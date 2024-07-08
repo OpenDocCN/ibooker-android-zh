@@ -1,0 +1,1670 @@
+- en: Chapter 2\. The Kotlin Collections Framework
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第二章 Kotlin 集合框架
+- en: In the preceding chapter we offered an overview of the syntax of the Kotlin
+    language. As with any language, syntax is a foundation but, really, no more than
+    that. When it comes to getting actual work done, syntax alone won’t carry the
+    water. To do that you need expressions and idioms that are easy to assemble into
+    useful code, and that are as easy for other developers to understand and modify.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前一章中，我们提供了 Kotlin 语言语法的概述。与任何语言一样，语法是基础，但真正重要的是实际工作时它只是个基础。要完成工作，单靠语法是不够的。为此，你需要一些易于组装成有用代码的表达式和习惯用语，并且其他开发者也能容易理解和修改它们。
+- en: 'One important aspect of nearly every modern language is its *collections framework*:
+    ways of grouping objects, and libraries of functions that manipulate them.'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 几乎每种现代语言的一个重要方面就是它的 *集合框架*：即对象的分组方式，以及操作它们的函数库。
+- en: 'At the time it was introduced, Java’s collection framework was state of the
+    art. Today, more than 20 years later, the basic data structures provided by newer
+    languages have not changed much. All of the containers that we’re familiar with
+    from the Java framework (or even the earliest versions of the C++ `stdlib`) are
+    still there: `Iterable`, `Collection`, `List`, `Set`, and `Map` (to use their
+    Java names). In response to broad acceptance of functional styles of programming,
+    however, collections frameworks for modern languages like Swift and Scala usually
+    provide a set of common, higher-order functions that operate on the collections:
+    `filter`, `map`, `flatmap`, `zip`, and more. You will, indeed, find these functions
+    in the collections framework from the Kotlin Standard Library.'
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在引入时，Java 的集合框架是当时的最先进技术。如今，超过 20 年后，新语言提供的基本数据结构并没有太大改变。我们熟悉的所有容器（来自 Java 框架，甚至是最早版本的
+    C++ `stdlib`）仍然存在：`Iterable`、`Collection`、`List`、`Set` 和 `Map`（使用它们的 Java 名称）。然而，面对广泛接受的函数式编程风格，现代语言的集合框架如
+    Swift 和 Scala 通常提供了一组通用的高阶函数来操作集合：`filter`、`map`、`flatmap`、`zip` 等等。事实上，你会在 Kotlin
+    标准库的集合框架中找到这些函数。
+- en: In this chapter, we will first visit the collections themselves and a few interesting
+    extensions that the Kotlin language empowers. After that, we will dig into some
+    of the powerful higher-order functions that operate on the collections.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们首先会介绍集合本身以及 Kotlin 语言赋予的一些有趣扩展。之后，我们会深入探讨一些在集合上运行的强大高阶函数。
+- en: Collection Basics
+  id: totrans-5
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 集合基础知识
+- en: Kotlin’s collections framework embeds the data structures from the Java Collections
+    Framework as a subset. It wraps the basic Java classes with some new features
+    and adds functional transformations that operate on them.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 的集合框架将 Java 集合框架的数据结构作为一个子集嵌入其中。它用一些新特性包装了基本的 Java 类，并添加了对它们进行的功能性转换。
+- en: Let’s start this deep dive into the collections library with a quick look at
+    some of the extensions to the data structures themselves.
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们从对数据结构本身的扩展快速深入到这个集合库。
+- en: Java Interoperability
+  id: totrans-8
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Java 互操作性
+- en: Because seamless interoperablity with Java is a central goal of the Kotlin language,
+    Kotlin collection data types are based on their Java counterparts. [Figure 2-1](#kotlin_collections)
+    illustrates the relationship.
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于与 Java 的无缝互操作性是 Kotlin 语言的一个核心目标，Kotlin 的集合数据类型基于其 Java 对应物。[图表 2-1](#kotlin_collections)
+    说明了它们的关系。
+- en: '![Kotlin Collections](assets/pawk_0201.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Kotlin 集合](assets/pawk_0201.png)'
+- en: Figure 2-1\. The Kotlin collection type hierarchy and its relation to Java.
+  id: totrans-11
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图表 2-1\. Kotlin 集合类型层次结构及其与 Java 的关系。
+- en: By making Kotlin collection types subtypes of their Java analogs, Kotlin preserves
+    all of functionality of the Java Collections Framework. For the most part, Kotlin
+    extends, but does not alter the Java framework. It just adds the new, functional
+    methods.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 将其集合类型作为 Java 类型的子类型，以保留 Java 集合框架的所有功能。大多数情况下，Kotlin 是在扩展 Java 框架，而非改变它。它只是添加了一些新的功能性方法。
+- en: 'There is one significant exception: mutability.'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一个显著的例外：可变性。
+- en: Mutability
+  id: totrans-14
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 可变性
+- en: It is, perhaps, only logical that a language that embeds mutability in its syntax
+    would also embed mutability in its collection system.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或许，一种将可变性嵌入语法的语言也会将可变性嵌入到其集合系统中，这是合乎逻辑的。
+- en: Kotlin defines two distinct type hierarchies in its collections framework, one
+    for collections that are mutable and one for collections that are not. This can
+    be seen in [Example 2-1](#mutability_in_collections).
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin在其集合框架中定义了两个不同的类型层次结构，一个用于可变集合，一个用于不可变集合。这可以在[例子2-1](#mutability_in_collections)中看到。
+- en: Example 2-1\. Mutable and Immutable Lists
+  id: totrans-17
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 例2-1\. 可变和不可变列表
+- en: '[PRE0]'
+  id: totrans-18
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: Note
+  id: totrans-19
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: '*Mutable* is the opposite of *immutable*. A mutable object can be changed and
+    an immutable one cannot. The distinction is critical when trying to optimize code.
+    Since they cannot change, immutable objects can be shared safely among multiple
+    threads. A mutable object, however, must be made explicitly thread-safe if it
+    is to be shared. Thread safety requires locking or copying, which may be expensive.'
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*可变*是*不可变*的相反。可变对象可以更改，而不可变对象则不能。在尝试优化代码时，这种区别非常关键。由于不可变对象无法更改，可以在多个线程之间安全共享它们。然而，如果要共享可变对象，则必须显式地保证线程安全性。线程安全性需要锁定或复制，这可能很昂贵。'
+- en: Unfortunately, Kotlin cannot guarantee the immutablity of its immutable collections.
+    Immutable collections simply do not have mutator functions (`add`, `remove`, `put`,
+    etc.). Especially when a Kotlin collection is passed to Java code—where Kotlin’s
+    immutability constraints are not enforced by the type system—there can be no assurance
+    that the contents of the collection will not change.
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不幸的是，Kotlin无法保证其不可变集合的不可变性。不可变集合简单地没有修改器函数（`add`、`remove`、`put`等）。特别是当将Kotlin集合传递给Java代码时——在那里，Kotlin的不可变性约束不受类型系统强制——无法保证集合的内容不会发生变化。
+- en: 'Note that the mutability of a collection is not related to the mutability of
+    the object that the collection contains. As a very simple example, consider the
+    following code:'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，集合的可变性与集合包含的对象的可变性无关。作为一个非常简单的例子，考虑以下代码：
+- en: '[PRE1]'
+  id: totrans-23
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: The variable `deeplist` is a `List<MutableList<Int>>`. It is and always will
+    be a list of two lists. The contents of the lists that `deeplist` contains, however,
+    can grow, shrink, and change.
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 变量`deeplist`是一个`List<MutableList<Int>>`。它始终是两个列表的列表。然而，`deeplist`包含的列表的内容可以增长、缩小和更改。
+- en: 'The creators of Kotlin are actively investigating all things immutable. The
+    prototype `kotlinx.collections.immutable` library is intended to be a set of truly
+    immutable collections. To use them in your own Android/Kotlin project, add the
+    following dependency to your `build.gradle` file:'
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin的创建者正在积极研究所有不可变事物。原型`kotlinx.collections.immutable`库旨在成为一组真正的不可变集合。要在您自己的Android/Kotlin项目中使用它们，请将以下依赖项添加到您的`build.gradle`文件中：
+- en: '[PRE2]'
+  id: totrans-26
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: While the *Kotlinx Immutable Collections Library* uses state-of-the-art algorithms
+    and optimizes them so that they are very fast compared to other JVM implementations
+    of immutable collections, these true immutable collections are still an order
+    of magnitude slower than their mutable analogs. Currently, there’s nothing to
+    be done about it. However, many modern developers are willing to sacrifice some
+    performance for the safety that immutability brings, especially in the context
+    of concurrency.^([1](ch02.html#idm46669757650256))
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然*Kotlinx不可变集合库*使用先进的算法并对其进行优化，以使其比其他JVM不可变集合实现快得多，但这些真正的不可变集合仍然比其可变模拟慢一个数量级。目前还没有解决办法。然而，许多现代开发者愿意为不可变性带来的安全性牺牲一些性能，特别是在并发环境下。^([1](ch02.html#idm46669757650256))
+- en: Overloaded Operators
+  id: totrans-28
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 过载运算符
+- en: 'Kotlin supports a disciplined ability to overload the meanings of certain infix
+    operators, in particular, `+` and `-`. Kotlin’s collections framework makes good
+    use of this capability. To demonstrate, let’s look at a naive implementation of
+    a function to convert a `List<Int>` to a `List<Double>`:'
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin支持有纪律的能力来重载特定中缀运算符的含义，特别是`+`和`-`。Kotlin的集合框架充分利用了这种能力。为了演示，让我们看一个将`List<Int>`转换为`List<Double>`的函数的天真实现：
+- en: '[PRE3]'
+  id: totrans-30
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: Don’t do this. The only thing that this example does efficiently is demonstrate
+    the use of the two infix operators `+` and `-`. The former adds an element to
+    a list and the latter removes an element from it.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不要这样做。这个例子唯一高效的地方是演示两个中缀运算符`+`和`-`的使用。前者向列表添加元素，而后者从中删除元素。
+- en: 'The operand to the left of a `+` or `-` operator can define the behavior of
+    that operator. Containers, when they appear to the left of a `+` or `-`, define
+    two implementations for each of those two operators: one when the right-hand operand
+    is another container and the other when it is not.'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`+` 或 `-` 运算符左侧的操作数可以定义该运算符的行为。当容器出现在 `+` 或 `-` 的左侧时，定义了这两个运算符的两种实现：一种是右操作数是另一个容器时的实现，另一种是右操作数不是容器时的实现。'
+- en: Adding a noncontainer object to a container creates a new container that has
+    all of the elements from the left-hand operand (the container) with the new element
+    (the right-hand operand) added. Adding two containers together creates a new container
+    that has all of the elements from both.
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将非容器对象添加到容器中会创建一个新的容器，其中包含左操作数（容器）的所有元素以及添加的新元素（右操作数）。将两个容器相加会创建一个新的容器，其中包含两者的所有元素。
+- en: Similarly, subtracting an object from a container creates a new container with
+    all but the first occurrence of the left-hand operand. Subtracting one container
+    from another produces a new container that has the elements of the left-hand operand,
+    with *all* occurrences of *all* the elements in the right-hand operand removed.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类似地，从容器中减去一个对象会创建一个新的容器，其中除了左操作数的第一次出现外，其他所有左操作数的元素都包含在内。从另一个容器中减去一个容器会创建一个新的容器，其中包含左操作数的元素，并移除右操作数中所有元素的所有出现。
+- en: Note
+  id: totrans-35
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'The `+` and `-` operators preserve order when the underlying container is ordered.
+    For instance:'
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`+` 和 `-` 运算符在基础容器有序时保留顺序。例如：'
+- en: '[PRE4]'
+  id: totrans-37
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: Creating Containers
+  id: totrans-38
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建容器
+- en: Kotlin does not have a way to express container literals. There is no syntactic
+    way, for instance, of making a `List` of the numbers 8, 9, and 54\. Nor is there
+    a way of making a `Set` of the strings “Dudley” and “Mather.” Instead, there are
+    handy methods for creating containers that are nearly as elegant. The code in
+    [Example 2-1](#mutability_in_collections) showed two simple examples of creating
+    lists. There are also `...Of` methods for creating mutable and immutable lists,
+    sets, and maps.
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 没有一种方式可以表示容器字面值。例如，没有一种语法方式可以创建包含数字 8、9 和 54 的 `List`，也没有一种方式可以创建包含字符串
+    "Dudley" 和 "Mather" 的 `Set`。相反，有方便的方法可以创建几乎同样优雅的容器。[示例 2-1](#mutability_in_collections)
+    中的代码展示了创建列表的两个简单示例。还有用于创建可变和不可变列表、集合和映射的 `...Of` 方法。
+- en: 'Creating literal maps requires knowing a clever trick. The `mapOf` function
+    takes a list of `Pairs` as its argument. Each of the pairs provides a key (the
+    pair’s first value) and a value (the pair’s second value). Recall that Kotlin
+    supports an extended set of infix operators. Among these operators is `to`, which
+    creates a new `Pair` with its left operand as the first element and its right
+    operand as the second element. Combine these two features and you can, conveniently,
+    build a `Map` like this:'
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建文字映射需要了解一个巧妙的技巧。`mapOf` 函数以 `Pairs` 列表作为其参数。每对提供一个键（对的第一个值）和一个值（对的第二个值）。回想一下，Kotlin
+    支持一组扩展的中缀运算符。其中之一是 `to`，它创建一个新的 `Pair`，其左操作数作为第一个元素，右操作数作为第二个元素。结合这两个特性，您可以方便地构建这样的
+    `Map`：
+- en: '[PRE5]'
+  id: totrans-41
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: The type of the content of a container is expressed using a generic syntax very
+    similar to Java’s. The type of the variable map in the preceding code, for instance,
+    is `Map<Int, Int>`, a container that maps `Int` keys to their `Int` values.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 容器的内容类型使用类似于 Java 的泛型语法表示。例如，前面代码中变量 `map` 的类型是 `Map<Int, Int>`，这是一个将 `Int`
+    键映射到其 `Int` 值的容器。
+- en: 'The Kotlin compiler is quite clever about inferring the types of the contents
+    of containers created with their factory methods. Obviously in this example:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 编译器在推断使用其工厂方法创建的容器内容类型时非常聪明。显然，在此示例中：
+- en: '[PRE6]'
+  id: totrans-44
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: the type of `map` is `MutableMap<String, Int>`. But what about this?
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`map` 的类型是 `MutableMap<String, Int>`。但是这又如何？'
+- en: '[PRE7]'
+  id: totrans-46
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: Kotlin will choose the nearest type in the type hierarchy tree that is an ancestor
+    of all of the elements of the container (this type is called the *upper bound
+    type*). In this case it will choose `Number`, the nearest ancestor of both `Long`
+    and `Double`. The variable `list` has the inferred type `List<Number>`.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 将选择类型层次树中最接近的类型作为容器元素的所有元素的祖先（此类型称为*上界类型*）。在这种情况下，它将选择 `Number`，即 `Long`
+    和 `Double` 的最近祖先。变量 `list` 具有推断类型 `List<Number>`。
+- en: 'We can add a `String`, though, as in the following:'
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以添加 `String`，如下所示：
+- en: '[PRE8]'
+  id: totrans-49
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: The only type that is an ancestor to all of the elements, a `Long`, a `Double`,
+    and a `String`, is the root of the Kotlin type hierarchy, `Any`. The type of the
+    variable `list` is `MutableList<Any>`.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有元素的祖先唯一类型是 `Long`、`Double` 和 `String` 的根，即 Kotlin 类型层次结构的 `Any`。变量 `list`
+    的类型是 `MutableList<Any>`。
+- en: 'Once again, though, recall from [Chapter 1](ch01.html#kotlin_essentials) that
+    the type `Any` is not the same as the type `Any?`. The following will not compile
+    (assuming the definition from the preceding example):'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次强调，不过，请从 [第 1 章](ch01.html#kotlin_essentials) 回忆，类型 `Any` 与类型 `Any?` 并不相同。以下内容将不会编译（假设前面示例的定义）：
+- en: '[PRE9]'
+  id: totrans-52
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'In order to allow the list to contain `null`, we’d have to specify its type
+    explicitly:'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了允许列表包含`null`，我们必须明确指定其类型：
+- en: '[PRE10]'
+  id: totrans-54
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: We can create collections now. So, what do we do with them?
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们现在可以创建集合了。那么，我们应该如何处理它们呢？
+- en: Functional Programming
+  id: totrans-56
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 函数式编程
+- en: We operate on them! Nearly all of the operations that we will discuss here are
+    based on the paradigm of functional programming. In order to understand their
+    context and motivation, let’s review the paradigm.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们对它们进行操作！我们将在这里讨论的几乎所有操作都基于函数式编程的范式。为了理解它们的背景和动机，让我们回顾一下这种范式。
+- en: '*Object-oriented programming* (OOP) and *functional programming* (FP) are both
+    paradigms for software design. Software architects understood the promise of functional
+    programming soon after its invention in the late 1950s. Early functional programs
+    tended to be slow, though, and it’s only recently that the functional style has
+    been able to challenge a more pragmatic imperative model for performance. As programs
+    get more complex and difficult to understand, as concurrency becomes inevitable,
+    and as compiler optimization improves, functional programming is changing from
+    a cute academic toy into a useful tool that every developer should be able to
+    wield.'
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*面向对象编程*（OOP）和 *函数式编程*（FP）都是软件设计的范式。软件架构师们在函数式编程刚刚发明后很快就理解了它的潜力。早期的函数式程序往往速度较慢，但直到最近，函数式风格才能够挑战更为实用的命令式模型以获取更好的性能。随着程序变得更加复杂和难以理解，随着并发变得不可避免，以及编译器优化的改善，函数式编程正在从一种可爱的学术玩具变成每个开发人员都应该掌握的有用工具。'
+- en: Functional programming encourages *immutability*. Unlike the functions in code,
+    mathematical functions don’t change things. They don’t “return” anything. They
+    simply have a value. Just as “4” and “2 + 2” are names for the same number, a
+    given function evaluated with given parameters is simply a name (perhaps a verbose
+    name!) for its value. Because mathematical functions do not change, they are not
+    affected by time. This is immensely useful when working in a concurrent environment.
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 函数式编程鼓励*不可变性*。与代码中的函数不同，数学函数不会改变事物。它们不会“返回”任何东西。它们只有一个值。就像“4”和“2 + 2”是同一个数字的名称一样，给定参数评估的给定函数只是其值的名称（也许是冗长的名称！）。因为数学函数不会改变，所以它们不受时间的影响。在并发环境中工作时，这非常有用。
+- en: Though different, FP and OOP paradigms can coexist. Java was, certainly, designed
+    as an OO language, and Kotlin, fully interoperable, can duplicate Java algorithms
+    nearly word for word. As we proclaimed in the preceding chapter, though, the true
+    power of Kotlin lies in its extensible functional programming capabilities. It’s
+    not uncommon for folks to start out writing “Java in Kotlin.” As they start to
+    feel more comfortable, they tend to gravitate toward more idiomatic Kotlin, and
+    much of that involves applying the power of FP.
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管不同，FP 和 OOP 范式可以共存。Java 显然是作为面向对象语言设计的，而完全可互操作的 Kotlin 几乎可以逐字复制 Java 算法。正如我们在前一章中所宣称的，然而，Kotlin
+    的真正力量在于其可扩展的函数式编程能力。从事“用 Kotlin 编写 Java”并非罕见。随着他们变得更加舒适，他们倾向于更具代表性的 Kotlin，其中很大一部分涉及应用
+    FP 的能力。
+- en: 'Functional Versus Procedural: A Simple Example'
+  id: totrans-61
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 函数式与过程式：一个简单的例子
+- en: 'The following code shows a procedural way of working with a collection:'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以下代码展示了处理集合的过程式方式：
+- en: '[PRE11]'
+  id: totrans-63
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: In the example, a `for` loop iterates over a list. It selects an element from
+    `collection` and assigns it to the variable `x`. It then calls the method `doSomething`
+    on the element. It does this for each element in the list.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在示例中，`for` 循环遍历列表。它从 `collection` 中选择一个元素，并将其分配给变量 `x`。然后调用元素的 `doSomething`
+    方法。它会为列表中的每个元素执行此操作。
+- en: The only constraint on the collection is that there must be a way to fetch each
+    of its elements exactly once. That capability is precisely what is encapsulated
+    by the type `Iterable<T>`.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 集合的唯一约束是必须有一种方法能确保每个元素只被获取一次。这种能力正是由类型 `Iterable<T>` 封装的。
+- en: 'The functional paradigm is certainly less complicated: no extra variables and
+    no special syntax. Just a single method call:'
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 功能性编程范式肯定更简单：没有额外的变量和特殊的语法。只需一个单一的方法调用：
+- en: '[PRE12]'
+  id: totrans-67
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: 'The `forEach` method takes a function as its argument. That argument, `doSomething`
+    in this case, is a function that takes a single parameter of the type contained
+    in `collection`. In other words, if `collection` is a list of `String`s, `doSomething`
+    must be `doSomething(s: String)`. If `collection` is a `Set<Freeptootsie>`, then
+    `doSomething` must be `doSomething(ft: Freeptootsie)`. The `forEach` method calls
+    its argument (`doSomething`) with each element in `collection` as its parameter.'
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`forEach` 方法将一个函数作为其参数。在本例中，该参数 `doSomething` 是一个接受 `collection` 中包含的类型的单个参数的函数。换句话说，如果
+    `collection` 是一个 `String` 列表，`doSomething` 必须是 `doSomething(s: String)`。如果 `collection`
+    是 `Set<Freeptootsie>`，那么 `doSomething` 必须是 `doSomething(ft: Freeptootsie)`。`forEach`
+    方法调用其参数 (`doSomething`)，并将集合中的每个元素作为其参数。'
+- en: This might seem like an insignificant difference. It is not. The `forEach` method
+    is a much better separation of concerns.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这似乎是一个微不足道的区别。它并不是。`forEach` 方法在关注点分离方面要好得多。
+- en: An `Iterable<T>` is stateful, ordered, and time dependent. Anyone who has ever
+    had to deal with a `ConcurrentModificationException` knows it is entirely possible
+    that the state of an iterator may not match the state of the collection over which
+    it is iterating. While Kotlin’s `forEach` operator is not completely immune to
+    `ConcurrentModificationException`, those exceptions occur in code that is actually
+    concurrent.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Iterable<T>` 是有状态的，有序的，并且时间相关的。任何曾经遇到过 `ConcurrentModificationException` 的人都知道，迭代器的状态可能与其正在迭代的集合的状态不匹配。尽管
+    Kotlin 的 `forEach` 操作符并非完全免疫于 `ConcurrentModificationException`，但这些异常发生在实际并发的代码中。'
+- en: More importantly, the mechanism that a collection uses to apply a passed function
+    to each of its elements is entirely the business of the collection itself. In
+    particular, there is no intrinsic contract about the order in which the function
+    will be evaluated on the collection’s elements.
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更重要的是，集合用于将传递的函数应用于其每个元素的机制完全是集合自身的事务。特别是，关于函数在集合元素上评估的顺序没有固有的约定。
+- en: A collection could, for instance, divide its elements into groups. It could
+    farm each of these groups out to a separate processor and then reassemble the
+    results. This approach is particularly interesting at a time when the number of
+    cores in a processor is increasing rapidly. The `Iterator<T>` contract cannot
+    support this kind of parallel execution.
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，一个集合可以将其元素分成组。它可以将每个这些组分配给一个单独的处理器，然后重新组合结果。在处理器内核数量迅速增加的时代，这种方法特别有趣。`Iterator<T>`
+    协议无法支持这种并行执行。
+- en: Functional Android
+  id: totrans-73
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 功能性安卓
+- en: Android has a quirky history with functional programming. Because its virtual
+    machine has nothing to do with Java’s, improvements in the Java language have
+    not necessarily been available to Android developers. Some of the most important
+    changes in Java, including lambdas and method references, were not supported in
+    Android for quite a while after they appeared in Java 8.
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 安卓在功能性编程方面有一个古怪的历史。因为其虚拟机与 Java 没有关系，所以 Java 语言的改进并不一定对安卓开发者可用。Java 中一些最重要的变化，包括
+    lambda 表达式和方法引用，出现在 Java 8 后，在一段时间内并未得到安卓的支持。
+- en: Although Java could compile these new features and DEX (Android’s bytecode)
+    could even represent them (though, perhaps, not efficiently), the Android toolchain
+    couldn’t convert the representations of these features—the compiled Java bytecode—into
+    the DEX code that could be run on an Android system.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管 Java 可以编译这些新特性，并且 DEX（安卓的字节码）甚至可以表示它们（尽管可能不是高效地），但是安卓工具链不能将这些特性的表示形式——编译后的
+    Java 字节码——转换为可以在安卓系统上运行的 DEX 代码。
+- en: The first attempt to fill the gap was a package called *RetroLambda*. Other
+    add-on library solutions followed, sometimes with confusing rules (e.g., with
+    the Android Gradle Plugin [AGP] 3.0+, if you wanted to use the Java Streams API
+    you had to target, at a minimum, Android API 24).
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 填补这一空白的第一次尝试是一个名为 *RetroLambda* 的包。随后出现了其他附加库解决方案，有时带有令人困惑的规则（例如，使用 Android
+    Gradle 插件 [AGP] 3.0+，如果想使用 Java Streams API，至少必须定位到 Android API 24）。
+- en: All of these constraints are now gone with Kotlin on Android. Recent versions
+    of the AGP will support functional programming even on older versions of Android.
+    You can now use the full Kotlin collection package on any supported platform.
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，使用 Kotlin 在 Android 上已经没有这些限制了。AGP 的最新版本将支持功能编程，即使在较旧版本的 Android 上也是如此。您现在可以在任何支持的平台上使用完整的
+    Kotlin 集合包。
+- en: Kotlin Transformation Functions
+  id: totrans-78
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Kotlin 转换函数
+- en: In this section, you will see how Kotlin brings functional capabilities to collections
+    to provide elegant and safe ways of manipulating them. Just as in the previous
+    chapter we didn’t visit all of Kotlin’s syntax, we will not in this chapter attempt
+    to visit all of Kotlin’s library functions. It isn’t necessary to memorize them
+    all. It is essential, though, for idiomatic and effective use of Kotlin, to get
+    comfortable with a few key transforms and to get a feel for how they work.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本节中，您将看到 Kotlin 如何为集合带来函数式能力，以提供优雅且安全的方式来操作它们。就像在前一章中我们没有访问 Kotlin 的所有语法一样，在本章中我们也不会尝试访问
+    Kotlin 的所有库函数。并不需要记住它们所有。然而，要想用 Kotlin 来写出符合习惯且高效的代码，掌握几个关键的转换并理解它们的工作方式是必要的。
+- en: The Boolean Functions
+  id: totrans-80
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 布尔函数
+- en: 'A convenient set of collection functions return a `Boolean` to indicate whether
+    the collection has—or does not have—a given attribute. The function `any()`, for
+    instance, will return `true` when a collection contains at least one element.
+    If used with a predicate, as in `any { predicate(it) }`, `any` will return `true`
+    if the predicate evaluates true for any element in the collection:'
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一组方便的集合函数返回一个 `Boolean` 来指示集合是否具有或不具有给定的属性。例如，函数 `any()` 在集合包含至少一个元素时将返回 `true`。如果与谓词一起使用，如
+    `any { predicate(it) }`，`any` 将在集合中任何元素的谓词评估为 true 时返回 `true`：
+- en: '[PRE13]'
+  id: totrans-82
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: Note
+  id: totrans-83
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: When a lambda takes only a single argument and the Kotlin compiler can figure
+    that out using type inferencing (it usually can), you can omit the parameter declaration
+    and use the implicit parameter named `it`. The preceding example uses this shortcut
+    twice, in the definitions of the predicates to the `any` method.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 lambda 只接受单个参数且 Kotlin 编译器可以使用类型推断来确定它（通常情况下可以），您可以省略参数声明并使用隐式参数 `it`。在 `any`
+    方法的谓词定义中，上述示例两次使用了这个快捷方式。
+- en: 'Another boolean function, `all { predicate }`, returns `true` only if every
+    element in the list matches the predicate:'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个布尔函数 `all { predicate }` 仅在列表中的每个元素都与谓词匹配时返回 `true`：
+- en: '[PRE14]'
+  id: totrans-86
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: 'The opposite of `any` is `none`. Without a predicate, `none()` returns `true`
+    only if there are no elements in a collection. With a predicate, `none { predicate
+    }` returns `true` only if the predicate evaluates to true for none of the elements
+    in the collection. For example:'
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`any` 的相反函数是 `none`。没有谓词时，`none()` 仅在集合中没有元素时返回 `true`。有谓词时，`none { predicate
+    }` 仅在谓词对集合中的任何元素都不成立时返回 `true`。例如：'
+- en: '[PRE15]'
+  id: totrans-88
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: Filter Functions
+  id: totrans-89
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 过滤函数
+- en: 'The basic `filter` function will return a new collection containing only the
+    elements of the original collection that match the given predicate. In this example,
+    for instance, the variable `numbers` will contain a list with the single value
+    `100`:'
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基本的 `filter` 函数将返回一个包含原始集合中与给定谓词匹配的元素的新集合。例如，在这个示例中，变量 `numbers` 将包含一个只有单个值
+    `100` 的列表：
+- en: '[PRE16]'
+  id: totrans-91
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: 'The `filterNot` function is the reverse. It returns elements that do *not*
+    match the predicate. In this example, for instance, the variable `numbers` will
+    contain three elements, 10, 20, and 5: the elements of `nums` that are not greater
+    than 20:'
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`filterNot` 函数则是相反的。它返回不匹配谓词的元素。例如，在这个示例中，变量 `numbers` 将包含三个元素 10、20 和 5：即
+    `nums` 中不大于 20 的元素：'
+- en: '[PRE17]'
+  id: totrans-93
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: 'A beautifully convenient special case of `filterNot` is the function `filterNotNull`.
+    It removes all of the `null`s from a collection:'
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`filterNot` 的一个极其方便的特例是函数 `filterNotNull`。它从集合中删除所有的 `null`：'
+- en: '[PRE18]'
+  id: totrans-95
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE18]'
+- en: In this example, the variable `numbers` will be a list containing two elements,
+    20 and 5.
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个示例中，变量 `numbers` 将是一个包含两个元素 20 和 5 的列表。
+- en: Map
+  id: totrans-97
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Map
+- en: The *map* function applies its argument to each element in a collection and
+    returns a collection of the resulting values. Note that it does not mutate the
+    collection to which it is applied; it returns a new, resulting, collection.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`map` 函数将其参数应用于集合中的每个元素，并返回结果值的集合。请注意，它不会改变所应用的集合；它返回一个新的结果集合。'
+- en: 'Here is the definition of the `map` function, for the `Array` type:'
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是 `map` 函数在 `Array` 类型上的定义：
+- en: '[PRE19]'
+  id: totrans-100
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE19]'
+- en: Let’s unpack this.
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来理解这一点。
+- en: Starting at the left, `map` is an inline function. The “fun” part should be
+    clear by now. But what about “inline.”
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从左边开始，`map` 是一个内联函数。现在，“fun”部分应该很清楚了。但是“inline”呢。
+- en: The keyword `inline` tells the Kotlin compiler to copy the bytecode for a function
+    directly into the binary whenever the method is called, instead of generating
+    a transfer to a single compiled version. When the number of instructions necessary
+    to call a function is a substantial percentage of the total number necessary to
+    run it, an `inline` function makes sense as a trade-off of space for time. Sometimes,
+    too, it can remove the overhead of the extra object allocation that some lambda
+    expressions require.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关键字 `inline` 告诉 Kotlin 编译器，在每次调用该方法时直接将函数的字节码复制到二进制文件中，而不是生成一个传输到单个编译版本的转移。当调用函数所需的指令数量占总运行所需指令数量的大部分时，使用
+    `inline` 函数作为空间换时间的权衡是有意义的。有时候，它还可以消除一些 lambda 表达式需要的额外对象分配的开销。
+- en: Next, `<T, R>` are the two, free, type variables used in the function definition.
+    We’ll get back to them.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来是 `<T, R>`，这是函数定义中使用的两个自由类型变量。我们稍后会回到它们。
+- en: 'Next is the description of the receiver, `Array<out T>`. This `map` function
+    is an extension function on the `Array` type: it is a function on an array whose
+    elements are of type `T` (or one of `T`’s superclasses, e.g., `Any`).'
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来是接收者的描述，`Array<out T>`。这个 `map` 函数是 `Array` 类型的扩展函数：它是一个作用在类型为 `T` 的数组上的函数（或者
+    `T` 的超类，比如 `Any`）。
+- en: 'Next is the `map`’s parameter. The parameter is a function named *transform*.
+    Transform is a function `transform: (T) -> R`: it takes as its argument something
+    of type `T` and returns something of type `R`. Well! That’s interesting! The array
+    to which the function will be applied is full of objects of type `T`! The function
+    can be applied to the elements of the array.'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '接下来是 `map` 的参数。该参数是一个名为 *transform* 的函数。Transform 是一个函数 `transform: (T) ->
+    R`：它以 `T` 类型的参数作为其参数，并返回 `R` 类型的结果。哦！这很有趣！函数将应用于数组中的元素，这些元素的类型是 `T`！'
+- en: Finally, there is `map`’s return. It is a `List<R>`, a list whose elements are
+    of type `R`. An `R` is what you get if you apply `transform` to an elements of
+    the array (a `T` ).
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，`map` 的返回值是 `List<R>`，一个元素类型为 `R` 的列表。如果将 `transform` 应用于数组元素（一个 `T`），则会得到
+    `R`。
+- en: It all works out. Calling `map` on an array with a function that can be applied
+    to the elements of the array will return a new `List` that contains the results
+    of the application of the function to each of the elements in the array.
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一切都很顺利。在数组上调用 `map` 函数，该函数可以应用于数组的元素，将返回一个包含应用函数结果的新 `List`。
+- en: 'Here’s an example that returns a list of starting dates for employee records
+    that have those starting dates stored as strings:'
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里有一个示例，返回的是员工记录开始日期的列表，这些开始日期存储为字符串：
+- en: '[PRE20]'
+  id: totrans-110
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE20]'
+- en: 'Perhaps you’re wondering: “What happens if the transform function doesn’t return
+    a value?” Ah! But Kotlin functions *always* have a value!'
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或许你正在想：“如果转换函数不返回值会发生什么？” 啊！但 Kotlin 函数*总是*有一个值！
+- en: 'For example:'
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如：
+- en: '[PRE21]'
+  id: totrans-113
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE21]'
+- en: In this example, the variable `squares` will be the list [1.0, 4.0, 9.0, null,
+    25.0]. Because of the conditional operator, `?.`, in the transform function, the
+    function’s value is the square of its argument, if that argument is not null.
+    If the argument is null, however, the function has the value `null`.
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个例子中，变量 `squares` 将是列表 [1.0, 4.0, 9.0, null, 25.0]。由于转换函数中的条件运算符 `?.`，如果参数不为空，则函数的值为其参数的平方。然而，如果参数为空，则函数的值为
+    `null`。
+- en: 'There are several variations on the `map` function in the Kotlin library. One
+    of them, `mapNotNull`, addresses situations like this:'
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 库中 `map` 函数有几种变体。其中一种是 `mapNotNull`，解决了这样的情况：
+- en: '[PRE22]'
+  id: totrans-116
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE22]'
+- en: The value of the variable `squares` in this example is [1.0, 4.0, 9.0, 25.0].
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此示例中变量 `squares` 的值是 [1.0, 4.0, 9.0, 25.0]。
+- en: 'Another variant of `map` is `mapIndexed`. `mapIndexed` also takes a function
+    as its argument. Unlike `map`, though, `mapIndexed`’s functional argument takes
+    an element of the collection as its second parameter (not its first and only parameter,
+    as did `map`’s argument). `mapIndexed`’s functional argument takes, as its first
+    parameter, an `Int`. The `Int` is the ordinal that gives the position in the collection
+    of the element that is its second paramter: 0 for the first element, 1 for the
+    second, and so on.'
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`map` 的另一个变体是 `mapIndexed`。`mapIndexed` 也接受一个函数作为其参数。不过，不同于 `map`，`mapIndexed`
+    的函数参数将集合的元素作为其第二个参数（而不是其第一个唯一参数，如 `map` 的参数所做）。`mapIndexed` 的函数参数以 `Int` 作为其第一个参数。这个
+    `Int` 是序数，表示集合中元素的位置：第一个元素为 0，第二个为 1，依此类推。'
+- en: 'There are mapping functions for most collection-like objects. There are even
+    similar functions for `Map`s (though they are not subtypes of `Collection`): the
+    functions `Map::mapKeys` and `Map::mapValues`.'
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于大多数类似集合的对象，都有映射函数。甚至对于 `Map`（虽然它们不是 `Collection` 的子类型），也有类似的函数：函数 `Map::mapKeys`
+    和 `Map::mapValues`。
+- en: flatMap
+  id: totrans-120
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: flatMap
+- en: The thing that makes the `flatMap` function hard to understand is that it may
+    seem abstract and not particularly useful. It turns out that, although it is abstract,
+    it is quite useful.
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使 `flatMap` 函数难以理解的是，它可能看起来抽象而且并不特别有用。但事实证明，尽管它抽象，它非常有用。
+- en: Let’s start with an analogy. Suppose you decide to reach out to the members
+    of your old high school debate team. You don’t know how to get in touch anymore.
+    You do remember, though, that you have yearbooks for all four years you were in
+    the school and that each yearbook has a picture of the debate team.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们用一个类比来开始。假设你决定联系你旧高中辩论队的成员。你不知道如何再联系他们了。但你记得，你有所有四年的年鉴，每年鉴上都有辩论队的照片。
+- en: You decide to divide the process of contacting members into two steps. First
+    you will examine each photo of the team and try to identify each person depicted
+    there. You will make a list of the people you identify. You will then combine
+    the four lists into a single list of all debate-team members.
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你决定将联系成员的过程分为两步。首先，你将检查团队每张照片，并尝试识别出每个人。你将制作一个你识别到的人的名单。然后，你将这四个列表合并成一个辩论队所有成员的单一列表。
+- en: That’s flatmapping! It’s all about containers. Let’s generalize.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是 flatmapping！它与容器有关。让我们概括一下。
+- en: Suppose you have some kind of container of something. It is a `CON<T>`. In the
+    yearbook example, `CON<T>` was four photographs, a `Set<Photo>`. Next you have
+    a function that maps `T -> KON<R>`. That is, it takes an element of `CON` and
+    turns it into a new kind of container, a `KON`, whose elements are of type `R`.
+    In the example, this was you identifying each person in one of the photos, and
+    producing a list of names of people in the photo. `KON` is a paper list and `R`
+    is the name of a person.
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设你有某种容器的容器。它是 `CON<T>`。在年鉴示例中，`CON<T>` 是四张照片，一个 `Set<Photo>`。接下来你有一个函数，将 `T
+    -> KON<R>` 映射。也就是说，它接受 `CON` 的一个元素并将其转换为新类型的容器 `KON`，其元素类型为 `R`。在例子中，这是你识别每张照片中的每个人，并生成一个人名列表。`KON`
+    是一张名单，`R` 是一个人的名字。
+- en: The result of the `flatMap` function in the example is the consolidated list
+    of names.
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`flatMap` 函数在示例中的结果是名字的汇总列表。'
+- en: 'The flatmap on `CON<T>` is the function:'
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对 `CON<T>` 的 flatmap 是这个函数：
+- en: '[PRE23]'
+  id: totrans-128
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE23]'
+- en: 'Note, just for comparison, how `flatMap` is different from `map`. The `map`
+    function, for the container `CON`, using the same transform function, has a signature
+    like this:'
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，为了比较，`flatMap` 如何与 `map` 不同。对于容器 `CON`，使用相同的转换函数，`map` 函数的签名如下：
+- en: '[PRE24]'
+  id: totrans-130
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE24]'
+- en: The `flatMap` function “flattens” away one of the containers.
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`flatMap` 函数将一个容器“展平”。'
+- en: 'While we’re on the subject, let’s take a look at an example of the use of `flatMap`
+    that is very common:'
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们谈论这个主题时，让我们来看一个非常常见的使用 `flatMap` 的例子：
+- en: '[PRE25]'
+  id: totrans-133
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE25]'
+- en: The variable `flatList` will have the value [1, 2, 3, 4, 5, 6].
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 变量 `flatList` 将具有值 [1, 2, 3, 4, 5, 6]。
+- en: 'This example can be confusing. Unlike the previous example, which converted
+    a set of photographs to lists of names and then consolidated those lists, in this
+    common example the two container types `CON` and `KON` are the same: they are
+    `List<Int>`. That can make it difficult to see what’s actually going on.'
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个例子可能会让人困惑。不同于前面的例子，它将一组照片转换为名单，并将这些名单汇总在一起，在这个常见的例子中，两种容器类型 `CON` 和 `KON`
+    是相同的：它们都是 `List<Int>`。这可能会让你难以理解实际发生了什么。
+- en: 'Just to prove that it works, though, let’s go through the exercise of binding
+    the quantities in this somewhat baffling example to the types in the function
+    description. The function is applied to a `List<List<Int>>`, so `T` must be a
+    `List<Int>`. The transform function is the identity function. In other words,
+    it is `(List<Int>) -> List<Int>`: it returns its parameter. This means that `KON<R>`
+    must also be a `List<Int>` and `R` must be an `Int`. The `flatMap` function, then,
+    will return a `KON<R`>, a `List<Int>`.'
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了证明它确实有效，让我们通过将这个有些令人困惑的例子中的数量绑定到函数描述中的类型来进行练习。该函数应用于`List<List<Int>>`，因此`T`必须是`List<Int>`。转换函数是恒等函数。换句话说，它是`(List<Int>)
+    -> List<Int>`：它返回其参数。这意味着`KON<R>`也必须是`List<Int>`，而`R`必须是`Int`。然后，`flatMap`函数将返回一个`KON<R>`，即`List<Int>`。
+- en: It works.
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它有效。
+- en: Grouping
+  id: totrans-138
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 分组
+- en: 'In addition to filtering, the Kotlin Standard Library provides another small
+    set of transformation extension functions that group elements of a collection.
+    The signature for the `groupBy` function, for instance, looks like this:'
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了过滤外，Kotlin标准库还提供了另一组小型转换扩展函数，用于对集合的元素进行分组。例如，`groupBy`函数的签名如下：
+- en: '[PRE26]'
+  id: totrans-140
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE26]'
+- en: 'As is often the case, you can intuit this function’s behavior just by looking
+    at the type information. `groupBy` is a function that takes an `Array` of things
+    (`Array` in this case: there are equivalents for other container types). For each
+    of the things, it applies the `keySelector` method. That method, somehow, labels
+    the thing with a value of type `K`. The return from the `groupBy` method is a
+    map of each of those labels to a list of the things to which the `keySelector`
+    assigned that label.'
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常情况下，你可以通过查看类型信息直觉地理解这个函数的行为。`groupBy`是一个函数，它接受一个`Array`（在本例中是`Array`：其他容器类型有对应的函数）。对于每个元素，它应用`keySelector`方法。那个方法以某种方式用类型`K`的值标记这个元素。`groupBy`方法的返回值是一个映射，将每个标签映射到`keySelector`为其分配的元素列表。
+- en: 'An example will help:'
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个例子将有所帮助：
+- en: '[PRE27]'
+  id: totrans-143
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE27]'
+- en: The variable `groupedNumbers` now contains a `Map<String, List<Int>>`. The map
+    has two keys, “less than 20” and “greater than or equal to 20.” The value for
+    the first key is the list [1, 18, 2]. The value for the second is [20, 37].
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 变量`groupedNumbers`现在包含一个`Map<String, List<Int>>`。该映射有两个键，“小于20”和“大于或等于20”。第一个键的值是列表`[1,
+    18, 2]`。第二个键的值是`[20, 37]`。
+- en: Maps that are generated from grouping functions will preserve the order of the
+    elements in the original collection, in the lists that are the values of the keys
+    of the output map.
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从分组函数生成的映射将保留原始集合中元素的顺序，即输出映射键的值列表。
+- en: Iterators Versus Sequences
+  id: totrans-146
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 迭代器与序列
+- en: Suppose you are going to paint your desk. You decide that it will look much
+    nicer if it is a nice shade of brown instead of that generic tan. You head down
+    to the paint store and discover that there are around 57 colors that might be
+    just the thing.
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设你要给你的书桌涂漆。你决定如果它是一种漂亮的棕色而不是那种普通的浅棕色，它看起来会更好。你去油漆店，发现大约有57种颜色可能正合你心意。
+- en: What you do next? Do you buy samples of each of the colors to take home? Almost
+    certainly not! Instead, you buy samples of two or three that seem promising and
+    try them. If they turn out not to be all your heart desires, you go back to the
+    store and buy three more. Instead of buying samples of all the candidate colors
+    and iterating over them, you create a process that will let you get the next candidate
+    colors, given the ones you have already tried.
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来你做什么？你买每一种颜色的样本回家吗？几乎可以肯定不是！相反，你买两三种看起来有希望的颜色并尝试它们。如果它们不是你心中所想，你就回到商店再买三种。你不是买所有候选颜色的样本并对它们进行迭代，而是创建一个过程，让你能够获取下一个候选颜色，考虑到你已经尝试过的颜色。
+- en: A sequence differs from an iterator in a similar way. An iterator is a way of
+    getting each element from an existing collection exactly once. The collection
+    exists. All the iterator needs to do is order it.
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 序列与迭代器的区别类似。迭代器是从现有集合中精确获取每个元素的一种方式。集合已经存在。迭代器只需要对其进行排序。
+- en: 'A sequence, on the other hand, is not necessarily backed by a collection. Sequences
+    are backed by *generators*. A generator is a function that will provide the next
+    item in the sequence. In this example, if you need more paint samples, you have
+    a way of getting them: you go back to the store and buy more. You don’t have to
+    buy them all and iterate over them. You just need to buy a couple because you
+    know how to get more. You can stop when you find the right color, and with luck,
+    that will happen before you pay for samples of all of the possible colors.'
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一方面，序列并不一定由集合支持。序列由 *生成器* 支持。生成器是一个函数，将提供序列中的下一个项。在这个例子中，如果你需要更多的油漆样本，你有办法得到它们：你回到商店买更多。你不必买下它们并迭代所有。你只需购买几个，因为你知道如何获得更多。你可以在找到正确的颜色之前停下来，带来好运的话，这可能发生在你支付所有可能颜色样本之前。
+- en: 'In Kotlin, you might express your search for desk paint like this:'
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Kotlin 中，你可能会这样表达对桌子油漆的搜索：
+- en: '[PRE28]'
+  id: totrans-152
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE28]'
+- en: This algorithm is efficient. On average, desk painters using it will buy only
+    28 paint samples instead of 57.
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个算法很有效。平均而言，使用它的桌子油漆工只会购买 28 个油漆样本，而不是 57 个。
+- en: 'Because sequences are lazy—only generating the next element when it is needed—they
+    can be very, very useful in optimizing operations, even on collections with fixed
+    content. Suppose, for instance, that you have a list of URLs, and you want to
+    know which one is a link to a page that contains an image of a cat. You might
+    do it like this:'
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为序列是惰性的——只在需要时生成下一个元素——所以它们在优化操作中非常有用，甚至在固定内容的集合上也是如此。例如，假设你有一个 URL 列表，想知道哪个是指向包含猫图片页面的链接。你可以这样做：
+- en: '[PRE29]'
+  id: totrans-155
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE29]'
+- en: 'That algorithm will download all of the pages. If you do the same thing using
+    a sequence:'
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那个算法将下载所有页面。如果你用序列做同样的事情：
+- en: '[PRE30]'
+  id: totrans-157
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE30]'
+- en: only the first page will be downloaded. The sequence will provide the first
+    URL, the `map` function will fetch it, and the `first` function will be satisfied.
+    None of the other pages will be downloaded.
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 只会下载第一页。顺序将提供第一个网址，`map` 函数将获取它，并且`first` 函数会被满足。不会下载其他页面。
+- en: 'Be careful, though! Don’t ask for all of the elements of an infinite collection!
+    This code, for instance, will eventually produce an `OutOfMemory` error:'
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但要小心！不要请求无限集合的所有元素！例如，这段代码最终会产生 `OutOfMemory` 错误：
+- en: '[PRE31]'
+  id: totrans-160
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE31]'
+- en: An Example
+  id: totrans-161
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 一个例子
+- en: Let’s make all this concrete with an example.
+  id: totrans-162
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们通过一个例子来具体化这一切。
+- en: We just met several of the handy functions that Kotlin’s Standard Library provides
+    for manipulating collections. Using those functions, you can create robust implementations
+    of complex logic. To illustrate that, we’ll take an example inspired by a real
+    application used in an aircraft engine factory.
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们刚刚接触了 Kotlin 标准库提供的几个方便的函数，用于操作集合。使用这些函数，你可以创建复杂逻辑的健壮实现。为了说明这一点，我们将以飞机发动机工厂中使用的真实应用为例。
+- en: The Problem
+  id: totrans-164
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 问题
+- en: Bandalorium Inc. builds aircraft engines. Each engine part is uniquely identifiable
+    by its serial number. Each part goes through a rigorous quality control process
+    that records numerical measurements for several of the part’s critical attributes.
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Bandalorium 公司制造飞机发动机。每个发动机部件由其序列号唯一标识。每个零件都要经过严格的质量控制过程，记录其几个关键属性的数值测量。
+- en: An attribute for an engine part is any measurable feature. For example, the
+    outside diameter of a tube might be an attribute. The electrical resistance of
+    some wire might be another. A third might be a part’s ability to reflect a certain
+    color of light. The only requirement is that measuring the attribute must produce
+    a single numerical value.
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 引擎部件的属性是任何可测量的特征。例如，一根管子的外径可能是一个属性。某些电线的电阻可能是另一个。第三个可能是零件反射特定颜色光的能力。唯一的要求是测量属性必须产生单一的数值。
+- en: One of the things that Bandalorium wants to track is the precision of its production
+    process. It needs to track the measurements of the parts it produces and whether
+    they change over time.
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Bandalorium 想要跟踪的其中一件事是其生产过程的精度。它需要追踪其生产的零件的测量值以及它们是否随时间变化。
+- en: 'The challenge, then, is:'
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 挑战在于：
+- en: Given a list of measurements for attributes of parts produced during a certain
+    interval (say, three months), create a CSV (comma-separated value) report similar
+    to the one shown in [Figure 2-2](#output_csv_id). As shown, the report should
+    be sorted by the time that the measurement was taken.
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 给定某个时间段（比如三个月）内生产的零件属性测量列表，创建类似于 [图 2-2](#output_csv_id) 中所示的 CSV（逗号分隔值）报告。如图所示，报告应按测量时间排序。
+- en: '![pawk 0202](assets/pawk_0202.png)'
+  id: totrans-170
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0202](assets/pawk_0202.png)'
+- en: Figure 2-2\. Example of CSV ouput.
+  id: totrans-171
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 2-2\. CSV 输出示例。
+- en: If we might make a suggestion—now would be a great time to put this book aside
+    for a moment and consider how you would approach this problem. Maybe just sketch
+    enough high-level code to feel confident that you can solve it.
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们可以提出一个建议——现在是将这本书放一边一会儿，考虑一下你如何解决这个问题的好时机。也许只需勾勒出足够高级的代码来确信你能够解决它。
+- en: The Implementation
+  id: totrans-173
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 实现
+- en: 'In Kotlin, we might represent an attribute like this:'
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Kotlin 中，我们可能像这样表示一个属性：
+- en: '[PRE32]'
+  id: totrans-175
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE32]'
+- en: 'The name is a unique identifier for the attribute. An attribute’s tolerance
+    indicates the significance of the attribute to the quality of the final product:
+    critical, important, or just regular.'
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 名称是属性的唯一标识符。属性的公差表示属性对最终产品质量的重要性：关键、重要或普通。
+- en: Each attribute probably has lots of other associated information. There is,
+    surely, a record of the units of measurement (centimeters, joules, etc.), a description
+    of its acceptable values, and perhaps the procedure used to measure it. We will
+    ignore those features for this example.
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个属性可能还有许多其他相关信息。毫无疑问，还有一个测量单位（厘米、焦耳等）、其可接受值的描述，以及可能用于测量的程序。在此示例中，我们将忽略这些特性。
+- en: 'A measurement of an attribute for a specific engine part includes the following:'
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 特定引擎零件的属性测量包括以下内容：
+- en: The serial number of the part being measured
+  id: totrans-179
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 零件的序列号
+- en: A timestamp giving the time at which the measurement was made
+  id: totrans-180
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 时间戳显示测量时间
+- en: The measured value
+  id: totrans-181
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 测量值
+- en: 'A measurement, then, might be modeled in Kotlin like this:'
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，一个测量可以在 Kotlin 中建模如下：
+- en: '[PRE33]'
+  id: totrans-183
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE33]'
+- en: 'Finally, we need a way to connect a measurement to the attribute it measures.
+    We model the relationship like this:'
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们需要一种方法将测量与其所测量的属性关联起来。我们像这样建模这种关系：
+- en: '[PRE34]'
+  id: totrans-185
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE34]'
+- en: The `TimeSeries` relates a list of measurements to the `Attr`s that they measure.
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`TimeSeries` 将一系列测量与它们所测量的 `Attr` 相关联。'
+- en: 'First, we build the header of the CSV file: the column titles that comprise
+    the first line (see [Example 2-2](#making_header_id)). The first two columns are
+    named `date` and `serial`. The other column names are the distinct names of the
+    attributes in the dataset.'
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们构建 CSV 文件的头部：第一行的列标题（参见 [示例 2-2](#making_header_id)）。前两列名为 `date` 和 `serial`。数据集中的其他列名是属性的不同名称。
+- en: Example 2-2\. Making the header
+  id: totrans-188
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 2-2\. 制作标题
+- en: '[PRE35]'
+  id: totrans-189
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE35]'
+- en: '[![1](assets/1.png)](#co_the_kotlin_collections_framework_CO1-1)'
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_the_kotlin_collections_framework_CO1-1)'
+- en: Use the `distinctBy` function to get a list of `TimeSeries` instances that have
+    distinct values for the `attr` attribute.
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 `distinctBy` 函数获取具有不同 `attr` 属性值的 `TimeSeries` 实例列表。
+- en: '[![2](assets/2.png)](#co_the_kotlin_collections_framework_CO1-2)'
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_the_kotlin_collections_framework_CO1-2)'
+- en: We have a list of distinct `TimeSeries` from the previous step and we only want
+    the `attr`, so we use the `map` function.
+  id: totrans-193
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有了上一步的不同 `TimeSeries` 的列表，现在只需要 `attr`，因此我们使用 `map` 函数。
+- en: '[![3](assets/3.png)](#co_the_kotlin_collections_framework_CO1-3)'
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_the_kotlin_collections_framework_CO1-3)'
+- en: Finally, we sort alphabetically using `sortedBy`. It wasn’t required but why
+    not?
+  id: totrans-195
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们使用 `sortedBy` 进行字母排序。虽然这不是必需的，但为什么不呢？
+- en: Now that we have the list of distinct characteristics, formatting the header
+    is straightforward using the `joinToString` function. This function transforms
+    a list into a string by specifying a string separator to insert between each element
+    of the list. You can even specify a prefix and/or a postfix if you need to.
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们有了不同特性的列表，使用 `joinToString` 函数进行头部格式化非常简单。该函数通过指定字符串分隔符将列表转换为字符串。如果需要，甚至可以指定前缀和/或后缀。
+- en: Note
+  id: totrans-197
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: It is often useful to be able to find the types of the returns from collection
+    transformation functions. In [Example 2-2](#making_header_id), for instance, if
+    you activate type hints, you’ll only get the inferred type of the whole chain
+    (the type of the variable `distinctAttrs`). There is a nice IntelliJ/Android Studio
+    feature that can help!
+  id: totrans-198
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在收集转换函数的返回类型中找到类型是很有用的。例如，在 [示例 2-2](#making_header_id) 中，如果激活了类型提示，你将只得到整个链条的推断类型（变量
+    `distinctAttrs` 的类型）。这是一个很好的 IntelliJ/Android Studio 功能，可以帮助你！
+- en: Click on `distinctCharacs` in the source code.
+  id: totrans-199
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 在源代码中点击 `distinctCharacs`。
+- en: Hit Ctrl + Shift + P. You’ll see a drop-down window appear.
+  id: totrans-200
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 按 Ctrl + Shift + P 键。会看到一个下拉窗口出现。
+- en: '![pawk 0203](assets/pawk_0203.png)'
+  id: totrans-201
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![pawk 0203](assets/pawk_0203.png)'
+- en: Select the step you want and the inferred type will appear before your eyes!
+  id: totrans-202
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 选择你想要的步骤，类型会在你眼前出现！
+- en: '![pawk 0204](assets/pawk_0204.png)'
+  id: totrans-203
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![pawk 0204](assets/pawk_0204.png)'
+- en: After building the header, we build the content of the CSV file. This is the
+    most technical and interesting part.
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 构建标题后，我们构建CSV文件的内容。这是最技术性和最有趣的部分。
+- en: The rest of the CSV file that we are trying to reproduce sorts the data by date.
+    For each given date, it gives a part’s serial number and then that part’s measurement
+    for each attribute of interest. That’s going to take some thought because, in
+    the model we’ve created, those things are not directly related. A `TimeSeries`
+    contains only data for a single attribute and we will need data for multiple attributes.
+  id: totrans-205
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们试图重现的CSV文件的其余部分按日期对数据进行排序。对于每个给定的日期，它会提供一个零件的序列号，然后是该零件在每个感兴趣属性上的测量值。这需要一些思考，因为在我们创建的模型中，这些东西并不直接相关。一个`TimeSeries`仅包含单个属性的数据，而我们需要多个属性的数据。
+- en: A common approach in this situation is to merge and flatten the input data into
+    a more convenient data structure, as shown in [Example 2-3](#flattenex).
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下的常见方法是将输入数据合并和展平为更方便的数据结构，如[示例2-3](#flattenex)所示。
+- en: Example 2-3\. Merge and flatten the data
+  id: totrans-207
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例2-3\. 合并和展平数据
+- en: '[PRE36]'
+  id: totrans-208
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE36]'
+- en: In this step, we associate each `Point` with its corresponding `Attr`, in a
+    single `PointAndAttr` object. This is much like joining two tables in SQL.
+  id: totrans-209
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此步骤中，我们将每个`Point`与其对应的`Attr`关联到一个单独的`PointAndAttr`对象中。这类似于在SQL中连接两个表。
+- en: The `flatMap` function transforms a list of `TimeSeries` objects. Internally,
+    the function applied by `flatMap` uses the `map` function, `series.points.map
+    { ... }`, to create a list of `PointAndAttr`s for each point in the `TimeSeries`.
+    If we had used `map` instead of `flatMap`, we would have produced a `List<List<PointAndAttr>>`.
+    Remember, though, that `flatMap` flattens out the top layer of the container,
+    so the result here is a `List<PointAndAttr>`.
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`flatMap`函数将转换`TimeSeries`对象列表。在内部，`flatMap`应用的函数使用`map`函数，`series.points.map
+    { ... }`，为每个`TimeSeries`中的点创建一个`PointAndAttr`列表。如果我们使用`map`而不是`flatMap`，我们将产生一个`List<List<PointAndAttr>>`。不过，请记住，`flatMap`会展平容器的顶层，因此这里的结果是一个`List<PointAndAttr>`。'
+- en: Now that we have “spread” the attribute information into every `Point`, creating
+    the CSV file is fairly straightforward.
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经将属性信息“传播”到每个`Point`中，创建CSV文件就变得非常简单了。
+- en: We’ll group the list of `pointWithAttrs` by date to create a `Map<LocalDate,
+    List<PointWithAttr>`. This map will contain a list of `pointWithAttrs` for each
+    date. Since the example seems to have a secondary sort (by the part’s serial number),
+    we’ll have to group each of the lists in the previously grouped `Map` by serial
+    number. The rest is just string formatting, as shown in [Example 2-4](#datarows).
+  id: totrans-212
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将按日期将`pointWithAttrs`列表分组，以创建一个`Map<LocalDate, List<PointWithAttr>>`。这个映射将包含每个日期的`pointWithAttrs`列表。由于示例似乎有二次排序（按零件序列号），我们将在先前分组的`Map`中的每个列表按序列号分组。剩下的就是字符串格式化，如[示例2-4](#datarows)所示。
+- en: Example 2-4\. Create data rows
+  id: totrans-213
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例2-4\. 创建数据行
+- en: '[PRE37]'
+  id: totrans-214
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE37]'
+- en: '[![1](assets/1.png)](#co_the_kotlin_collections_framework_CO2-1)'
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_the_kotlin_collections_framework_CO2-1)'
+- en: Group by date, using the `groupBy` function.
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 按日期分组，使用`groupBy`函数。
+- en: '[![2](assets/2.png)](#co_the_kotlin_collections_framework_CO2-2)'
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_the_kotlin_collections_framework_CO2-2)'
+- en: Sort the map (by date). It’s not mandatory, but a sorted CSV is easier to read.
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对映射（按日期）进行排序。这不是强制性的，但排序的CSV更易于阅读。
+- en: '[![3](assets/3.png)](#co_the_kotlin_collections_framework_CO2-3)'
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_the_kotlin_collections_framework_CO2-3)'
+- en: Group by serial number.
+  id: totrans-220
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 按序列号分组。
+- en: '[![4](assets/4.png)](#co_the_kotlin_collections_framework_CO2-4)'
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![4](assets/4.png)](#co_the_kotlin_collections_framework_CO2-4)'
+- en: Build the list of values for each line.
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 构建每行的值列表。
+- en: '[![5](assets/5.png)](#co_the_kotlin_collections_framework_CO2-5)'
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![5](assets/5.png)](#co_the_kotlin_collections_framework_CO2-5)'
+- en: Format each line and assemble all those lines using the `joinToString` function.
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`joinToString`函数格式化每一行并组装所有这些行。
+- en: '[![6](assets/6.png)](#co_the_kotlin_collections_framework_CO2-6)'
+  id: totrans-225
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![6](assets/6.png)](#co_the_kotlin_collections_framework_CO2-6)'
+- en: Finally, return the header and the rows as a single `String`.
+  id: totrans-226
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，将标题和行作为单个`String`返回。
+- en: Now, let’s suppose that you get an additional request to report only on attributes
+    that are `CRITICAL` or `IMPORTANT`. You just have to use the `filter` function,
+    as shown in [Example 2-5](#filter).
+  id: totrans-227
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，假设您收到额外的请求，只报告“CRITICAL”或“IMPORTANT”的属性。您只需使用`filter`函数，如[示例2-5](#filter)所示。
+- en: Example 2-5\. Filter critical and important samples
+  id: totrans-228
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例2-5\. 过滤关键和重要样本
+- en: '[PRE38]'
+  id: totrans-229
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE38]'
+- en: That’s it!
+  id: totrans-230
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样！
+- en: To test that code, we can use a predefined input and check that the output matches
+    your expectations. We won’t show a full-blown set of unit tests here—just an example
+    of CSV output, as shown in [Example 2-6](#demonstrates).
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要测试那段代码，我们可以使用预定义的输入并检查输出是否符合你的期望。我们这里不会展示完整的单元测试集合，只是展示了CSV输出的示例，如[示例 2-6](#demonstrates)所示。
+- en: Example 2-6\. Demonstrate the application
+  id: totrans-232
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 2-6\. 展示应用程序
+- en: '[PRE39]'
+  id: totrans-233
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE39]'
+- en: If you use the `csv` string as the content of a file with the “.csv” extension,
+    you can open it using your favorite spreadsheet tool. [Figure 2-3](#finaloutput)
+    shows what we got using FreeOffice.
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你将`csv`字符串作为一个带有“.csv”扩展名的文件的内容，你可以使用你喜爱的电子表格工具打开它。[图 2-3](#finaloutput) 展示了我们使用FreeOffice得到的内容。
+- en: '![pawk 0202](assets/pawk_0202.png)'
+  id: totrans-235
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0202](assets/pawk_0202.png)'
+- en: Figure 2-3\. Final output.
+  id: totrans-236
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 2-3\. 最终输出。
+- en: Using functional programming to transform data, as in this example, is particularly
+    robust. Why? By combining Kotlin’s null safety and functions from the Standard
+    Library, you can produce code which has either few or no side effects. Throw in
+    any list of `PointWithAttr` you can imagine. If even one `Point` instance has
+    a `null` value, the code won’t even compile. Anytime the result of transformation
+    returns a result which can be null, the language forces you to account for that
+    scenario. Here we did this in step 4, with the `firstOrNull` function.
+  id: totrans-237
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用函数式编程转换数据，就像这个例子中一样，特别强大。为什么？通过结合Kotlin的空安全性和标准库的函数，你可以生成几乎没有或没有副作用的代码。添加任何你可以想象的`PointWithAttr`列表。如果有一个`Point`实例有一个`null`值，代码甚至不会编译。每当转换的结果返回一个可能为空的结果时，语言都会强制你考虑到这种情况。在这里，我们在第4步中使用了`firstOrNull`函数。
+- en: It’s always a thrill when your code compiles and does exactly what you expect
+    it to do on the first try. With Kotlin’s null safety and functional programming,
+    that happens a lot.
+  id: totrans-238
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你的代码在第一次尝试时编译并确切地执行你的期望时，总是让人兴奋。利用Kotlin的空安全性和函数式编程，这种情况经常发生。
+- en: Summary
+  id: totrans-239
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 摘要
+- en: 'As a functional language, Kotlin employs great ideas like mapping, zipping,
+    and other functional transformations. It even allows you to create your own data
+    transformations with the power of higher-order functions and lambdas:'
+  id: totrans-240
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为一种函数式语言，Kotlin采用了诸如映射、合并和其他函数式转换的伟大思想。它甚至允许你利用高阶函数和Lambda创建自己的数据转换：
+- en: Kotlin collections include the entire Java collections API. In addition, the
+    library provides all the common functional transformations like mapping, filtering,
+    grouping, and more.
+  id: totrans-241
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Kotlin集合包括整个Java集合API。此外，该库还提供了所有常见的函数式转换，如映射、过滤、分组等。
+- en: Kotlin supports inline functions for more performant data transformations.
+  id: totrans-242
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Kotlin支持内联函数以实现更高性能的数据转换。
+- en: The Kotlin collections library supports sequences, a way of working with collections
+    that are defined by intention instead of extension. Sequences are appropriate
+    when getting the next element is very expensive, or even on collections of unbounded
+    size.
+  id: totrans-243
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Kotlin集合库支持序列，这是一种通过意图而不是扩展定义的处理集合的方式。当获取下一个元素非常昂贵，甚至在大小不受限制的集合上时，序列是合适的选择。
+- en: If you’ve ever used languages like Ruby, Scala, or Python, perhaps some of this
+    feels familiar to you. It should! Kotlin’s design is based on many of the same
+    principles that drove the development of those languages.
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你曾经使用过像Ruby、Scala或Python这样的语言，也许这些内容对你来说并不陌生。应该是的！Kotlin的设计基于驱动这些语言开发的许多相同原则。
+- en: Writing your Android code in a more functional way is as easy as using data
+    transformation operations offered with the Kotlin Standard Library. Now that you
+    are familiar with Kotlin syntax and the spirit of functional programming in Kotlin,
+    the next chapter focuses on the Android OS and other programming fundamentals.
+    Android development turned toward Kotlin as an official language back in 2017,
+    so Kotlin has heavily influenced Android’s evolution in recent years. It will
+    continue to do so in the coming years.
+  id: totrans-245
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以更加函数式的方式编写你的Android代码就像使用Kotlin标准库提供的数据转换操作一样简单。现在你已经熟悉了Kotlin语法和Kotlin中函数式编程的精神，接下来的章节将专注于Android操作系统和其他编程基础知识。Android开发在2017年转向Kotlin作为官方语言，因此Kotlin在近年来已经对Android的发展产生了重大影响，未来也将继续如此。
+- en: ^([1](ch02.html#idm46669757650256-marker)) Roman Elizarov; email interview on
+    Kotlin Collections Immutable Library. Oct. 8, 2020.
+  id: totrans-246
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch02.html#idm46669757650256-marker)) Roman Elizarov；关于Kotlin Collections
+    Immutable Library的电子邮件访谈。2020年10月8日。

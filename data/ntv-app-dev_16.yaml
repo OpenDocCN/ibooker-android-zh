@@ -1,0 +1,28 @@
+- en: Part II. Sample App
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第二部分. 示例应用
+- en: In the second half of the book, starting here, we create functional apps in
+    both platforms using the tasks from [Part I](part01.html#part_1_tasks). Here,
+    you get to see the theoretical code from Part I used in a practical fashion.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书的第二部分从这里开始，我们将使用[第一部分](part01.html#part_1_tasks)的任务，在两个平台上创建功能性应用。在这里，您将看到第一部分的理论代码如何实际运用。
+- en: While we do adhere to best practices and recommended patterns, remember that
+    this book is mainly a cross-reference. We may choose to follow more generic patterns
+    than is common in one platform or the other in order to demonstrate the similarity.
+    We are not maintaining that the apps presented here are necessarily the most efficiently
+    or effectively programmed, but we do hope that they demonstrate the common practices
+    we want to emphasize with this work.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然我们遵循最佳实践和推荐模式，但请记住，这本书主要是一个交叉参考。为了展示相似之处，我们可能选择遵循比某个平台上通常更通用的模式。我们并不主张这里呈现的应用一定是编程效率或效果最高的，但我们希望它们展示了我们在这项工作中要强调的通用实践。
+- en: Happy coding!
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 祝愉快编码！

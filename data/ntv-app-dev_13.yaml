@@ -1,0 +1,851 @@
+- en: Chapter 12\. Serialization and Transports
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第 12 章。序列化和传输
+- en: To serialize an object we convert the abstract concept (the “model”) to transportable
+    entities, usually either a `String` representation of the model, like XML or JSON,
+    or bytes.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了序列化一个对象，我们将抽象概念（“模型”）转换为可传输的实体，通常是模型的字符串表示，比如 XML 或 JSON，或者字节。
+- en: To deserialize data means to convert it from a series of entities to an object
+    your program recognizes. For example, you might have an `Author` entity with a
+    `name` property.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 反序列化数据意味着将其从一系列实体转换为程序所识别的对象。例如，你可能有一个带有 `name` 属性的 `Author` 实体。
+- en: Tasks
+  id: totrans-3
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 任务
+- en: 'In this chapter, you’ll learn to:'
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，你将学习：
+- en: Serialize and deserialize an object instance.
+  id: totrans-5
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 序列化和反序列化对象实例。
+- en: Android
+  id: totrans-6
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android
+- en: Android uses a lot of XML internally, but in the real world, JSON is still the
+    primary serialization mechanism (although larger organizations with plenty of
+    engineering resources have started to embrace “protobuf,” or Protocol Buffers).
+    This is a neat concept and highly performant, but beyond the scope of our examination
+    of the framework and standard APIs.
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 内部大量使用 XML，但在现实世界中，JSON 仍然是主要的序列化机制（尽管拥有大量工程资源的大型组织已经开始采用“protobuf”，或
+    Protocol Buffers）。这是一个巧妙的概念并且高性能，但超出了我们对框架和标准 API 检查的范围。
+- en: Serialize and Deserialize an Object Instance
+  id: totrans-8
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 序列化和反序列化对象实例
+- en: 'In Java and Android, deserialization probably starts with a data model, like
+    this:'
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Java 和 Android 中，反序列化可能从数据模型开始，就像这样：
+- en: 'Deserialized to JSON, an `Author` instance that returned “Mike” by invoking
+    `getName` would probably look like this:'
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 反序列化为 JSON，调用 `getName` 返回 “Mike” 的 `Author` 实例可能看起来像这样：
+- en: '[PRE0]'
+  id: totrans-11
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: Once it’s in JSON format, it can be passed along with a network request, written
+    to disk, or even handed off to another program in wildly different technologies;
+    since the JSON format has an established spec, we can trust that the JSON rules
+    used by your Android application will look like the JSON rules used by an iOS
+    application, or even a Windows or Unix program.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦它以 JSON 格式存在，就可以随网络请求传输，写入磁盘，甚至传递给另一个采用完全不同技术的程序；因为 JSON 格式具有已建立的规范，我们可以信任
+    Android 应用使用的 JSON 规则与 iOS 应用或甚至 Windows 或 Unix 程序使用的 JSON 规则相似。
+- en: 'There are really three main modes of serialization in the Android framework:'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 框架中实际上有三种主要的序列化模式：
+- en: JSON
+  id: totrans-14
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: JSON
+- en: XML
+  id: totrans-15
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: XML
+- en: Java Serialization
+  id: totrans-16
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Java 序列化
+- en: Those are roughly in order of popularity. While some level of support for each
+    is available from the Java standard libraries, or the Android framework, we’ll
+    also take a look at third-party libraries like [Gson](https://oreil.ly/RRhOS).
+    While Gson is a Google product, there are some very popular alternatives—do a
+    quick search if you don’t find Gson or org.json compelling or if you don’t use
+    a ton of JSON in your application.
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些大致按受欢迎程度排序。虽然 Java 标准库或 Android 框架都提供了各种程度的支持，我们还将看看像 [Gson](https://oreil.ly/RRhOS)
+    这样的第三方库。虽然 Gson 是 Google 产品，但也有一些非常流行的替代品——如果你不认为 Gson 或 org.json 有吸引力，或者你的应用程序不使用大量
+    JSON，请快速搜索一下。
+- en: org.json
+  id: totrans-18
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: org.json
+- en: See [the developer docs for this package](https://oreil.ly/5Zw0T) for reference.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 参见 [此包的开发者文档](https://oreil.ly/5Zw0T) 以供参考。
+- en: 'Basic serialization and deserialization using the `org.json` package is pretty
+    straightforward. Let’s consider the `Author` class used earlier. To serialize
+    that, we can instantiate a `JSONObject` instance, copy our properties to it, and
+    call the `toString` method:'
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 `org.json` 包进行基本序列化和反序列化非常简单。让我们考虑前面使用的 `Author` 类。要将其序列化，我们可以实例化一个 `JSONObject`
+    实例，将我们的属性复制到其中，然后调用 `toString` 方法：
+- en: This would print out `{"name":"Mike"}`.
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将打印出 `{"name":"Mike"}`。
+- en: 'Deserializing is more automated:'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 反序列化更加自动化：
+- en: This would log `Mike`.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将记录 `Mike`。
+- en: There are similar facilities for arrays (lists), but there can be a fairly large
+    amount of conversion with checked exceptions handling large objects this way,
+    and it’s not as common as Gson. Let’s take a look at that.
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数组（列表）也有类似的功能，但通过这种方式处理大对象并处理检查异常会有相当多的转换，而且不像 Gson 那样常见。我们来看看这个。
+- en: 'Using Gson, serialization works pretty similarly, but you don’t need an intermediary
+    wrapper:'
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 Gson，序列化工作方式非常类似，但你不需要中介包装器：
+- en: '[PRE1]'
+  id: totrans-26
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: This would output `{"mName":"Mike"}`.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将输出 `{"mName":"Mike"}`。
+- en: Did you catch it? `mName`, not `name`. Gson uses the property name by default,
+    rather than getter or setter method names.
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你注意到了吗？`mName`，而不是 `name`。Gson 默认使用属性名，而不是 getter 或 setter 方法名。
+- en: 'This type of notation—using an `m` to prefix member variables, and `s` to prefix
+    static variables—is known as Hungarian notation. You see that AOSP itself uses
+    Hungarian notation exclusively, so many Android developers have taken to using
+    that style as well. As you’ll see in the following, there’s a simple fix, but
+    do note that Hungarian notation does create an issue with Gson (or similar libraries)
+    out of the box. Note that the issue with Hungarian (or any arbitrary) notation
+    is NOT an issue in Kotlin. If your `Author` class were defined as shown in the
+    Kotlin sample, earlier, the output would be just as you’d expect: `{"name": "Mike"}`.'
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '这种类型的注释——使用`m`前缀成员变量和`s`前缀静态变量——被称为匈牙利命名法。你会看到AOSP本身完全使用匈牙利命名法，因此许多Android开发者也开始使用这种风格。正如接下来将要看到的，这有一个简单的修复方法，但请注意，匈牙利命名法在Gson（或类似库）中确实存在问题。请注意，匈牙利（或任何任意的）命名法的问题在Kotlin中并不存在。如果你的`Author`类如Kotlin示例所示定义，输出将如你所料：`{"name":
+    "Mike"}`。'
+- en: 'Back to the Java example. This issue is common but also very simple to modify—you
+    can annotate any property with `@SerializedName` to use an alternative. For example,
+    assume the `Author` class looked like this:'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回到Java示例。这个问题很常见，但修改起来也很简单——你可以使用`@SerializedName`注解任何属性以使用其他名称。例如，假设`Author`类看起来像这样：
+- en: '[PRE2]'
+  id: totrans-31
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: 'Then the output would be as you’d expect: `{"name":"Mike"}`. Note that this
+    works both ways, and it will deserialize from annotated values as well. Let’s
+    assume we’ve updated the `Author` class for the next example, deserialization:'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后输出将如你所料：`{"name":"Mike"}`。请注意，这两者皆可，并且它将从注解值反序列化。让我们假设我们已经更新了`Author`类，用于下一个示例，反序列化：
+- en: '[PRE3]'
+  id: totrans-33
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: This would output `Mike`, just as you’d expect.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将输出`Mike`，就像你所期望的那样。
+- en: The biggest benefit of Gson is that it will handle this in a recursive strategy,
+    and the `org.json` classes often will not.
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Gson的最大好处在于它将以递归策略处理此问题，而`org.json`类通常不会。
+- en: org.xmlpull
+  id: totrans-36
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: org.xmlpull
+- en: Another common transport is XML. If you’ve ever written for the web, you’re
+    sure to have seen XML or some variant of it—if you see data that’s chock full
+    of angle brackets, it’s probably XML or a cousin.
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个常见的传输方式是XML。如果你曾经为网络编写过代码，肯定见过XML或其某个变种——如果你看到充斥着尖括号的数据，那很可能是XML或者其衍生物。
+- en: 'While Java standard libraries available within the Android framework don’t
+    provide any built-in APIs for handling XML, Android does provide a third-party
+    package that is maintained is vetted: `org.xmlpull`. This package provides object
+    instances known as “XML pull parsers,” with which we can read and traverse XML
+    data. A “pull parser” is just one that requests tokens from a stream—the opposite
+    “push parser” sends tokens to the parser as they’re encountered, not as they’re
+    requested. This is really a semantic detail and is unimportant to how you’ll use
+    these classes in practice.'
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然Android框架中的Java标准库没有提供任何用于处理XML的内置API，但Android确实提供了一个第三方包，该包是经过维护和审查的：`org.xmlpull`。该包提供了称为“XML
+    pull解析器”的对象实例，我们可以用它们来读取和遍历XML数据。“Pull解析器”仅仅是从流中请求标记的解析器之一——相反的“推送解析器”在遇到标记时将标记发送到解析器，而不是在请求时发送。这实际上是一个语义上的细节，对于你实际使用这些类的方式并不重要。
+- en: 'In any event, we’ll provide as basic an example of XML parsing as we can, but
+    even this small sample you’ll notice is verbose and not exactly readable. If you
+    have data coming in from XML and need to parse it, do a deep dive on the `org.xml`
+    classes, or find a good third-party alternative. Here’s the basic operation:'
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无论如何，我们将提供尽可能基本的XML解析示例，但即使这个小样本，你也会注意到它冗长而不容易阅读。如果你从XML获取数据并需要解析它，请深入研究`org.xml`类，或找一个良好的第三方替代方案。以下是基本操作：
+- en: For a deep dive into the `org.xml` package, see [the Android developer docs](https://oreil.ly/OEm5A).
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 欲深入了解`org.xml`包，请参阅[Android开发者文档](https://oreil.ly/OEm5A)。
+- en: Java serialization
+  id: totrans-41
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: Java序列化
+- en: Java serialization is perhaps the easiest transport to understand and from a
+    distance can seem like a great strategy. In practice, however, there are lots
+    of downsides—we’ll touch on them briefly, but that’s not to say there is never
+    a circumstance where Java serialization is appropriate.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Java序列化也许是最容易理解和从远处看似乎是一个很好的策略。然而，在实践中，存在许多弊端——我们将简要地触及它们，但这并不意味着Java序列化从来没有适合的情况。
+- en: 'The basic premise is simple: convert an object instance to bytes. You can then
+    save those bytes to disk, or send them across the wire, and reassemble the original
+    object as needed. However, this requires that any program attempting to deserialize
+    an object serialized in this fashion must have the exact Java definition of the
+    object—the Java virtual machine (JVM) must have a class that matches the fully
+    qualified class name of the object, and if any of the methods or properties are
+    accessed on either side and don’t match, you’ve pretty much hit the end of the
+    road.'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基本前提很简单：将对象实例转换为字节。然后，您可以将这些字节保存到磁盘或通过网络发送，并根据需要重新组装原始对象。然而，这要求任何试图反序列化以这种方式序列化的对象的程序都必须具有对象的确切Java定义——Java虚拟机（JVM）必须具有与对象的完全限定类名匹配的类，并且如果任何方法或属性在任一方面被访问且不匹配，那么您基本上已经到了尽头。
+- en: 'As an example, imagine that you have inherited your application code from a
+    third-party contractor. They used a class called “Chapter” that had a variety
+    of properties and methods useful for an object representing that chapter. However,
+    the package name (and therefore the fully qualified class name, or the “canonical”
+    name) included the domain of the contractor, and when you took ownership of the
+    application source code, you no longer had a matching package name. Normally,
+    this would be fine and you’d come up with our own `Chapter` class, which may or
+    may not have methods and properties with names or functionality similar to that
+    old `Chapter` class. However, the contractor had violated a community consensus:
+    they had stored `Chapter` instances in a user’s favorites list by serializing
+    the `Chapter` instance to bytes and saving that blob to a local SQLite database.
+    This means you *have* to maintain a package with a name matching exactly the previous
+    canonical name, including the contractor’s domain. Of course, when you want to
+    define how a `Chapter` instance works in your own app, this intermediary class
+    exists only long enough to deserialize from the database, convert to the updated
+    version of the `Chapter` class, and save its properties to our updated database.
+    This is not only confusing because we have to tell this story to each new developer,
+    but every time you open Android Studio, that unused contractor’s package sits
+    at the top of your source code, littered with skeleton classes that exist only
+    so users from the previous version can migrate their content to the new app.'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 举个例子，想象一下，您从第三方承包商那里继承了您的应用程序代码。他们使用了一个名为“Chapter”的类，该类具有多种对于表示该章节的对象有用的属性和方法。然而，包名（因此完全限定类名或“规范”名称）包括承包商的域，当您接管应用程序源代码时，您不再拥有匹配的包名。通常情况下，这没有问题，您可以自己定义一个名为`Chapter`的类，该类可能具有与旧`Chapter`类相似的名称或功能的方法和属性，也可能没有。然而，承包商违反了社区共识：他们通过将`Chapter`实例序列化为字节并将该
+    blob 保存到本地SQLite数据库中，将`Chapter`实例存储在用户的收藏列表中。这意味着您*必须*维护一个包名与先前的规范名称完全匹配，包括承包商的域。当然，当您想要定义在您自己的应用程序中如何工作的`Chapter`实例时，这个中间类只存在足够长的时间来从数据库反序列化，转换为`Chapter`类的更新版本，并将其属性保存到我们更新的数据库中。这不仅令人困惑，因为我们必须向每位新开发者讲述这个故事，而且每次打开Android
+    Studio时，未使用的承包商包都位于您的源代码顶部，满是仅仅为了使以前版本的用户可以将其内容迁移到新应用程序而存在的骨架类。
+- en: Warnings aside, let’s dig in to how you can use Java serialization if you ever
+    decide you need it.
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 话虽如此，让我们深入探讨一下，如果您决定需要的话，如何使用Java序列化。
+- en: The first thing you’ll need to know is that to use built-in Java serialization,
+    the class being serialized must implement the `Serializable` interface. Now, there
+    is no contract with that interface (no methods you have to implement); it just
+    has to implement the interface itself.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您需要了解的第一件事是，要使用内置的Java序列化，被序列化的类必须实现`Serializable`接口。现在，与该接口没有约定（没有您必须实现的方法）；它只是必须实现接口本身。
+- en: You should also provide a `Long` serialization ID, in the form of `private static
+    final long serialVersionUID = 12345467890;`. Any valid `Long` is allowed here,
+    and it should be unique amongst your serializable classes. Most Java or Android-aware
+    IDEs can generate this value for you, with the correct name and value.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您还应提供一个`Long`序列化ID，格式为`private static final long serialVersionUID = 12345467890;`。这里允许使用任何有效的`Long`，并且它应该在您的可序列化类中是唯一的。大多数Java或Android-aware
+    IDE可以为您生成正确名称和值的这个值。
+- en: 'From there, there’s not a lot left. You’ll write the object to a file using
+    the subclasses of the `InputStream` and `OutputStream` classes we learned about
+    in [Chapter 6](ch06.html#topics_files). Let’s take a look on how to serialize
+    a simple class—in fact, we’ll use the same `Author` class we showed earlier:'
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，剩下的不多了。你将使用我们在 [第6章](ch06.html#topics_files) 学到的 `InputStream` 和 `OutputStream`
+    类的子类将对象写入文件。让我们看看如何序列化一个简单的类——事实上，我们将使用之前展示过的相同的 `Author` 类：
+- en: 'Now you’ve got a file called “data.obj” that contains the bytes representing
+    your object instance. Note that this is a complete reproduction and can be deserialized
+    back to the state it was at the time of serialization, as long as the class file
+    is on your CLASSPATH at the time you want to deserialize. Reading it back out
+    is also pretty familiar:'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，你有一个名为“data.obj”的文件，其中包含表示您对象实例的字节。请注意，这是一个完整的复制，可以在反序列化时将其还原为序列化时的状态，只要类文件在您希望反序列化时位于
+    CLASSPATH 上。读取它也非常熟悉：
+- en: That’s it! As mentioned, a lot of the community has moved to JSON as the standard
+    serialization strategy for networked computing, but as you can see there are lots
+    of options. For more fun, take a quick Google around “protobuffs”—a new, Googley
+    way to transport data.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就是这样！如前所述，社区的大部分已经将 JSON 视为网络计算的标准序列化策略，但正如您所见，还有很多选择。要更有趣，快速搜索一下“protobuffs”——这是一种新的、谷歌式的数据传输方式。
+- en: iOS
+  id: totrans-51
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: iOS
+- en: There are a variety of ways to convert data to and from transport entities.
+    Usually, this is done during network requests, and the two most common data transport
+    formats are JSON and XML, with JSON becoming much more popular in recent years
+    than XML. The process for converting between these two formats and Swift object
+    instances is very different. There is an additional format used almost exclusively
+    by Apple called property lists. They are special-purpose XML that iOS (and macOS)
+    apps can read and write data to and from.
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有多种方法可以在数据和传输实体之间进行转换。通常情况下，在网络请求期间完成这些转换，最常见的两种数据传输格式是 JSON 和 XML，近年来 JSON
+    比 XML 更受欢迎。在 Swift 对象实例之间进行这两种格式之间的转换过程非常不同。还有一种几乎完全由 Apple 使用的格式叫做属性列表。它们是专用的
+    XML，iOS（和 macOS）应用程序可以用来读取和写入数据。
+- en: Updates to Swift have made parsing this data much more straightforward and less
+    error-prone in the past, but there is still significant complexity involved. In
+    other words, we’ve got a lot to cover, so let’s dive in.
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Swift 的更新使得解析数据变得更加直接和不易出错，但仍然存在相当的复杂性。换句话说，我们有很多内容要涵盖，让我们深入了解一下。
+- en: Serialize and Deserialize an Object Instance
+  id: totrans-54
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 序列化和反序列化对象实例
+- en: Historically, in the primeval days of Objective-C, parsing an object to JSON
+    was unnecessarily complex or required a third-party library. Indeed, even the
+    early days of Swift were fraught with complexity and distress. Thankfully, Apple
+    paid attention to the needs of developers and with Swift 3 brought a new, modern
+    approach to JSON serialization and deserialization.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从历史上看，在 Objective-C 的早期日子里，将对象解析为 JSON 是不必要复杂或需要第三方库的。事实上，即使是 Swift 的早期日子也充满了复杂性和困扰。幸运的是，Apple
+    关注了开发者的需求，并在 Swift 3 中带来了一种新的现代化的 JSON 序列化和反序列化方法。
+- en: JSON
+  id: totrans-56
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: JSON
+- en: 'Let’s start with a Swift object that looks like this:'
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们从一个看起来像这样的 Swift 对象开始：
+- en: '[PRE4]'
+  id: totrans-58
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'The JSON representation would probably look like this:'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: JSON 表示可能看起来像这样：
+- en: '[PRE5]'
+  id: totrans-60
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'When communicating with a server, it’s usually necessary to send and receive
+    JSON like this and convert it into the pure Swift object. It’s certainly common
+    to persist data an app needs to read later as JSON (or any of the other formats
+    covered in this chapter) locally as well. Using the `Author` structure defined
+    earlier, converting an instance of that object to the JSON previously displayed
+    would look like similar to this:'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在与服务器通信时，通常需要发送和接收类似这样的 JSON 并将其转换为纯 Swift 对象。将应用程序需要后续读取的数据（本章中涵盖的任何其他格式）作为
+    JSON 保存在本地也很常见。使用之前定义的 `Author` 结构，将该对象的实例转换为先前显示的 JSON 将看起来类似于这样：
+- en: '[PRE6]'
+  id: totrans-62
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: 'Walking through this, you can see that we’ve added a protocol for our object
+    to implement called `Codable`. This protocol is a composition of two other protocols:
+    `Encodable` and `Decodable`. They provide a set of functionality that the Swift
+    compiler is able to interpret through some syntactic sugar and expected values.'
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过这个例子，你可以看到我们为我们的对象添加了一个叫做 `Codable` 的协议。这个协议是两个其他协议 `Encodable` 和 `Decodable`
+    的组合。它们通过一些语法糖和预期值为 Swift 编译器提供了一组功能。
+- en: Objects that implement `Codable` are required to implement `encode(to:)` and
+    `init(from:)`. If no implementation is provided, instead of erroring out, the
+    Swift compiler applies some special logic to write the logic for the type itself.
+    This is done by looking at the properties an object has and modifying a special
+    nested enum type by the name of `CodingKeys`. Using this enum, the compiler is
+    then able to create proper implementations of `encode(to:)` and `init(from:)`.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实现 `Codable` 的对象必须实现 `encode(to:)` 和 `init(from:)`。如果没有提供实现，Swift 编译器不会报错，而是通过查看对象的属性并修改名为
+    `CodingKeys` 的特殊嵌套枚举类型来自动生成适当的实现。使用这个枚举，编译器可以创建正确的 `encode(to:)` 和 `init(from:)`
+    实现。
+- en: You could call it magic, but really it’s the compiler making pragmatic decisions
+    about the code.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以称其为魔法，但实际上是编译器在对代码做出实用决策。
+- en: In our example, this plays out through `JSONEncoder` being able to encode `author`
+    as a `Data` object that can used for storing locally on the device or sending
+    across the wire to a server.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的示例中，通过 `JSONEncoder` 能够将 `author` 编码为一个 `Data` 对象，可以用于本地存储在设备上或通过网络发送到服务器。
+- en: '`Codable` also helps in converting (or “deserializing”) our object from JSON
+    back into a normal Swift object. Here’s an example of what that looks like:'
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Codable` 还帮助将我们的对象从 JSON 转换（或“反序列化”）回一个普通的 Swift 对象。以下是一个示例：'
+- en: '[PRE7]'
+  id: totrans-68
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: First, we’re defining a `Data` object named `rawJson` that contains the JSON
+    we might receive from a server. Next, we take that JSON and pass it into an instance
+    of `JSONDecoder` in the `decode(_:from:)` method. This method also takes an object
+    type to attempt to transform the data into; in this case, we’re passing `Author.self`,
+    which is the `Author` structure defined in the preceding example. The decoder
+    decodes the object back into a native Swift object named `author`.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们定义了一个名为 `rawJson` 的 `Data` 对象，其中包含我们可能从服务器收到的 JSON。接下来，我们将该 JSON 传递给 `JSONDecoder`
+    的实例，并在 `decode(_:from:)` 方法中进行解码。这个方法还需要一个对象类型来尝试将数据转换为；在本例中，我们传递了 `Author.self`，这是前面示例中定义的
+    `Author` 结构体。解码器将对象解码回一个名为 `author` 的本地 Swift 对象。
+- en: Note
+  id: totrans-70
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Now, if we had given `JSONDecoder` an object type that it couldn’t decode the
+    data back into, it would have produced an error. We’ve marked our call to this
+    method as `try?`, which is sufficient for this example, but in a shipping app,
+    you’d probably want to handle this with some user feedback or logging.
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，如果我们给 `JSONDecoder` 提供了一个无法将数据解码回的对象类型，它将会产生一个错误。我们在对此方法的调用中标记了 `try?`，这对于本示例已足够，但在一个发布的应用程序中，你可能需要通过一些用户反馈或日志处理这个问题。
+- en: 'There is more functionality packed into `Codable`, but it’s outside the scope
+    of this chapter. For now, let’s talk about another popular transport format: XML.'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Codable` 中还包含更多功能，但超出了本章的范围。现在，让我们来谈谈另一种流行的传输格式：XML。'
+- en: XML
+  id: totrans-73
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: XML
+- en: 'XML is a format older than JSON. There are various standards of XML, including
+    some very specific transport types like the Simple Object Access Protocol (SOAP),
+    but for the purposes of our example, we’re going to use a slightly modified version
+    of the JSON we used previously to keep things simple. Let’s start with this XML:'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: XML 是比 JSON 更古老的格式。XML 有各种标准，包括一些非常具体的传输类型，如简单对象访问协议（SOAP），但为了我们的示例，我们将使用稍微修改过的
+    JSON 版本来保持简单。让我们从这个 XML 开始：
+- en: '[PRE8]'
+  id: totrans-75
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: This XML describes an author with the name of “Mike” that happens to be human
+    (and an author of this book, coincidentally).
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个 XML 描述了一个名为“Mike”的作者，碰巧是人类（也是这本书的作者）。
+- en: 'If you’re expecting the same simplicity as `Codable` offers with `JSONEncoder`
+    and `JSONDecoder`, I’m afraid I have some bad news: `XMLParser` in iOS is much
+    more verbose.'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你期望 `Codable` 提供与 `JSONEncoder` 和 `JSONDecoder` 一样简单的简洁性，我恐怕要给你些坏消息：iOS 中的
+    `XMLParser` 要复杂得多。
+- en: 'Let’s start with the same XML and create an object that starts parsing:'
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们从相同的 XML 开始，并创建一个开始解析的对象：
+- en: '[PRE9]'
+  id: totrans-79
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: We have an `NSObject` named `SomeObject` that has a method called `parseSomeXml`
+    that we’ve created. This method has a string variable named `xml` that contains
+    our XML from earlier encoded. In the next line, we convert it to a `Data` object
+    with UTF-8 encoding. Next, we instantiate an `XMLParser` with the `rawData` object.
+    Then, we set ourselves as the delegate to handle the parsing. Finally, we call
+    `parse()` to start parsing.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有一个名为 `SomeObject` 的 `NSObject`，它有一个名为 `parseSomeXml` 的方法，我们已经创建了这个方法。这个方法有一个名为
+    `xml` 的字符串变量，其中包含我们之前编码的 XML。在下一行中，我们将它转换为一个使用 UTF-8 编码的 `Data` 对象。接下来，我们使用 `rawData`
+    对象实例化一个 `XMLParser`。然后，我们将自己设置为处理解析的代理。最后，我们调用 `parse()` 来开始解析。
+- en: If you attempted to run this code right now, you’d have an error because `SomeObject`
+    currently doesn’t implement the `XMLParserDelegate` protocol it’s supposed to
+    implement to properly handle the parse operating. This is the core of what drives
+    parsing, so let’s look at each protocol method we’re implementing in depth to
+    understand what’s going on.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你现在尝试运行这段代码，会出现错误，因为 `SomeObject` 目前没有实现它应该实现的 `XMLParserDelegate` 协议来正确处理解析操作。这是驱动解析的核心，所以让我们深入了解我们正在实现的每个协议方法的内容。
+- en: 'XML parsing is synchronous. The document is scanned and walked through element
+    by element. There are four methods we’re going to use in our XML parsing delegate.
+    They are:'
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: XML 解析是同步的。文档逐个元素地扫描和遍历。在我们的 XML 解析代理中，我们将使用四种方法。它们是：
+- en: '`parser(_:didStartElement:namespaceURI:qualifiedName:attributes:)`'
+  id: totrans-83
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '`parser(_:didStartElement:namespaceURI:qualifiedName:attributes:)`'
+- en: '`parser(_:foundCharacters:)`'
+  id: totrans-84
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '`parser(_:foundCharacters:)`'
+- en: '`parser(_:didEndElement:namespaceURI:qualifiedName:)`'
+  id: totrans-85
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '`parser(_:didEndElement:namespaceURI:qualifiedName:)`'
+- en: '`parserDidEndDocument(_:)`'
+  id: totrans-86
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '`parserDidEndDocument(_:)`'
+- en: 'Let’s take a look at the first method in this list:'
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看列表中的第一个方法：
+- en: '[PRE10]'
+  id: totrans-88
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: This method is called every time a new XML element is found in the document
+    as we walk through it. In our preceding example XML, the only valid elements are
+    `author` and `name`. If we find a new `author` element, we create a new `Author`
+    instance in a new property that’s been added to the `SomeObject` class called
+    `author`. This acts as something of a temporary place to store the `Author` instance
+    as we build it out with data we find during parsing this element.
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们遍历文档并找到新的 XML 元素时，此方法被调用。在我们之前的示例 XML 中，唯一有效的元素是 `author` 和 `name`。如果我们找到一个新的
+    `author` 元素，我们会在 `SomeObject` 类中新增一个名为 `author` 的属性，创建一个新的 `Author` 实例。这作为一个临时存储，用于在解析该元素时存储所找到的数据。
+- en: The first piece of data discovered is the attribute `type`. If you recall, our
+    authors have a type and in our particular XML element this is `human` for the
+    `Mike` author. We set the `type` property on our temporary `Author` instance to
+    this value.
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 发现的第一段数据是属性 `type`。如果你回忆一下，我们的作者有一个类型，在我们特定的 XML 元素中，对于 `Mike` 作者，这是 `human`。我们将临时
+    `Author` 实例的 `type` 属性设置为此值。
+- en: 'As the document parses, the next element we will find will be `name`. We don’t
+    need to do anything special once that element is started, but we do need to capture
+    the data between the `<name>` and `</name>` tags. The next method in our list,
+    `parser(_:foundCharacters:)`, allows us to do that like so:'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随着文档的解析，我们将找到的下一个元素是 `name`。一旦该元素开始，我们无需执行任何特殊操作，但是我们需要捕获 `<name>` 和 `</name>`
+    标签之间的数据。我们列表中的下一个方法 `parser(_:foundCharacters:)` 允许我们像这样执行：
+- en: '[PRE11]'
+  id: totrans-92
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: 'Inside the body of this method, we’re storing any found characters inside another
+    new property added to our `SomeObject` instance called `characters`. This property
+    acts as a temporary buffer of sorts to keep the characters around for the next
+    step in the process, which occurs whenever we find the closing element for this
+    tag:'
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个方法的主体内部，我们将找到的任何字符存储在另一个新增的属性 `characters` 中，该属性添加到我们的 `SomeObject` 实例中。这个属性充当了一个临时缓冲区，用于在进程的下一步中保留字符，该步骤在找到此标签的闭合元素时发生：
+- en: '[PRE12]'
+  id: totrans-94
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: This delegate method is called whenever the parser finds a closing tag for an
+    element. In our case, this is `</name>`. We take the string buffer we had, `characters`,
+    and add it to the `name` property on our `author` object that we’re building.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当解析器找到元素的闭合标签时，将调用此委托方法。在我们的情况下，这是 `</name>`。我们将之前的字符串缓冲区 `characters` 添加到正在构建的
+    `author` 对象的 `name` 属性中。
+- en: 'Last, we take what we’ve created and display it as a `print()` statement at
+    the end of the XML document:'
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们将创建的内容通过 `print()` 语句显示在 XML 文档的末尾：
+- en: '[PRE13]'
+  id: totrans-97
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: Note
+  id: totrans-98
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: If we had more items in the XML document, we’d continue building out more and
+    more author instances, and we’d need to save them whenever a new element is started
+    and a temporary object is created.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果在 XML 文档中有更多项，我们将继续构建更多的作者实例，并且我们需要在开始新元素并创建临时对象时保存它们。
+- en: 'Here’s the example in its entirety:'
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是完整示例：
+- en: '[PRE14]'
+  id: totrans-101
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: We’ve had a good look at straight XML, but what about something XML based that’s
+    a little bit less verbose?
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经仔细查看了直接的 XML，但是对于基于 XML 的内容，稍微少一些冗长的呢？
+- en: Property lists
+  id: totrans-103
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 属性列表
+- en: 'Property lists, or plist files, are an XML-based format that have traditionally
+    been used for serializing and deserializing data in apps. Let’s take a look at
+    how to read a plist file from the filesystem:'
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 属性列表或 plist 文件是一种基于 XML 的格式，传统上用于应用程序中的数据序列化和反序列化。让我们看看如何从文件系统中读取 plist 文件：
+- en: '[PRE15]'
+  id: totrans-105
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: This looks pretty similar to our JSON decoding example. Notice the use of `PropertyListDecoder`,
+    which is functionally similar to `JSONDecoder` except it handles plist data instead
+    of JSON data.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这看起来与我们的 JSON 解码示例非常相似。请注意 `PropertyListDecoder` 的使用，它在功能上类似于 `JSONDecoder`，但处理的是
+    plist 数据而不是 JSON 数据。
+- en: 'Writing to a plist file is similar to the JSON example as well:'
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 写入 plist 文件与 JSON 示例类似：
+- en: '[PRE16]'
+  id: totrans-108
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: 'This will output a plist file as XML. There are additional options available
+    for exporting property list files, however. In fact, there are three common types
+    you can export to: XML, binary, or Open Step.'
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将以 XML 格式输出 plist 文件。对于导出属性列表文件，还有其他可用的选项。实际上，有三种常见类型可以导出：XML、二进制或 Open Step。
+- en: 'Here’s an example of how to export to a binary plist file:'
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是如何导出为二进制 plist 文件的示例：
+- en: '[PRE17]'
+  id: totrans-111
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: iOS Notes
+  id: totrans-112
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS 笔记
+- en: 'Although `Codable` appears to be magic, there are some very interesting things
+    happening at the compiler level that do have the option to be overwritten. For
+    example, to use a different property name for JSON other than what’s declared
+    in the Swift-defined structure of `Author`, the following code could work:'
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管 `Codable` 看起来像是魔法，但在编译器层面确实发生了一些非常有趣的事情，可以选择覆盖。例如，要在 JSON 中使用与 Swift 定义的
+    `Author` 结构中声明的名称不同的属性名称，以下代码可以起作用：
+- en: '[PRE18]'
+  id: totrans-114
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE18]'
+- en: 'This example changes the `name` property in the JSON output to `something`.
+    Running this code would output JSON like the following:'
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此示例将 JSON 输出中的 `name` 属性更改为 `something`。运行此代码将输出以下 JSON：
+- en: '[PRE19]'
+  id: totrans-116
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE19]'
+- en: In addition, it’s possible to provide your own separate implementations of the
+    `Encodable` and `Decodable` methods `encode(to:)` and `init(from:)` for completely
+    manual serialization and deserialization.
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此外，可以为完全手动的序列化和反序列化提供自己单独的 `Encodable` 和 `Decodable` 方法 `encode(to:)` 和 `init(from:)`
+    的实现。
+- en: What We’ve Learned
+  id: totrans-118
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: Android and iOS have remarkably similar approaches to serializing and deserializing
+    data like XML and JSON. There is also a similar path to take a Java, Kotlin, or
+    Swift object and serialize it out to a native platform format. Despite the differences
+    in the language and frameworks, this is an area where both platforms make it a
+    bit easier to jump back and forth.
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 和 iOS 在序列化和反序列化诸如 XML 和 JSON 等数据方面有着非常相似的方法。同样，还有一条类似的路径，可以将 Java、Kotlin
+    或 Swift 对象序列化为本地平台格式。尽管语言和框架存在差异，但这是两个平台都让跨平台操作变得更加简单的领域。
+- en: In the next chapter, we’ll explain a bit about extending the base framework
+    objects (and other objects) to add a bit of functionality. Let’s have a look!
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接下来的章节中，我们将解释如何扩展基础框架对象（以及其他对象），以添加一些功能。让我们来看看！

@@ -1,0 +1,2451 @@
+- en: Chapter 10\. Flows
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第 10 章。流
+- en: Up to now, we’ve covered coroutines, suspending functions, and how to deal with
+    streams using `Channel`s. We’ve seen from the previous chapter that working with
+    `Channel`s implies starting coroutines to send and/or receive from those `Channel`s.
+    The aforementioned coroutines are then *hot* entities that are sometimes hard
+    to debug, or can leak resources if they aren’t cancelled when they should be.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们已经涵盖了协程、挂起函数以及如何使用 `Channel` 处理流。我们从前一章节中了解到，使用 `Channel` 意味着启动协程来发送和/或接收来自这些
+    `Channel` 的数据。上述的协程就是 *热* 实体，有时很难调试，或者如果它们没有在应该取消时被取消，可能会泄漏资源。
+- en: '`Flow`s, like `Channel`s, are meant to handle asynchronous streams of data,
+    but at a higher level of abstraction and with better library tooling. Conceptually,
+    `Flow`s are similar to `Sequence`s, except that each step of a `Flow` can be asynchronous.
+    It is also easy to integrate flows in structured concurrency, to avoid leaking
+    resources.'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Flow` 和 `Channel` 一样，都用于处理异步数据流，但在更高层次的抽象和更好的库工具化。在概念上，`Flow` 类似于 `Sequence`，但是
+    `Flow` 的每一步都可以是异步的。将流集成到结构化并发中也很容易，以避免资源泄漏。'
+- en: However, `Flow`s^([1](ch10.html#idm46669741189760)) aren’t meant to replace
+    `Channel`s. `Channel`s are building blocks for flows. `Channel`s are still appropriate
+    in some architectures such as in CSP (see [Chapter 9](ch09.html#channels_id)).
+    Nevertheless, you’ll see that flows suit most needs in asynchronous data processing.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，`Flow`s^([1](ch10.html#idm46669741189760)) 并不意味着要取代 `Channel`s。 `Channel`s
+    是流的构建块。在某些架构中，比如 CSP（参见 [第 9 章](ch09.html#channels_id)），`Channel`s 仍然是合适的。尽管如此，你会看到在异步数据处理中，`Flow`s
+    更适合大多数需求。
+- en: In this chapter, we’ll introduce you to cold and hot flows. You’ll see how *cold*
+    flows can be a better choice when you want to make sure never to leak any resources.
+    On the other hand, *hot* flows serve a different purpose such as when you need
+    a “publish-subscribe” relationship between entities in your app. For example,
+    you can implement an event bus using hot flows.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们将介绍冷流和热流。你将看到 *冷* 流在你希望确保不泄漏任何资源时可能是一个更好的选择。另一方面，*热* 流提供了不同的用途，比如在应用程序中需要“发布-订阅”关系时。例如，你可以使用热流实现事件总线。
+- en: The best way to understand flows is to see how they are used in real-life applications.
+    So this chapter will also go through a series of typical use cases.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 理解流的最佳方式是看看它们在现实生活应用中的使用方式。因此，本章还将通过一系列典型用例来讲解。
+- en: An Introduction to Flows
+  id: totrans-6
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 流介绍
+- en: 'Lets reimplement [Example 9-6](ch09.html#flows_channel_produce_id), using a
+    `Flow`:'
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们使用 `Flow` 重新实现 [示例 9-6](ch09.html#flows_channel_produce_id)：
+- en: '[PRE0]'
+  id: totrans-8
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'Several aspects are important to notice:'
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有几个重要方面需要注意：
+- en: Instead of returning a `Channel` instance, we’re returning a `Flow` instance.
+  id: totrans-10
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 不是返回 `Channel` 实例，而是返回 `Flow` 实例。
+- en: Inside the flow, we use the `emit` suspending function instead of `send`.
+  id: totrans-11
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 在流中，我们使用 `emit` 挂起函数而不是 `send`。
+- en: The `numbers` function, which returns a `Flow` instance, isn’t a suspending
+    function. Invoking the `numbers` function doesn’t start anything by itself—it
+    just immediately returns a `Flow` instance.
+  id: totrans-12
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '`numbers` 函数返回一个 `Flow` 实例，并不是一个挂起函数。调用 `numbers` 函数本身并不会启动任何东西 — 它只是立即返回一个
+    `Flow` 实例。'
+- en: To sum up, you define in the `flow` block the emission of values. When invoked,
+    the `numbers` function quickly returns a `Flow` instance without running anything
+    in the background.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 总结一下，在 `flow` 块中定义了值的发射。当调用时，`numbers` 函数会快速返回一个 `Flow` 实例，而不会在后台运行任何东西。
+- en: 'On the consuming site:'
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在消费端：
+- en: '[PRE1]'
+  id: totrans-15
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: '[![1](assets/1.png)](#co_flows_CO1-1)'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_flows_CO1-1)'
+- en: We get an instance of `Flow`, using the `numbers` function.
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们通过 `numbers` 函数获得了一个 `Flow` 实例。
+- en: '[![2](assets/2.png)](#co_flows_CO1-2)'
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_flows_CO1-2)'
+- en: 'Once we get a flow, instead of looping over it (like we would with a channel),
+    we use the `collect` function which, in flows parlance, is called a *terminal
+    operator*. We’ll extend on *flows operators* and terminal operators in [“Operators”](#flows_operators).
+    For now, we can summarize the purpose of the `collect` terminal operator: it consumes
+    the flow; foor example, iterate over the flow and execute the given lambda on
+    each element of the flow.'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦我们获得了一个流，不像循环遍历它（就像我们使用通道那样），我们使用 `collect` 函数，这在流的术语中被称为 *终端操作符*。我们将会在 [“Operators”](#flows_operators)
+    中详细讨论 *flows operators* 和终端操作符。现在，我们可以总结 `collect` 终端操作符的目的：它消费了流；例如，迭代流并在流的每个元素上执行给定的
+    lambda 函数。
+- en: That’s it—you’ve seen the basic usage of a flow. As we mentioned earlier, we’ll
+    now take a more realistic example, so you’ll see the real interest of `Flow`s.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样——你已经看到了流的基本用法。正如我们之前提到的，现在我们将看一个更为现实的例子，这样你就能看到`Flow`的真正用途。
+- en: A More Realistic Example
+  id: totrans-21
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 更为现实的例子
+- en: Imagine that you need to get tokens from a remote database,^([2](ch10.html#idm46669741051328))
+    then query additional data for each of those tokens. You need to do that only
+    once in a while, so you decide not to maintain an active connection to the database
+    (which could be expensive). So you create a connection only when fetching the
+    data, and close it when you’re done.
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想象一下，你需要从远程数据库获取令牌，^([2](ch10.html#idm46669741051328))然后为每个令牌查询附加数据。你只需要偶尔这样做，所以决定不保持与数据库的活动连接（这可能很昂贵）。因此，只有在获取数据时才创建连接，并在完成后关闭连接。
+- en: 'Your implementation should first establish the connection to the database.
+    Then you get a token using a suspending function `getToken`. This `getToken` function
+    performs a request to the database and returns a token. Then you asynchronously
+    get optional data associated with this token. In our example, this is done by
+    invoking the suspending function `getData`, which takes a token as a parameter.
+    Once you get the result of `getData`, you wrap both the token and the result in
+    one `TokenData` class instance, defined as:'
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的实现应该首先建立到数据库的连接。然后使用挂起函数`getToken`获取一个令牌。这个`getToken`函数向数据库发出请求并返回一个令牌。然后异步获取与该令牌相关联的可选数据。在我们的例子中，通过调用挂起函数`getData`来完成这一点，该函数以令牌作为参数。一旦获取到`getData`的结果，你就将令牌和结果包装在一个`TokenData`类实例中，定义如下：
+- en: '[PRE2]'
+  id: totrans-24
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: To sum up, you need to produce a stream of `TokenData` objects. This stream
+    requires first establishing a database connection, then performing asynchronous
+    queries for retrieving tokens and getting associated data. You choose how many
+    tokens you need. After you’ve processed all the tokens, you disconnect and release
+    underlying database connection resources. [Figure 10-1](#flow_realistic_id) shows
+    how to implement such a flow.
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 总之，你需要生成一系列的`TokenData`对象。这个流程首先需要建立数据库连接，然后执行异步查询以检索令牌并获取相关数据。你可以自行决定需要多少个令牌。在处理完所有令牌后，断开连接并释放底层数据库连接资源。[图 10-1](#flow_realistic_id)展示了如何实现这样的流程。
+- en: '![Implementing the flow for retrieving token data](assets/pawk_1001.png)'
+  id: totrans-26
+  prefs: []
+  type: TYPE_IMG
+  zh: '![实现检索令牌数据流程](assets/pawk_1001.png)'
+- en: Figure 10-1\. Data flow.
+  id: totrans-27
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 10-1\. 数据流。
+- en: You can find the corresponding [source code in GitHub](https://oreil.ly/dU4uZ).
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以在[Github上找到相应的[源代码](https://oreil.ly/dU4uZ)]。
+- en: Note
+  id: totrans-29
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: In this chapter, we sometimes use images instead of code blocks because the
+    screenshots from our IDE show suspension points (in the margin) and type hints,
+    which are really helpful.
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，有时我们使用图像而不是代码块，因为我们的IDE截图显示了悬停点（在边缘）和类型提示，这对于理解非常有帮助。
+- en: 'Several aspects of this implementation are particularly important to notice:'
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个实现的几个方面特别重要需要注意：
+- en: Creating a connection to the database and closing it on completion is completely
+    transparent to the client code that consumes the flow. Client code only sees a
+    flow of `TokenData`.
+  id: totrans-32
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 创建到数据库的连接并在完成时关闭对于使用该流的客户端代码完全透明。客户端代码只看到`TokenData`的流。
+- en: All operations inside the flow are sequential. For example, once we get the
+    first token (say, “token1”), the flow invokes `getData("token1")` and suspends
+    until it gets the result (say, “data1”). Then the flow emits the first `TokenData("token1,"
+    "data1")`. Only after that does the execution proceed with “token2,” etc.
+  id: totrans-33
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 流内的所有操作都是顺序执行的。例如，一旦我们获取了第一个令牌（比如说，“token1”），流就会调用`getData("token1")`并暂停，直到获取结果（比如说，“data1”）。然后流会发布第一个`TokenData("token1,"
+    "data1")`。只有在此之后才会继续执行“token2”等。
+- en: Invoking the `getDataFlow` function does nothing on its own. It simply returns
+    a flow. The code inside the flow executes only when a coroutine collects the flow,
+    as shown in [Example 10-1](#flow_realistic_collection).
+  id: totrans-34
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 调用`getDataFlow`函数本身不会做任何事情。它只是返回一个流。流内的代码只有在协程收集流时才会执行，就像在[例子 10-1](#flow_realistic_collection)中所示。
+- en: Example 10-1\. Collecting a flow
+  id: totrans-35
+  prefs:
+  - PREF_IND
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 例子 10-1\. 收集一个流
+- en: '[PRE3]'
+  id: totrans-36
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: If the coroutine that collects the flow gets cancelled or reaches the end of
+    the flow, the code inside the `onCompletion` block executes. This guarantees that
+    we properly release the connection to the database.
+  id: totrans-37
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如果收集流的协程被取消或到达流的末尾，`onCompletion`块内的代码将执行。这保证了我们正确释放对数据库的连接。
+- en: As we already mentioned, `collect` is a terminal operator that consumes all
+    elements of the flow. In this example, `collect` invokes a function on each collected
+    element of the flow (e.g., `println(data)` is invoked three times). We’ll cover
+    other terminal operators in [“Examples of Cold Flow Usage”](#flows_use_cases_id).
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我们之前提到的，`collect` 是一个终端操作符，消耗流的所有元素。在这个例子中，`collect` 在流的每个收集元素上调用一个函数（例如，`println(data)`
+    被调用三次）。我们将在[“冷流用法示例”](#flows_use_cases_id)中覆盖其他终端操作符。
+- en: Note
+  id: totrans-39
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Until now, you’ve seen examples of flows that don’t run any code until a coroutine
+    collects them. In flows parlance, they are cold flows.
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，您已经看到了不运行任何代码直到协程收集它们的流示例。在流术语中，它们是冷流。
+- en: Operators
+  id: totrans-41
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 操作符
+- en: If you need to perform transformations on a flow, much like you would do on
+    collections, the coroutines library provides functions such as `map`, `filter`,
+    `debounce`, `buffer`, `onCompletion`, etc. Those functions are called *flow operators*
+    or *intermediate operators*, because they operate on a flow and return another
+    flow. A regular operator shouldn’t be confused with a terminal operator, as you’ll
+    see later.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您需要在流上执行类似于集合的转换操作，协程库提供了诸如 `map`、`filter`、`debounce`、`buffer`、`onCompletion`
+    等函数。这些函数被称为*流操作符*或*中间操作符*，因为它们在流上操作并返回另一个流。不要将常规操作符与终端操作符混淆，稍后您会看到它们的区别。
+- en: 'In the following, we have an example usage of the `map` operator:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以下是 `map` 操作符的一个示例用法：
+- en: '[PRE4]'
+  id: totrans-44
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: The interesting bit here is that `map` turns a `Flow<Int>` into a `Flow<String>`.
+    The type of the resulting flow is determined by the return type of the lambda
+    passed to the operator.
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里有趣的地方在于 `map` 将 `Flow<Int>` 转换为 `Flow<String>`。结果流的类型由传递给操作符的 lambda 的返回类型确定。
+- en: Note
+  id: totrans-46
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'The `map` flow operator is conceptually really close to the `map` extension
+    function on collections. There’s a noticeable difference, though: the lambda passed
+    to the `map` flow operator can be a suspending function.'
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`map` 流操作符在概念上与集合的 `map` 扩展函数非常接近。不过，有一个显著的区别：传递给 `map` 流操作符的 lambda 可以是一个挂起函数。'
+- en: We’ll cover most of the common operators in a series of use cases in the next
+    section.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在下一节中，我们将覆盖大多数常见操作符的一系列使用案例。
+- en: Terminal Operators
+  id: totrans-49
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 终端操作符
+- en: A terminal operator can be easily distinguished from other regular operators
+    since it’s a suspending function that starts the collection of the flow. You’ve
+    previously seen `collect`.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 终端操作符可以很容易地与其他常规操作符区分开，因为它是一个启动流收集的挂起函数。您之前已经看到了 `collect`。
+- en: 'Other terminal operators are available, like `toList`, `collectLatest`, `first`,
+    etc. Here is a brief description of those terminal operators:'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其他终端操作符可用，如 `toList`、`collectLatest`、`first` 等。以下是这些终端操作符的简要描述：
+- en: '`toList` collects the given flow and returns a `List` containing all collected
+    elements.'
+  id: totrans-52
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`toList` 收集给定的流，并返回一个包含所有收集元素的 `List`。'
+- en: '`collectLatest` collects the given flow with a provided action. The difference
+    from `collect` is that when the original flow emits a new value, the action block
+    for the previous value is cancelled.'
+  id: totrans-53
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`collectLatest` 使用提供的操作收集给定的流。与 `collect` 的区别在于，当原始流发出新值时，前一个值的操作块将被取消。'
+- en: '`first` returns the first element emitted by the flow and then cancels the
+    flow’s collection. It throws a `NoSuchElementException` if the flow was empty.
+    There’s also a variant, `firstOrNull`, which returns `null` if the flow was empty.'
+  id: totrans-54
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`first` 返回流发出的第一个元素，然后取消流的收集。如果流为空，则抛出 `NoSuchElementException`。还有一个变体，`firstOrNull`，如果流为空则返回
+    `null`。'
+- en: Examples of Cold Flow Usage
+  id: totrans-55
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 冷流用法示例
+- en: As it turns out, picking one single example making use of all possible operators
+    isn’t the best path to follow. Instead, we’ll provide different use cases, which
+    will illustrate the usage of several flow operators.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事实证明，选择一个例子来展示所有可能操作符的使用并不是最佳方式。相反，我们将提供不同的用例，以说明几个流操作符的使用。
+- en: 'Use Case #1: Interface with a Callback-Based API'
+  id: totrans-57
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用案例＃1：与基于回调的 API 进行接口交互
+- en: Suppose that you’re developing a chat application. Your users can send messages
+    to one another. A message has a date, a reference to the author of the message,
+    and content as plain text.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设您正在开发一个聊天应用程序。您的用户可以互发消息。消息包含日期、消息作者的引用和纯文本内容。
+- en: 'Here is a `Message`:'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是一条 `Message`：
+- en: '[PRE5]'
+  id: totrans-60
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'Unsurprisingly, we’ll represent the stream of messages as a flow of the `Message`
+    instance. Every time a user posts a message into the app, the flow will transmit
+    that message. For now, assume that you can invoke a function `getMessageFlow`,
+    which returns an instance of `Flow<Message>`. With the Kotlin Flows library, you
+    are able to create your own custom flows. However, it makes the most sense to
+    start by exploring how the flow API can be used in common use cases:'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 毫不奇怪，我们将消息流表示为`Message`实例的流。每当用户将消息发布到应用程序时，流将传输该消息。暂时假设你可以调用`getMessageFlow`函数，该函数返回`Flow<Message>`的实例。使用Kotlin
+    Flows库，你可以创建自己的自定义流。然而，首先探索流API如何在常见用例中使用是最有意义的：
+- en: '[PRE6]'
+  id: totrans-62
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: Now, suppose that you want to translate all messages from a given user in a
+    different language, on the fly. Moreover, you’d like to perform the translation
+    on a background thread.
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在假设你想要在后台线程上执行翻译所有来自特定用户的消息。此外，你希望能够实时翻译这些消息到不同的语言。
+- en: 'To do that, you start by getting the flow of messages, by invoking `getMessageFlow()`.
+    Then you apply operators to the original flow, as shown in the following:'
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要实现这一点，你首先通过调用`getMessageFlow()`来获取消息流。然后你对原始流应用操作符，如下所示：
+- en: '[PRE7]'
+  id: totrans-65
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: '[![1](assets/1.png)](#co_flows_CO2-1)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_flows_CO2-1)'
+- en: The first operator, `filter`, operates on the original flow and returns another
+    flow of messages which all originate from the same `user` passed as a parameter.
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个操作符`filter`在原始流上操作，并返回由传递的`user`参数产生的另一个消息流。
+- en: '[![2](assets/2.png)](#co_flows_CO2-2)'
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_flows_CO2-2)'
+- en: The second operator, `map`, operates on the flow returned by `filter` and returns
+    a flow of translated messages. From the `filter` operator standpoint, the original
+    flow (returned by `getMessageFlow()`) is the *upstream flow*, while the *downstream
+    flow* is represented by all operators happening *after* `filter`. The same reasoning
+    applies for all intermediate operators—they have their own relative upstream and
+    downstream flow, as illustrated in [Figure 10-2](#upstream_downstream_id).
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二个操作符`map`操作`filter`返回的流，并返回翻译后的消息流。从`filter`操作符的角度来看，原始流（由`getMessageFlow()`返回）是*上游流*，而*下游流*由`filter`之后的所有操作符表示。中间操作符都有它们自己的相对上游和下游流，如[图10-2](#upstream_downstream_id)所示。
+- en: '[![3](assets/3.png)](#co_flows_CO2-3)'
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_flows_CO2-3)'
+- en: Finally, the `flowOn` operator changes the context of the flow it is operating
+    on. It changes the coroutine context of the upstream flow, while not affecting
+    the downstream flow. Consequently, steps 1 and 2 are done using the dispatcher
+    `Dispatchers.Default`.
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，`flowOn`操作符会改变它所操作的流的上下文。它会改变上游流的协程上下文，但不会影响下游流。因此，步骤1和步骤2都将使用调度器`Dispatchers.Default`执行。
+- en: 'In other words, the upstream flow’s operators (which are `filter` and `map`)
+    are now encapsulated: their execution context will always be `Dispatchers.Default`.
+    It doesn’t matter in which context the resulting flow will be collected; the previously
+    mentioned operators will be executed using `Dispatchers.Default`.'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 换句话说，上游流的操作符（即`filter`和`map`）现在被封装起来：它们的执行上下文始终为`Dispatchers.Default`。不管结果流将在哪个上下文中被收集，前述的操作符都将使用`Dispatchers.Default`执行。
+- en: This is a very important property of flows, called *context preservation*. Imagine
+    that you’re collecting the flow on the UI thread of your application—typically,
+    you would do that using the `viewModelScope` of a `ViewModel`. It would be embarrassing
+    if the context of execution of one of the flow’s operators leaked downstream and
+    affected the thread in which the flow was ultimately collected. Thankfully, this
+    will never happen. For example, if you collect a flow on the UI thread, all values
+    are emitted by a coroutine that uses `Dispatchers.Main`. All the necessary context
+    switches are automatically managed for you.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是流非常重要的一个特性，称为*上下文保留*。想象一下，你在应用程序的UI线程上收集流，通常你会使用`ViewModel`的`viewModelScope`来做到这一点。如果流的操作符的执行上下文泄漏到下游，并影响最终收集流的线程，这将是令人尴尬的。幸运的是，这种情况永远不会发生。例如，如果你在UI线程上收集流，所有值都是由一个使用`Dispatchers.Main`的协程发出的。所有必要的上下文切换都会自动为你管理。
+- en: '![pawk 1002](assets/pawk_1002.png)'
+  id: totrans-74
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1002](assets/pawk_1002.png)'
+- en: Figure 10-2\. Upstream and downstream flows.
+  id: totrans-75
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图10-2\. 上游和下游流。
+- en: Under the hood, `flowOn` starts a new coroutine when it detects that the context
+    is about to change. This new coroutine interacts with the rest of the flow through
+    a channel that is internally managed.
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在内部，`flowOn`在检测到上下文即将改变时启动一个新的协程。这个新的协程通过一个内部管理的通道与流的其余部分交互。
+- en: Note
+  id: totrans-77
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: In flow parlance, an intermediate operator like `map` operates on the upstream
+    flow and returns another flow. From the `map` operator standpoint, the returned
+    flow is the downstream flow.
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在流术语中，像`map`这样的中间操作符作用于上游流，并返回另一个流。从`map`操作符的角度来看，返回的流就是下游流。
+- en: 'The `map` operator accepts a suspending function as a transformation block.
+    So if you wanted to only perform message translation using `Dispatchers.Default`
+    (and not message filtering), you could remove the `flowOn` operator and declare
+    the `translate` function like so:'
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`map`操作符接受一个挂起函数作为转换块。因此，如果你只想使用`Dispatchers.Default`执行消息翻译（而不是消息过滤），你可以移除`flowOn`操作符，并像这样声明`translate`函数：'
+- en: '[PRE8]'
+  id: totrans-80
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: See how easy it is to offload parts of data transformation to other threads,
+    while still having a big picture of the data flow?
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 看看将数据转换的部分轻松转移到其他线程，同时仍然对数据流的整体有一个大图景是多么容易？
+- en: As you can see, the Flow API allows for a declarative way to express data transformation.
+    When you invoke `getMessagesFromUser("Amanda," "en-us")`, nothing is actually
+    running. All those transformations involve intermediate operators, which will
+    be triggered when the flow will be collected.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所见，Flow API 允许以声明方式表达数据转换。当你调用`getMessagesFromUser("Amanda," "en-us")`时，并不会实际运行任何内容。所有这些转换涉及中间操作符，当流被收集时将被触发。
+- en: 'On the consuming site, if you need to act on each received message, you can
+    use the `collect` function like so:'
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在消费方面，如果你需要对每个接收到的消息采取操作，你可以像这样使用`collect`函数：
+- en: '[PRE9]'
+  id: totrans-84
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'Now that we’ve shown how to transform the flow and consume it, we can provide
+    an implementation for the flow itself: the `getMessageFlow` function. The signature
+    of this function is to return a flow of `Message`s. In that particular situation,
+    we can reasonably assume that the message machinery is actually a service that
+    runs in its own thread. We’ll name this service `MessageFactory`.'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经展示了如何转换流并消耗它，我们可以为流本身提供一个实现：`getMessageFlow`函数。这个函数的签名是返回`Message`的流。在这种特定情况下，我们可以合理地假设消息机制实际上是在其自己的线程中运行的服务。我们将这个服务命名为`MessageFactory`。
+- en: 'Like most services of that kind, the message factory has a *publish/subscribe*
+    mechanism—we can register or unregister observers for new incoming messages, as
+    shown in the following:'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与大多数类似的服务一样，消息工厂具有*发布/订阅*机制——我们可以注册或注销观察者以接收新消息，如下所示：
+- en: '[PRE10]'
+  id: totrans-87
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: 'This implementation polls for new messages every second and notifies observers.
+    Now the question is: how do we turn a hot^([3](ch10.html#idm46669740498544)) entity
+    such as this `MessageFactory` into a flow? `MessageFactory` is also said to be
+    *callback-based*, because it holds references to `MessageObserver` instances and
+    calls methods on those instances when new messages are retrieved. To bridge the
+    flow world with the “callback” world, you can use the `callbackFlow` flow builder.
+    [Example 10-2](#get_message_flow) shows how you can use it.'
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此实现每秒轮询新消息并通知观察者。现在的问题是：如何将诸如`MessageFactory`这样的热实体转换为流？`MessageFactory`也被称为*基于回调*的，因为它保存对`MessageObserver`实例的引用，并在检索到新消息时调用这些实例的方法。要将流世界与“回调”世界连接起来，你可以使用`callbackFlow`流构建器。[示例 10-2](#get_message_flow)展示了如何使用它。
+- en: Example 10-2\. Making a flow from a callback-based API
+  id: totrans-89
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 10-2\. 从基于回调的 API 创建流
+- en: '[PRE11]'
+  id: totrans-90
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: 'The `callbackFlow` builder creates a cold flow which doesn’t perform anything
+    until you invoke a terminal operator. Let’s break it down. First off, it’s a parameterized
+    function which returns a `Flow` of the given type. It’s always done in three steps:'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`callbackFlow`构建器创建了一个冷流，直到你调用终端操作符之前都不会执行任何操作。让我们来详细分析一下。首先，它是一个带有给定类型的流的参数化函数。它总是分为三个步骤完成：'
+- en: '[PRE12]'
+  id: totrans-92
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: 'It’s worth having a look at the signature of `callbackFlow`:'
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 值得一看的是`callbackFlow`的签名：
+- en: '[PRE13]'
+  id: totrans-94
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: Don’t be impressed by this. One key piece of information is that `callbackFlow`
+    takes a suspending function with `ProducerScope` receiver as the argument. This
+    means that inside the curly braces of the block following `callbackFlow`, you
+    have a `ProducerScope` instance as an implicit `this`.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不要被这些印象深刻。一个关键的信息是，`callbackFlow`接受一个带有`ProducerScope`接收者的挂起函数作为参数。这意味着在`callbackFlow`后面的大括号块内部，你有一个`ProducerScope`实例作为隐式的`this`。
+- en: 'Here is the signature of `ProducerScope`:'
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是`ProducerScope`的签名：
+- en: '[PRE14]'
+  id: totrans-97
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: 'So a `ProducerScope` is a `SendChannel`. And that’s what you should remember:
+    `callbackFlow` provides you with an instance of `SendChannel`, which you can use
+    inside your implementation. You send the object instances you get from your callback
+    to this channel. This is what we do in step 1 of [Example 10-2](#get_message_flow).'
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，`ProducerScope`是一个`SendChannel`。这就是你应该记住的：`callbackFlow`为你提供了一个`SendChannel`实例，你可以在你的实现中使用它。你将从回调中获取的对象实例发送到这个通道。这就是我们在[Example 10-2](#get_message_flow)的第一步中所做的。
+- en: 'Use Case #2: Concurrently Transform a Stream of Values'
+  id: totrans-99
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用案例#2：并发转换值流
+- en: Sometimes you have to apply a transformation on a collection or stream of objects,
+    to get a new collection of transformed objects. When those transformations should
+    be done asynchronously, things start getting a bit complicated. Not with flows!
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时你必须在集合或对象流上应用转换，以获取一个新的转换对象集合。当这些转换应该异步进行时，情况就开始变得有些复杂了。但使用流，一切变得简单！
+- en: 'Imagine that you have a list of `Location` instances. Each location can be
+    resolved to a `Content` instance, using the `transform` function:'
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设你有一个`Location`实例的列表。每个位置可以使用`transform`函数解析为一个`Content`实例：
+- en: '[PRE15]'
+  id: totrans-102
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: So you are receiving `Location` instances, and you have to transform them on
+    the fly using the `transform` function. However, processing one `Location` instance
+    might take quite some time. So you don’t want that processing of a location to
+    delay the transformation of the next incoming locations. In other words, transformations
+    should be done *in parallel*, as shown in [Figure 10-3](#figure10_3).
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，你会接收到`Location`实例，并且必须使用`transform`函数即时转换它们。然而，处理一个`Location`实例可能需要相当长的时间。因此，你不希望一个位置的处理延迟到下一个位置的转换。换句话说，转换应该*并行*进行，如[Figure 10-3](#figure10_3)所示。
+- en: '![Merge flows](assets/pawk_1003.png)'
+  id: totrans-104
+  prefs: []
+  type: TYPE_IMG
+  zh: '![合并流](assets/pawk_1003.png)'
+- en: Figure 10-3\. Merge flows.
+  id: totrans-105
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图10-3\. 合并流。
+- en: In the preceding schema, we’ve limited the concurrency to four; in other words,
+    at most, four locations can be transformed simultaneously at a given point in
+    time.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前面的示意图中，我们限制了并发数为四；换句话说，在任何给定时间点最多可以同时转换四个位置。
+- en: '[Figure 10-4](#figure10_4) shows how you would implement this behavior using
+    flows.'
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[Figure 10-4](#figure10_4)展示了如何使用流来实现此行为。'
+- en: '![pawk 1004](assets/pawk_1004.png)'
+  id: totrans-108
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1004](assets/pawk_1004.png)'
+- en: Figure 10-4\. Implementing merging flows.
+  id: totrans-109
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图10-4\. 实现合并流。
+- en: You can find the corresponding [source code in GitHub](https://oreil.ly/LhW77).
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以在GitHub上找到对应的[源代码](https://oreil.ly/LhW77)。
+- en: To understand what’s going on here, you should realize that `locations.map{..}`
+    returns a flow of a flow (e.g., the type is `Flow<Flow<Content>>`). Indeed, inside
+    the `map{..}` operator, a new flow is created upon emission of a location by the
+    upstream flow (which is `locationsFlow`). Each of those created flows is of type
+    `Flow<Content>` and individually performs location transformation.
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要理解这里的情况，你应该意识到`locations.map{..}`返回了一个流的流（例如，类型为`Flow<Flow<Content>>`）。实际上，在`map{..}`操作符内部，当上游流（即`locationsFlow`）发射一个位置时，就会创建一个新的流。每个创建的流都是`Flow<Content>`类型，并且单独执行位置转换。
+- en: The last statement, `flattenMerge`, merges all those created flows inside a
+    new resulting `Flow<Content>` (which we assign to `contentFlow`). Also, `flattenMerge`
+    has a “concurrency” parameter. Indeed, it would probably be inappropriate to concurrently
+    create and collect a flow every time we receive a location. With a concurrency
+    level of 4, we ensure that no more than four flows will be collected at a given
+    point in time. This is handy in the case of CPU-bound tasks, when you know that
+    your CPU won’t be able to transform more than four locations *in parallel* (assuming
+    the CPU has four cores). In other words, `flattenMerge`’s concurrency level refers
+    to how many operations/transformations will be done in parallel *at most* at a
+    given point in time.
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后一句，`flattenMerge`，将所有这些创建的流合并到一个新的结果流`Flow<Content>`中（我们将其分配给`contentFlow`）。此外，`flattenMerge`具有“并发”参数。确实，在每次接收位置时并发创建和收集流可能是不合适的。通过并发级别为4，我们确保在给定时间点最多只有四个流将被收集。这在CPU密集型任务中非常方便，当你知道你的CPU不能并行转换超过四个位置时（假设CPU有四个核心）。换句话说，`flattenMerge`的并发级别指的是在给定时间点最多可以并行进行多少操作/转换。
+- en: Thanks to the suspending nature of flows, you get *back pressure* for free.
+    New locations are collected from `locationsFlow` only when the machinery is available
+    to process them. A similar mechanism could be implemented without flows or coroutines,
+    using a thread pool and a blocking queue. However, that would require considerably
+    more lines of code.
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 多亏了流的挂起性质，你可以免费获得*回压*。只有在机器可用于处理时，才会从`locationsFlow`中收集新的位置。可以使用线程池和阻塞队列实现类似的机制，而不使用流或协程。然而，这将需要更多的代码行。
+- en: Note
+  id: totrans-114
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: As of this writing, the `flattenMerge` operator is marked as `@FlowPreview`
+    in the source code, which means that this declaration is in a preview state and
+    can be changed in a backward-incompatible manner with a best-effort migration.
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 战至撰写本文时，`flattenMerge`操作符在源代码中标记为`@FlowPreview`，这意味着此声明处于预览状态，并且可以通过尽力迁移以不向后不兼容的方式进行更改。
+- en: We hope that by the time we finish writing this book, the flow-merging API will
+    be stabilized. Otherwise, a similar operator might replace `flattenMerge`.
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望在完成写作时，流合并API将得到稳定。否则，类似的操作符可能会取代`flattenMerge`。
+- en: What Happens in Case of Error?
+  id: totrans-117
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 发生错误时会发生什么？
+- en: If one of the `transform` functions raises an exception, the entire flow will
+    be cancelled, and the exception will be propagated downstream. While this good
+    default behavior, you might want to handle some exceptions right inside the flow
+    itself.
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果其中一个`transform`函数抛出异常，整个流将被取消，并且异常将向下游传播。虽然这是一个很好的默认行为，但你可能希望在流内部处理一些异常。
+- en: We’ll show how to do that in [“Error Handling”](#error_handling_id).
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将展示如何在[“错误处理”](#error_handling_id)中做到这一点。
+- en: Final Thoughts
+  id: totrans-120
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 最后的思考
+- en: Do you realize that we’ve just created a worker pool that concurrently transforms
+    an incoming stream of objects, using only five lines of code?
+  id: totrans-121
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 你是否意识到，我们仅用五行代码就创建了一个工作池，同时转换传入的对象流？
+- en: You’re guaranteed that the flow machinery is thread-safe. No more headaches
+    figuring out the proper synchronization strategy to pass object references from
+    a thread pool to a collecting thread.
+  id: totrans-122
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 您可以确保流机制是线程安全的。不再为了找到适当的同步策略而头疼，以便将对象引用从线程池传递到收集线程。
+- en: You can easily tweak the concurrency level, which, in this case, means the maximum
+    number of parallel transformations.
+  id: totrans-123
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 您可以轻松调整并发级别，这在本例中意味着最大并行转换数。
+- en: 'Use Case #3: Create a Custom Operator'
+  id: totrans-124
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用情况＃3：创建自定义操作符
+- en: Even if a lot of flow operators are available out of the box, sometimes you’ll
+    have to make your own. Thankfully, flows are composable, and it’s not that difficult
+    to implement custom reactive logic.
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 即使有很多流操作符可以直接使用，有时候你必须自己制作。幸运的是，流是可组合的，实现自定义的响应式逻辑并不那么困难。
+- en: For example, by the time we write those lines, there’s no Flows operator equivalent
+    of the [Project Reactor’s bufferTimeout](https://oreil.ly/udGs0).
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，到我们撰写这些文字的时候，还没有Flows操作符等同于[Project Reactor的bufferTimeout](https://oreil.ly/udGs0)。
+- en: 'So, what is `bufferTimeout` supposed to do? Imagine that you have an upstream
+    flow of elements, but you want to process those elements by batches and at a fixed
+    maximum rate. The flow returned by `bufferTimeout` should buffer elements and
+    emit a list (batch) of elements when either:'
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，`bufferTimeout`应该做什么？想象一下，你有一个元素的上游流，但你希望通过批处理以及在固定的最大速率下处理这些元素。`bufferTimeout`返回的流应该缓冲元素，并在以下情况之一时发出一个元素列表（批处理）：
+- en: The buffer is full.
+  id: totrans-128
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 缓冲区已满。
+- en: A predefined maximum amount of time has elapsed (timeout).
+  id: totrans-129
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 预定义的最大时间已过（超时）。
+- en: 'Before going through the implementation, let’s talk about the key idea. The
+    flow returned by `bufferTimeout` should internally consume the upstream flow and
+    buffer elements. When the buffer is full, or a timeout has elapsed, the flow should
+    emit the content of the buffer (a list). You can imagine that internally we’ll
+    start a coroutine that receives two types of events:'
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在进行实现之前，让我们先讨论关键思想。`bufferTimeout`返回的流应内部消耗上游流并缓冲元素。当缓冲区满或超时已过时，流应发出缓冲区的内容（一个列表）。你可以想象内部我们会启动一个协程来接收两种类型的事件：
+- en: “An element has just been received from the upstream flow. Should we just add
+    it to the buffer or also send the whole buffer?”
+  id: totrans-131
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: “刚刚从上游流接收到一个元素。我们是应该将其添加到缓冲区还是发送整个缓冲区？”
+- en: “Timeout! Send the content of the buffer right now.”
+  id: totrans-132
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: “超时！立即发送缓冲区内容。”
+- en: In [Chapter 9](ch09.html#channels_id) (CSP section), we’ve discussed a similar
+    situation. The `select` expression is perfect for dealing with multiple events
+    coming from several channels.
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[第9章](ch09.html#channels_id)（CSP部分）中，我们已经讨论过类似的情况。`select`表达式非常适合处理来自多个通道的多个事件。
+- en: 'Now we’re going to implement our `bufferTimeout` flow operator:'
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们将实现我们的`bufferTimeout`流操作符：
+- en: '![pawk 10in01](assets/pawk_10in01.png)'
+  id: totrans-135
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 10in01](assets/pawk_10in01.png)'
+- en: You can find the corresponding [source code in GitHub](https://oreil.ly/JxkZj).
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在GitHub中找到相应的[源代码](https://oreil.ly/JxkZj)。
+- en: 'Here is the explanation:'
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是解释：
+- en: 'First of all, the signature of the operator tells us a lot. It’s declared as
+    an extension function of `Flow<T>`, so you can use it like this: `upstreamFlow.bufferTimeout(10,
+    100)`. As for the return type, it’s `Flow<List<T>>`. Remember that you want to
+    process elements by batches, so the flow returned by `bufferTimeout` should return
+    elements as `List<T>`.'
+  id: totrans-138
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 首先，操作符的签名告诉了我们很多信息。它声明为`Flow<T>`的扩展函数，因此您可以像这样使用它：`upstreamFlow.bufferTimeout(10,
+    100)`。至于返回类型，它是`Flow<List<T>>`。请记住，您希望按批处理处理元素，因此`bufferTimeout`返回的流应将元素作为`List<T>`返回。
+- en: 'Line 17: we’re using a `flow{}` builder. As a reminder, the builder provides
+    you an instance of `FlowCollector`, and the block of code is an extension function
+    with `FlowCollector` as the receiver type. In other words, you can invoke `emit`
+    from inside the block of code.'
+  id: totrans-139
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 第17行：我们正在使用一个`flow{}`构建器。作为提醒，这个构建器为您提供了一个`FlowCollector`的实例，并且代码块是一个以`FlowCollector`作为接收器类型的扩展函数。换句话说，您可以在代码块内部调用`emit`。
+- en: 'Line 21: we’re using `coroutineScope{}` because we’ll start new coroutines,
+    which is only possible within a `CoroutineScope`.'
+  id: totrans-140
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 第21行：我们正在使用`coroutineScope{}`，因为我们将启动新的协程，这只能在`CoroutineScope`内部完成。
+- en: 'Line 22: from our coroutine standpoint,^([4](ch10.html#idm46669739885136))
+    received elements should come from a `ReceiveChannel`. So another inner coroutine
+    should be started to consume the upstream flow and send them over a channel. This
+    is exactly the purpose of the `produceIn` flow operator.'
+  id: totrans-141
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 第22行：从我们的协程视角来看，接收到的元素应该来自于一个`ReceiveChannel`。因此，我们需要启动另一个内部协程来消费上游的流，并通过一个通道发送它们。这正是`produceIn`流操作符的目的。
+- en: 'Line 23: we need to generate “timeout” events. A library function already exists
+    exactly for that purpose: `ticker`. It creates a channel that produces the first
+    item after the given initial delay, and subsequent items with the given delay
+    between them. As specified in the documentation, `ticker` starts a new coroutine
+    *eagerly*, and we’re fully responsible for cancelling it.'
+  id: totrans-142
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 第23行：我们需要生成“超时”事件。已经有一个专门用于此目的的库函数：`ticker`。它创建一个通道，在给定的初始延迟后产生第一个项目，并且在它们之间以给定的延迟产生后续项目。正如文档中指定的那样，`ticker`会急切地启动一个新的协程，我们需要完全负责取消它。
+- en: 'Line 34: we’re using `whileSelect`, which really is just syntax sugar for looping
+    in a `select` expression while clauses return `true`. Inside the `whileSelect{}`
+    block you can see the logic of adding an element to the buffer only if it’s not
+    full, and emitting the whole buffer otherwise.'
+  id: totrans-143
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 第34行：我们正在使用`whileSelect`，它实际上只是在`select`表达式中循环的语法糖，当子句返回`true`时。在`whileSelect{}`块内部，您可以看到仅在缓冲区不满时才向其添加元素，并在缓冲区已满时发出整个缓冲区。
+- en: Line  46:  when  the  upstream  flow  collection  completes,  the  coroutine 
+    started  with `produceIn` will still attempt to read from that flow, and a `ClosedReceiveChannelException` 
+    will  be  raised.  So  we  catch  that  exception, and we know that we should
+    emit the content of the buffer.
+  id: totrans-144
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 第46行：当上游流收集完成时，使用`produceIn`启动的协程仍然会尝试从该流中读取，并且会引发`ClosedReceiveChannelException`。因此，我们捕获该异常，然后知道我们应该发出缓冲区的内容。
+- en: 'Lines 48 and 49: channels are hot entities—they should be cancelled when they’re
+    not supposed to be used anymore. As for the `ticker`, it should be cancelled too.'
+  id: totrans-145
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 第48和49行：通道是活跃实体，当它们不再需要使用时应该被取消。对于`ticker`也应该取消。
+- en: Usage
+  id: totrans-146
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用情况：
+- en: '[Figure 10-5](#buffer_timeout_usage_id) shows an example of how `bufferTimeout`
+    can be used.'
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[图 10-5](#buffer_timeout_usage_id)显示了如何使用`bufferTimeout`的示例。'
+- en: '![`bufferTimeout` usage](assets/pawk_1005.png)'
+  id: totrans-148
+  prefs: []
+  type: TYPE_IMG
+  zh: '![`bufferTimeout` usage](assets/pawk_1005.png)'
+- en: Figure 10-5\. `bufferTimeout` usage.
+  id: totrans-149
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 10-5\. `bufferTimeout`使用示例。
+- en: You can find the corresponding [source code in GitHub](https://oreil.ly/Y2xVe).
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在GitHub中找到相应的[源代码](https://oreil.ly/Y2xVe)。
+- en: 'The output is:'
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输出结果：
+- en: '[PRE16]'
+  id: totrans-152
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: As you can see, the upstream flow is emitting numbers from 1 to 100, with a
+    delay of 10 ms between each emission. We set a timeout of 50 ms, and each emitted
+    list can contain at most five numbers.
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所见，上游流正在发出从1到100的数字，每次发射之间延迟10毫秒。我们设置了50毫秒的超时，并且每个发射的列表最多可以包含五个数字。
+- en: Error Handling
+  id: totrans-154
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 错误处理
+- en: 'Error handling is fundamental in reactive programming. If you’re familiar with
+    RxJava, you probably handle exceptions using the `onError` callback of the `subscribe`
+    method:'
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 错误处理在响应式编程中至关重要。如果您熟悉RxJava，您可能使用`subscribe`方法的`onError`回调来处理异常：
+- en: '[PRE17]'
+  id: totrans-156
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: 'Using flows, you can handle errors using a combination of techniques, involving:'
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用流，您可以使用一系列技术处理错误，涉及：
+- en: The classic `try`/`catch` block.
+  id: totrans-158
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 经典的`try`/`catch`块。
+- en: The `catch` operator—we’ll cover this new operator right after we discuss the
+    `try`/`catch` block.
+  id: totrans-159
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`catch`操作符——我们将在讨论`try`/`catch`块后立即介绍这个新操作符。'
+- en: The try/catch Block
+  id: totrans-160
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: try/catch块
+- en: 'If we define a dummy upstream flow made of only three `Int`s, and purposely
+    throw an exception inside the `collect{}` block, we can catch the exception by
+    wrapping the whole chain in a `try`/`catch` block:'
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们定义一个仅由三个`Int`组成的虚拟上游流，并且在`collect{}`块内部故意抛出异常，我们可以通过将整个链条包装在`try`/`catch`块中来捕获异常：
+- en: '![pawk 10in02](assets/pawk_10in02.png)'
+  id: totrans-162
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 10in02](assets/pawk_10in02.png)'
+- en: You can find the corresponding [source code in GitHub](https://oreil.ly/qcOKV).
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在GitHub上找到相应的[source code in GitHub](https://oreil.ly/qcOKV)。
+- en: 'The output is:'
+  id: totrans-164
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输出是：
+- en: '[PRE18]'
+  id: totrans-165
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE18]'
+- en: 'It is important to note that `try`/`catch` also works when the exception is
+    raised from inside the upstream flow. For example, we get the exact same result
+    if we change the definition of the upstream flow to:'
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需要注意的是，`try`/`catch`也适用于从上游流内部引发异常的情况。例如，如果我们将上游流的定义更改为以下内容，我们将得到完全相同的结果：
+- en: '![pawk 10in03](assets/pawk_10in03.png)'
+  id: totrans-167
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 10in03](assets/pawk_10in03.png)'
+- en: You can find the corresponding [source code in GitHub](https://oreil.ly/lrrGt).
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在GitHub上找到相应的[source code in GitHub](https://oreil.ly/lrrGt)。
+- en: 'However, if you try to intercept an exception in the flow itself, you’re likely
+    to get unexpected results. Here is an example:'
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，如果您尝试在流本身内部拦截异常，则可能会得到意外的结果。这里是一个例子：
+- en: '[PRE19]'
+  id: totrans-170
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE19]'
+- en: In this example, we’re using the `flow` builder to define `upstream`, and we
+    wrapped the `emit` invocation inside a `try`/`catch` statement. Even if it seems
+    useless because `emit` isn’t throwing exceptions, it could make sense with nontrivial
+    emission logic nevertheless. At the consuming site, in the `main` function, we
+    collect that flow and we check that we don’t get values strictly greater than
+    2\. Otherwise, the `catch` block should print `Caught java.lang.IllegalStateException
+    Collected x while we expect values below 2`.
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个例子中，我们使用`flow`构建器来定义`upstream`，并且我们在`emit`调用周围包裹了一个`try`/`catch`语句。即使看起来没有用，因为`emit`不会抛出异常，但在非平凡的发射逻辑中这也是有意义的。在消费站点，在`main`函数中，我们收集该流，并检查我们是否获得了严格大于2的值。否则，`catch`块应打印`Caught
+    java.lang.IllegalStateException Collected x while we expect values below 2`。
+- en: 'We expect the following output:'
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们期望以下输出：
+- en: '[PRE20]'
+  id: totrans-173
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE20]'
+- en: 'However, this is what we actually get:'
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，实际上我们得到的是：
+- en: '[PRE21]'
+  id: totrans-175
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE21]'
+- en: Despite the exception raised by `check(value <= 2) {..}`, that exception gets
+    caught not by the `try`/`catch` statement of the `main` function, but by the `try`/`catch`
+    statement of the flow.
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管`main`函数的`try`/`catch`语句没有捕获`check(value <= 2) {..}`引发的异常，但`flow`的`try`/`catch`语句却捕获了它。
+- en: Warning
+  id: totrans-177
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: A `try`/`catch` statement inside a flow builder might catch *downstream* exceptions—which
+    includes exceptions raised during the collection of the flow.
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 流构建器内部的`try`/`catch`语句可能会捕获*下游*异常——包括在收集流期间引发的异常。
+- en: Separation of Concern Is Important
+  id: totrans-179
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 关注分离非常重要
+- en: 'A flow implementation shouldn’t have a side effect on the code that collects
+    that flow. Likewise, the code that collects a flow shouldn’t be aware of the implementation
+    details of the upstream flow. A flow should always be *transparent to exceptions*:
+    it should propagate exceptions coming from a collector. In other words, a flow
+    should never swallow downstream exceptions.'
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 流的实现不应对收集该流的代码产生副作用。同样，收集流的代码不应了解上游流的实现细节。流应始终对异常*透明*：它应传播来自收集器的异常。换句话说，流永远不应吞噬下游的异常。
+- en: Throughout this book, we’ll refer to *exception transparency* to designate a
+    flow that is *transparent to exceptions*.
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在整本书中，我们将使用*异常透明*来指代一种对异常*透明*的流。
+- en: Exception Transparency Violation
+  id: totrans-182
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 异常透明性违规
+- en: 'The previous example was an example of exception transparency violation. Trying
+    to emit values from inside a `try`/`catch` block is another violation. Here is
+    an example (again, don’t do this!):'
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 前一个示例是例外透明性违规的示例。试图从`try`/`catch`块内部发出值是另一种违规。以下是一个示例（再次强调，不要这样做！）：
+- en: '[PRE22]'
+  id: totrans-184
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE22]'
+- en: 'The output is:'
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输出如下：
+- en: '[PRE23]'
+  id: totrans-186
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE23]'
+- en: The  `try`/`catch`  block  should  *only*  be  used  to  surround  the  collector, 
+    to  handle  exceptions raised from the collector itself, or (possibly, although
+    it’s not ideal) to handle exceptions raised from the flow.
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`try`/`catch`块应该*只*用于包围收集器，以处理收集器本身引发的异常，或者（虽然不是理想的）处理流引发的异常。'
+- en: To handle exceptions inside the flow, you should use the `catch` operator.
+  id: totrans-188
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要处理流内的异常，应使用`catch`运算符。
+- en: The catch Operator
+  id: totrans-189
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: catch运算符
+- en: The `catch` operator allows for a declarative style of catching exceptions,
+    as shown in [Figure 10-6](#declarative). It catches all upstream exceptions. By
+    all exceptions, we mean that it even catches `Throwable`s. Since it only catches
+    upstream exceptions, the `catch` operator doesn’t have the exception issue of
+    the `try`/`catch` block.
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`catch`运算符允许以声明式风格捕获异常，如[图 10-6](#declarative)所示。它捕获所有上游异常。这里的所有异常包括`Throwable`。由于它只捕获上游异常，`catch`运算符不具有`try`/`catch`块的异常问题。'
+- en: '![pawk 10in04](assets/pawk_10in04.png)'
+  id: totrans-191
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 10in04](assets/pawk_10in04.png)'
+- en: Figure 10-6\. Declarative style.
+  id: totrans-192
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 10-6\. 声明式风格。
+- en: You can find the corresponding [source code in GitHub](https://oreil.ly/QcUeq).
+  id: totrans-193
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在GitHub上找到相应的[源代码](https://oreil.ly/QcUeq)。
+- en: 'The output is:'
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输出如下：
+- en: '[PRE24]'
+  id: totrans-195
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE24]'
+- en: The flow raises a `RuntimeException` if it’s passed a value greater than 2\.
+    Right after, in the `catch` operator, we print in the console. However, the collector
+    never get the value 3\. So the `catch` operator automatically cancels the flow.
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果流传递大于2的值，则流会引发`RuntimeException`。紧接着，在`catch`运算符中，我们在控制台打印。然而，收集器永远不会收到值3。因此，`catch`运算符会自动取消流。
+- en: Exception transparency
+  id: totrans-197
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 异常透明性
+- en: 'From inside this operator, you can only catch *upstream exceptions*. When we
+    say upstream, we mean relative to the `catch` operator. To show what we mean,
+    we’ll pick an example where the collector throws an exception before the flow
+    internally throws another exception. The collector should be able to catch the
+    raised exception (the exception shouldn’t be caught by the flow):'
+  id: totrans-198
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个运算符内部，你只能捕获*上游异常*。所谓的上游是相对于`catch`运算符而言。为了说明我们的意思，我们将选择一个示例，在该示例中，收集器在流内部抛出异常之前抛出异常。收集器应该能够捕获引发的异常（异常不应该被流捕获）：
+- en: '![pawk 10in05](assets/pawk_10in05.png)'
+  id: totrans-199
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 10in05](assets/pawk_10in05.png)'
+- en: You can find the corresponding [source code in GitHub](https://oreil.ly/0U5h1).
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在GitHub上找到相应的[源代码](https://oreil.ly/0U5h1)。
+- en: In this example, the collector throws a `RuntimeException` if it collects a
+    value greater than 2\. The collection logic is wrapped in a `try`/`catch` statement
+    because we don’t want our program to crash and log the exception. The flow internally
+    raises a `NumberformatException` if the value is negative. The `catch` operator
+    acts as a safeguard (logs the exception and cancels the flow).
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此示例中，如果收集器收集到大于2的值，它会抛出`RuntimeException`。收集逻辑包装在`try`/`catch`语句中，因为我们不希望程序崩溃并记录异常。如果值为负，流内部会引发`NumberformatException`。`catch`运算符充当保护措施（记录异常并取消流）。
+- en: 'The output is:'
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输出如下：
+- en: '[PRE25]'
+  id: totrans-203
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE25]'
+- en: Note that the flow didn’t intercept the exception raised inside the collector,
+    because it was caught in the catch clause of the `try`/`catch`. The flow never
+    got to raise a `NumberformatException`, because the collector prematurely cancelled
+    the collection.
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，流没有拦截收集器内部引发的异常，因为异常已在`try`/`catch`子句中捕获。流从未引发`NumberformatException`，因为收集器过早取消了收集。
+- en: Another example
+  id: totrans-205
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 另一个示例
+- en: 'In [“Use Case #2: Concurrently Transform a Stream of Values”](#use_case_2_id),
+    we held off on talking about error handling. Suppose the `transform` function
+    might raise exceptions, among which is `NumberFormatException`. You can selectively
+    handle `NumberFormatException` using the `catch` operator:'
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '在[“用例 #2: 同时转换值流”](#use_case_2_id)中，我们暂时不讨论错误处理。假设`transform`函数可能引发异常，其中包括`NumberFormatException`。您可以使用`catch`运算符有选择地处理`NumberFormatException`：'
+- en: '[PRE26]'
+  id: totrans-207
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE26]'
+- en: '[![1](assets/1.png)](#co_flows_CO3-1)'
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_flows_CO3-1)'
+- en: As the `catch` operator catches `Throwable`s, we need to check the type of the
+    error. If the error is a `NumberFormatException`, then we handle it inside the
+    `if` statement. You can add other checks there for different error types.
+  id: totrans-209
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当`catch`操作符捕获`Throwable`时，我们需要检查错误的类型。如果错误是`NumberFormatException`，那么我们在`if`语句内处理它。您可以在那里添加其他检查来处理不同类型的错误。
+- en: '[![2](assets/2.png)](#co_flows_CO3-2)'
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_flows_CO3-2)'
+- en: Otherwise, you don’t know the error’s type. In most cases, it’s preferable not
+    to swallow the error and rethrow.
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 否则，您无法知道错误的类型。在大多数情况下，最好不要吞噬错误并重新抛出。
+- en: You can use emit from inside catch
+  id: totrans-212
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 您可以在`catch`内部使用`emit`。
+- en: 'Sometimes it will make sense to emit a particular value when you catch an exception
+    from inside the flow:'
+  id: totrans-213
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时，在捕获流内部的异常时发出特定值是有意义的：
+- en: '![pawk 10in06](assets/pawk_10in06.png)'
+  id: totrans-214
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 10in06](assets/pawk_10in06.png)'
+- en: You can find the corresponding [source code in GitHub](https://oreil.ly/vknEm).
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在GitHub上找到相应的[源代码](https://oreil.ly/vknEm)。
+- en: 'The output is:'
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输出是：
+- en: '[PRE27]'
+  id: totrans-217
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE27]'
+- en: Emitting values from inside `catch` is especially useful to *materialize exceptions*.
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从`catch`内部发出值对于*具体化异常*尤其有用。
+- en: Materialize Your Exceptions
+  id: totrans-219
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 具体化您的异常
+- en: '*Materializing exceptions*^([5](ch10.html#idm46669739314304)) is the process
+    of catching exceptions and emitting special values or objects that represent those
+    exceptions. The goal is to avoid throwing exceptions from inside the flow, because
+    code execution then goes to whatever place that collects that flow. It doesn’t
+    matter whether collection code handles exceptions thrown by the flow or not. If
+    the flow throws exceptions, the collection code needs to be aware of those exceptions
+    and catch them in order to avoid undefined behavior. Consequently, the flow has
+    a *side effect on the collection code*, and this is a violation of the exception
+    transparency principle.'
+  id: totrans-220
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*异常的具体化*^([5](ch10.html#idm46669739314304))是捕获异常并发出代表这些异常的特殊值或对象的过程。其目标是避免从流的内部抛出异常，因为代码执行会转向收集该流的任何地方。无论收集代码是否处理流抛出的异常，都不重要。如果流抛出异常，收集代码需要意识到这些异常并捕获它们，以避免未定义的行为。因此，流对收集代码有*副作用*，这违反了异常透明原则。'
+- en: Note
+  id: totrans-221
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: The collection code shouldn’t be aware of implementation details of the flow.
+    For example, if the flow is a `Flow<Number>`, you should only expect to get `Number`
+    values (or subtypes)—not exceptions.
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 收集代码不应该了解流的实现细节。例如，如果流是`Flow<Number>`，您应该只期望获得`Number`值（或其子类型），而不是异常。
+- en: 'Let’s take another example. Imagine you’re fetching images, given their URLs.
+    You have an incoming flow of URLs:'
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们举另一个例子。假设您正在获取图像，给定它们的 URL。您有一系列传入的 URL：
+- en: '[PRE28]'
+  id: totrans-224
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE28]'
+- en: 'You also have this function already available:'
+  id: totrans-225
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您已经可以使用此功能：
+- en: '[PRE29]'
+  id: totrans-226
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE29]'
+- en: This `fetchImage` function may throw `IOException`s. In order to craft a “flow
+    of images” using the `urlFlow` and the `fetchImage` function, you should materialize
+    `IOException`s. Regarding the `fetchImage` function, it either succeeds or fails—you
+    either get an `Image` instance, or an exception is thrown. You can represent these
+    outcomes by a `Result` type, with `Success` and `Error` subclasses:^([6](ch10.html#idm46669739185008))
+  id: totrans-227
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个`fetchImage`函数可能会抛出`IOException`。为了使用`urlFlow`和`fetchImage`函数来构建“图像流”，您应该具体化`IOException`。关于`fetchImage`函数，它要么成功返回一个`Image`实例，要么抛出异常。您可以通过`Result`类型来表示这些结果，其中包括`Success`和`Error`子类:^([6](ch10.html#idm46669739185008))
+- en: '[PRE30]'
+  id: totrans-228
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE30]'
+- en: In the case of a success, we wrap the actual result—the `Image` instance. In
+    the case of failure, we felt it was appropriate to wrap the URL for which image
+    retrieval failed. However, you’re free to wrap all data that might be useful for
+    the collection code, such as the exception itself.
+  id: totrans-229
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在成功的情况下，我们包装实际的结果——`Image`实例。在失败的情况下，我们认为将失败的图像检索的URL包装起来是合适的。但是，您可以自由地包装所有可能对收集代码有用的数据，例如异常本身。
+- en: 'Now you can encapsulate `fetchImage` usage, by creating a `fetchResult` function
+    which returns `Result` instances:'
+  id: totrans-230
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，您可以通过创建一个返回`Result`实例的`fetchResult`函数来封装`fetchImage`的使用：
+- en: '[PRE31]'
+  id: totrans-231
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE31]'
+- en: 'Finally, you can implement a `resultFlow` and collect it safely:'
+  id: totrans-232
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，您可以实现一个`resultFlow`并安全地收集它：
+- en: '[PRE32]'
+  id: totrans-233
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE32]'
+- en: 'The output is:'
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输出是：
+- en: '[PRE33]'
+  id: totrans-235
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE33]'
+- en: A bonus
+  id: totrans-236
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 一个额外的奖励
+- en: 'Imagine that you’d like to automatically retry fetching an image in the event
+    of an error. You can implement a custom flow operator that retries an `action`
+    while the `predicate` returns true:'
+  id: totrans-237
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设您希望在发生错误时自动重试获取图像。您可以实现一个自定义流操作符，该操作符在`predicate`返回`true`时重试`action`：
+- en: '[PRE34]'
+  id: totrans-238
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE34]'
+- en: 'If you’d like to retry, three times (at most) before returning an error, you
+    can use this operator like so:'
+  id: totrans-239
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您想重试，在返回错误之前最多可以尝试三次，您可以像这样使用此操作符：
+- en: '[PRE35]'
+  id: totrans-240
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE35]'
+- en: 'The output is:'
+  id: totrans-241
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输出是：
+- en: '[PRE36]'
+  id: totrans-242
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE36]'
+- en: Hot Flows with SharedFlow
+  id: totrans-243
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用 SharedFlow 的热流
+- en: 'Previous implementations of flow were *cold*: nothing runs until you start
+    collecting the flow. This is made possible because for each emitted value, only
+    one collector would get the value. Therefore, there’s no need to run anything
+    until the collector is ready to collect the values.'
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以前的流实现是*cold*的：直到开始收集流为止，什么都不会运行。这是可能的，因为对于每个发出的值，只有一个收集器会获取该值。因此，在收集器准备好收集值之前，无需运行任何内容。
+- en: However, what if you need to *share* emitted values among several collectors?
+    For example, say an event like a file download completes in your app. You might
+    want to directly notify various components, such as some view-models, repositories,
+    or even some views. Your file downloader might not have to be aware of the existence
+    of other parts of your app. A good separation of concerns starts with a loose
+    coupling of classes, and the *event bus* is one architecture pattern that helps
+    in this situation.
+  id: totrans-245
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是，如果您需要在多个收集器之间*共享*发出的值怎么办？例如，假设您的应用中完成了文件下载等事件。您可能希望直接通知各种组件，例如一些视图模型、存储库或甚至一些视图。您的文件下载器可能不需要知道应用程序的其他部分的存在。良好的关注点分离从类的松耦合开始，并且*事件总线*是在这种情况下有助于的一种架构模式。
+- en: 'The principle is simple: the downloader emits an event (an instance of a class,
+    optionally holding some state) by giving it to the event bus, and all subscribers
+    subsequently receive that event. A `SharedFlow` can act just like that, as shown
+    in [Figure 10-7](#shared_flow_principle).'
+  id: totrans-246
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 原理很简单：下载器通过将事件（一个类的实例，可选地保存一些状态）传递给事件总线来发出事件，随后所有订阅者都会接收到该事件。`SharedFlow` 可以像这样运行，如
+    [图 10-7](#shared_flow_principle) 所示。
+- en: '![SharedFlow](assets/pawk_1006.png)'
+  id: totrans-247
+  prefs: []
+  type: TYPE_IMG
+  zh: '![SharedFlow](assets/pawk_1006.png)'
+- en: Figure 10-7\. `SharedFlow`.
+  id: totrans-248
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 10-7\. `SharedFlow`。
+- en: A `SharedFlow` broadcasts events to all its subscribers. Actually, `SharedFlow`
+    really is a toolbox that can be used in many situations—not just to implement
+    an event bus. Before giving examples of usage, we’ll show how to create a `SharedFlow`
+    and how you can tune it.
+  id: totrans-249
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`SharedFlow` 将事件广播给所有订阅者。实际上，`SharedFlow` 确实是一个可以在许多情况下使用的工具箱，而不仅仅是实现事件总线。在提供使用示例之前，我们将展示如何创建一个
+    `SharedFlow` 以及如何调整它。'
+- en: Create a SharedFlow
+  id: totrans-250
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建一个 SharedFlow
+- en: 'In its simplest usage, you invoke `MutableSharedFlow()` with no parameter.
+    As its name suggests, you can *mutate* its state, by sending values to it. A common
+    pattern when creating a `SharedFlow` is to create a private mutable version and
+    a public nonmutable one using `asSharedFlow()`, as shown in the following:'
+  id: totrans-251
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在最简单的用法中，您可以无参数调用 `MutableSharedFlow()`。正如其名称所示，您可以通过向其发送值来*改变*其状态。创建 `SharedFlow`
+    的常见模式是创建一个私有的可变版本和一个使用 `asSharedFlow()` 创建的公共不可变版本，如下所示：
+- en: '[PRE37]'
+  id: totrans-252
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE37]'
+- en: This pattern is useful when you ensure that subscribers will only be able to
+    *read* the flow (e.g., not send values). You might be surprised to find that `MutableSharedFlow`
+    is not a class. It’s actually a function that accepts parameters, which we’ll
+    cover later in this chapter. For now, we’re only showing the default no-arg version
+    of `MutableSharedFlow`.
+  id: totrans-253
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当确保订阅者只能*读取*流时，这种模式非常有用（例如，不能发送值）。您可能会感到惊讶，`MutableSharedFlow` 不是一个类。它实际上是一个接受参数的函数，我们稍后将在本章中详细介绍。现在，我们只展示了
+    `MutableSharedFlow` 的默认无参数版本。
+- en: Register a Subscriber
+  id: totrans-254
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 注册一个订阅者
+- en: 'A subscriber registers when it starts collecting the `SharedFlow`—preferably
+    the public nonmutable version:'
+  id: totrans-255
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当订阅者开始收集 `SharedFlow` 时，最好使用公共不可变版本注册：
+- en: '[PRE38]'
+  id: totrans-256
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE38]'
+- en: 'A subscriber can only live in a scope, because the `collect` terminal operator
+    is a suspending function. This is good for structured concurrency: if the scope
+    is cancelled, so is the subscriber.'
+  id: totrans-257
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 订阅者只能存在于一个作用域中，因为 `collect` 终端操作符是一个挂起函数。这对于结构化并发非常有利：如果取消了作用域，订阅者也会被取消。
+- en: Send Values to the SharedFlow
+  id: totrans-258
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 向 SharedFlow 发送值
+- en: 'A `MutableSharedFlow` exposes two methods to emit values—`emit` and `tryEmit`:'
+  id: totrans-259
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`MutableSharedFlow` 公开两种方法来发射值——`emit` 和 `tryEmit`：'
+- en: '`emit`'
+  id: totrans-260
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`emit`'
+- en: This suspends under some conditions (discussed shortly).
+  id: totrans-261
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在某些条件下会暂停（稍后讨论）。
+- en: '`tryEmit`'
+  id: totrans-262
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`tryEmit`'
+- en: This never suspends. It tries to emit the value immediately.
+  id: totrans-263
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这永远不会暂停。它会立即尝试发射该值。
+- en: Why are there two methods to emit values? This is because, by default, when
+    a `MutableSharedFlow` emits a value using `emit`, it suspends until *all* subscribers
+    start processing the value. We will give an example of `emit` usage in the next
+    section.
+  id: totrans-264
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为什么有两种发射值的方法？这是因为，默认情况下，当 `MutableSharedFlow` 使用 `emit` 发射值时，它会暂停，直到 *所有* 订阅者开始处理该值。我们将在下一节中举例说明
+    `emit` 的使用。
+- en: However, sometimes this isn’t what you want to do. You’ll find situations where
+    you have to emit values from nonsuspending code (see [“Using SharedFlow as an
+    Event Bus”](#shared_flow_as_eventbus)). So here comes `tryEmit`, which tries to
+    emit a value immediately and returns `true` if it succeeded, and `false` otherwise.
+    We’ll provide more details on the nuances of `emit` and `tryEmit` in upcoming
+    sections.
+  id: totrans-265
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，有时这并不是您想要的。您会发现某些情况下需要从非挂起代码发射值（见 [“使用 SharedFlow 作为事件总线”](#shared_flow_as_eventbus)）。因此，这里有
+    `tryEmit`，它尝试立即发射一个值，并在成功时返回 `true`，否则返回 `false`。我们将在接下来的部分详细介绍 `emit` 和 `tryEmit`
+    的微妙之处。
+- en: Using SharedFlow to Stream Data
+  id: totrans-266
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 SharedFlow 流式传输数据
+- en: Suppose you are developing a news app. One of the features of your app is that
+    it fetches news from an API or a local database and displays this news (or newsfeed).
+    Ideally, you should rely on a local database to avoid using the API when possible.
+    In this example, we’ll use the API as the only source of news, although you can
+    easily extend on our example to add local persistence.
+  id: totrans-267
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设您正在开发一款新闻应用。您的应用的一个特性是从API或本地数据库获取新闻并显示这些新闻（或新闻源）。理想情况下，您应该依赖于本地数据库，以尽可能避免使用API。在此示例中，我们将API作为唯一的新闻来源，尽管您可以轻松扩展我们的示例以添加本地持久化。
+- en: The architecture
+  id: totrans-268
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 架构
+- en: In our architecture, a view-model relies on a repository to get the newsfeed.
+    When the view-model receives news, it notifies the view. The repository is responsible
+    for querying the remote API at regular intervals, and provides a means for view-models
+    to get the newsfeed (see [Figure 10-8](#shared_flow_example_arch)).
+  id: totrans-269
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的架构中，视图模型依赖于存储库获取新闻源。当视图模型接收到新闻时，它会通知视图。存储库负责定期查询远程API，并为视图模型提供获取新闻源的方式（见
+    [图 10-8](#shared_flow_example_arch)）。
+- en: '![App architecure](assets/pawk_1007.png)'
+  id: totrans-270
+  prefs: []
+  type: TYPE_IMG
+  zh: '![应用架构](assets/pawk_1007.png)'
+- en: Figure 10-8\. App architecture.
+  id: totrans-271
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 10-8\. 应用架构。
+- en: The implementation
+  id: totrans-272
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 实施
+- en: 'To keep it simple, the following `News` data class represents news:'
+  id: totrans-273
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了简化，以下 `News` 数据类代表新闻：
+- en: '[PRE39]'
+  id: totrans-274
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE39]'
+- en: 'The repository reaches the API through a `NewsDao`. In our example, the data
+    access object (DAO) is manually constructor-injected. In a real application, we
+    recommend that you use a dependency injection (DI) framework such as Hilt or Dagger:'
+  id: totrans-275
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 存储库通过 `NewsDao` 访问API。在我们的示例中，数据访问对象（DAO）是手动构造注入的。在实际应用中，建议使用依赖注入（DI）框架，如 Hilt
+    或 Dagger：
+- en: '[PRE40]'
+  id: totrans-276
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE40]'
+- en: 'We now have enough material to implement the repository:'
+  id: totrans-277
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经有足够的材料来实现存储库了：
+- en: '[PRE41]'
+  id: totrans-278
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE41]'
+- en: '[![1](assets/1.png)](#co_flows_CO4-1)'
+  id: totrans-279
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_flows_CO4-1)'
+- en: We create our private mutable shared flow. It will only be used inside the repository.
+  id: totrans-280
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们创建了私有的可变共享流。它仅在存储库内部使用。
+- en: '[![2](assets/2.png)](#co_flows_CO4-2)'
+  id: totrans-281
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_flows_CO4-2)'
+- en: We create the public nonmutable version of the shared flow.
+  id: totrans-282
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们创建了共享流的公共不可变版本。
+- en: '[![3](assets/3.png)](#co_flows_CO4-3)'
+  id: totrans-283
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_flows_CO4-3)'
+- en: As soon as the repository instance is created, we start fetching news from the
+    API.
+  id: totrans-284
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦创建存储库实例，我们就开始从API获取新闻。
+- en: '[![4](assets/4.png)](#co_flows_CO4-4)'
+  id: totrans-285
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![4](assets/4.png)](#co_flows_CO4-4)'
+- en: Every time we get a list of `News` instances, we emit those values using our
+    `MutableSharedFlow`.
+  id: totrans-286
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次我们获取 `News` 实例列表时，我们都会使用我们的 `MutableSharedFlow` 发射这些值。
+- en: 'All that’s left is to implement a view-model that will subscribe to the repository’s
+    shared flow:'
+  id: totrans-287
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 唯一剩下的就是实现一个视图模型，它将订阅存储库的共享流：
+- en: '[PRE42]'
+  id: totrans-288
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE42]'
+- en: By invoking `repository.newsFeed.collect { .. }`, the view-model subscribes
+    to the shared flow. Every time the repository emits a `News` instance to the shared
+    flow, the view-model receives the news and adds it to its `LiveData` to update
+    the view.
+  id: totrans-289
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过调用 `repository.newsFeed.collect { .. }`，视图模型订阅了共享流。每当存储库向共享流发射一个 `News` 实例时，视图模型将接收到新闻并将其添加到其
+    `LiveData` 以更新视图。
+- en: Notice how the flow collection happens inside a coroutine started with `viewModelScope.launch`.
+    This implies that if the view-model reaches its end-of-life, the flow collection
+    will automatically be cancelled, and that’s a good thing.
+  id: totrans-290
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意流集合发生在使用 `viewModelScope.launch` 启动的协程内部。这意味着如果视图模型达到生命周期的末尾，流集合将自动取消，这是一件好事。
+- en: Tip
+  id: totrans-291
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: In our example, we manually constructor-inject an object (in this case, the
+    repository). A DI framework would definitely help to avoid boilerplate code. As
+    demonstrating DI frameworks isn’t the primary focus of this chapter, we chose
+    to go for a manual repository injection into the view-model.
+  id: totrans-292
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的示例中，我们手动构造注入一个对象（在本例中是仓库）。依赖注入框架肯定会帮助避免样板代码。由于本章节的重点不是演示依赖注入框架，我们选择手动将仓库注入到视图模型中。
+- en: Test of our implementation
+  id: totrans-293
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 我们实现的测试
+- en: 'In order to test the previous code, we need to mock the `NewsDao`. Our DAO
+    will just send two dummy `News` instances and increment a counter:'
+  id: totrans-294
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了测试前面的代码，我们需要模拟`NewsDao`。我们的DAO将只发送两个虚拟的`News`实例并增加一个计数器：
+- en: '[PRE43]'
+  id: totrans-295
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE43]'
+- en: 'When we run our code using the preceding DAO, this is what we see in the console:'
+  id: totrans-296
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们使用上述DAO运行我们的代码时，在控制台中可以看到以下内容：
+- en: '[PRE44]'
+  id: totrans-297
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE44]'
+- en: 'There is nothing surprising here: our view-model simply receives the news sent
+    by the repository. Things become interesting when there’s not one but several
+    view-models that  subscribe  to  the  shared  flow.  We’ve  gone  ahead  and 
+    created  another  view-model which also logs in the console. We created the other
+    view-model 250 ms *after* the launch of the program. This is the output we get:'
+  id: totrans-298
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里没有什么令人惊讶的：我们的视图模型简单地接收存储库发送的新闻。当不只有一个而是多个视图模型订阅共享流时，情况变得有趣。我们已经创建了另一个视图模型，它也在控制台中记录。我们在程序启动后的250毫秒*后*创建了另一个视图模型。这是我们得到的输出：
+- en: '[PRE45]'
+  id: totrans-299
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE45]'
+- en: You can see that the other view-model *missed* the first two news entries. This
+    is because, at the time the shared flow emits the first two news entries, the
+    first view-model is the only subscriber. The second view-model comes after and
+    only receives subsequent news.
+  id: totrans-300
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以看到另一个视图模型*错过了*前两个新闻条目。这是因为在共享流发出前两个新闻条目时，第一个视图模型是唯一的订阅者。第二个视图模型稍后加入，只接收后续新闻。
+- en: Replay values
+  id: totrans-301
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 重放值
+- en: 'What if you need the second view-model to get previous news? A shared flow
+    can *optionally* cache values so that new subscribers receive the last *n* cached
+    values. In our case, if we want the shared flow to replay the last two news entries,
+    all we have to do is to update the line in the repository:'
+  id: totrans-302
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您需要第二个视图模型获取先前的新闻，会发生什么？共享流可以*选择性*缓存值，以便新订阅者接收最后*n*个缓存的值。在我们的情况下，如果我们希望共享流重放最后两条新闻条目，我们只需更新存储库中的一行：
+- en: '[PRE46]'
+  id: totrans-303
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE46]'
+- en: With that change, the two view-models receive *all* news. Replaying data is
+    actually useful in other common situations. Imagine the user leaves the fragment
+    that displays the list of news. Potentially, the associated view-model might also
+    get destroyed, if its lifecycle is bound to the fragment (that wouldn’t be the
+    case if you chose to bound the view-model to the activity). Later on, the user
+    comes back to the news fragment. What happens then? The view-model is re-created
+    and immediately gets the last two news entries while waiting for fresh news. Replaying
+    only two news entries might then be insufficient. Therefore, you might want to
+    increase the replay count to, say, 15.
+  id: totrans-304
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 改变后，两个视图模型都会收到*所有*新闻。在其他常见情况下，回放数据实际上是有用的。想象一下用户离开显示新闻列表的片段。如果与片段绑定的生命周期相关联的视图模型也可能被销毁（如果您选择将视图模型绑定到活动上，则不会发生这种情况）。稍后，用户返回到新闻片段。那么会发生什么？视图模型会重新创建，并立即获取最后两条新闻条目，同时等待新的新闻。因此，仅重放两条新闻条目可能是不够的。因此，您可能希望将重放次数增加到，比如，15。
+- en: Let’s recap. A `SharedFlow` can optionally replay values for new subscribers.
+    The number of values to replay is configurable, using the `replay` parameter of
+    the `MutableSharedFlow` function.
+  id: totrans-305
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们回顾一下。一个`SharedFlow`可以选择性地为新订阅者重放值。通过`MutableSharedFlow`函数的`replay`参数，可以配置重放的值数量。
+- en: Suspend or not?
+  id: totrans-306
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 暂停还是不暂停？
+- en: 'There’s one last thing about this replay feature that you should be aware of.
+    A shared flow with `replay` > `0` internally uses a cache that works similarly
+    to a `Channel`. For example, if you create a shared flow with `replay` = `3`,
+    the first three `emit` calls won’t suspend. In this case, `emit` and `tryEmit`
+    do exactly the same thing: they add a new value to the cache, as shown in [Figure 10-9](#shared_flow_cache_not_full).'
+  id: totrans-307
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有关于这个重放特性的最后一点需要注意。一个`replay` > `0`的共享流内部使用类似于`Channel`的缓存。例如，如果您创建一个带有`replay`
+    = `3`的共享流，则前三个`emit`调用不会暂停。在这种情况下，`emit`和`tryEmit`的作用完全相同：它们向缓存中添加一个新值，如图[10-9](#shared_flow_cache_not_full)所示。
+- en: '![Replay cache not full](assets/pawk_1008.png)'
+  id: totrans-308
+  prefs: []
+  type: TYPE_IMG
+  zh: '![重放缓存未满](assets/pawk_1008.png)'
+- en: Figure 10-9\. Replay cache not full.
+  id: totrans-309
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图10-9\. 重放缓存未满。
+- en: When you submit a fourth value to the shared flow, then it depends on whether
+    you use `emit` or `tryEmit`, as shown in [Figure 10-10](#shared_flow_cache_full).
+    By default, when the replay cache is full, `emit` suspends until all subscribers
+    start processing the oldest value in the cache. As for `tryEmit`, it returns `false`
+    since it can’t add the value to the cache. If you don’t keep track of that fourth
+    value yourself, this value is lost.
+  id: totrans-310
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你向共享流提交第四个值时，取决于你使用的是`emit`还是`tryEmit`，如[图 10-10](#shared_flow_cache_full)所示。默认情况下，当重放缓存满时，`emit`会暂停，直到所有订阅者开始处理缓存中的最旧值。至于`tryEmit`，由于无法将值添加到缓存中，它返回`false`。如果你没有自己跟踪第四个值，这个值将会丢失。
+- en: '![Replay cache full](assets/pawk_1009.png)'
+  id: totrans-311
+  prefs: []
+  type: TYPE_IMG
+  zh: '![重放缓存已满](assets/pawk_1009.png)'
+- en: Figure 10-10\. Replay cache full.
+  id: totrans-312
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 10-10\. 重放缓存已满。
+- en: 'That behavior (when the replay cache is full) can be changed. You can also
+    opt to discard either the oldest value in the cache or the value that is being
+    added to the cache. In both cases, `emit` does not suspend and `tryEmit` returns
+    true. Therefore, there are three possible behaviors on buffer overflow: suspend,
+    drop oldest, and drop latest.'
+  id: totrans-313
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当重放缓存满时，可以更改该行为。你还可以选择丢弃缓存中最旧的值或正在添加到缓存中的值。在这两种情况下，`emit`不会暂停，并且`tryEmit`返回true。因此，在缓冲区溢出时有三种可能的行为：暂停、丢弃最旧的和丢弃最新的。
+- en: 'You apply the desired behavior while creating the shared flow, by using the
+    `onBufferOverflow` parameter, as shown in the following:'
+  id: totrans-314
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在创建共享流时，可以使用`onBufferOverflow`参数应用所需的行为，如下所示：
+- en: '[PRE47]'
+  id: totrans-315
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE47]'
+- en: '`BufferOverflow` is an *enum* with three possible values: `SUSPEND`, `DROP_OLDEST`,
+    and `DROP_LATEST`. If you don’t specify a value for `onBufferOverflow`, `SUSPEND`
+    is the default strategy.'
+  id: totrans-316
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`BufferOverflow`是一个包含三个可能值的*枚举*：`SUSPEND`、`DROP_OLDEST`和`DROP_LATEST`。如果未为`onBufferOverflow`指定值，则`SUSPEND`是默认策略。'
+- en: Buffer values
+  id: totrans-317
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 缓冲值
+- en: 'In addition to being able to replay values, a shared flow can *buffer* values
+    without replaying them, allowing slow subscribers to lag behind other, faster
+    subscribers. The size of the buffer is customizable, as shown in the following:'
+  id: totrans-318
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了能够重放值外，共享流还可以*缓冲*值而不重放它们，允许慢速订阅者落后于其他更快的订阅者。缓冲区的大小是可自定义的，如下所示：
+- en: '[PRE48]'
+  id: totrans-319
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE48]'
+- en: By default, `extraBufferCapacity` equals zero. When you set a strictly positive
+    value, `emit` doesn’t suspend while there is buffer space remaining—unless you
+    explicitly change the buffer overflow strategy.
+  id: totrans-320
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 默认情况下，`extraBufferCapacity`等于零。当你设置一个严格正值时，只要缓冲区中还有空间，`emit`就不会暂停，除非你明确更改缓冲区溢出策略。
+- en: You might be wondering in what situations `extraBufferCapacity` can be useful.
+    One immediate consequence of creating a shared flow with, for example, `extraBufferCapacity`
+    `=` `1` and `onBufferOverflow` `=` `BufferOverflow.DROP_OLDEST`, is that you’re
+    guaranteed that `tryEmit` will *always* successfully insert a value into the shared
+    flow. It’s sometimes really convenient to insert values in a shared flow from
+    nonsuspending code. A good example of such a use case is when using a shared flow
+    as an event bus.
+  id: totrans-321
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能会想知道`extraBufferCapacity`在哪些情况下会有用。例如，创建一个带有`extraBufferCapacity = 1`和`onBufferOverflow
+    = BufferOverflow.DROP_OLDEST`的共享流，可以确保`tryEmit`始终成功地将值插入到共享流中。有时候，从非挂起代码中向共享流插入值确实非常方便。一个很好的示例是在使用共享流作为事件总线时。
+- en: Using SharedFlow as an Event Bus
+  id: totrans-322
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 将 SharedFlow 用作事件总线
+- en: 'You need an event bus when all the following conditions are met:'
+  id: totrans-323
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当所有以下条件满足时，你需要一个事件总线：
+- en: You need to broadcast an event across one or several subscribers.
+  id: totrans-324
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 你需要向一个或多个订阅者广播事件。
+- en: The event should be processed *only once*.
+  id: totrans-325
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 事件应*仅处理一次*。
+- en: If a component isn’t registered as a subscriber at the time you emit the event,
+    the event is lost for that component.
+  id: totrans-326
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如果在发出事件时某个组件未注册为订阅者，则该组件将丢失事件。
+- en: Notice the difference with `LiveData`, which keeps in memory the last emitted
+    value and replays it every time the fragment is re-created. With an event bus,
+    the fragment would only receive the event *once*. For example, if the fragment
+    is re-created (the user rotates the device), the event won’t be processed again.
+  id: totrans-327
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意与`LiveData`的区别，它会在内存中保留上次发出的值，并在每次片段重新创建时重放它。对于事件总线，片段只会*收到一次*事件。例如，如果重新创建片段（用户旋转设备），事件不会再次被处理。
+- en: 'An event bus is particularly useful when you want, for example, to display
+    a message as a `Toast` or `Snackbar`. It makes sense to display the message only
+    once. To achieve this, a repository can expose a shared flow as shown in the following
+    code. In order to make the exposed flow accessible for view-models, or even fragments,
+    you can use a DI framework such as Hilt or Dagger:'
+  id: totrans-328
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你想要像 `Toast` 或 `Snackbar` 一样显示消息时，事件总线特别有用。只显示一次消息是有意义的。为了实现这一点，存储库可以将共享流公开如下代码所示。为了使公开的流对视图模型或者片段可访问，你可以使用诸如
+    Hilt 或 Dagger 的 DI 框架：
+- en: '[PRE49]'
+  id: totrans-329
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE49]'
+- en: We’ve set `extraBufferCapacity` to 1 and `onBufferOverflow` to `DROP_OLDEST`
+    so that `_messageFlow.tryEmit` always emits successfully. Why do we care about
+    `tryEmit`? In our example, we use `_messageFlow` from a nonsuspending function.
+    Therefore, we can’t use `emit` inside `someTask`.
+  id: totrans-330
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将 `extraBufferCapacity` 设置为 1，将 `onBufferOverflow` 设置为 `DROP_OLDEST`，以确保 `_messageFlow.tryEmit`
+    总是能够成功发出。为什么我们关心 `tryEmit`？在我们的示例中，我们从一个非挂起函数使用 `_messageFlow`。因此，我们无法在 `someTask`
+    中使用 `emit`。
+- en: If you use `_messageFlow` from inside a coroutine, you can use `emit`. The behavior
+    would be exactly the same, since `emit` wouldn’t suspend because of the presence
+    of the buffer and the buffer overflow policy.
+  id: totrans-331
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你在协程内部使用 `_messageFlow`，你可以使用 `emit`。行为会完全相同，因为由于缓冲区的存在以及缓冲区溢出策略，`emit` 不会挂起。
+- en: An event bus is appropriate for dispatching one-time events that some components
+    might miss if they’re not ready to receive those events. For example, say you
+    fire a “recording-stopped” event while the user hasn’t navigated to the fragment
+    displaying recordings yet. The result is that the event is lost. However, your
+    application can be designed to update the state of the fragment anytime the fragment
+    resumes. Consequently, receiving “recording-stopped” is only useful when the fragment
+    is in the resumed state, as this should trigger a state update. This is just an
+    example of when losing events is totally acceptable and part of your application’s
+    design.
+  id: totrans-332
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事件总线适合分派一次性事件，一些组件可能会错过这些事件，如果它们尚未准备好接收这些事件。例如，假设当用户尚未导航到显示录音的片段时，你会触发“录制停止”事件。结果是事件丢失。但是，你的应用程序可以设计为在任何时候片段恢复时更新片段的状态。因此，仅当片段处于恢复状态时才接收“录制停止”，这应该触发状态更新。这只是一个示例，说明在某些情况下丢失事件是完全可以接受的，并且是应用程序设计的一部分。
+- en: Sometimes, however, this isn’t what you want to achieve. Take, for example,
+    a service that can perform downloads. If the service fires a “download-finished”
+    event, you don’t want your UI to miss that. When the user navigates to the view
+    displaying the status of the download, the view should render the updated *state*
+    of the download.
+  id: totrans-333
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，有时这并不是你想要实现的。例如，一个可以执行下载的服务。如果服务触发了“下载完成”事件，你不希望你的 UI 错过这个事件。当用户导航到显示下载状态的视图时，视图应该呈现下载的更新*状态*。
+- en: 'You will face situations where sharing a *state* is required. This situation
+    is so common that a type of shared flow was specifically created for it: `StateFlow`.'
+  id: totrans-334
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你会面临需要共享*状态*的情况。这种情况非常常见，因此专门为此创建了一种类型的共享流：`StateFlow`。
+- en: 'StateFlow: A Specialized SharedFlow'
+  id: totrans-335
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: StateFlow：一种特殊的 SharedFlow
+- en: 'When sharing a state, a state flow:'
+  id: totrans-336
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当共享状态时，状态流：
+- en: 'Shares only one value: the current *state*.'
+  id: totrans-337
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 仅共享一个值：当前*状态*。
+- en: Replays the state. Indeed, subscribers should get the last state even if they
+    subscribe afterward.
+  id: totrans-338
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 重播状态。确实，即使订阅者在后来订阅，他们也应该获得最后一个状态。
+- en: Emits an initial value—much like `LiveData` has an initial value.
+  id: totrans-339
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 发出初始值——就像 `LiveData` 有初始值一样。
+- en: Emits new values only when the state changes.
+  id: totrans-340
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 仅在状态更改时发出新值。
+- en: 'As you’ve learned previously, this behavior can be achieved using a shared
+    flow:'
+  id: totrans-341
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你之前学到的，可以使用共享流来实现这种行为：
+- en: '[PRE50]'
+  id: totrans-342
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE50]'
+- en: '`StateFlow`^([7](ch10.html#idm46669737887008)) is a shorthand for the preceding
+    code. In practice, all you have to write is:'
+  id: totrans-343
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`StateFlow`^([7](ch10.html#idm46669737887008)) 是前述代码的缩写。实际上，你只需要写：'
+- en: '[PRE51]'
+  id: totrans-344
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE51]'
+- en: An Example of StateFlow Usage
+  id: totrans-345
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: StateFlow 使用示例
+- en: 'Imagine that you have a download service that can emit three possible download
+    states: download started, downloading, and download finished, as shown in [Figure 10-11](#download_state_flow).'
+  id: totrans-346
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设你有一个下载服务，它可以发出三种可能的下载状态：下载已开始、正在下载和下载完成，如 [图 10-11](#download_state_flow)
+    所示。
+- en: '![Download state](assets/pawk_1010.png)'
+  id: totrans-347
+  prefs: []
+  type: TYPE_IMG
+  zh: '![下载状态](assets/pawk_1010.png)'
+- en: Figure 10-11\. Download state.
+  id: totrans-348
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 10-11\. 下载状态。
+- en: 'Exposing a flow from an Android service can be done in several ways. If you
+    need high decoupling for, say, testability purposes, a DI-injected “repository”
+    object can expose the flow. The repository is then injected in all components
+    that need to subscribe. Or the service can statically expose the flow in a companion
+    object. This induces tight coupling between all components that use the flow.
+    However, it might be acceptable in a small app or for demo purpose, such as in
+    the following example:'
+  id: totrans-349
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从Android服务公开流可以通过几种方式完成。如果需要高解耦，例如用于可测试性目的，可以通过DI注入的“repository”对象公开流。然后将存储库注入所有需要订阅的组件中。或者服务可以在伴生对象中静态地公开流。这将在所有使用流的组件之间引入紧密耦合。然而，在小型应用程序或演示目的中，这可能是可以接受的，例如以下示例：
+- en: '[PRE52]'
+  id: totrans-350
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE52]'
+- en: 'Internally, the service can update its state by using, for example, `_downloadState.tryEmit(Stopped)`.
+    When declared inside a companion object, the state flow can be easily accessed
+    from a view-model, and exposed as a `LiveData` using `asLiveData()`:'
+  id: totrans-351
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在内部，服务可以使用例如`_downloadState.tryEmit(Stopped)`来更新其状态。当声明在伴生对象内部时，状态流可以轻松地从视图模型访问，并使用`asLiveData()`作为`LiveData`公开：
+- en: '[PRE53]'
+  id: totrans-352
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE53]'
+- en: 'Subsequently, a view can subscribe to the `LiveData`:'
+  id: totrans-353
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随后，视图可以订阅`LiveData`：
+- en: '[PRE54]'
+  id: totrans-354
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE54]'
+- en: '[![1](assets/1.png)](#co_flows_CO5-1)'
+  id: totrans-355
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_flows_CO5-1)'
+- en: We subscribe to the `LiveData`. If we receive a nonnull value, then we invoke
+    `onDownloadServiceStatus` method.
+  id: totrans-356
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们订阅`LiveData`。如果收到非空值，则调用`onDownloadServiceStatus`方法。
+- en: '[![2](assets/2.png)](#co_flows_CO5-2)'
+  id: totrans-357
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_flows_CO5-2)'
+- en: We are purposely using `when` as an expression so that the Kotlin compiler guarantees
+    that all possible types of `ServiceStatus` are taken into account.
+  id: totrans-358
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们特意使用`when`作为表达式，以便Kotlin编译器确保考虑了所有可能的`ServiceStatus`类型。
+- en: You might be wondering why we used a state flow, and why we haven’t used a `LiveData`
+    in the first place—eliminating the need of `asLiveData()` in the view-model.
+  id: totrans-359
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可能想知道为什么我们使用状态流，并且为什么我们首先没有使用`LiveData`——这消除了在视图模型中使用`asLiveData()`的需要。
+- en: The reason is simple. `LiveData` is Android-specific. It’s a lifecycle-aware
+    component which is meaningful when used within Android views. You might design
+    your application with Kotlin multiplatform code in mind. When targeting Android
+    and iOS, only multiplatform code can be shared as common code. The coroutine library
+    is multiplatform. `LiveData` isn’t.
+  id: totrans-360
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 原因很简单。`LiveData`是特定于Android的。它是一个生命周期感知的组件，仅在Android视图中使用时才有意义。您可能设计您的应用程序考虑到Kotlin多平台代码。当针对Android和iOS时，只有多平台代码可以作为公共代码共享。协程库是多平台的。`LiveData`不是。
+- en: However, even when not considering Kotlin multiplatform, the Flows API makes
+    more sense since it provides greater flexibility with all its flows operators.
+  id: totrans-361
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，即使不考虑Kotlin多平台，流API也更有意义，因为它提供了所有流操作符的更大灵活性。
+- en: Summary
+  id: totrans-362
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 概述
+- en: The Flows API allows for *asynchronous data stream transformation*. A lot of
+    operators are already available out of the box and cover most use cases.
+  id: totrans-363
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 流API允许*异步数据流转换*。许多操作符已经内置并覆盖了大多数用例。
+- en: Thanks to the *composable* nature of flow operators, you can fairly easily design
+    your own, if you need to.
+  id: totrans-364
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 由于流操作符的*可组合*特性，如果需要的话，你可以相当容易地设计自己的流操作。
+- en: Some parts of the flow can be offloaded to a background thread or thread pool,
+    and yet keep a high-level view of data transformation.
+  id: totrans-365
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 流的某些部分可以转移到后台线程或线程池，并保持对数据转换的高级别视图。
+- en: A shared flow broadcasts values to all its subscribers. You can enable buffering
+    and/or replay of values. Shared flows really are a toolbox. You can use them as
+    an event bus for one-time events, or in more complex interactions between components.
+  id: totrans-366
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 共享流向所有订阅者广播值。您可以启用缓冲和/或回放值。共享流真的是一个工具箱。您可以将它们用作一次性事件的事件总线，或者用于组件之间更复杂的交互。
+- en: 'When a component shares its state, a special kind of shared flow is appropriate
+    for use: state flow. It replays the last state for new subscribers and only notifies
+    subscribers when the state changes.'
+  id: totrans-367
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 当组件共享其状态时，适合使用一种特殊类型的共享流：状态流。它会为新订阅者重播最后的状态，并且仅在状态更改时通知订阅者。
+- en: ^([1](ch10.html#idm46669741189760-marker)) We’ll refer to `Flow`s as *flows*
+    in the rest of this chapter.
+  id: totrans-368
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch10.html#idm46669741189760-marker)) 我们将在本章的其余部分将`Flow`称为*flows*。
+- en: ^([2](ch10.html#idm46669741051328-marker)) A token is generally encrypted registration
+    data which the client application stores in memory so that further database access
+    doesn’t require explicit authentication.
+  id: totrans-369
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([2](ch10.html#idm46669741051328-marker)) 令牌通常是客户端应用程序存储在内存中的加密注册数据，以便进一步的数据库访问不需要显式身份验证。
+- en: ^([3](ch10.html#idm46669740498544-marker)) As opposed to cold, a hot entity
+    lives on its own until explicitly stopped.
+  id: totrans-370
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([3](ch10.html#idm46669740498544-marker)) 与冷实体相对应，热实体会自行运行，直到显式停止。
+- en: ^([4](ch10.html#idm46669739885136-marker)) The coroutine started with `coroutineScope{}`.
+  id: totrans-371
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([4](ch10.html#idm46669739885136-marker)) 使用 `coroutineScope{}` 开始的协程。
+- en: ^([5](ch10.html#idm46669739314304-marker)) *Materialize* comes from the Rx operator
+    of the same name. See the [Rx documentation](https://oreil.ly/SEiRP) for more
+    insight.
+  id: totrans-372
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([5](ch10.html#idm46669739314304-marker)) *Materialize* 来自同名的 Rx 操作符。查看 [Rx
+    文档](https://oreil.ly/SEiRP) 获取更多见解。
+- en: ^([6](ch10.html#idm46669739185008-marker)) These subclasses are an algebraic
+    data type.
+  id: totrans-373
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([6](ch10.html#idm46669739185008-marker)) 这些子类是一种代数数据类型。
+- en: ^([7](ch10.html#idm46669737887008-marker)) Actually, `StateFlow` *is* a `SharedFlow`
+    under the hood.
+  id: totrans-374
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([7](ch10.html#idm46669737887008-marker)) 实际上，`StateFlow` 在内部 *就是* `SharedFlow`。

@@ -1,0 +1,1525 @@
+- en: 'Chapter 12\. Live Data: *Leaping into Action*'
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第12章。 LiveData：*跃入行动*
+- en: '![image](Images/f0483-01.png)'
+  id: totrans-1
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0483-01.png)'
+- en: '**Your code often needs to react to property value changes.**'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**您的代码经常需要对属性值更改做出反应。**'
+- en: 'If a view model property changes value, for example, **the fragment might need
+    to respond** by updating its views or navigating elsewhere. But **how does a fragment
+    get to hear when a property’s been updated**? Here, we’ll introduce you to **live
+    data**: a way of **telling interested parties when something’s changed**. You’ll
+    learn all about ***MutableLiveData***, and how to **make your fragment observe
+    properties** of this type. You’ll discover **how the *LiveData* type helps maintain
+    your app’s integrity**. Soon, you’ll be writing apps that are **more responsive
+    than ever before**...'
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，如果视图模型属性更改值，**片段可能需要做出响应**，更新其视图或导航到其他位置。 但是**片段如何知道何时更新属性**？ 在这里，我们将向您介绍**LiveData**：一种**告知感兴趣方何时发生更改**的方法。
+    您将了解有关***MutableLiveData***的所有信息，以及如何**使您的片段观察此类型的属性**。 您将发现**LiveData类型如何帮助维护应用程序的完整性**。
+    很快，您将编写比以往更**响应更快**的应用程序...
+- en: The Guessing Game app revisited
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 重新审视Guessing Game应用程序
+- en: In the previous chapter, we built a Guessing Game app that lets the user guess
+    which letters are included in a secret word. When the user guesses all the letters
+    or runs out of lives, the game ends.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在上一章中，我们构建了一个Guessing Game应用程序，让用户猜测秘密单词中包含哪些字母。 当用户猜对所有字母或生命次数用尽时，游戏结束。
+- en: 'To stop the fragment code from becoming too bloated and maintain the app’s
+    state when the user rotated the device screen, we used view models for the app’s
+    game logic and data. `GameFragment` uses `GameViewModel` for its logic and data,
+    and `ResultViewModel` holds the game result that’s needed by `ResultFragment`:'
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了防止片段代码变得过于臃肿，并在用户旋转设备屏幕时保持应用程序的状态，我们为应用程序的游戏逻辑和数据使用了视图模型。 `GameFragment`使用`GameViewModel`进行逻辑和数据处理，`ResultViewModel`保存`ResultFragment`所需的游戏结果：
+- en: '![image](Images/f0484-01.png)'
+  id: totrans-7
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0484-01.png)'
+- en: When each fragment is displayed, or the user makes a guess, the fragments get
+    the latest values from their view models and display them on the screen.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个片段显示时，或用户猜测时，片段从其视图模型获取最新值并在屏幕上显示它们。
+- en: While this approach works, however, there are some disadvantages.
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管这种方法有效，但也存在一些缺点。
+- en: The fragments decide when to update views
+  id: totrans-10
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 片段决定何时更新视图
+- en: The downside to this approach is that each fragment decides when to fetch the
+    latest property values from the view model and update its views. And some of the
+    time, these values won’t have changed. If the user makes a correct guess, for
+    example, `GameFragment` updates the text that’s displayed for the number of lives
+    left and the incorrect guesses, even though these values won’t have changed.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种方法的缺点是每个片段决定何时从视图模型获取最新的属性值并更新其视图。 有时，这些值不会发生变化。 例如，如果用户猜对了，`GameFragment`会更新显示的剩余生命次数和错误猜测的文本，即使这些值没有发生变化。
+- en: '![image](Images/f0485-01.png)'
+  id: totrans-12
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0485-01.png)'
+- en: Let the view model say when a value’s changed
+  id: totrans-13
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 让视图模型在值更改时发出信号
+- en: An alternative approach is for `GameViewModel` to let `GameFragment` know when
+    each of its properties has been updated. If the fragment is notified of these
+    changes, it will no longer need to decide for itself when to fetch the latest
+    property values from the view model and update its views. Instead, it will only
+    need to update its views once it’s told that the underlying property has been
+    updated.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一种方法是让`GameViewModel`告知`GameFragment`其每个属性何时已被更新。 如果片段收到这些更改的通知，它将不再需要自行决定何时从视图模型获取最新的属性值并更新其视图。
+    相反，它只需要在告知底层属性已被更新后更新其视图。
+- en: '![image](Images/f0485-02.png)'
+  id: totrans-15
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0485-02.png)'
+- en: 'We’re going to implement this change in the Guessing Game app using Android’s
+    **live data** library: part of Android Jetpack. Live data lets the view model
+    tell interested parties—such as fragments and activities—when its property values
+    have been updated. They can then react to these changes by updating views, or
+    calling other methods.'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用Android的**LiveData**库来实现Guessing Game应用程序中的这一更改：这是Android Jetpack的一部分。
+    LiveData允许视图模型告知感兴趣的各方（如片段和活动），其属性值已被更新。 然后，它们可以通过更新视图或调用其他方法来对这些更改做出反应。
+- en: '![image](Images/f0485-03.png)'
+  id: totrans-17
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0485-03.png)'
+- en: You’ll find out how to use live data through the rest of this chapter. First,
+    let’s go through the steps we’ll take to update the app.
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您将通过本章的其余部分了解如何使用LiveData。 首先，让我们看看我们将采取的更新应用程序的步骤。
+- en: Here’s what we’re going to do
+  id: totrans-19
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 这是我们将要做的事情：
+- en: '![image](Images/f0486-01.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0486-01.png)'
+- en: 'Here are the steps that we’ll go through to write the app:'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以下是我们将要完成的应用程序的步骤：
+- en: '**Make the Guessing Game app use live data.**'
+  id: totrans-22
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**使猜谜游戏应用程序使用实时数据。**'
+- en: We’ll update `GameViewModel` so that the `livesLeft`, `incorrectGuesses,` and
+    `secretWordDisplay` properties use live data. We’ll then make `GameFragment` update
+    its views when the values of these properties change.
+  id: totrans-23
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将更新`GameViewModel`，使`livesLeft`、`incorrectGuesses`和`secretWordDisplay`属性使用实时数据。然后，当这些属性的值更改时，我们将使`GameFragment`更新其视图。
+- en: '![image](Images/f0486-02.png)'
+  id: totrans-24
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0486-02.png)'
+- en: '**Protect GameViewModel’s properties and methods.**'
+  id: totrans-25
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**保护GameViewModel的属性和方法。**'
+- en: We’ll restrict access to `GameViewModel`’s properties so that only `GameViewModel`
+    can update them. We’ll also make sure that `GameFragment` only has access to the
+    methods it requires to do its job.
+  id: totrans-26
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将限制对`GameViewModel`的属性的访问，以便只有`GameViewModel`可以更新它们。我们还将确保`GameFragment`只能访问其工作所需的方法。
+- en: '![image](Images/f0486-03.png)'
+  id: totrans-27
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0486-03.png)'
+- en: '**Add a gameOver property.**'
+  id: totrans-28
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**添加一个gameOver属性。**'
+- en: We’ll make `GameViewModel` decide when each game is over using a new `gameOver`
+    property. `GameFragment` will navigate to `ResultFragment` when the value of this
+    property changes.
+  id: totrans-29
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将使`GameViewModel`使用一个新的`gameOver`属性来决定每个游戏何时结束。当此属性的值更改时，`GameFragment`将导航到`ResultFragment`。
+- en: '![image](Images/f0486-04.png)'
+  id: totrans-30
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0486-04.png)'
+- en: Add a live data dependency to the app build.gradle file
+  id: totrans-31
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在应用程序的*build.gradle*文件中添加实时数据依赖项
+- en: As we’re going to be using live data, we’ll begin by adding a live data dependency
+    to the app’s *build.gradle* file.
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我们将使用实时数据，所以我们将首先在应用程序的*build.gradle*文件中添加实时数据依赖项。
+- en: 'Open the project for the Guessing Game app (if you haven’t already done so),
+    open the file *GuessingGame/app/build.gradle*, and add the following line (in
+    bold) to the `dependencies` section:'
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开Guessing Game应用的项目（如果尚未打开），打开文件*GuessingGame/app/build.gradle*，并在`dependencies`部分添加以下行（加粗）：
+- en: '![image](Images/f0486-05.png)'
+  id: totrans-34
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0486-05.png)'
+- en: When prompted, sync your changes.
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在提示时，同步您的更改。
+- en: GameViewModel and GameFragment need to use live data
+  id: totrans-36
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: GameViewModel和GameFragment需要使用实时数据
+- en: We want to use live data in the Guessing Game app so that `GameViewModel` notifies
+    `GameFragment` when its property values have changed. `GameFragment` will then
+    react to these changes.
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望在猜谜游戏应用程序中使用实时数据，以便当`GameViewModel`的属性值更改时，通知`GameFragment`。然后，`GameFragment`将对这些更改做出反应。
+- en: 'We’ll tackle this in two stages:'
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将分两个阶段解决这个问题：
+- en: '**Specify which GameViewModel property changes GameFragment needs to know about.**'
+  id: totrans-39
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**指定GameViewModel属性更改GameFragment需要知道的内容。**'
+- en: '**Tell GameFragment how to respond to each change.**'
+  id: totrans-40
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**告诉GameFragment如何响应每个更改。**'
+- en: For now, we’ll focus on the `GameViewModel` code changes.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们将专注于`GameViewModel`的代码更改。
+- en: Which view model properties should use live data?
+  id: totrans-42
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 哪些视图模型属性应该使用实时数据？
+- en: '`GameViewModel` includes three properties—`secretWordDisplay`, `incorrectGuesses,`
+    and `livesLeft`—that `GameFragment` uses to update its views. We’ll specify that
+    these three properties use live data so that `GameFragment` is notified when their
+    values change.'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`GameViewModel`包括三个属性——`secretWordDisplay`、`incorrectGuesses`和`livesLeft`——这些属性由`GameFragment`用于更新其视图。我们将指定这三个属性使用实时数据，以便在它们的值更改时通知`GameFragment`。'
+- en: 'You specify that a property uses live data by changing its type to `**MutableLiveData<Type>**`,
+    where `Type` is the type of data the property should hold. The `livesLeft` property,
+    for example, is currently defined as an `Int` using the code:'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以通过将其类型更改为`**MutableLiveData<Type>**`来指定属性使用实时数据，其中`Type`是属性应该保存的数据类型。例如，当前`livesLeft`属性被定义为`Int`类型的代码如下：
+- en: '[PRE0]'
+  id: totrans-45
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'To make the property use live data, you change its type to `MutableLiveData<Int>`
+    so that it looks like this instead:'
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使属性使用实时数据，您可以将其类型更改为`MutableLiveData<Int>`，使其看起来像这样：
+- en: '![image](Images/f0487-03.png)![image](Images/f0487-02.png)'
+  id: totrans-47
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0487-03.png)![image](Images/f0487-02.png)'
+- en: This specifies that `livesLeft` is now a `MutableLiveData<Int>` with an initial
+    value of 8.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这指定了`livesLeft`现在是一个`MutableLiveData<Int>`，其初始值为8。
+- en: Similarly, we can define the `incorrectGuesses` and `secretWordDisplay` properties
+    using code like this
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类似地，我们可以使用以下代码定义`incorrectGuesses`和`secretWordDisplay`属性
+- en: '![image](Images/f0487-04.png)'
+  id: totrans-50
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0487-04.png)'
+- en: Here, each property’s type is set to `MutableLiveData<String>`. `incorrectGuesses`’s
+    value is set to `""`, while `secretWordDisplay`’s value will get set in `GameViewModel`’s
+    `init` block.
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，每个属性的类型都设置为`MutableLiveData<String>`。例如，`incorrectGuesses`的值设置为`""`，而`secretWordDisplay`的值将在`GameViewModel`的`init`块中设置。
+- en: So that’s how you define a live data property. Next up, how to update its value.
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是您如何定义一个 LiveData 属性。接下来是如何更新其值。
+- en: Live data objects use a value property
+  id: totrans-53
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 实时数据对象使用一个值属性
+- en: 'When you use `MutableLiveData` properties, you update their values using a
+    property named `**value**`. To update the `secretWordDisplay` property with the
+    `deriveSecretWordDisplay()` method’s return value, for example, you don’t use
+    the code:'
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您使用 `MutableLiveData` 属性时，您使用名为 `**value**` 的属性来更新它们的值。例如，要使用 `deriveSecretWordDisplay()`
+    方法的返回值更新 `secretWordDisplay` 属性，您不使用以下代码：
+- en: '[PRE1]'
+  id: totrans-55
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: 'as you did before. You use the following code instead:'
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像之前做的一样。您可以改用以下代码：
+- en: '[PRE2]'
+  id: totrans-57
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: Changing the `value` property in this way is important, because it’s how any
+    interested parties—in this case `GameFragment`—get notified of any changes. Each
+    time `secretWordDisplay`’s `value` property gets updated, `GameFragment` is informed,
+    so it can respond by updating its views.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以这种方式更改 `value` 属性非常重要，因为这是任何感兴趣的方——在本例中为 `GameFragment` ——收到任何更改通知的方式。每次更新
+    `secretWordDisplay` 的 `value` 属性时，都会通知 `GameFragment`，因此它可以通过更新其视图来做出响应。
+- en: '![image](Images/f0488-02.png)'
+  id: totrans-59
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0488-02.png)'
+- en: The value property can be null
+  id: totrans-60
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 值属性可能为 null
+- en: 'There’s one extra thing to be aware of when you use live data: the `value`’s
+    type is *nullable*. This means that when you use live data values in your code,
+    you need to perform null-safety checks, or your code won’t compile.'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您使用实时数据时，还有一件额外的事情要注意：`value`的类型是*可空*。这意味着当您在代码中使用实时数据值时，您需要执行空安全检查，否则您的代码将无法编译。
+- en: 'As an example, the `livesLeft` property is defined using the code:'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，`livesLeft` 属性是使用以下代码定义的：
+- en: '![image](Images/f0488-03.png)'
+  id: totrans-63
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0488-03.png)'
+- en: This property’s type is `MutableLiveData<Int>`, so its `value` property can
+    accept an `Int`, or be `null`.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此属性的类型是 `MutableLiveData<Int>`，因此其 `value` 属性可以接受一个 `Int`，或者为 `null`。
+- en: 'As the `value` property may be `null`, we can’t, say subtract one from its
+    value using the code:'
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于 `value` 属性可能为 `null`，因此我们不能使用以下代码从其值中减去1：
+- en: '[PRE3]'
+  id: totrans-66
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: 'Instead, we need to use:'
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相反，我们需要使用：
+- en: '![image](Images/f0488-04.png)'
+  id: totrans-68
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0488-04.png)'
+- en: which subtracts 1 from its value so long as it isn’t `null`.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 减去1，直到它不是`null`为止。
+- en: 'Similarly, the following `isLost()` method won’t compile because `liveLeft.value`
+    may be `null`:'
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类似地，以下 `isLost()` 方法不会编译，因为 `liveLeft.value` 可能为 `null`：
+- en: '[PRE4]'
+  id: totrans-71
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'We can, however, change it to use Kotlin’s Elvis operator like this:'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以使用 Kotlin 的 Elvis 运算符进行更改，像这样：
+- en: '![image](Images/f0488-05.png)![image](Images/f0489-02.png)'
+  id: totrans-73
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0488-05.png)![image](Images/f0489-02.png)'
+- en: '**Live Data properties can be defined using val.**'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**使用 `val` 可以定义 LiveData 属性。**'
+- en: As you already know, you use `val` and `var` in Kotlin to specify whether or
+    not a property can be given a reference to a new object.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如您已知，您在 Kotlin 中使用 `val` 和 `var` 来指定属性是否可以引用新对象。
+- en: 'When we first defined each property, we used `var` so that we could update
+    it. We defined the `livesLeft` property, for example, using:'
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们首次定义每个属性时，我们使用 `var` 以便可以更新它。例如，我们使用以下代码定义了 `livesLeft` 属性：
+- en: '[PRE5]'
+  id: totrans-77
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'which initialized `livesLeft` with an `Int` object whose value is 8\. Each
+    time the user made an incorrect guess, we subtracted 1 from `livesLeft`, which
+    gave it a reference to a new `Int` object:'
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它初始化 `livesLeft`，其值为8的 `Int` 对象。每当用户猜测不正确时，我们就从 `livesLeft` 减去1，这使它引用一个新的 `Int`
+    对象：
+- en: '![image](Images/f0489-03.png)'
+  id: totrans-79
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0489-03.png)'
+- en: 'With live data, you update the `value` property of the *existing* object, instead
+    of replacing it with another object, and interested parties are notified of this
+    change. As the object is no longer being replaced, you can define the property
+    using `val` instead of `var` like this:'
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 LiveData，您更新现有对象的 `value` 属性，而不是将其替换为另一个对象，并通知感兴趣的方进行此更改。由于对象不再被替换，因此您可以像这样使用
+    `val` 而不是 `var` 来定义属性：
+- en: '![image](Images/f0489-04.png)'
+  id: totrans-81
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0489-04.png)'
+- en: The full code for GameViewModel.kt
+  id: totrans-82
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: GameViewModel.kt 的完整代码
+- en: Now that you know how live data works, let’s update `GameViewModel` so that
+    its `livesLeft`, `incorrectGuesses`, and `secretWordDisplay` properties all use
+    live data.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经了解了实时数据的工作原理，请更新 `GameViewModel`，以便其 `livesLeft`、`incorrectGuesses` 和 `secretWordDisplay`
+    属性都使用实时数据。
+- en: 'Here’s the full code for *GameViewModel.kt*; update the code to include the
+    changes (in bold):'
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是完整的代码*GameViewModel.kt*; 更新代码以包括更改（加粗部分）：
+- en: '![image](Images/f0490-02.png)![image](Images/f0491-02.png)'
+  id: totrans-85
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0490-02.png)![image](Images/f0491-02.png)'
+- en: That’s everything that we need for `GameViewModel`. Next up, let’s make `GameFragment`
+    respond when the `livesLeft`, `incorrectGuesses`, and `secretWordDisplay` properties
+    get updated.
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们需要为`GameViewModel`做的一切。接下来，让我们让`GameFragment`在更新`livesLeft`、`incorrectGuesses`和`secretWordDisplay`属性时作出响应。
+- en: The fragment observes the view model properties and reacts to changes.
+  id: totrans-87
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 该片段观察视图模型属性并对变化作出反应。
+- en: 'You make a fragment respond to `value` changes in a view model’s `MutableLiveData`
+    property by calling the property’s `**observe()**` method. If the following code
+    is added to `GameFragment`, for example, it will observe the view model’s `livesLeft`
+    property, and take action when it changes:'
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过调用属性的`**observe()**`方法，你可以使一个片段响应视图模型的`MutableLiveData`属性中的`value`变化。例如，如果将以下代码添加到`GameFragment`中，它将观察视图模型的`livesLeft`属性，并在其变化时采取行动：
+- en: '![image](Images/f0492-02.png)'
+  id: totrans-89
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0492-02.png)'
+- en: As you can see, the above code passes `viewLifecycleOwner` and `Observer` arguments
+    to the `observe()` method.
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所见，上述代码向`observe()`方法传递了`viewLifecycleOwner`和`Observer`参数。
+- en: '`viewLifecycleOwner` refers to the lifecycle of the fragment’s views. It’s
+    tied to when the fragment has access to its UI: from when it’s created in the
+    fragment’s `onCreateView()` method, to when its destroyed, and `onDestroyView()`
+    gets called.'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`viewLifecycleOwner`指的是片段视图的生命周期。它绑定于片段从其`onCreateView()`方法创建时开始，到其销毁并调用`onDestroyView()`为止。'
+- en: '![image](Images/f0492-03.png)'
+  id: totrans-92
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0492-03.png)'
+- en: '`Observer` is a class that can receive live data. It’s tied to the `viewLifecycleOwner`,
+    so it’s only active—and able to receive live data notifications—when the fragment
+    has access to its views. If the live data property’s value changes while the fragment
+    doesn’t have access to its UI, the observer isn’t notified, so the fragment doesn’t
+    respond. This stops the fragment from trying to update views when they’re not
+    available, which might cause the app to crash.'
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Observer`是一个可以接收LiveData的类。它与`viewLifecycleOwner`绑定，因此只有在片段可以访问其视图时才活动，并能接收LiveData通知。如果在片段无法访问其UI时LiveData属性的值发生变化，观察者不会收到通知，因此片段不会作出响应。这样可以防止片段在视图不可用时尝试更新视图，从而导致应用程序崩溃。'
+- en: Note
+  id: totrans-94
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: It also makes your coding life easier because you don’t need to check whether
+    the view’s available for yourself. Using live data handles it all for you.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它还可以使你的编码生活更轻松，因为你不需要自己检查视图是否可用。使用LiveData可以为你处理所有这些。
+- en: 'The `Observer` class accepts a lambda parameter, which specifies how the property’s
+    new value should be used. In the Guessing Game app, for example, we want `GameFragment`
+    to update its `lives` text each time the view model’s `livesLeft` property gets
+    updated, and we can achieve this using the following code:'
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Observer`类接受一个lambda参数，该参数指定如何使用属性的新值。例如，在Guessing Game应用程序中，我们希望`GameFragment`每当视图模型的`livesLeft`属性更新时更新其`lives`文本，我们可以使用以下代码实现：'
+- en: '![image](Images/f0492-04.png)'
+  id: totrans-97
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0492-04.png)'
+- en: That’s everything that we need to know in order to make `GameFragment` update
+    its views when the view model property values get changed. Let’s update its code.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们需要知道的一切，以便在视图模型属性值变化时使`GameFragment`更新其视图。让我们更新它的代码。
+- en: The full code for GameFragment.kt
+  id: totrans-99
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`GameFragment.kt`的完整代码'
+- en: 'Here’s the updated code for `GameFragment`; make sure that the file *GameFragment.kt*
+    includes the changes shown below (in bold):'
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是更新后的`GameFragment`代码；确保`GameFragment.kt`文件包含下面显示的更改（**加粗**）：
+- en: '![image](Images/f0493-02.png)![image](Images/f0494-02.png)'
+  id: totrans-101
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0493-02.png)![image](Images/f0494-02.png)'
+- en: Those are all the changes we need to make to `GameFragment` so that it updates
+    its views each time it observes changes to the `incorrectGuesses`, `livesLeft`,
+    and `secretWordDisplay` properties.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些是我们需要对`GameFragment`进行的所有更改，以便它在观察到`incorrectGuesses`、`livesLeft`和`secretWordDisplay`属性的变化时更新其视图。
+- en: We’ve now implemented live data in the Guessing Game app Let’s go through what
+    happens when the app runs.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经在Guessing Game应用程序中实现了LiveData。让我们看看应用程序运行时会发生什么。
+- en: '![image](Images/f0495-02.png)'
+  id: totrans-104
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0495-02.png)'
+- en: '**ResultViewModel doesn’t need to use live data, so we don’t need to update
+    it.**'
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**ResultViewModel不需要使用LiveData，因此我们不需要更新它。**'
+- en: 'As you may recall, `ResultViewModel` has one property (named `result`), which
+    gets set when the view model gets created. The code looks like this:'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你可能记得的，`ResultViewModel`有一个属性（名为`result`），当视图模型创建时设置该属性。代码如下所示：
+- en: '[PRE6]'
+  id: totrans-107
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: As you can see, result is defined using `val`, so once it’s been initialized,
+    it can’t be updated to another value. `ResultFragment` doesn’t need to be notified
+    when `result` changes because **once set,** `**result**` **can never change**.
+    There’s no need to make `ResultFragment` respond to any changes, because there
+    can’t be any.
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所见，`result` 是用 `val` 定义的，因此一旦初始化，就不能更新为其他值。 `ResultFragment` 不需要在 `result`
+    更改时被通知，因为**一旦设置，** `**result**` **就不能改变**。不需要使 `ResultFragment` 响应任何更改，因为不会有任何更改发生。
+- en: So let’s walk through what happens when the code runs, and then take the app
+    for a test drive.
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们一起看看代码运行时会发生什么，然后测试一下这个应用程序。
+- en: What happens when the app runs
+  id: totrans-110
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 应用程序运行时会发生什么
+- en: 'The following things happen when the app runs:'
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序运行时会发生以下事情：
+- en: '**GameFragment asks the ViewModelProvider class for an instance of GameViewModel.**'
+  id: totrans-112
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment 请求 `ViewModelProvider` 类获取 `GameViewModel` 的实例。**'
+- en: The `GameViewModel` object is initialized, and the values of its three `MutableLiveData`
+    properties—`livesLeft`, `incorrectGuesses`, and `secretWordDisplay`—are set.
+  id: totrans-113
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 初始化 `GameViewModel` 对象，并设置其三个 `MutableLiveData` 属性的值 — `livesLeft`、`incorrectGuesses`
+    和 `secretWordDisplay`。
+- en: '![image](Images/f0496-02.png)'
+  id: totrans-114
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0496-02.png)'
+- en: '**GameFragment observes the livesLeft, incorrectGuesses, and secretWordDisplay
+    properties in the GameViewModel.**'
+  id: totrans-115
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment 观察 `GameViewModel` 中的 `livesLeft`、`incorrectGuesses` 和 `secretWordDisplay`
+    属性。**'
+- en: '![image](Images/f0496-03.png)'
+  id: totrans-116
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0496-03.png)'
+- en: '**GameFragment updates its views with the values of the properties it’s observing.**'
+  id: totrans-117
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment 使用其正在观察的属性的值更新其视图。**'
+- en: '![image](Images/f0496-04.png)'
+  id: totrans-118
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0496-04.png)'
+- en: '**When the user makes a correct guess, secretWordDisplay’s value is updated,
+    and the new value is passed to GameFragment.**'
+  id: totrans-119
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户猜对时，`secretWordDisplay` 的值会更新，并将新值传递给 `GameFragment`。**'
+- en: '`GameFragment` responds by updating its `word` view, which is displayed on
+    the screen.'
+  id: totrans-120
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`GameFragment` 通过更新其在屏幕上显示的 `word` 视图来响应。'
+- en: '![image](Images/f0497-02.png)'
+  id: totrans-121
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0497-02.png)'
+- en: '**When the user makes an incorrect guess, the values for incorrectGuesses and
+    livesLeft are updated, and passed to GameFragment.**'
+  id: totrans-122
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户猜错时，会更新 `incorrectGuesses` 和 `livesLeft` 的值，并传递给 `GameFragment`。**'
+- en: '`GameFragment` responds by updating its views.'
+  id: totrans-123
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`GameFragment` 通过更新其视图来响应。'
+- en: '![image](Images/f0497-03.png)'
+  id: totrans-124
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0497-03.png)'
+- en: '**When isWon() or isLost() return true, GameFragment navigates to ResultFragment,
+    passing it the result.**'
+  id: totrans-125
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当 `isWon()` 或 `isLost()` 返回 `true` 时，`GameFragment` 导航到 `ResultFragment`，并传递结果。**'
+- en: '`ResultFragment` displays the result.'
+  id: totrans-126
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`ResultFragment` 显示结果。'
+- en: '![image](Images/f0497-04.png)'
+  id: totrans-127
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0497-04.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来测试一下这个应用程序。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-129
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/car.png) 测试驾驶'
+- en: When we run the app, `GameFragment` is displayed as before.
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用时，`GameFragment`与以前一样显示。
+- en: When we make a correct guess, the secret word display gets updated. When we
+    make an incorrect guess, the lives left is updated, and our guess is added to
+    the incorrect guesses display.
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们猜对时，秘密单词显示会更新。当我们猜错时，生命剩余数会更新，并将我们的猜测添加到错误猜测显示中。
+- en: If we guess all the letters or lose all our lives, the app navigates to `ResultFragment`,
+    which displays the result.
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们猜对所有字母或失去所有生命，应用程序会导航到 `ResultFragment`，显示结果。
+- en: '![image](Images/f0498-02.png)'
+  id: totrans-133
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0498-02.png)'
+- en: The game behaves in the same way as before, but behind the scenes, it responds
+    using live data.
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 游戏的行为方式与以往相同，但在幕后，它使用实时数据做出响应。
+- en: Fragments can update GameViewModel’s properties
+  id: totrans-135
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`Fragments` 可以更新 `GameViewModel` 的属性'
+- en: So far, we’ve updated the code in `GameViewModel` and `GameFragment` so that
+    it uses live data. Each time the value of a `MutableLiveData` property in `GameViewModel`
+    gets updated, `GameFragment` responds by updating its views.
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们已经更新了 `GameViewModel` 和 `GameFragment` 中的代码，以便使用实时数据。每当 `GameViewModel`
+    中的 `MutableLiveData` 属性的值更新时，`GameFragment` 会响应并更新其视图。
+- en: There’s a slight problem with the code, however. `GameFragment` has full access
+    to `GameViewModel`’s properties and methods, so if it wanted to, it could use
+    them inappropriately. There’s nothing to stop the fragment from, say, updating
+    the `livesLeft` property to 100 so that the user can make many more guesses and
+    win the game each time she plays.
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，代码中存在一个小问题。 `GameFragment` 可以完全访问 `GameViewModel` 的属性和方法，因此如果希望，它可以不恰当地使用它们。没有阻止
+    `fragment`，比如更新 `livesLeft` 属性为 100，以便用户每次玩游戏时都能做更多猜测并赢得游戏。
+- en: To get around this problem, we’re going to restrict direct access to the `GameViewModel`’s
+    properties so that **only methods in the view model can update them**.
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了解决这个问题，我们将限制直接访问 `GameViewModel` 的属性，以便**只有视图模型中的方法才能更新它们**。
+- en: '**You can restrict direct access to a view model’s property by marking it private,
+    and providing read-only access via another property’s getter.**'
+  id: totrans-139
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**您可以通过标记为 private 限制对视图模型属性的直接访问，并通过另一个属性的 getter 提供只读访问。**'
+- en: Keep your privates private
+  id: totrans-140
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 保持私有性
+- en: 'To protect `GameViewModel`’s properties, we’ll mark each one as `private` so
+    that only code in `GameViewModel` can update their values. We’ll then expose a
+    *read-only version* of each `MutableLiveData` property that `GameFragment` needs
+    to observe. Instead of defining the `livesLeft` property using code like this:'
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了保护 `GameViewModel` 的属性，我们将每个属性标记为 `private`，以便只有 `GameViewModel` 中的代码才能更新它们的值。然后，我们将为
+    `GameFragment` 需要观察的每个 `MutableLiveData` 属性暴露一个*只读版本*。而不是像这样定义 `livesLeft` 属性的代码：
+- en: '[PRE7]'
+  id: totrans-142
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: 'we’ll use the following:'
+  id: totrans-143
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用以下内容：
+- en: '![image](Images/f0501-01.png)'
+  id: totrans-144
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0501-01.png)'
+- en: Here, the `_livesLeft` property holds a reference to a `MutableLiveData` object.
+    `GameFragment` doesn’t have access to this property because it’s marked as `private`.
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，`_livesLeft` 属性保存对 `MutableLiveData` 对象的引用。`GameFragment` 无法访问此属性，因为它标记为
+    `private`。
+- en: '`GameFragment` can, however, access the value of this property using `livesLeft`’s
+    getter. `livesLeft`’s type is `**LiveData**`, which is like `MutableLiveData`
+    except that it can’t be used to update the underlying object’s `value` property:
+    `GamesFragment` can read the value, but it can’t update it.'
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`GameFragment` 可以通过 `livesLeft` 的 getter 访问该属性的值。`livesLeft` 的类型是 `**LiveData**`，类似于
+    `MutableLiveData`，但不能用于更新底层对象的 `value` 属性：`GameFragment` 可以读取该值，但不能更新它。'
+- en: When you structure your code in this way, the private property is sometimes
+    called a **backing property**. It holds a reference to an object that other classes
+    only have access to via another property.
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你以这种方式结构化你的代码时，私有属性有时被称为 **backing property**。它保存了对其他类仅通过另一个属性才能访问的对象的引用。
+- en: Let’s update the `GameViewModel` code.
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们更新 `GameViewModel` 代码。
+- en: '![image](Images/f0501-02.png)'
+  id: totrans-149
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0501-02.png)'
+- en: The full code for GameViewModel.kt
+  id: totrans-150
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: GameViewModel.kt 的完整代码
+- en: '![image](Images/f0502-01.png)'
+  id: totrans-151
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0502-01.png)'
+- en: We’ll update the code for `GameViewModel` so that it uses backing properties
+    to restrict direct access to its live data properties. We’ll also mark as private
+    any properties and methods that `GameFragment` doesn’t need to use.
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将更新 `GameViewModel` 的代码，使其使用后备属性限制对其 LiveData 属性的直接访问。我们还将标记为 private `GameFragment`
+    不需要使用的任何属性和方法。
+- en: 'Here’s the full code for *GameViewModel.kt*; update the code to include our
+    changes (in bold):'
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 *GameViewModel.kt* 的完整代码；更新代码以包含我们的更改（加粗部分）：
+- en: '![image](Images/f0502-02.png)![image](Images/f0503-02.png)'
+  id: totrans-154
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0502-02.png)![image](Images/f0503-02.png)'
+- en: Let’s go through what happens when the code runs.
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看代码运行时会发生什么。
+- en: What happens when the app runs
+  id: totrans-156
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 应用程序运行时会发生什么
+- en: 'The following things happen when the app runs:'
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序运行时会发生以下事情：
+- en: '**GameFragment asks the ViewModelProvider class for an instance of GameViewModel.**'
+  id: totrans-158
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment 请求 ViewModelProvider 类的一个 GameViewModel 实例。**'
+- en: '![image](Images/f0504-02.png)'
+  id: totrans-159
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0504-02.png)'
+- en: '**GameViewModel’s properties are initialized.**'
+  id: totrans-160
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameViewModel 的属性已初始化。**'
+- en: '`livesLeft`, `incorrectGuesses`, and `secretWordDisplay` are `LiveData` properties
+    that refer to the same underlying objects as their `MutableLiveData` backing properties.'
+  id: totrans-161
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`livesLeft`、`incorrectGuesses` 和 `secretWordDisplay` 是 `LiveData` 属性，它们引用与其
+    `MutableLiveData` 后备属性相同的底层对象。'
+- en: '![image](Images/f0504-03.png)'
+  id: totrans-162
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0504-03.png)'
+- en: '**GameFragment observes the livesLeft, incorrectGuesses, and secretWordDisplay
+    properties.**'
+  id: totrans-163
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment 观察 livesLeft、incorrectGuesses 和 secretWordDisplay 属性。**'
+- en: '`GameFragment` can’t update any of these properties, but it responds when `GameViewModel`
+    updates any of the backing properties because they refer to the same underlying
+    object.'
+  id: totrans-164
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`GameFragment` 无法更新这些属性中的任何一个，但当 `GameViewModel` 更新任何后备属性时，它会做出响应，因为它们引用相同的底层对象。'
+- en: '![image](Images/f0504-04.png)'
+  id: totrans-165
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0504-04.png)'
+- en: '**GameFragment continues to respond to value changes until isWon() or isLost()
+    returns true.**'
+  id: totrans-166
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment 继续响应值更改，直到 isWon() 或 isLost() 返回 true。**'
+- en: '`GameFragment` navigates to `ResultFragment`, passing it the result. `ResultFragment`
+    displays the result.'
+  id: totrans-167
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`GameFragment` 导航到 `ResultFragment`，将结果传递给它。`ResultFragment` 显示结果。'
+- en: '![image](Images/f0505-01.png)'
+  id: totrans-168
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0505-01.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们测试应用程序。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-170
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驾驶'
+- en: '![image](Images/f0505-02.png)'
+  id: totrans-171
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0505-02.png)'
+- en: When we run the app, it works in the same way as before. This time, however,
+    we’ve protected `GameViewModel`’s `MutableLiveData` properties by restricting
+    `GameFragment`’s access to them.
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，它的工作方式与以前相同。但是，这一次，我们通过限制`GameFragment`对`GameViewModel`的`MutableLiveData`属性的访问来保护它们。
+- en: '![image](Images/f0505-03.png)'
+  id: totrans-173
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0505-03.png)'
+- en: We’ve nearly finished updating the Guessing Game app. There’s just one more
+    thing we need to change...
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们几乎完成了更新猜谜游戏应用程序。只剩下一件事需要改变...
+- en: GameFragment still includes game logic
+  id: totrans-175
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: GameFragment仍包含游戏逻辑
+- en: '![image](Images/f0506-01.png)'
+  id: totrans-176
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0506-01.png)'
+- en: In the current version of the app, `GameFragment` decides when the game is finished
+    by calling `GameViewModel`’s `isWon()` and `isLost()` methods after the user has
+    made each guess. If either of these returns *true*, `GameFragment` navigates to
+    `ResultFragment`, passing it the result.
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在应用程序的当前版本中，`GameFragment`通过在用户每次猜测后调用`GameViewModel`的`isWon()`和`isLost()`方法来决定游戏何时结束。如果其中任何一个返回*true*，`GameFragment`将导航到`ResultFragment`，并将结果传递给它。
+- en: 'Here’s the current code:'
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是当前的代码：
+- en: '![image](Images/f0506-02.png)'
+  id: totrans-179
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0506-02.png)'
+- en: The problem with this approach is that `GameFragment` decides when the game
+    is over instead of `GameViewModel`. As determining when the game has finished
+    is a game decision, it’s something that `GameViewModel` should be responsible
+    for, not `GameFragment`.
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种方法的问题在于`GameFragment`决定游戏何时结束，而不是`GameViewModel`。确定游戏何时结束是一个游戏决策，这是`GameViewModel`应该负责的，而不是`GameFragment`。
+- en: Make GameViewModel decide when the game is over
+  id: totrans-181
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 让GameViewModel决定游戏何时结束
+- en: To deal with this, we’ll add a `MutableLiveData<Boolean>` property named `_gameOver`
+    to `GameViewModel`, whose value we’ll expose using a `LiveData` property named
+    `gameOver`. We’ll set this property to *true* when the user wins or loses the
+    game. When this happens, `GameFragment` will respond by navigating to `ResultFragment`.
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了解决这个问题，我们将向`GameViewModel`添加一个名为`_gameOver`的`MutableLiveData<Boolean>`属性，我们将使用名为`gameOver`的`LiveData`属性公开其值。当用户赢得或输掉游戏时，我们将将此属性设置为*true*。当这种情况发生时，`GameFragment`将通过导航到`ResultFragment`做出响应。
+- en: '![image](Images/f0506-03.png)'
+  id: totrans-183
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0506-03.png)'
+- en: You’re already familiar with the changes that are required to do this, so before
+    we show you the code, try the following exercise.
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你已经熟悉了必须进行的更改，因此在向你展示代码之前，请尝试以下练习。
+- en: Pool Puzzle
+  id: totrans-185
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 池谜题
+- en: '![image](Images/common01.png)'
+  id: totrans-186
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common01.png)'
+- en: Your **goal** is to add a `gameOver` property (with a `_gameOver` backing property)
+    to `GameViewModel` so that `GameFragment` can respond when its value (a `Boolean`)
+    gets updated. The property should be initialized with a value of *false*. Take
+    code snippets from the pool and place them into the blank lines in the code. You
+    may **not** use the same snippet more than once, and you won’t need to use all
+    the snippets.
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的**目标**是向`GameViewModel`添加一个`gameOver`属性（带有一个`_gameOver`支持属性），以便`GameFragment`在其值（一个`Boolean`）更新时做出响应。该属性应初始化为*false*。从池中提取代码片段，并将它们放入代码中的空白行中。你**不能**多次使用相同的片段，也不需要使用所有的片段。
+- en: '[PRE8]'
+  id: totrans-188
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: '![image](Images/f0507-01.png)'
+  id: totrans-189
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0507-01.png)'
+- en: Note
+  id: totrans-190
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: '**Note: each thing from the pool can only be used once!**'
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**注意：池中的每个元素只能使用一次！**'
+- en: Pool Puzzle Solution
+  id: totrans-192
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 池谜题解决方案
+- en: '![image](Images/common01.png)'
+  id: totrans-193
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common01.png)'
+- en: Your **goal** is to add a `gameOver` property (with a `_gameOver` backing property)
+    to `GameViewModel` so that `GameFragment` can respond when its value (a `Boolean`)
+    gets updated. The property should be initialized with a value of *false*. Take
+    code snippets from the pool and place them into the blank lines in the code. You
+    may **not** use the same snippet more than once, and you won’t need to use all
+    the snippets.
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的**目标**是向`GameViewModel`添加一个`gameOver`属性（带有一个`_gameOver`支持属性），以便`GameFragment`在其值（一个`Boolean`）更新时做出响应。该属性应初始化为*false*。从池中提取代码片段，并将它们放入代码中的空白行中。你**不能**多次使用相同的片段，也不需要使用所有的片段。
+- en: '![image](Images/f0508-01.png)![image](Images/f0508-02.png)'
+  id: totrans-195
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0508-01.png)![image](Images/f0508-02.png)'
+- en: The full code for GameViewModel.kt
+  id: totrans-196
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: GameViewModel.kt的完整代码
+- en: We need to add a `gameOver` property to `GameViewModel`, along with a `_gameOver`
+    backing property. We’ll get the `makeGuess()` method to set it to *true* when
+    the user has guessed all of the letters in the secret word, or run out of lives.
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要在`GameViewModel`中添加一个`gameOver`属性，以及一个`_gameOver`支持属性。当用户猜对了秘密单词中的所有字母，或者耗尽生命时，我们将让`makeGuess()`方法将其设置为*true*。
+- en: 'Here’s the full code for `GameViewModel`; update the code in *GameViewModel.kt*
+    to include the changes shown below (in bold):'
+  id: totrans-198
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是`GameViewModel`的完整代码；更新*GameViewModel.kt*中的代码，以包含下面显示的更改（用**粗体**标出）：
+- en: '![image](Images/f0509-02.png)![image](Images/f0510-02.png)'
+  id: totrans-199
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0509-02.png)![image](Images/f0510-02.png)'
+- en: Make GameFragment observe the new property
+  id: totrans-200
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 让`GameFragment`观察新属性
+- en: Now that we’ve added the `gameOver` property to `GameViewModel`, we need to
+    make `GameFragment` respond to when it’s been updated. We’ll make the fragment
+    observe the property, so that when its value is changed to *true*, the fragment
+    will navigate to `ResultFragment`.
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经添加了`gameOver`属性到`GameViewModel`，我们需要让`GameFragment`响应其更新。我们将使碎片观察该属性，因此当其值更改为*true*时，该碎片将导航到`ResultFragment`。
+- en: 'Here’s the code for `GameFragment`; update the code in *GameFragment.kt* so
+    that it includes the changes below (in bold):'
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是`GameFragment`的代码；更新*GameFragment.kt*中的代码，以包含以下更改（用**粗体**标出）：
+- en: '![image](Images/f0511-01.png)![image](Images/f0512-02.png)'
+  id: totrans-203
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0511-01.png)![image](Images/f0512-02.png)'
+- en: That’s it! Let’s go through what happens when it runs.
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就是这样！让我们看看运行时会发生什么。
+- en: What happens when the app runs
+  id: totrans-205
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 应用程序运行时会发生什么？
+- en: 'The following things happen when the app runs:'
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序运行时会发生以下事情：
+- en: '**GameFragment asks the ViewModelProvider class for an instance of GameViewModel.**'
+  id: totrans-207
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment请求ViewModelProvider类的一个GameViewModel实例。**'
+- en: '![image](Images/f0513-02.png)'
+  id: totrans-208
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0513-02.png)'
+- en: '**GameViewModel’s properties are initialized.**'
+  id: totrans-209
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**初始化**了`GameViewModel`的属性。'
+- en: The `_gameOver` and `gameOver` properties refer to a `MutableLiveData<Boolean>`
+    object whose value is set to *false*.
+  id: totrans-210
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`_gameOver`和`gameOver`属性引用的是一个`MutableLiveData<Boolean>`对象，其值被设置为*false*。'
+- en: '![image](Images/f0513-03.png)'
+  id: totrans-211
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0513-03.png)'
+- en: '**GameFragment observes the GameViewModel’s gameOver property.**'
+  id: totrans-212
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment观察GameViewModel的gameOver属性。**'
+- en: '`GameFragment` can’t update the `MutableLiveData` object that the `gameOver`
+    property refers to, but it can respond to when its value changes.'
+  id: totrans-213
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`GameFragment`无法更新`gameOver`属性引用的`MutableLiveData`对象，但它可以响应其值的变化。'
+- en: '![image](Images/f0513-04.png)'
+  id: totrans-214
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0513-04.png)'
+- en: '**Each time the GameViewModel’s makeGuess() method is called, it checks whether
+    isWon() or isLost() returns true.**'
+  id: totrans-215
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**每次调用GameViewModel的makeGuess()方法时，它都会检查isWon()或isLost()是否返回true。**'
+- en: If either is *true*, it sets the value of its `_gameOver` property to *true*.
+  id: totrans-216
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 如果任何一个是*true*，它将其`_gameOver`属性的值设置为*true*。
+- en: '![image](Images/f0514-02.png)'
+  id: totrans-217
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0514-02.png)'
+- en: '**GameFragment observes the value has been updated to true via the GameViewModel’s
+    gameOver property.**'
+  id: totrans-218
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment通过GameViewModel的gameOver属性观察到值已更新为true。**'
+- en: The new value is passed to `GameFragment`.
+  id: totrans-219
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 新值将传递给`GameFragment`。
+- en: '![image](Images/f0514-03.png)'
+  id: totrans-220
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0514-03.png)'
+- en: '**GameFragment responds by navigating to ResultFragment, passing it the result.**'
+  id: totrans-221
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**GameFragment响应并导航到ResultFragment，并将结果传递给它。**'
+- en: '![image](Images/f0514-04.png)'
+  id: totrans-222
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0514-04.png)'
+- en: We’ll take the app for a test drive after the following exercise.
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在以下练习后，我们将带着这个应用程序试驾。
+- en: Fragment Magnets
+  id: totrans-224
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 碎片磁铁
+- en: '![image](Images/common02.png)'
+  id: totrans-225
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: Somebody wrote the code for a fragment named `LotteryFragment` on the fridge
+    door, but a freak kitchen blizzard blew some of the code away. Can you piece it
+    back together again?
+  id: totrans-226
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有人在冰箱门上写了一个名为`LotteryFragment`的碎片的代码，但是一场疯狂的厨房暴风雪把一些代码吹走了。你能把它重新拼起来吗？
+- en: 'The fragment needs to observe `LotteryViewModel`’s `winningNumbers` property,
+    which is defined like this:'
+  id: totrans-227
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该碎片需要观察`LotteryViewModel`的`winningNumbers`属性，其定义如下：
+- en: '[PRE9]'
+  id: totrans-228
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: When `winningNumbers` changes, `LotteryFragment` needs to update its `numbers`
+    view with the new value.
+  id: totrans-229
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当`winningNumbers`发生变化时，`LotteryFragment`需要使用新值更新其`numbers`视图。
+- en: '![image](Images/f0515-01.png)'
+  id: totrans-230
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0515-01.png)'
+- en: Fragment Magnets Solution
+  id: totrans-231
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 碎片磁铁解决方案
+- en: '![image](Images/common02.png)'
+  id: totrans-232
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: Somebody wrote the code for a fragment named `LotteryFragment` on the fridge
+    door, but a freak kitchen blizzard blew some of the code away. Can you piece it
+    back together again?
+  id: totrans-233
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有人在冰箱门上写了一个名为`LotteryFragment`的碎片的代码，但是一场疯狂的厨房暴风雪把一些代码吹走了。你能把它重新拼起来吗？
+- en: 'The fragment needs to observe `LotteryViewModel`’s `winningNumbers` property,
+    which is defined like this:'
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该碎片需要观察`LotteryViewModel`的`winningNumbers`属性，其定义如下：
+- en: '[PRE10]'
+  id: totrans-235
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: When `winningNumbers` changes, `LotteryFragment` needs to update its `numbers`
+    view with the new value.
+  id: totrans-236
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当`winningNumbers`发生变化时，`LotteryFragment`需要使用新值更新其`numbers`视图。
+- en: '![image](Images/f0516-01.png)'
+  id: totrans-237
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0516-01.png)'
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-238
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 试驾'
+- en: '![image](Images/f0517-01.png)'
+  id: totrans-239
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0517-01.png)'
+- en: When we run the app, it works in the same way as before. This time, however,
+    `GameViewModel` decides when the game is over instead of `GameFragment`. The fragment
+    simply observes the view model’s `gameOver` property, and navigates to `ResultFragment`
+    when it’s changed to *true*.
+  id: totrans-240
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，它的工作方式与以前相同。然而，这一次，`GameViewModel`决定游戏何时结束，而不是`GameFragment`。片段只需观察视图模型的`gameOver`属性，并在其更改为*true*时导航到`ResultFragment`。
+- en: '![image](Images/f0517-02.png)'
+  id: totrans-241
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0517-02.png)'
+- en: Congratulations! You’ve now built an app that uses live data to respond to changes
+    as and when they occur. In the next chapter, we’ll build on this still further
+    using a new technique called data binding.
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恭喜！你现在已经构建了一个应用程序，可以使用实时数据来响应随时发生的更改。在下一章中，我们将进一步利用一种称为数据绑定的新技术。
+- en: Your Android Toolbox
+  id: totrans-243
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 你的安卓工具箱
+- en: '![image](Images/tools.png)'
+  id: totrans-244
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/tools.png)'
+- en: '**You’ve got [Chapter 12](#live_datacolon_leaping_into_action) under your belt
+    and now you’ve added live data to your toolbox.**'
+  id: totrans-245
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**你已经掌握了[第12章](#live_datacolon_leaping_into_action)，现在你已经将实时数据添加到你的工具箱中。**'
+- en: '![image](Images/f0518-01.png)'
+  id: totrans-246
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0518-01.png)'

@@ -1,0 +1,424 @@
+- en: Chapter 15\. Welcome and Environment Setup
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第15章 欢迎和环境设置
+- en: Comparing Native Development to Cross-Platform Tools
+  id: totrans-1
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 比较原生开发和跨平台工具
+- en: Let’s state some facts and draw some initial conclusions to be clear.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们列出一些事实并得出一些初步的结论，以便清楚地理解。
+- en: When we say “native development,” we mean programming for each platform in the
+    language, framework, and IDE supported and promoted by the maintainers of the
+    platform. The platforms are Android and iOS.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们说“原生开发”时，我们指的是针对每个平台使用由平台维护者支持和推广的语言、框架和IDE进行编程。这些平台包括Android和iOS。
+- en: For Android, the maintainer is Google. We say “maintainer” rather than “owner”
+    because it is really open source—in fact, Amazon’s FireOS is a fork of the Android
+    OS. Sometimes, we refer to the Android Open Source Project with the acronym AOSP.
+    The language is Java, Kotlin, or a mix (Kotlin generates Java bytecode; as far
+    as the runtime is concerned, there’s no difference). You could technically create
+    an Android app in any language that produced Java byte code—in fact, one of our
+    friends once wrote an Android app completely in Scala. That said, we’re only using
+    Java and Kotlin in this book. The framework doesn’t have a specific name and is
+    generally just referred to as “the Android framework.”
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于Android，维护者是Google。我们使用“维护者”而不是“所有者”，因为它真的是开源的——事实上，亚马逊的FireOS是Android OS的一个分支。有时，我们用AOSP这个缩写来指代Android开源项目。编程语言是Java、Kotlin或者两者混合（Kotlin生成Java字节码，在运行时没有区别）。你理论上可以用任何生成Java字节码的语言来创建Android应用——事实上，我们的一个朋友曾完全用Scala编写过Android应用。不过，在本书中我们只使用Java和Kotlin。这个框架没有一个特定的名称，通常被称为“Android框架”。
+- en: When we say “native development,” we do *not* mean native in the context you
+    might see *within* a framework, which would indicate either the system-provided
+    functionality like the system clock (surprisingly important), thread, or filesystem
+    implementations, etc. We also do not mean “native” in the sense of the Android
+    Native Development Kit (aka Android NDK), which allows you to invoke code written
+    in C or C++ from within an `Activity` or `Service`.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们说“原生开发”时，我们并不是指在*框架内部*看到的原生，这可能表明系统提供的功能，例如系统时钟（非常重要）、线程或文件系统实现等。我们也不是指Android原生开发工具包（也称为Android
+    NDK），它允许您从`Activity`或`Service`中调用用C或C++编写的代码。
+- en: So with that established, let’s compare some cross-platform tools. There are
+    many different products available for cross-platform development, but really only
+    a few approaches.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，既然我们已经明确了这一点，让我们来比较一些跨平台工具。有许多不同的产品可用于跨平台开发，但实际上只有少数几种方法。
+- en: Web-Based
+  id: totrans-7
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Web-Based
+- en: Products like PhoneGap allow a developer to write HTML, CSS, and JavaScript
+    to create web pages that are rendered using web-based view components in each
+    platform. We have found that while this is certainly simpler in the sense that
+    there is only a single codebase (in theory) and these technologies and languages
+    are well-known and well-supported, the reality is that very seldom can you actually
+    get away with a single codebase—the idiosyncrasies of each platform often require
+    a lot of conditional logic for each branch. It can also be difficult to keep up
+    with updates or additions to each native development framework.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像PhoneGap这样的产品允许开发者使用HTML、CSS和JavaScript编写网页，这些网页在每个平台上都使用基于Web的视图组件进行渲染。我们发现，虽然从理论上讲这样做更简单，因为只有一个代码库，并且这些技术和语言都是众所周知和广泛支持的，但实际上很少能够仅用一个代码库解决问题——每个平台的特异性往往需要大量的条件逻辑处理。同时，跟进每个原生开发框架的更新或添加也可能会很困难。
+- en: Other
+  id: totrans-9
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 其他
+- en: There are a number of other products that aim to simplify cross-platform development.
+    Google has a tool called Flutter, which uses the Dart language and its own kernel
+    to create both Android and iOS apps from the same codebase and, since it’s not
+    relying on existing frameworks, is able to run apps at double the standard framerate,
+    from 60 to 120 frames per second. On devices powerful enough to support this,
+    scrolling can feel almost *physical*—as if you were actually dragging a piece
+    of paper along a smooth surface. The downside of Flutter is that it’s almost impossible
+    to really have a single uniform codebase for both platforms—Android users expect
+    different widgets, reactions to input, transitions, etc., than iOS users, and
+    vice versa. Similarly, by not taking advantage of the Android or Cocoa installations
+    already on the device, the size a Flutter app requires is almost always going
+    to be markedly larger than a natively developed app.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有许多旨在简化跨平台开发的其他产品。Google有一个名为Flutter的工具，使用Dart语言和其自己的内核从同一代码库创建Android和iOS应用程序，并且由于不依赖现有框架，能够以双倍于标准帧率的速度运行应用程序，从60帧到120帧每秒。在足够强大支持的设备上，滚动可以感觉几乎*物理*——就像你真的在平滑表面上拖动一张纸一样。Flutter的缺点是几乎不可能真正拥有一个适用于两个平台的统一代码库——Android用户期望不同的小部件、对输入的反应、过渡等等，与iOS用户相反。同样地，由于不利用设备上已有的Android或Cocoa安装，Flutter应用程序所需的大小几乎总是会比本地开发的应用程序大得多。
+- en: Another approach—this one pioneered by Facebook—is React Native. React Native
+    uses Facebook’s proprietary flavor of JavaScript to create apps in both platforms
+    from a single codebase. Besides some of the drawbacks mentioned earlier, you’re
+    ceding a large portion of control of your app to an entirely unrelated third party
+    (Facebook). If Facebook wants to start grabbing metrics completely transparently
+    to you as the developer, there’s not much you could do about it. I’m in no way
+    suggesting it does, or ever will, do something like this; it’s simply a heavy-handed
+    example of one of the costs associated with cross-platform tools that might not
+    be immediately available.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一种方法——这是Facebook率先采用的——是React Native。React Native使用Facebook的专有JavaScript版本从单一代码库中创建两个平台的应用程序。除了前面提到的一些缺点外，你将一个很大的部分控制权交给了一个完全不相关的第三方（Facebook）。如果Facebook想要开始透明地完全抓取开发者的指标，你几乎无能为力。我绝不是在暗示它这样做，或者将来会这样做；这只是跨平台工具所带来的一种可能不会立即显现的成本的一个极端例子。
+- en: There are other tools, and we as the authors don’t want to waste our time or
+    your criticizing some really amazing work done by others to fill this gap. We
+    just want you to understand why we genuinely believe that side-by-side development
+    in each platform—using each platform’s language and framework and toolsets, etc.,
+    can not only provide tremendous benefit, but also does not in our opinion double
+    the cost or time or even investment of attention. As we’ve tried to show throughout
+    this book, there really is a lot of similarity between the two platforms, and
+    writing a single application for each platform using native tools doesn’t have
+    to be as onerous a task as you might think.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有其他工具，作为作者，我们不想浪费时间，也不想浪费你的时间批评其他人做的真正了不起的工作来填补这个空白。我们只希望你理解我们为什么真诚地认为在每个平台上并行开发——使用每个平台的语言、框架和工具集等等——不仅能带来巨大的好处，而且在我们看来，并不会使成本、时间甚至关注的投入翻倍。正如我们在本书中所展示的，这两个平台之间确实有很多相似之处，使用各自的本地工具为每个平台编写单一应用程序并不需要像你可能想的那样繁琐的任务。
+- en: Environment Setup
+  id: totrans-13
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 环境设置
+- en: In order to work with Android and iOS, we first need to get our environments
+    set up. Thankfully, nothing prevents both Android Studio and Xcode from being
+    installed on a single machine. Android Studio can be installed on a number of
+    platforms, but because we’re using Xcode, Apple’s IDE for iOS development, we’ll
+    need to use a machine capable of running macOS for Xcode. Let’s get set up for
+    Android development first.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了与Android和iOS一起工作，我们首先需要设置好我们的环境。值得庆幸的是，没有什么能阻止在同一台机器上安装Android Studio和Xcode。Android
+    Studio可以安装在多个平台上，但因为我们使用的是Xcode，苹果的iOS开发IDE，我们需要使用一台能够运行macOS的机器来使用Xcode。让我们首先为Android开发设置好环境。
+- en: Android Setup
+  id: totrans-15
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android设置
+- en: 'At this point in Android development, we’ve managed to move almost all our
+    processes to a single IDE: Android Studio. This is supported and recommended by
+    Google, the Android maintainer. Technically, it’s certainly possible to do it
+    without Android Studio, but that’s a fairly advanced topic and should probably
+    be used only in very specific scenarios, but we have seen it done (it was messy).
+    For now, let’s assume you’re going to go along, and start with Android Studio.'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Android 开发的这一阶段，我们几乎将所有过程迁移到了一个单一的集成开发环境：Android Studio。这是由 Google 支持和推荐的，Android
+    的维护者。从技术上讲，当然可以不使用 Android Studio，但那是一个相当高级的话题，可能只在非常特定的场景下使用，我们确实见过（这样做很混乱）。现在，让我们假设您将继续使用
+    Android Studio 开始工作。
+- en: Let’s see how to get rolling. For Android, installation runs directly into new
+    project creation, so we’ll roll the whole process into a single set of instructions.
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 看看如何开始。对于 Android，安装直接转入新项目创建，因此我们将整个过程组合为一组指令。
+- en: Set up Android Studio
+  id: totrans-18
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 设置 Android Studio
+- en: At one time, setting up an Android environment was pretty complicated and involved
+    multiple moving parts. With the advent *and maturity* of Android Studio (the recommended
+    IDE for Android development), it’s become almost trivial. It even comes with an
+    embedded JDK (Java Development Kit), so it’s really just one download and initial
+    setup.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一度，设置 Android 开发环境相当复杂且涉及多个组件。随着 Android Studio 的出现和成熟（Android 开发推荐的 IDE），这一切变得几乎是轻而易举的。它甚至自带了嵌入式
+    JDK（Java 开发工具包），因此只需一次下载和初始设置。
+- en: At the time of this writing, Android Studio could be downloaded at *[*https://developer.android.com/studio*](https://developer.android.com/studio)*,
+    but feel free to just search the web for “Download Android Studio” if you’re a
+    reader in some far-flung future where URLs have been replaced by robots.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在撰写本文时，Android Studio 可以从 *[*https://developer.android.com/studio*](https://developer.android.com/studio)*
+    下载，但如果您是一个远在未来的读者，可以随意在网络上搜索“下载 Android Studio”，假设 URL 被机器人取代。
+- en: Once Android Studio is downloaded, launch it! We’ll lay out the sequence between
+    download and first run as it happened at the time of this writing, summer 2019\.
+    This sequence may change in the future, but presumably the basic premise will
+    remain the same and generally speaking will provide options that won’t directly
+    affect development. Use your best judgment if what you see on your screen deviates
+    from this walk-through.
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦下载了 Android Studio，立即启动它！我们将详细介绍从下载到首次运行的过程，此文撰写时为 2019 年夏季。未来这个序列可能会有所变化，但基本前提应该保持不变，并且通常提供不会直接影响开发的选项。如果您的屏幕显示与此步骤不符，请自行判断。
+- en: The program may ask you to import settings from a previous installation; if
+    this is your first time installing, skip the import step and continue to [Figure 15-1](#figures_android_setup_import_settings).
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 程序可能会要求您从先前的安装中导入设置；如果这是您首次安装，请跳过导入步骤，继续到 [图 15-1](#figures_android_setup_import_settings)。
+- en: '![Import Settings Screen](assets/nmdv_1501.png)'
+  id: totrans-23
+  prefs: []
+  type: TYPE_IMG
+  zh: '![导入设置屏幕](assets/nmdv_1501.png)'
+- en: Figure 15-1\. Import settings screen
+  id: totrans-24
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 15-1\. 导入设置屏幕
+- en: Android Studio should start the initialization process now. Watch the loading
+    bar for progress. When that’s complete, you may see a welcome screen, as shown
+    in [Figure 15-2](#figures_android_setup_welcome_screen).
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在应该启动 Android Studio 的初始化过程。观察加载进度条。完成后，您可能会看到欢迎屏幕，如 [图 15-2](#figures_android_setup_welcome_screen)
+    所示。
+- en: '![Welcome Screen](assets/nmdv_1502.png)'
+  id: totrans-26
+  prefs: []
+  type: TYPE_IMG
+  zh: '![欢迎屏幕](assets/nmdv_1502.png)'
+- en: Figure 15-2\. Welcome screen
+  id: totrans-27
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 15-2\. 欢迎屏幕
+- en: Then you can choose an install type, as shown in [Figure 15-3](#figures_android_setup_install_type).
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后您可以选择安装类型，如 [图 15-3](#figures_android_setup_install_type) 所示。
+- en: '![Install Type](assets/nmdv_1503.png)'
+  id: totrans-29
+  prefs: []
+  type: TYPE_IMG
+  zh: '![安装类型](assets/nmdv_1503.png)'
+- en: Figure 15-3\. Install type
+  id: totrans-30
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 15-3\. 安装类型
+- en: Just pick Standard for now. You can make customizations later.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在只需选择标准。稍后可以进行自定义设置。
+- en: You may be prompted to select a light, or dark, theme for the IDE, as shown
+    in [Figure 15-4](#figures_android_setup_select_theme).
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能会提示您为 IDE 选择浅色或深色主题，如 [图 15-4](#figures_android_setup_select_theme) 所示。
+- en: '![Select Theme](assets/nmdv_1504.png)'
+  id: totrans-33
+  prefs: []
+  type: TYPE_IMG
+  zh: '![选择主题](assets/nmdv_1504.png)'
+- en: Figure 15-4\. Select theme
+  id: totrans-34
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 15-4\. 选择主题
+- en: Ideally, at this point you’ll just need to verify your previous choices, as
+    shown in [Figure 15-5](#figures_android_setup_verify).
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在理想情况下，您只需验证之前的选择，如 [图 15-5](#figures_android_setup_verify) 所示。
+- en: '![Verify Settings](assets/nmdv_1505.png)'
+  id: totrans-36
+  prefs: []
+  type: TYPE_IMG
+  zh: '![验证设置](assets/nmdv_1505.png)'
+- en: Figure 15-5\. Verify settings
+  id: totrans-37
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 15-5\. 验证设置
+- en: Click Finish if you’re satisfied, and you’ll see Android Studio contact various
+    servers to update its components, as shown in [Figure 15-6](#figures_android_setup_download_components).
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果满意，请点击“完成”，你将看到 Android Studio 联系各个服务器以更新其组件，如 [图 15-6](#figures_android_setup_download_components)
+    所示。
+- en: '![Install Components](assets/nmdv_1506.png)'
+  id: totrans-39
+  prefs: []
+  type: TYPE_IMG
+  zh: '![安装组件](assets/nmdv_1506.png)'
+- en: Figure 15-6\. Install components
+  id: totrans-40
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 15-6\. 安装组件
+- en: 'To enable Java 8 features, which are used throughout this book, add the following
+    to your module-level `build.gradle` file (code block from the Android developer
+    docs):'
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要启用本书中使用的 Java 8 特性，请在你的模块级 `build.gradle` 文件中添加以下内容（Android 开发者文档中的代码块）：
+- en: '[PRE0]'
+  id: totrans-42
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: Once that’s complete, you’ll immediately be taken to the New Project flow. From
+    here, this is the same process you’ll use when you create your next and subsequent
+    projects in Android Studio, so we’ll do a deep dive into this workflow in [Chapter 16](ch16.html#app_project).
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 完成后，你将立即进入新项目流程。从这里开始，你将在创建下一个及后续项目时使用相同的流程，因此我们将在 [第 16 章](ch16.html#app_project)
+    中深入探讨这个工作流程。
+- en: For now, you’ve got your development environment set up and ready to go!
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 目前为止，你已经设置好了开发环境，准备好开始了！
+- en: iOS Setup
+  id: totrans-45
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS 设置
+- en: Xcode is the development environment created and maintained by Apple that’s
+    used to build iOS (and macOS) applications, libraries, and projects. It’s a very
+    full-featured application that’s been around for a long time in various forms.
+    Xcode itself has been around through the transition from PowerPC desktops to Intel-based
+    processers in the mid-2000s to ARM-based iOS devices starting with the launch
+    of the iPhone; it was there in the days of Objective-C and in the nascent moments
+    of Swift. It’s an amazing piece of software that will be delight and frustrate
+    you to no end.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Xcode 是由苹果创建和维护的开发环境，用于构建 iOS（和 macOS）应用程序、库和项目。它是一个非常功能齐全的应用程序，在不同形式中已经存在了很长时间。从
+    PowerPC 桌面到中期 Intel-based 处理器时代再到从 iPhone 发布开始的 ARM-based iOS 设备，Xcode 一直在那里；它伴随着
+    Objective-C 时代和 Swift 的早期阶段。它是一款令人惊叹的软件，会让你感到喜悦和沮丧。
+- en: Installing Xcode is one of those delightful moments, thankfully.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 安装 Xcode 是那些令人愉悦的时刻之一，感谢天地。
+- en: Set up and install Xcode
+  id: totrans-48
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 设置和安装 Xcode
+- en: To install Xcode, go to the macOS App Store that’s installed by default on every
+    macOS machine. Search for “Xcode,” and once you’ve found the right application
+    by Apple, click Install to install it on your computer.
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要安装 Xcode，请打开默认安装在每台 macOS 机器上的 macOS App Store。搜索“Xcode”，一旦找到由苹果提供的正确应用程序，请点击“安装”将其安装到你的计算机上。
+- en: This book was written with Xcode 11 and Swift 5 in mind. Xcode 11 was launched
+    in September 2019\. Generally speaking, Xcode doesn’t change much between versions,
+    so if you are on an older or newer version of Xcode, it’s possible you might have
+    to hunt for commands that have changed names but are still, fundamentally, the
+    same operation.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书是基于 Xcode 11 和 Swift 5 编写的。Xcode 11 是在 2019 年 9 月发布的。总体而言，Xcode 在不同版本之间变化不大，所以如果你使用的是旧版或新版
+    Xcode，可能需要寻找一些命令的名称变化，但它们本质上仍然是相同的操作。
+- en: Once you open up Xcode for the first time, you’ll be prompted to install additional
+    components that add command-line tools to your environment. We definitely recommend
+    you install these tools to make life a little easier in the future.
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你第一次打开 Xcode 时，系统会提示你安装额外的组件，这些组件会向你的环境添加命令行工具。我们强烈建议你安装这些工具，这样未来的生活会变得更加轻松。
+- en: Apple Developer account
+  id: totrans-52
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 苹果开发者账户
+- en: If you’d like, you can create an account and pay $99 to be part of the Apple
+    Developer Program. However, this is necessary only if you’re planning on distributing
+    your app. If you’re just looking to practice building apps, you don’t need to
+    pay for that just yet. You can still build your app and install it on your own
+    development device if you connect it to your computer.
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你愿意，你可以创建一个账户并支付 99 美元成为苹果开发者计划的一部分。不过，只有在你打算发布你的应用时才是必需的。如果你只是想练习构建应用程序，那么目前还不需要支付这笔费用。你可以连接你的开发设备到电脑上，仍然可以构建并安装你的应用。
+- en: What We’ve Learned
+  id: totrans-54
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: Within this introductory chapter, we’ve covered a lot of ground. We learned
+    about the reasons why we believe in true, native development over cross-platform
+    apps. The amount of time saved in developing shared code is often lost due to
+    the amount of extra time spent working around incomplete vendor functionality,
+    the separate code necessary for different user interface behavior, and the opportunity
+    cost in waiting for third-party library support for new platform functionality.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个介绍性的章节中，我们涵盖了很多内容。我们了解到，我们相信真正的本地开发胜过跨平台应用的原因。开发共享代码所节省的时间往往会因为在解决不完整的供应商功能、为不同的用户界面行为编写分开的代码以及等待第三方库支持新平台功能的机会成本而丢失。
+- en: We also spent some time getting each environment set up and ready for development.
+    We installed Android Studio and Xcode on our machines. Now, it looks like we’re
+    ready to get rolling and start building our first app. But first, let’s learn
+    a little bit about what we’ll be building in the next chapter.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还花了一些时间设置每个环境并为开发做好准备。我们在我们的机器上安装了Android Studio和Xcode。现在，看起来我们已经准备好开始构建我们的第一个应用了。但是首先，让我们先了解一下我们将在下一章中构建的内容。

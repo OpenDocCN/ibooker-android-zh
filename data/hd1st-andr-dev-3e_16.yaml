@@ -1,0 +1,824 @@
+- en: 'Appendix A. Leftovers: *The Top Ten Things (we didn’t cover)*'
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 附录 A. 遗留问题：*十大未覆盖的事项*
+- en: '![image](Images/f0861-01.png)'
+  id: totrans-1
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0861-01.png)'
+- en: '**Even after all that, there’s still a little more.**'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**即使做了这些，还有更多内容。**'
+- en: There are just a few more things we think you need to know. We wouldn’t feel
+    right about ignoring them, and we really wanted to give you a book you’d be able
+    to lift without extensive training at the local gym. Before you put down the book,
+    **read through these tidbits**.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们认为还有一些事情是您需要了解的。如果我们忽略了它们，我们会觉得不对，我们真的希望给您一本书，您无需在当地健身房接受大量培训就可以抬起它。在您放下书之前，请**仔细阅读这些信息**。
+- en: 1\. Sharing data with other apps
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 1\. 与其他应用程序共享数据
+- en: If you want to share simple data with another app, you can do so with an `**Intent**`.
+    You can think of an `Intent` as an “intent to do something.” It’s a type of message
+    that lets you send data to another object—such as an activity—at runtime.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您想要与另一个应用程序共享简单数据，可以使用一个 `**Intent**`。您可以将 `Intent` 理解为“执行某项操作的意图”。它是一种消息类型，允许您在运行时将数据发送到另一个对象（例如一个活动）。
+- en: Sharing data with Android’s intent resolver
+  id: totrans-6
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 Android 意图解析器共享数据
+- en: 'If you want to pass text to another activity, you can do so using code like
+    this:'
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您想将文本传递给另一个活动，可以使用以下代码：
+- en: '[PRE0]'
+  id: totrans-8
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: The code first creates an `Intent` named `sendIntent`. It uses the `type` property
+    to specify the type of data that’s being sent (in this case plain text), and uses
+    `putExtra()` to attach the data (here, it’s some text).
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码首先创建一个名为 `sendIntent` 的 `Intent`。它使用 `type` 属性来指定正在发送的数据类型（在本例中是纯文本），并使用 `putExtra()`
+    来附加数据（这里是一些文本）。
+- en: '![image](Images/f0862-01.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0862-01.png)'
+- en: 'The `action` property tells Android which types of activity can receive the
+    intent. Here, it’s set using:'
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`action` 属性告诉 Android 应用程序可以接收的活动类型。在这里，它使用以下设置：'
+- en: '[PRE1]'
+  id: totrans-12
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: which means that only activities that can send messages can receive the intent.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着只有能够发送消息的活动才能接收到该意图。
+- en: 'The intent is sent using the line:'
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过以下行发送意图：
+- en: '[PRE2]'
+  id: totrans-15
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: Behind the scenes, Android looks for activities across all the device’s apps
+    that can accept intents with the specified action and type. If it finds multiple
+    such activities, it displays an **Intent Resolver** screen, which lets the user
+    choose which app they want to share the data with.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在幕后，Android 搜索所有设备应用程序中可以接受具有指定动作和类型的意图的活动。如果找到多个这样的活动，它会显示一个 **意图解析器** 屏幕，让用户选择要与之共享数据的应用程序。
+- en: '![image](Images/f0862-02.png)'
+  id: totrans-17
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0862-02.png)'
+- en: Android then starts the activity, passing it the data.
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后 Android 启动该活动，并将数据传递给它。
+- en: Sharing data with the Android Sharesheet
+  id: totrans-19
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 Android Sharesheet 进行数据共享
+- en: 'In most cases, you’ll want to share data using the Android Sharesheet instead.
+    This lets you specify who you want to share data with and how, and the code looks
+    like this:'
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大多数情况下，您将希望使用 Android Sharesheet 来共享数据。这样可以指定您希望与谁以及如何共享数据，并且代码看起来像这样：
+- en: '![image](Images/f0863-01.png)'
+  id: totrans-21
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0863-01.png)'
+- en: 'As you can see, the code includes an extra call to the `Intent`’s `createChooser()`
+    method. When this runs, it displays the Android Sharesheet like this:'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所见，代码包含对 `Intent` 的 `createChooser()` 方法的额外调用。运行此方法时，它会显示 Android Sharesheet，如下所示：
+- en: '![image](Images/f0863-02.png)'
+  id: totrans-23
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0863-02.png)'
+- en: 'You can find out more about sharing data with other apps—and how to make your
+    app receive data—here:'
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想要了解如何与其他应用程序共享数据，并使您的应用程序接收数据，请参阅：
+- en: '*[https://developer.android.com/training/sharing](https://developer.android.com/training/sharing)*'
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/training/sharing](https://developer.android.com/training/sharing)*'
+- en: 2\. WorkManager
+  id: totrans-26
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 2\. WorkManager
+- en: There are times when you’ll want your app to process data in the background.
+    This might be because it needs to access storage, for example, or it needs to
+    download a large file.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时您希望您的应用程序在后台处理数据。这可能是因为它需要访问存储空间，例如，或者它需要下载一个大文件。
+- en: As you learned in [Chapter 14](ch14.xhtml#room_databasescolon_room_with_a_view),
+    you can use Kotlin coroutines for tasks that need to be executed immediately.
+    But what if you want to defer the task, or have a long-running task that must
+    continue to run, even if the device restarts?
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您在[第 14 章](ch14.xhtml#room_databasescolon_room_with_a_view)中学到的，您可以使用 Kotlin
+    协程来执行需要立即执行的任务。但是如果您希望推迟任务执行或者有一个需要长时间运行的任务，即使设备重新启动也要继续运行，该怎么办？
+- en: Use WorkManager to schedule deferrable tasks
+  id: totrans-29
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 WorkManager 安排可推迟的任务
+- en: If you want to schedule a task to run in the background, you can use Android’s
+    **WorkManager** API. It’s part of Android Jetpack, and it’s designed for potentially
+    long-running tasks that are guaranteed to run even if the user quits the app or
+    restarts the device.
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您想要安排后台运行的任务，可以使用Android的**WorkManager** API。它是Android Jetpack的一部分，专为即使用户退出应用程序或重新启动设备也保证运行的可能长时间运行的任务而设计。
+- en: You can even use WorkManager to run tasks when certain constraints are met,
+    such as when WiFi is available, or chain complex tasks together.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 甚至可以使用WorkManager在满足某些约束条件时运行任务，例如在WiFi可用时，或将复杂任务链接在一起。
+- en: '![image](Images/f0864-01.png)'
+  id: totrans-32
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0864-01.png)'
+- en: 'You can find out more about WorkManager—and how to use it—here:'
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以在这里找到更多关于WorkManager及其使用方法的信息：
+- en: '*[https://developer.android.com/topic/libraries/architecture/workmanager](https://developer.android.com/topic/libraries/architecture/workmanager)*'
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/topic/libraries/architecture/workmanager](https://developer.android.com/topic/libraries/architecture/workmanager)*'
+- en: 3\. Dialogs and notifications
+  id: totrans-35
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 3\. 对话框和通知
+- en: In [Chapter 9](ch09.xhtml#material_viewscolon_a_material_world), you learned
+    how to show the user a simple pop-up message using a toast and a snackbar. These
+    are useful for low priority messages that appear in the app, and don’t require
+    any user action.
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[第9章](ch09.xhtml#material_viewscolon_a_material_world)中，您学习了如何使用toast和snackbar向用户显示简单的弹出消息。这些对于在应用程序中显示低优先级消息并且不需要任何用户操作的消息非常有用。
+- en: There are times, however, when you need to display a message that prompts the
+    user to make a decision, or that’s displayed outside the app’s UI. In these situations,
+    you can use **dialogs** and **notifications**.
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，在需要显示提示用户做出决定或显示在应用程序UI之外的消息的时候，您可以使用**对话框**和**通知**。
+- en: Use dialogs to prompt the user for a decision
+  id: totrans-38
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用对话框提示用户做决定
+- en: 'A dialog is a small window that appears in the middle of the screen. They’re
+    normally used for situations where the user must make a decision before the app
+    can proceed:'
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对话框是出现在屏幕中间的小窗口。它们通常用于用户必须在应用程序可以继续之前做出决定的情况：
+- en: '![image](Images/f0865-01.png)'
+  id: totrans-40
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0865-01.png)'
+- en: 'You can find out how to create and use dialogs here:'
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在这里找到如何创建和使用对话框的信息：
+- en: '*[https://developer.android.com/guide/topics/ui/dialogs](https://developer.android.com/guide/topics/ui/dialogs)*'
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/guide/topics/ui/dialogs](https://developer.android.com/guide/topics/ui/dialogs)*'
+- en: Notifications appear outside the app’s UI
+  id: totrans-43
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 通知出现在应用程序UI之外
+- en: 'If you want to remind the user to do something, or tell them when they’ve received
+    a message, you can use a notification. Notifications appear on the device status
+    bar and the notification drawer, and may appear on the device lock screen as well:'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您希望提醒用户做某事，或者告诉他们何时收到消息，可以使用通知。通知会出现在设备状态栏和通知抽屉上，也可能出现在设备锁定屏幕上：
+- en: '![image](Images/f0865-02.png)'
+  id: totrans-45
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0865-02.png)'
+- en: 'You can find out how to create and use notifications here:'
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在这里找到如何创建和使用通知的信息：
+- en: '*[https://developer.android.com/guide/topics/ui/notifiers/notifications](https://developer.android.com/guide/topics/ui/notifiers/notifications)*'
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/guide/topics/ui/notifiers/notifications](https://developer.android.com/guide/topics/ui/notifiers/notifications)*'
+- en: 4\. Automated testing
+  id: totrans-48
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 4\. 自动化测试
+- en: If you create an app that’s intended to be used by thousands or even millions
+    of people, you will quickly lose users if it’s flaky or keeps crashing. You can
+    prevent many of these problems, however, using automated testing.
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您创建的应用程序预计将被数千甚至数百万人使用，如果应用程序不稳定或频繁崩溃，您将很快失去用户。但是，您可以使用自动化测试来预防许多这些问题。
+- en: Two popular testing frameworks are JUnit and Espresso. When you create a new
+    Android project, Android Studio usually includes dependencies for these in the
+    app’s *build.gradle* file.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 两个流行的测试框架是JUnit和Espresso。创建新的Android项目时，Android Studio通常会在应用程序的*build.gradle*文件中包含这些依赖项。
+- en: 'Automated testing usually falls into two categories: **unit tests** and **instrumented
+    tests**.'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自动化测试通常分为两类：**单元测试**和**仪器化测试**。
+- en: Unit tests
+  id: totrans-52
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 单元测试
+- en: 'Unit tests run on the development machine, and they check the individual pieces—or
+    units—of your code. They live in the *app/src/test* folder of your project, and
+    look something like this:'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 单元测试在开发机器上运行，它们检查代码的各个部分或单元。它们位于项目的*app/src/test*文件夹中，看起来像这样：
+- en: '[PRE3]'
+  id: totrans-54
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: Instrumented tests
+  id: totrans-55
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 仪器化测试
+- en: Instrumented—or on-device—tests run inside an emulator or physical device, and
+    check the fully assembled app. They live in the *app/src/androidTest* folder of
+    your project.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仪器化测试或设备上测试在模拟器或物理设备内运行，并检查完全组装的应用程序。它们位于项目的*app/src/androidTest*文件夹中。
+- en: We’ll show you an example of an instrumented test on the next page.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页上向您展示一个仪表化测试的示例。
+- en: An instrumented test example
+  id: totrans-58
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 仪表化测试示例
+- en: 'Here’s an instrumented test that checks whether a composable displays the correct
+    text:'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是一个仪表化测试的示例，检查一个可组合对象是否显示正确的文本：
+- en: '[PRE4]'
+  id: totrans-60
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'Go here to find out more about using automated testing with Android apps:'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 点击这里了解有关在Android应用程序中使用自动化测试的更多信息：
+- en: '*[https://developer.android.com/training/testing](https://developer.android.com/training/testing)*'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/training/testing](https://developer.android.com/training/testing)*'
+- en: 5\. Supporting different screen sizes
+  id: totrans-63
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 5\. 支持不同的屏幕尺寸
+- en: Android apps come in all sorts of shapes and sizes, and you want your apps to
+    look good on all of them. There are several techniques you can use, including
+    constraint layouts (which you learned about in [Chapter 4](ch04.xhtml#constraint_layoutscolon_draw_up_a_bluepr)),
+    providing alternate layouts, and sliding pane layouts.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android应用程序具有各种形状和大小，您希望您的应用程序在所有这些设备上都看起来很好。您可以使用几种技术，包括约束布局（您在[第4章](ch04.xhtml#constraint_layoutscolon_draw_up_a_bluepr)中了解过的内容）、提供备用布局和滑动窗格布局。
+- en: Provide alternate layouts
+  id: totrans-65
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 提供备用布局
+- en: Android apps can have multiple versions of the same layout file that cater to
+    different screen specs. This is done by creating multiple layout folders, each
+    one with an appropriate name, and adding a separate layout file to each one.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android应用程序可以具有多个版本的同一布局文件，以适应不同的屏幕规格。通过创建多个具有适当名称的布局文件夹，并向每个文件夹添加单独的布局文件来实现此目的。
+- en: To have one layout for devices with a width of 600dp or above (such as 7” tablets),
+    and another for smaller devices, add an extra folder to the *app/src/main/res*
+    folder named *layout-sw600dp*. Then put a layout for wider devices to use in the
+    *layout-sw600dp* folder, and one for smaller devices in the *layout* folder.
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要为宽度达到600dp或以上的设备（例如7英寸平板电脑）设计一个布局，并为较小的设备设计另一个布局，请在*app/src/main/res*文件夹中添加一个名为*layout-sw600dp*的额外文件夹。然后，在*layout-sw600dp*文件夹中放置一个供较宽设备使用的布局，在*layout*文件夹中放置一个供较小设备使用的布局。
+- en: When the app runs on a phone, it will use the layout in the *layout* folder
+    as normal, and when it runs on a wider device, it will use the one in the *layout-sw600dp*
+    folder instead.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当应用程序在手机上运行时，它将像往常一样使用*layout*文件夹中的布局，并在更宽的设备上使用*layout-sw600dp*文件夹中的布局。
+- en: '![image](Images/f0868-01.png)'
+  id: totrans-69
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0868-01.png)'
+- en: 'You can find out more about using width qualifiers here:'
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在这里了解更多有关使用宽度限定符的信息：
+- en: '*[https://developer.android.com/training/multiscreen/screensizes#alternative-layouts](https://developer.android.com/training/multiscreen/screensizes#alternative-layouts)*'
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/training/multiscreen/screensizes#alternative-layouts](https://developer.android.com/training/multiscreen/screensizes#alternative-layouts)*'
+- en: Use a SlidingPaneLayout
+  id: totrans-72
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用SlidingPaneLayout
+- en: Some layouts include a navigable list of records, where clicking on an item
+    displays its details. On small devices, you might want the details to appear in
+    a separate screen, but on large devices, you might prefer to display the list
+    and details side by side.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一些布局包括一个可导航的记录列表，点击其中一项会显示其详细信息。在小型设备上，您可能希望详细信息显示在单独的屏幕上，但在大型设备上，您可能更喜欢并排显示列表和详细信息。
+- en: 'To deal with this kind of situation, you can use a `SlidingPaneLayout` to define
+    separate panes for the list and details. The code looks like this:'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要处理这种情况，您可以使用`SlidingPaneLayout`定义列表和详细信息的分开窗格。代码如下所示：
+- en: '![image](Images/f0869-01.png)'
+  id: totrans-75
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0869-01.png)'
+- en: The layout uses the `layout-width` attributes of each pane to figure out whether
+    they’ll fit side by side on the device. If the device is wide enough, the layout
+    displays them next to one another, and if it’s not, it displays them on separate
+    screens.
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 布局使用每个窗格的`layout-width`属性来确定它们是否能够在设备上并排显示。如果设备足够宽，布局会将它们显示在一起，否则会在不同屏幕上显示它们。
+- en: 'You can find out more here:'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在这里找到更多信息：
+- en: '*[https://developer.android.com/reference/androidx/slidingpanelayout/widget/SlidingPaneLayout](https://developer.android.com/reference/androidx/slidingpanelayout/widget/SlidingPaneLayout)*'
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/reference/androidx/slidingpanelayout/widget/SlidingPaneLayout](https://developer.android.com/reference/androidx/slidingpanelayout/widget/SlidingPaneLayout)*'
+- en: 6\. More Compose features
+  id: totrans-79
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 6\. 更多Compose功能
+- en: In [Chapter 18](ch18.xhtml#jetpack_composecolon_compose_yourself) and [Chapter 19](ch19.xhtml#integrating_compose_with_viewscolon_perf),
+    we introduced you to building UIs with Compose. We think it has a bright future
+    ahead of it, but it’s so new that at the time of writing, some of its libraries
+    aren’t yet stable.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[第18章](ch18.xhtml#jetpack_composecolon_compose_yourself)和[第19章](ch19.xhtml#integrating_compose_with_viewscolon_perf)中，我们向您介绍了使用Compose构建UI。我们认为它有很大的发展前景，但由于其某些库在撰写时尚未稳定，因此有点新。
+- en: We didn’t want to leave without giving you a glimpse into the future, so here
+    are some of the libraries and features we’re most excited about.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不想在不给您展示一些我们最期待的库和功能的情况下离开。
+- en: The Compose ViewModel library
+  id: totrans-82
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Compose视图模型库
+- en: In [Chapter 19](ch19.xhtml#integrating_compose_with_viewscolon_perf), we passed
+    an existing view model to a composable so it could access the view model’s properties
+    and methods. If you use the Compose view model library, this is no longer necessary;
+    the composable can get the view model for itself.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[第19章](ch19.xhtml#integrating_compose_with_viewscolon_perf)中，我们将现有的视图模型传递给可组合项，以便它可以访问视图模型的属性和方法。如果使用Compose视图模型库，则不再需要此操作；可组合项可以自行获取视图模型。
+- en: 'Add the following dependency to the app’s *build.gradle* file:'
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将以下依赖项添加到应用的*build.gradle*文件中：
+- en: '[PRE5]'
+  id: totrans-85
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'Then add code like this to the composable:'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后在可组合项中添加如下代码：
+- en: '![image](Images/f0870-01.png)'
+  id: totrans-87
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0870-01.png)'
+- en: Compose constraint layout library
+  id: totrans-88
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Compose约束布局库
+- en: In [Chapter 18](ch18.xhtml#jetpack_composecolon_compose_yourself), we showed
+    you how to arrange composables in rows and columns. If you need something a little
+    more flexible, however, there’s the Compose constraint layout library. As you
+    might expect, this library lets you position composables using constraints.
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[第18章](ch18.xhtml#jetpack_composecolon_compose_yourself)中，我们向您展示了如何在行和列中排列可组合项。但是，如果您需要更灵活的内容，还有Compose约束布局库。正如您可能期望的那样，此库允许您使用约束来定位可组合项。
+- en: 'You can find out more about this library, and how to use it, here:'
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在这里找到有关此库及其使用方法的更多信息：
+- en: '*[https://developer.android.com/jetpack/compose/layouts/constraintlayout](https://developer.android.com/jetpack/compose/layouts/constraintlayout)*'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/jetpack/compose/layouts/constraintlayout](https://developer.android.com/jetpack/compose/layouts/constraintlayout)*'
+- en: The Compose Navigation component
+  id: totrans-92
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Compose导航组件
+- en: As you already know, you navigate between screens in a `View`-based UI using
+    the Navigation component. You define a separate fragment for each screen, and
+    the Navigation component decides which fragment to display.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您已经知道的那样，在基于`View`的UI中使用导航组件进行屏幕之间的导航。您为每个屏幕定义一个单独的片段，导航组件决定显示哪个片段。
+- en: '![image](Images/f0871-01.png)'
+  id: totrans-94
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0871-01.png)'
+- en: When you use the Compose Navigation component, you no longer need to use fragments.
+    Instead, you define a *composable* for each screen, and the Navigation component
+    decides which one to display.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您使用Compose导航组件时，不再需要使用片段。相反，您为每个屏幕定义一个*可组合项*，导航组件决定显示哪一个。
+- en: 'To use the Compose Navigation component, add the following dependency to the
+    app’s *build.gradle* file:'
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使用Compose导航组件，请将以下依赖项添加到应用的*build.gradle*文件中：
+- en: '[PRE6]'
+  id: totrans-97
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: 'Then use code like this for your activity:'
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后为您的活动使用以下代码：
+- en: '![image](Images/f0871-02.png)![image](Images/f0872-01.png)'
+  id: totrans-99
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0871-02.png)![image](Images/f0872-01.png)'
+- en: 'When the app runs, it looks like this:'
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当应用程序运行时，看起来像这样：
+- en: '![image](Images/f0872-02.png)'
+  id: totrans-101
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0872-02.png)'
+- en: 'You can keep up-to-date with Compose here:'
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在这里跟上Compose的最新动态：
+- en: '*[https://developer.android.com/jetpack/compose](https://developer.android.com/jetpack/compose)*'
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/jetpack/compose](https://developer.android.com/jetpack/compose)*'
+- en: 7\. Retrofit
+  id: totrans-104
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 7\. Retrofit
+- en: In [Chapter 14](ch14.xhtml#room_databasescolon_room_with_a_view), you learned
+    how to persist your data in a Room database held on the device. But what if your
+    data is held remotely instead?
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[第14章](ch14.xhtml#room_databasescolon_room_with_a_view)中，您学习了如何在设备上持久保存数据在Room数据库中。但如果您的数据是存储在远程位置呢？
+- en: In this situation, you can use Retrofit. This is a third-party REST client for
+    Android, Java, and Kotlin that lets you make network requests, interact with REST
+    APIs, and download JSON or XML data.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，您可以使用Retrofit。这是一个第三方的Android、Java和Kotlin REST客户端，允许您发出网络请求，与REST API交互，并下载JSON或XML数据。
+- en: 'You can find out more about Retrofit here:'
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在这里了解更多有关Retrofit的信息：
+- en: '*[https://square.github.io/retrofit/](https://square.github.io/retrofit/)*'
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://square.github.io/retrofit/](https://square.github.io/retrofit/)*'
+- en: 'You can also find out more about including Retrofit in your app’s architecture
+    by going here:'
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您还可以在这里找到有关如何在应用程序架构中包含Retrofit的更多信息：
+- en: '*[https://developer.android.com/jetpack/guide](https://developer.android.com/jetpack/guide)*'
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/jetpack/guide](https://developer.android.com/jetpack/guide)*'
+- en: 8\. Android Game Development Kit
+  id: totrans-111
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 8\. Android游戏开发工具包
+- en: If you’re interested in developing games for Android apps, we suggest you check
+    out the Android Game Development Kit (AGDK). This is a range of libraries and
+    tools that let you develop, optimize, and deliver Android games.
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您对开发Android应用程序的游戏感兴趣，我们建议您查看Android游戏开发工具包（AGDK）。这是一组库和工具，让您可以开发、优化和交付Android游戏。
+- en: The Android Game Development Kit includes game libraries for C/C++ game development.
+    There’s a `GameActivity`, for example, which inherits from `AppCompatActivity`
+    and uses a C API. There’s also a way of using the software keyboard in C, and
+    handling input from game controllers.
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android游戏开发工具包包括用于C/C++游戏开发的游戏库。例如，有一个`GameActivity`，它继承自`AppCompatActivity`并使用C
+    API。还有一种方法可以在C中使用软件键盘，并处理来自游戏控制器的输入。
+- en: Note
+  id: totrans-114
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: '[Note from Marketing: Make sure you mention your book Head First C.]'
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[市场营销提示：确保提及您的书《Head First C》。]'
+- en: 'You can read more about the Android Game Development Kit here:'
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在此处阅读更多关于Android游戏开发工具包的信息：
+- en: '*[https://developer.android.com/games/agdk](https://developer.android.com/games/agdk)*'
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/games/agdk](https://developer.android.com/games/agdk)*'
+- en: 9\. CameraX
+  id: totrans-118
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 9\. CameraX
+- en: If you want to use the device camera in your app, there’s a Jetpack library
+    you can use called CameraX. This gives you a consistent API that works across
+    most Android devices, and resolves device-compatibility issues. You can use it
+    to preview, capture, and analyze images. There’s even an Extensions add-on that
+    lets you access features used by the native camera app that ships with the device.
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您希望在应用程序中使用设备摄像头，有一个Jetpack库可供您使用，称为CameraX。这为您提供了一个在大多数Android设备上都能工作的一致API，并解决了设备兼容性问题。您可以使用它来预览、捕获和分析图像。甚至还有一个扩展插件，让您可以访问设备随附的原生相机应用程序使用的功能。
+- en: 'Read more about CameraX here:'
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 阅读更多关于CameraX的信息：
+- en: '*[https://developer.android.com/training/camerax](https://developer.android.com/training/camerax)*'
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/training/camerax](https://developer.android.com/training/camerax)*'
+- en: 10\. Publishing your app
+  id: totrans-122
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 10\. 发布您的应用程序
+- en: Once you’ve developed your app, you’ll probably want to make it available to
+    other users. You’ll likely want to do this by publishing your app through an app
+    marketplace such as Google Play.
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦您开发了您的应用程序，您可能希望将其提供给其他用户。您可能希望通过应用市场如Google Play发布您的应用程序。
+- en: 'There are two stages to this process: preparing your app for release, and then
+    releasing it.'
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此过程分为两个阶段：准备发布您的应用程序，然后发布它。
+- en: Preparing your app for release
+  id: totrans-125
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 准备发布您的应用程序
+- en: Before you can release your app, you need to configure, build, and test a release
+    version of it. This includes tasks such as deciding on an icon for your app, removing
+    any logging code, and modifying *AndroidManifest.xml* so that only devices you
+    want to be able to run your app can download it.
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在您发布应用程序之前，您需要配置、构建和测试其发布版本。这包括任务如为您的应用程序决定一个图标、移除任何日志代码以及修改*AndroidManifest.xml*，以便只有您想让其运行您的应用程序的设备可以下载它。
+- en: Before you release your app, make sure that you test it on *at least* one tablet
+    and one phone to check that it looks the way you expect and its performance is
+    acceptable.
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在发布您的应用程序之前，请确保您在*至少*一台平板电脑和一部手机上进行测试，以确保其外观符合您的期望并且其性能可接受。
+- en: 'You can find further details of how to prepare your app for release here:'
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在此处找到关于如何准备发布您的应用程序的进一步详细信息：
+- en: '*[http://developer.android.com/tools/publishing/preparing.html](http://developer.android.com/tools/publishing/preparing.html)*'
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[http://developer.android.com/tools/publishing/preparing.html](http://developer.android.com/tools/publishing/preparing.html)*'
+- en: Releasing your app
+  id: totrans-130
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 发布您的应用程序
+- en: This stage includes publishing your app, selling it, and publicizing it.
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此阶段包括发布您的应用程序，销售它以及宣传它。
+- en: 'Before you publish your app we suggest you go here:'
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在您发布应用程序之前，我们建议您访问此处：
+- en: '*[https://developer.android.com/distribute/best-practices/launch](https://developer.android.com/distribute/best-practices/launch)*'
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[https://developer.android.com/distribute/best-practices/launch](https://developer.android.com/distribute/best-practices/launch)*'
+- en: It includes checklists and tips to help you publish and manage your app.
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它包括清单和提示，帮助您发布和管理您的应用程序。
+- en: 'For ideas on how to best target your app to your users and build a buzz about
+    it, we suggest you explore the documents here:'
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于如何最好地将您的应用程序定位于用户并建立关于它的兴趣的想法，我们建议您探索此处的文档：
+- en: '*[https://developer.android.com/distribute/best-practices/engage](https://developer.android.com/distribute/best-practices/engage)*'
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[Android 分发最佳实践：参与](https://developer.android.com/distribute/best-practices/engage)*'
+- en: 'and here:'
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并且在这里：
+- en: '*[https://developer.android.com/distribute/best-practices/grow](https://developer.android.com/distribute/best-practices/grow)*'
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*[Android 分发最佳实践：增长](https://developer.android.com/distribute/best-practices/grow)*'

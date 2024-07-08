@@ -1,0 +1,1376 @@
+- en: Chapter 4\. Concurrency in Android
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第四章 并发编程在Android中
+- en: This chapter does not focus specifically on Kotlin. Instead, it will introduce
+    some of the issues that surround *concurrent programming* and that the rest of
+    the book addresses. It will also introduce a few tools, already available to Android
+    developers, for managing concurrent tasks.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章不专门关注Kotlin。相反，它将介绍围绕*并发编程*的一些问题，这些问题是本书其余部分讨论的内容。它还将介绍一些已经提供给Android开发者的用于管理并发任务的工具。
+- en: 'Concurrent programming has a reputation as kind of a dark art: something that
+    is done by self-proclaimed wizards and that novices touch at their peril. Certainly,
+    writing correct concurrent programs can be quite challenging. This is particularly
+    true because errors in concurrent programs don’t always show up right away. It
+    is nearly impossible to test for concurrency bugs and they can be extremely difficult
+    to reproduce, even when they are known to exist.'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并发编程有点像黑魔法：是由自称为巫师的人做的事情，初学者可能会触碰到危险。当然，编写正确的并发程序可能非常具有挑战性。这尤其是因为并发程序中的错误并不总是立即显现出来。几乎不可能测试并发错误，即使已知其存在，要复现它们也可能极为困难。
+- en: 'A developer concerned about the hazards of concurrent programming would do
+    well to remember these three things:'
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于担心并发编程风险的开发人员，有三件事是需要记住的：
+- en: Nearly everything you do, every day, *except* programming, is concurrent. You
+    get along quite nicely in a concurrent environment. It is programming, where things
+    happen in order, that is odd.
+  id: totrans-4
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 几乎你每天做的一切，*除了* 编程，都是并发的。在并发环境中你可以很好地相处。奇怪的是编程，它是按顺序进行的。
+- en: If you are trying to understand the issues that concurrent programming presents,
+    you are on the right path. Even an incomplete understanding of concurrency is
+    better than copying sample code and crossing your fingers.
+  id: totrans-5
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如果你正试图理解并发编程带来的问题，你走在了正确的道路上。即使对并发性的理解不完整，也比复制示例代码并祈祷要好。
+- en: Concurrent programming is just how Android works. Anything other than the most
+    trivial Android application will require concurrent execution. Might as well get
+    on with it and figure out what it’s all about!
+  id: totrans-6
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 并发编程就是Android的工作方式。除了最简单的Android应用程序外，其他任何东西都需要并发执行。最好开始并弄清楚它到底是什么！
+- en: Before getting into specifics, let’s define some terms.
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在具体进入细节之前，让我们先定义一些术语。
+- en: The first term is *process*. A process is memory that an application can use,
+    and one or more threads of execution. The memory space belongs to the process—no
+    other processes can affect it.^([1](ch04.html#idm46669754182608)) An application
+    usually runs as a single process.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个术语是*进程*。进程是应用程序可以使用的内存，以及一个或多个执行线程。内存空间属于进程——没有其他进程可以影响它。^([1](ch04.html#idm46669754182608))
+    一个应用程序通常作为一个单独的进程运行。
+- en: 'That, of course, introduces the second term: *thread*. A thread is a sequence
+    of instructions, executed one at a time, in order.'
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当然，这引出了第二个术语：*线程*。线程是一系列指令，按顺序逐一执行。
+- en: 'And this leads us to the term that, to some extent, drives the rest of this
+    book: *thread safe*. A set of instructions is thread-safe if, when multiple threads
+    execute it, no possible ordering of the instructions executed by the threads can
+    produce a result that could not be obtained if each of the threads executed the
+    code completely, in some order, one at a time. That’s a little hard to parse,
+    but it just says that the code produces the same results whether the multiple
+    threads execute it all at the same time or, serially, one at a time. It means
+    that running the program produces predictable results.'
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也引出了在某种程度上驱动本书其余部分的术语：*线程安全*。如果一组指令在多个线程执行时，线程执行指令的任何可能顺序都不能产生不能在每个线程完全执行代码时以某种顺序逐一执行的情况下获得的结果。这有点难以解析，但它只是说，无论多个线程同时执行代码还是按顺序逐一执行，代码都产生相同的结果。这意味着运行程序会产生可预测的结果。
+- en: So how does one make a program thread-safe? There are lots and lots of ideas
+    about this. We would like to propose one that is clear, relatively easy to follow,
+    and always correct. Just follow one, fairly clear, fairly simple rule. We’ll state
+    the rule in a few pages. First, though, let’s discuss in more detail what thread
+    safety means.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如何使程序具备线程安全性？关于这个问题有很多不同的想法。我们想提出一个清晰、相对易于理解并且总是正确的方法。只需要遵循一个相对清晰、相对简单的规则。我们将在接下来的几页中阐述这个规则。不过首先，让我们更详细地讨论一下什么是线程安全性。
+- en: Thread Safety
+  id: totrans-12
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 线程安全性
+- en: 'We’ve already said that thread-safe code cannot produce a result, when executed
+    by multiple threads at the same time, that could not have been produced by some
+    ordering of the threads executing one at a time. That definition, though, is not
+    very useful in practice: no one is going to test all possible execution orders.'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经说过，线程安全的代码不能在同时由多个线程执行时产生不能通过一次性执行线程产生的结果。然而，这个定义在实践中并不十分有用：没有人会测试所有可能的执行顺序。
+- en: Perhaps we can get a handle on the problem by looking at some common ways that
+    code can be *thread-unsafe*.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也许我们可以通过查看代码可能*线程不安全*的一些常见方法来解决问题。
+- en: Thread-safety failures can be divided into a few categories. Two of the most
+    important are *atomicity* and *visibility*.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程安全失败可以分为几类。最重要的两类是 *原子性* 和 *可见性*。
+- en: Atomicity
+  id: totrans-16
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 原子性
+- en: 'Nearly all developers understand problems of atomicity. This code is not thread-safe:'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 几乎所有开发人员都了解原子性的问题。此代码不是线程安全的：
+- en: '[PRE0]'
+  id: totrans-18
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: Multiple threads executing this code can interfere with each other. Each thread
+    executing this code might read the same value for `globalVar`—say, 3\. Each might
+    increment that value to get 4, and then each might update `globalVar` to have
+    the value 4\. Even if 724 threads executed the code, `globalVar` might, when all
+    were through executing, have the value 4.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 多个线程执行此代码可能会互相干扰。执行此代码的每个线程可能会读取相同的 `globalVar` 值，比如 3。每个线程可能会将该值递增为 4，然后每个线程可能会更新
+    `globalVar` 为值 4。即使有 724 个线程执行了此代码，当所有线程执行完毕时，`globalVar` 的值可能仍然为 4。
+- en: There is no possible way that each of those 724 threads could execute that code
+    serially and have `globalVar` end up as 4. Because the result of executing the
+    code concurrently can be different from any possible result generated by serial
+    execution, this code is not thread-safe, according to our definition.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没有可能让这 724 个线程依次执行该代码，并使 `globalVar` 最终值为 4。因为并发执行的结果可能与串行执行生成的任何可能结果都不同，根据我们的定义，此代码不是线程安全的。
+- en: To make the code thread-safe, we need to make the read, increment, and write
+    operations on the variable `globalVar`, together, *atomic*. An atomic operation
+    is one that cannot be interrupted by another thread. If the read, increment, and
+    write operations are atomic, then no two threads can see the same value of `globalVar`,
+    and the program is guaranteed to behave as expected.
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使代码线程安全，我们需要使变量 `globalVar` 的读取、递增和写入操作*原子化*。原子操作是指不能被另一个线程中断的操作。如果读取、递增和写入操作是原子的，那么没有两个线程能看到相同的
+    `globalVar` 值，程序保证表现如预期。
+- en: Atomicity is easy to understand.
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 原子性很容易理解。
+- en: Visibility
+  id: totrans-23
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 可见性
+- en: 'Our second category of thread-safety errors, visibility, is much more difficult
+    to apprehend. This code is also not thread-safe:'
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的第二类线程安全错误，可见性，更难以理解。此代码也不是线程安全的：
+- en: '[PRE1]'
+  id: totrans-25
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: A thread running the function `runner` may never stop, even though another thread
+    runs `stopper`. The thread running `runner` may never notice that the value of
+    `shouldStop` has changed to `true`.
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行函数 `runner` 的线程可能永远不会停止，即使另一个线程运行 `stopper`。运行 `runner` 的线程可能永远不会注意到 `shouldStop`
+    的值已更改为 `true`。
+- en: 'The reason for this is optimization. Both the hardware (using registers, multilayer
+    caches, etc.) and the compiler (using hoisting, reordering, etc.) do their very
+    best to make your code run fast. In order to do this, the instructions that the
+    hardware actually executes may not look much like the Kotlin source at all. In
+    particular, while you think that `shouldStop` is a single variable, the hardware
+    probably has at least two representations for it: one in a register and one in
+    main memory.'
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这背后的原因是优化。硬件（使用寄存器、多层缓存等）和编译器（使用提升、重排序等）都在尽最大努力使您的代码运行速度快。为此，硬件实际执行的指令可能与 Kotlin
+    源代码看起来完全不同。特别是，尽管您认为 `shouldStop` 是一个单一变量，但硬件可能对其至少有两种表示：一个在寄存器中，一个在主存储器中。
+- en: You definitely want that! You would not want the loops in your code to depend
+    on access to main memory instead of using caches and registers. Fast memory optimizes
+    your code because it has access times that are several orders of magnitude faster
+    than main memory.
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你绝对希望这样！你不希望你的代码中的循环依赖于对主存储器的访问，而不是使用缓存和寄存器。快速内存优化了您的代码，因为其访问时间比主存储器快几个数量级。
+- en: To make the example code work, though, you have to explain to the compiler that
+    it cannot keep the value of `shouldStop` in local memory (a register or cache).
+    If, as proposed, there are multiple representations of `shouldStop` in different
+    kinds of hardware memory, the compiler must be sure that the value kept in the
+    fast, local representation of `shouldStop` is pushed to memory that is visible
+    to all threads. This is called *publishing* the value.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，为了使示例代码正常工作，你必须告诉编译器，它不能将`shouldStop`的值保留在本地内存（寄存器或缓存）中。如果按照建议，在不同种类的硬件内存中有`shouldStop`的多个表示，编译器必须确保快速本地表示的`shouldStop`值被推送到对所有线程可见的内存中。这称为*发布*该值。
+- en: '`@Synchronized` is the way to do that. Synchronization tells the compiler that
+    it must make sure that any side effects of the code executed within the synchronized
+    block are visible to all other threads, before the executing thread leaves the
+    block.'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`@Synchronized` 就是这么做的方式。同步告诉编译器，必须确保在同步块内执行的代码的任何副作用对所有其他线程可见，然后执行线程离开该块。'
+- en: Synchronization, then, is not so much about hardware, or tricky and complicated
+    criteria for what must be protected and what need not be. Synchronization is a
+    contract between the developer and the compiler. If you don’t synchronize code,
+    the compiler is free to make any optimization that it can prove safe, based on
+    serial execution. If there is other code somewhere, running on a different thread,
+    that makes the compiler’s proof invalid, you must synchronize the code.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，同步不仅仅是关于硬件，或者关于必须保护和不需要保护的棘手和复杂的标准。同步是开发人员与编译器之间的一种契约。如果你不同步代码，编译器可以根据串行执行来进行任何安全证明的优化。如果某处有其他代码在不同的线程上运行，并使编译器的证明无效，你必须同步代码。
+- en: So, here’s the rule. If you want to write code that is thread-safe, you just
+    have to follow this one short, clear rule. Paraphrasing from Java’s bible of parallel
+    programming, [*Java Concurrency in Practice*](https://oreil.ly/4zx8L):^([2](ch04.html#idm46669754063120))
+    Whenever more than one thread accesses a given state variable, and one of them
+    might write to it, they all must coordinate their access to it using synchronization.
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，这里有一个规则。如果你想编写线程安全的代码，你只需遵循这一简短而明确的规则。来自Java并行编程的圣经[*Java Concurrency in
+    Practice*](https://oreil.ly/4zx8L)的释义：^([2](ch04.html#idm46669754063120)) 每当多个线程访问给定状态变量，并且其中一个可能会写入它时，它们都必须使用同步来协调对它的访问。
+- en: Note, by the way, that that quote does not distinguish between read access and
+    write access for synchronization. Unless it is guaranteed that *nobody* will mutate
+    the shared state, all access, read or write, must be synchronized.
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 顺便说一句，那个引用并没有区分同步的读访问和写访问。除非可以保证*没有人*会改变共享状态，否则所有的访问，无论是读还是写，都必须同步。
+- en: The Android Threading Model
+  id: totrans-34
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android线程模型
+- en: As noted in [Chapter 3](ch03.html#android_fundamentals), one of the implications
+    of an MVC architecture is a single-threaded UI (the View and Controller). Although
+    a multithreaded UI seems very tempting (surely a thread for the View and a thread
+    for the Controller would work…), attempts to build them were abandoned back in
+    the 1970s, when it became clear that they, inevitably, ended in a snarl of deadlocks.
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如[第3章](ch03.html#android_fundamentals)所述，MVC架构的一个含义是单线程UI（视图和控制器）。尽管多线程UI看起来非常诱人（视图一个线程，控制器一个线程……），但在20世纪70年代就放弃了尝试构建它们，因为很明显，它们最终陷入了死锁的混乱中。
+- en: Since the general adoption of MVC, the standard UI design is a queue serviced
+    by a single thread (in Android, the *Main-*, or *UI-thread*). As illustrated in
+    [Figure 4-1](#ui_thread), events—both those that originate with a user (clicks,
+    taps, typing, etc.) and those that originate in the model (animation, requests
+    to redraw/update the screen, etc.)—are enqueued and eventually processed in order
+    by the single UI thread.
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自从MVC的普遍采纳以来，标准UI设计是由单线程队列服务的（在Android中是*主线程*或*UI线程*）。如[图4-1](#ui_thread)所示，事件——无论是用户发起的（点击、轻触、输入等）还是模型发起的（动画、请求重新绘制/更新屏幕等）——都会被单一UI线程按顺序排队并最终处理。
+- en: '![pawk 0401](assets/pawk_0401.png)'
+  id: totrans-37
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0401](assets/pawk_0401.png)'
+- en: Figure 4-1\. UI thread.
+  id: totrans-38
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图4-1\. UI线程。
+- en: This is exactly how Android’s UI works. An application’s main thread (the application
+    process’s original thread) becomes its UI thread. As part of initialization, the
+    thread enters a tight loop. For the rest of the life of the application, it removes
+    tasks from the canonical UI queue one by one and executes them. Because UI methods
+    are always run on a single thread, UI components make no attempt to be thread-safe.
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这正是安卓UI的工作方式。一个应用程序的主线程（应用程序进程的原始线程）成为其UI线程。作为初始化的一部分，该线程进入一个紧密的循环。在应用程序的其余生命周期中，它逐个从标准UI队列中移除任务并执行它们。因为UI方法始终在单线程上运行，UI组件并不试图保持线程安全。
+- en: That sounds great, right? A single-threaded UI and no worries about thread safety.
+    There’s a problem, though. To understand it, we’ll have to switch out of our developer
+    hats and talk a bit about the experience of the end users of Android devices.
+    In particular, we’ll need to look into some details of video display.
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 听起来很不错，对吧？单线程UI且无需担心线程安全问题。但有个问题。为了理解这个问题，我们需要摘下开发者的帽子，稍微讨论一下安卓设备终端用户的体验。特别是，我们需要深入了解视频显示的一些细节。
+- en: Note
+  id: totrans-41
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'Threads are said to *deadlock* when each holds a resource that the other requires:
+    neither can make forward progress. For instance, one thread might hold the widget
+    that displays a value and require the container that holds the value to be displayed.
+    At the same time, another thread might hold the container and require the widget.
+    Deadlocks can be avoided if all threads always seize resources in the same order.'
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当每个线程都持有另一个需要的资源时，线程被称为*死锁*：它们都无法向前进展。例如，一个线程可能持有显示值的小部件并需要显示该值的容器。同时，另一个线程可能持有容器并需要该小部件。如果所有线程始终按相同的顺序获取资源，则可以避免死锁。
+- en: Dropped Frames
+  id: totrans-43
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 丢帧
+- en: We know, from long experience with motion pictures and TV, that the human brain
+    can be tricked into perceiving motion as continuous, even when it is not. A series
+    of still images shown rapidly, one after the other, can appear to the observer
+    to be smooth, uninterrupted motion. The rate at which the images are displayed
+    is known as the *frame rate*. It is measured in *frames per second* (fps).
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过长期的电影和电视观看经验，我们知道，即使实际上不是连续运动，人脑也可以被欺骗为感知到连续的运动。快速显示一系列静止图像，一个接一个地显示，观察者会感觉是平滑的、不间断的运动。图像显示的速率称为*帧率*。它以每秒帧数（fps）来衡量。
+- en: The standard frame rate for movies is 24 fps. That has worked quite well for
+    the entire Golden Age of Hollywood. Older televisions used a frame rate of 30
+    fps. As you might imagine, faster frame rates do an even better job of tricking
+    the brain than slow ones. Even if you can’t exactly put your finger on what you
+    are sensing, if you watch a high frame rate video next to one with a lower frame
+    rate, you will likely notice a difference. The faster one will feel “smoother.”
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 电影的标准帧率是24 fps，在整个好莱坞黄金时代都很有效。老式电视使用的帧率为30 fps。你可以想象，比较快的帧率比慢的帧率更能欺骗大脑。即使你不能确切感知到差异，但如果你在高帧率视频和低帧率视频之间进行比较，你很可能会注意到不同。快速的那个会感觉“更流畅”。
+- en: Many Android devices use a frame rate of 60 fps. This translates to redrawing
+    the screen once approximately every 16 milliseconds (ms). That means that the
+    UI thread, the single thread handling UI tasks, must have a new image available,
+    ready to be drawn on the screen every 16 ms. If producing the image takes longer
+    than that, and the new image is not ready when the screen is redrawn, we say that
+    the frame has been dropped.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 许多安卓设备使用60 fps的帧率。这意味着屏幕每16毫秒（ms）重绘一次。这意味着UI线程，即处理UI任务的单个线程，必须在每16毫秒准备好新图像，以便在屏幕重绘时绘制。如果生成图像所需时间超过这个时间，并且在屏幕重绘时新图像还没有准备好，我们称帧已丢失。
+- en: It will be another 16 ms before the screen is redrawn again and a new frame
+    becomes visible. Instead of 60 fps, a dropped frame lowers the frame rate to 30
+    fps, close to the threshold at which the human brain notices it. Just a few dropped
+    frames can give a UI a choppy feeling that is sometimes called “jank.”
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 屏幕再次重绘并显示新帧之前会再等待16 ms。如果帧率从60 fps降至30 fps，那就接近人脑能感知的阈值了。只需少数几个丢失的帧就会让用户界面产生所谓的“卡顿”感觉。
+- en: Consider the queue of tasks shown in [Figure 4-2](#dropped_frame_1), at Android’s
+    standard render rate of 60 fps.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 考虑在[图4-2](#dropped_frame_1)中显示的任务队列，在安卓的标准渲染速率为60 fps。
+- en: '![pawk 0402](assets/pawk_0402.png)'
+  id: totrans-49
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0402](assets/pawk_0402.png)'
+- en: Figure 4-2\. Tasks queued for the UI thread.
+  id: totrans-50
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图4-2。排队等待UI线程的任务。
+- en: The first task, handling character input from the user, takes 8 ms to execute.
+    The next task, updating the view, is part of an animation. In order to look smooth,
+    the animation needs to be updated at least 24 times per second. The third task,
+    though, handling a user click, takes 22 ms. The last task in the diagram is the
+    next frame of the animation. [Figure 4-3](#dropped_frame_2) shows what the UI
+    thread sees.
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理用户的字符输入是第一个任务，执行时间为8毫秒。接下来的任务是更新视图，是动画的一部分。为了看起来平滑，动画需要每秒至少更新24次。然而，处理用户点击的第三个任务需要22毫秒。图示中的最后一个任务是动画的下一帧。[图 4-3](#dropped_frame_2)展示了UI线程的视角。
+- en: '![pawk 0403](assets/pawk_0403.png)'
+  id: totrans-52
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0403](assets/pawk_0403.png)'
+- en: Figure 4-3\. A dropped frame.
+  id: totrans-53
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 4-3\. 一帧丢失的情况。
+- en: The first task completes in 8 ms. The animation draws a frame to the display
+    buffer in 4 ms. The UI thread then starts to handle the click. A couple of milliseconds
+    into handling the click, the hardware redraw takes place and the animation’s frame
+    is now visible on the screen.
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个任务在8毫秒内完成。动画在4毫秒内向显示缓冲区绘制了一帧。然后UI线程开始处理点击。点击处理几毫秒后，硬件进行了重绘，此时动画帧已经显示在屏幕上。
+- en: Unfortunately, 16 ms later, the task to handle the click is still not complete.
+    The task to draw the next frame of the animation, which is queued behind it, has
+    not been processed. When the redraw happens, the contents of the display buffer
+    are exactly as they were during the previous redraw. The animation frame has been
+    dropped.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不幸的是，16毫秒后，处理点击的任务仍未完成。排在其后的动画下一帧的任务也未被处理。当进行重绘时，显示缓冲区的内容与上一次重绘时完全相同。动画帧已经丢失。
+- en: Note
+  id: totrans-56
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Computer displays are usually managed using one or more display buffers. A *display
+    buffer* is an area of memory in which user code “draws” the things that will be
+    visible on the screen. Occasionally, at the *refresh interval* (approximately
+    16 ms for a 60 fps display), user code is briefly locked out of the buffer. The
+    system uses the contents of the buffer to render the screen and then releases
+    it back to the user code for further updates.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 计算机显示通常使用一个或多个显示缓冲区来管理。*显示缓冲区* 是内存中的一个区域，用户代码在其中“绘制”将显示在屏幕上的内容。偶尔在*刷新间隔*（大约60帧每秒时约为16毫秒）时，用户代码会短暂地被锁定在缓冲区之外。系统使用缓冲区的内容来渲染屏幕，然后将其释放回用户代码以进行进一步更新。
+- en: A few milliseconds later, when the click handling task is complete, the animation
+    task gets its chance to update the display buffer. Even though the display buffer
+    now contains the next frame of the animation, the screen will not be redrawn for
+    several milliseconds. The frame rate for the animation has been cut in half, to
+    30 fps, dangerously close to visible flicker.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 几毫秒后，当点击处理任务完成时，动画任务有机会更新显示缓冲区。尽管显示缓冲区现在包含动画的下一帧，屏幕将不会在几毫秒内进行重绘。动画的帧率已经降低到每秒30帧，接近可见的闪烁频率。
+- en: Some newer devices, like Google’s Pixel 4, have the ability to refresh the screen
+    at much higher frame rates. With a frame rate that is, for instance, twice as
+    high (120 fps), even if the UI thread misses two frames in a row, it still only
+    has to wait an extra 8 ms for the next redraw. The interval between the two renderings
+    in this case is only around 24 ms; much better than the 32 ms cost of dropping
+    a frame at 60 fps.
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一些新设备，如谷歌的Pixel 4，能够以更高的帧率刷新屏幕。例如，帧率提高到两倍（120帧每秒），即使UI线程连续错过两帧，它仍然只需等待额外的8毫秒进行下一次重绘。在这种情况下，两次渲染之间的间隔仅约为24毫秒；远远优于在60帧每秒时掉帧造成的32毫秒成本。
+- en: Though increased frame rate may help, an Android developer must be vigilant
+    and make sure that an application drops as few frames as possible. If an app is
+    in the middle of an expensive computation and that computation takes longer than
+    expected to complete, it will miss the redraw time slot and drop the frame, and
+    the application will feel janky.
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然提高帧率可能有所帮助，但安卓开发者必须保持警惕，确保应用程序尽量减少掉帧现象。如果应用程序正在进行一项昂贵的计算，并且该计算花费的时间超过预期，它将错过重绘的时间段，导致掉帧，应用程序会感觉卡顿。
+- en: This scenario is the reason why it is absolutely necessary to deal with concurrency
+    in Android applications. Put simply, the UI is single-threaded and the UI thread
+    must never be occupied for more than a few milliseconds
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种情况正是为什么在安卓应用程序中必须处理并发的原因。简而言之，UI是单线程的，UI线程绝不能被占用超过几毫秒。
+- en: The only possible solution for a nontrivial application is to pass time-consuming
+    work—database storage and retrieval, network interactions, and long-running computations—to
+    some other thread.
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于非平凡应用程序，唯一可能的解决方案是将耗时工作（如数据库存储和检索、网络交互和长时间运算）传递给其他线程。
+- en: Memory Leaks
+  id: totrans-63
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 内存泄漏
+- en: 'We’ve already dealt with one complexity introduced by concurrency: thread safety.
+    Android’s component-based architecture adds a second, equally dangerous complexity:
+    *memory leaks*.'
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经处理了并发引入的一个复杂性：线程安全。Android 的组件化架构引入了第二个同样危险的复杂性：*内存泄漏*。
+- en: A memory leak occurs when the object can’t be freed (garbage-collected) even
+    though it’s no longer useful. At worst, memory leaks could result in an `OutOfMemoryError`,
+    and an application crash. Even if things don’t get that bad, though, running short
+    on memory can force more frequent garbage collections that again cause “jank.”
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当对象不再有用时无法释放（垃圾回收），就会发生内存泄漏。在最坏的情况下，内存泄漏可能导致`OutOfMemoryError`和应用程序崩溃。即使情况没有变得那么糟，内存不足也可能强制更频繁地进行垃圾回收，进而导致“卡顿”。
+- en: As discussed in [Chapter 3](ch03.html#android_fundamentals), Android applications
+    are particularly susceptible to memory leaks because the lifecycles of some of
+    the most frequently used components—`Activity`s, `Fragment`s, `Service`s, and
+    so on—are not under the control of the application. Instances of those components
+    can all too easily turn into dead weight.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如[第三章](ch03.html#android_fundamentals)所讨论的，Android 应用程序特别容易发生内存泄漏，因为一些最常用组件的生命周期（如`Activity`、`Fragment`、`Service`等）不受应用程序控制。这些组件的实例很容易变成无用的负担。
+- en: 'This is particularly true in a multithreaded environment. Consider offloading
+    a task to a worker thread like this:'
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在多线程环境中尤为如此。考虑将任务卸载到工作线程，如下所示：
+- en: '[PRE2]'
+  id: totrans-68
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: The idea of moving the time-consuming work off the UI thread is a noble one.
+    Unfortunately, the preceding code has several flaws. Can you spot them?
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将耗时工作从 UI 线程移开的想法是很崇高的。不幸的是，前述代码存在几个缺陷。你能发现它们吗？
+- en: First, as mentioned earlier in this chapter, Android UI components are not thread-safe
+    and cannot be accessed or modified from outside the UI thread. The call to `setText`
+    in this code, from a thread other than the UI thread, is incorrect. Many Android
+    UI components detect unsafe uses like this, and throw exceptions if they occur.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，如本章前述，Android UI 组件不是线程安全的，不能在 UI 线程之外访问或修改。在此代码中，从非 UI 线程调用`setText`是不正确的。许多
+    Android UI 组件会检测到此类不安全的使用，并在发生时抛出异常。
+- en: One way to address this problem is to return results to the UI thread using
+    one of the Android toolkit methods for safe thread dispatch, as shown here. Note
+    that this code *still* has flaws!
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 解决此问题的一种方法是使用 Android 工具包中的安全线程分派方法将结果返回到 UI 线程，如下所示。请注意，此代码*仍然*存在缺陷！
+- en: '[PRE3]'
+  id: totrans-72
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: That fixes the first issue (the UI method, `setText`, is now called from the
+    Main thread) but the code is still not correct. Though the vagaries of the language
+    make it hard to see the problem, it is that the thread, newly created in the `ClickListener`,
+    holds an implicit reference to an Android-managed object. Since `doTimeConsumingThing`
+    is a method on an `Activity` (or `Fragment`), the thread, newly created in the
+    click listener, holds an *implicit* reference to that `Activity`, as shown in
+    [Figure 4-4](#a_leaked_activity).
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这解决了第一个问题（UI 方法`setText`现在从主线程调用），但代码仍然不正确。尽管语言的曲折性使问题难以看清楚，但问题是在`ClickListener`中新创建的线程隐含地引用了一个由
+    Android 管理的对象。由于`doTimeConsumingThing`是`Activity`（或`Fragment`）的方法，因此在点击监听器中新创建的线程隐式引用了该`Activity`，如图[4-4](#a_leaked_activity)所示。
+- en: '![pawk 0404](assets/pawk_0404.png)'
+  id: totrans-74
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0404](assets/pawk_0404.png)'
+- en: Figure 4-4\. A leaked activity.
+  id: totrans-75
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 4-4\. 泄露的活动。
+- en: It might be more obvious if the call to `doTimeConsumingThing` were written
+    as `this.doTimeConsumingThing`. If you think about it, though, it is clear that
+    there is no way to call the method `doTimeConsumingThing` on some object (in this
+    case, an instance of an `Activity`) without holding a reference to that object.
+    Now the `Activity` instance cannot be garbage-collected as long as the `Runnable`
+    running on the worker thread holds a reference to it. If the thread runs for any
+    significant amount of time, `Activity` memory has leaked.
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果将调用 `doTimeConsumingThing` 写成 `this.doTimeConsumingThing`，可能会更加明显。但是仔细想想，显然无法在没有持有该对象引用的情况下（在这种情况下是
+    `Activity` 的实例），调用方法 `doTimeConsumingThing`。现在 `Activity` 实例在工作线程上运行的 `Runnable`
+    持有其引用时，该实例将无法进行垃圾回收。如果线程运行时间较长，`Activity` 的内存就会泄露。
+- en: This issue is considerably more difficult to address than the last. One approach
+    assumes that tasks that are guaranteed to hold such an implicit reference for
+    only a very short period of time (less than a second) may not cause a problem.
+    The Android OS itself occasionally creates such short-lived tasks.
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 解决这个问题比上一个问题困难得多。一种方法假定保证仅短时间（少于一秒）持有隐式引用的任务可能不会导致问题。Android 操作系统本身偶尔会创建这种短暂的任务。
+- en: '`ViewModel`s and `LiveData` ensure that your UI always renders the freshest
+    data, and does it safely. Combined with Jetpack’s `viewModelScope` and coroutines—both
+    to be introduced shortly—all these things make it easier to control cancellation
+    of background tasks that are no longer relevant, and ensure memory integrity and
+    thread safety. Without the libraries, we’d have to correctly address all of these
+    concerns ourselves.'
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`ViewModel` 和 `LiveData` 确保你的 UI 总是展示最新的数据，并且安全地进行更新。结合 Jetpack 的 `viewModelScope`
+    和协程（即将介绍的两个内容），这些工具使得更容易控制取消不再相关的后台任务，并确保内存完整性和线程安全。如果没有这些库，我们必须自行正确处理所有这些问题。'
+- en: Note
+  id: totrans-79
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Careful design using Jetpacks’ lifecycle-aware, observable `LiveData` containers,
+    as described in [Chapter 3](ch03.html#android_fundamentals), can help to eliminate
+    both memory leaks and the danger of using an Android component that has completed
+    its lifecycle.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 谨慎设计，使用 Jetpack 的生命周期感知、可观察的 `LiveData` 容器，如第 3 章所述，可以帮助消除内存泄漏，并消除使用已完成生命周期的
+    Android 组件的风险。
+- en: Tools for Managing Threads
+  id: totrans-81
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 管理线程的工具
+- en: There is, actually, a third flaw in the code we just discussed; a deep design
+    flaw.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，我们刚刚讨论的代码中存在第三个缺陷；一个深层次的设计缺陷。
+- en: Threads are very expensive objects. They are large, they affect garbage collection,
+    and switching context among them is far from free. Creating and destroying threads,
+    as the code in the example does, is quite wasteful, ill-advised, and likely to
+    affect application performance.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程是非常昂贵的对象。它们占用空间大，影响垃圾回收，并且在它们之间切换上下文远非免费。创建和销毁线程，如示例中的代码所做的那样，是非常浪费和不明智的，可能会影响应用程序的性能。
+- en: 'Spawning more threads in no way makes an application able to accomplish more
+    work: a CPU has only so much power. Threads that are not executing are simply
+    an expensive way of representing work that is not yet complete.'
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 增加更多线程并不能使应用程序完成更多的工作：CPU 的处理能力是有限的。那些没有执行的线程只是代表尚未完成的工作，是一种昂贵的表示方式。
+- en: Consider, for instance, what would happen if a user mashed `myButton`, from
+    the previous example. Even if the operations that each of the generated threads
+    performed were fast and thread-safe, creating and destroying those threads would
+    slow the app to a crawl.
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如考虑一下，如果用户反复点击之前例子中的 `myButton`，会发生什么。即使每个生成的线程执行的操作都很快且线程安全，创建和销毁这些线程将使应用程序速度变得非常慢。
+- en: 'A best practice for applications is a thread policy: an application-wide strategy
+    based on the number of threads that is actually useful, that controls how many
+    threads are running at any given time. A smart application maintains one or more
+    pools of threads, each with a particular purpose, and each fronted by a queue.
+    Client code, with work to be done, enqueues tasks to be executed by the pool threads
+    and, if necessary, recovers the task results.'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序的最佳实践是线程策略：一种基于实际有用线程数量的应用程序全局策略，用于控制任何给定时间运行的线程数量。一个智能的应用程序维护一个或多个线程池，每个线程池都有特定目的，并且每个线程池都由一个队列控制。客户端代码有工作需要完成时，将任务加入到线程池中由池线程执行，并在必要时恢复任务结果。
+- en: The next two sections introduce two threading primitives available to Android
+    developers, the `Looper`/`Handler` and the `Executor`.
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来的两个部分介绍 Android 开发人员可用的两种线程原语，`Looper`/`Handler` 和 `Executor`。
+- en: Looper/Handler
+  id: totrans-88
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Looper/Handler
+- en: 'The `Looper`/`Handler` is a framework of cooperating classes: a `Looper`, a
+    `MessageQueue` and the `Message`s enqueued on it, and one or more `Handler`s.'
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Looper`/`Handler`是一组协作类的框架：一个`Looper`，一个`MessageQueue`及其上排队的`Message`，以及一个或多个`Handler`。'
+- en: 'A `Looper` is simply a Java `Thread` that is initialized by calling the methods
+    `Looper.prepare()` and `Looper.start()` from its `run` method, like this:'
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Looper`其实就是一个Java `Thread`，通过从其`run`方法调用`Looper.prepare()`和`Looper.start()`方法进行初始化，代码如下：'
+- en: '[PRE4]'
+  id: totrans-91
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: The second method, `Looper.loop()`, causes the thread to enter a tight loop
+    in which it checks its `MessageQueue` for tasks, removes them one by one, and
+    executes them. If there are no tasks to be executed, the thread sleeps until a
+    new task is enqueued.
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二种方法`Looper.loop()`会使线程进入一个紧密循环，它会检查其`MessageQueue`中的任务，逐个移除并执行它们。如果没有要执行的任务，线程将休眠，直到有新任务入队为止。
+- en: Note
+  id: totrans-93
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: If you find yourself thinking that this sounds vaguely familiar, you are right.
+    Android’s UI thread is simply a `Looper` created from the application process’s
+    main thread.
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你觉得这听起来有些眼熟，你是对的。Android的UI线程就是从应用程序进程的主线程中创建的`Looper`。
+- en: 'A `Handler` is the mechanism used to enqueue tasks on a `Looper`’s queue, for
+    processing. You create a `Handler` like this:'
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Handler`是在`Looper`队列上排队任务并进行处理的机制。你可以像这样创建一个`Handler`：'
+- en: '[PRE5]'
+  id: totrans-96
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'The main thread’s `Looper` is always accessible using the method `Looper.getMainLooper`.
+    Creating a `Handler` that posts tasks to the UI thread, then, is as simple as
+    this:'
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 主线程的`Looper`可以通过方法`Looper.getMainLooper`随时访问。因此，创建一个将任务发布到UI线程的`Handler`就变得如此简单：
+- en: '[PRE6]'
+  id: totrans-98
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: In fact, this is exactly how the `post()` method, shown in the preceding example,
+    works.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，这正是前面示例中展示的`post()`方法的工作原理。
+- en: '`Handler`s are interesting because they handle both ends of the `Looper`’s
+    queue. In order to see how this works, let’s follow a single task through the
+    `Looper`/`Handler` framework.'
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Handler`非常有趣，因为它们处理`Looper`队列的两端。为了理解其工作原理，让我们跟随一个单一任务通过`Looper`/`Handler`框架的过程。'
+- en: 'There are several `Handler` methods for enqueuing a task. Here are two of them:'
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有几种用于将任务加入队列的`Handler`方法。以下是其中的两种：
+- en: '`post(task: Runnable)`'
+  id: totrans-102
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`post(task: Runnable)`'
+- en: '`send(task: Message)`'
+  id: totrans-103
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`send(task: Message)`'
+- en: 'These two methods define two slightly different ways of enqueuing a task: sending
+    messages and posting `Runnable`s. Actually, the `Handler` always enqueues a `Message`.
+    For convenience, though, the `post...()` group of methods attach a `Runnable`
+    to the `Message` for special handling.'
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这两种方法定义了两种稍微不同的任务入队方式：发送消息和发布`Runnable`。实际上，`Handler`总是将`Message`加入队列。但为了方便起见，`post...()`方法组会将`Runnable`附加到`Message`上，以进行特殊处理。
+- en: 'In this example we use the method `Handler.post(task: Runnable)` to enqueue
+    our task. The `Handler` obtains a `Message` object from a pool, attaches the `Runnable`,
+    and adds the `Message` to the end of the `Looper`’s `MessageQueue`.'
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '在本例中，我们使用`Handler.post(task: Runnable)`方法将任务加入队列。`Handler`从池中获取一个`Message`对象，将`Runnable`附加到其中，并将`Message`添加到`Looper`的`MessageQueue`的末尾。'
+- en: Our task is now awaiting execution. When it reaches the head of the queue, the
+    `Looper` picks it up and, interestingly, hands it right back to the exact same
+    `Handler` that enqueued it. The same `Handler` instance that enqueues a task is
+    always the instance that runs it.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的任务现在等待执行。当它达到队列的首部时，`Looper`会接收到它，并且有趣的是，它会将任务交回给正是将其入队的那个`Handler`。因此，入队任务和执行任务的`Handler`实例始终是同一个。
+- en: This can seem a bit perplexing until you realize that the `Handler` code that
+    submitted the task might be running on any application thread. The `Handler` code
+    that processes the task, however, is *always* running on the `Looper`, as shown
+    in [Figure 4-5](#looper_handler).
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可能看起来有点令人困惑，直到你意识到提交任务的`Handler`代码可以在任何应用程序线程上运行。然而，处理任务的`Handler`代码始终在`Looper`上运行，如[图 4-5](#looper_handler)所示。
+- en: '![pawk 0405](assets/pawk_0405.png)'
+  id: totrans-108
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0405](assets/pawk_0405.png)'
+- en: Figure 4-5\. `Looper`/`Handler`.
+  id: totrans-109
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 4-5\. `Looper`/`Handler`。
+- en: The `Handler` method called by the `Looper` to handle a task first checks to
+    see if the `Message` contains a `Runnable`. If it does—and because we used one
+    of the `post...()` methods, our task does—the `Handler` executes the `Runnable`.
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Looper`通过调用`Handler`方法来处理任务，首先检查`Message`是否包含`Runnable`。如果是（因为我们使用了`post...()`方法之一，所以任务包含`Runnable`），`Handler`会执行`Runnable`。'
+- en: 'If we’d used one of the `send...()` methods, the `Handler` would have passed
+    the `Message` to its own overridable method, `Handler.handleMessage(msg: Message)`.
+    A subclass of `Handler` would, in that method, use the `Message` attribute `what`
+    to decide which particular task it should perform, and the attributes `arg1`,
+    `arg2`, and `obj` as task parameters.'
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '如果我们使用了 `send...()` 方法之一，`Handler` 将会将 `Message` 传递给自己的可重写方法 `Handler.handleMessage(msg:
+    Message)`。`Handler` 的子类将在该方法中使用 `Message` 属性 `what` 来决定它应执行的特定任务，以及属性 `arg1`、`arg2`
+    和 `obj` 作为任务参数。'
+- en: The `MessageQueue` is, actually, a sorted queue. Each `Message` includes, as
+    one of its attributes, the earliest time at which it may be executed. In the preceding
+    two methods, `post` and `send`, simply use the current time (the message will
+    be processed “now,” immediately).
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`MessageQueue` 实际上是一个排序队列。每个 `Message` 包含其可能被执行的最早时间之一作为其属性之一。在前面两种方法中，`post`
+    和 `send` 简单地使用当前时间（消息将会“现在”立即被处理）。'
+- en: 'Two other methods, though, allow tasks to be enqueued to be run at some time
+    in the future:'
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另外两种方法允许任务在将来某个时间被排队运行：
+- en: '`postDelayed(runnable, delayMillis)`'
+  id: totrans-114
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`postDelayed(runnable, delayMillis)`'
+- en: '`sendMessageDelayed(message, delayMillis)`'
+  id: totrans-115
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`sendMessageDelayed(message, delayMillis)`'
+- en: Tasks created using these methods will be sorted into the `MessageQueue` to
+    be executed at the indicated time.
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用这些方法创建的任务将被排序到 `MessageQueue` 中，在指定的时间执行。
+- en: Note
+  id: totrans-117
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: As noted, a `Looper` can only make a best effort at running a task at the requested
+    time. While it will never run a delayed task before its time, if another task
+    hogs the thread the task may run late.
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如注意到的，一个 `Looper` 只能尽力在请求的时间运行任务。虽然它不会在规定时间之前运行延迟的任务，但如果另一个任务占用了线程，该任务可能会运行晚一些。
+- en: '`Looper`/`Handler`s are a fantastically versatile and efficient tool. The Android
+    system makes extensive use of them, particularly the `send...()` calls, which
+    do not do any memory allocation.'
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Looper`/`Handler` 是一种非常多才多艺和高效的工具。Android 系统广泛使用它们，尤其是 `send...()` 调用，这些调用不会进行任何内存分配。'
+- en: Note that a `Looper` can submit tasks to itself. Tasks that execute and then
+    reschedule themselves after a given interval (using one of the `...Delayed()`
+    methods) are one of the ways that Android creates animations.
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，一个 `Looper` 可以向自身提交任务。执行任务并在给定间隔后重新安排自己（使用 `...Delayed()` 方法之一）是 Android
+    创建动画的一种方式。
+- en: Also note that because a `Looper` is single-threaded, a task that is only run
+    on one particular `Looper` need not be thread-safe. There is no need for synchronization
+    or ordering when a task, even a task that is run asynchronously, is run only on
+    a single thread. As mentioned earlier, the entire Android UI framework, which
+    runs only on the UI Looper, depends on this assumption.
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还要注意，因为 `Looper` 是单线程的，只在特定 `Looper` 上运行的任务无需线程安全。当任务仅在单个线程上运行时，无论是异步运行的任务还是同步运行的任务，都不需要同步或排序。正如前面提到的，整个
+    Android UI 框架仅依赖于这一假设，它运行在 UI Looper 上。
+- en: Executors and ExecutorServices
+  id: totrans-122
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Executors 和 ExecutorServices
+- en: Java introduced `Executor`s and `ExecutorService`s in Java 5, as part of a new
+    Concurrency Framework. The new framework provided several higher-level concurrency
+    abstractions that allowed developers to leave behind many of the details of threads,
+    locks, and synchronization.
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Java 5 引入了 `Executor` 和 `ExecutorService`，作为新并发框架的一部分。新框架提供了几个更高级的并发抽象，允许开发人员摆脱线程、锁和同步的许多细节。
+- en: An `Executor` is, as its name suggests, a utility that executes tasks submitted
+    to it. Its contract is the single method `execute(Runnable)`.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如其名，`Executor` 是一个执行提交给它的任务的实用工具。它的合同是单一方法 `execute(Runnable)`。
+- en: Java provides several implementations of the interface, each with a different
+    execution strategy and purpose. The simplest of these is available using the method
+    `Executors.newSingleThreadExecutor`.
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Java 提供了接口的多个实现，每个都具有不同的执行策略和目的。其中最简单的可以使用方法 `Executors.newSingleThreadExecutor`
+    获得。
+- en: 'A single-threaded executor is very similar to the `Looper`/`Handler` examined
+    in the previous section: it is an unbounded queue in front of a single thread.
+    New tasks are enqueued onto the queue and then removed and executed in order on
+    the single thread that services the queue.'
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 单线程执行器与前面部分讨论的 `Looper`/`Handler` 非常相似：它是一个单线程前面的无界队列。新任务被排入队列，然后按顺序从服务队列的单个线程上执行和删除。
+- en: '`Looper`/`Handler`s and single-threaded `Executor`s each have their own advantages.
+    For instance, a `Looper`/`Handler` is heavily optimized, to avoid object allocation.
+    On the other hand, a single-threaded `Executor` will replace its thread if that
+    thread is aborted by a failing task.'
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Looper`/`Handler` 和单线程 `Executor` 各有各的优点。例如，`Looper`/`Handler` 经过了大量优化，避免了对象分配。另一方面，单线程
+    `Executor` 会在其线程因失败任务而中止时替换线程。'
+- en: 'A generalization of the single-threaded `Executor` is the `FixedThreadPoolExecutor`:
+    instead of a single thread, its unbounded queue is serviced by a fixed number
+    of threads. Like the single-threaded `Executor`, a `FixedThreadPoolExecutor` will
+    replace threads when tasks kill them. A `FixedThreadPoolExecutor` does not guarantee
+    task order, though, and will execute tasks simultaneously, hardware permitting.'
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 单线程 `Executor` 的一种泛化是 `FixedThreadPoolExecutor`：它不是单个线程，而是其无界队列由固定数量的线程服务。与单线程
+    `Executor` 类似，`FixedThreadPoolExecutor` 将替换线程当任务终止它们时。然而，`FixedThreadPoolExecutor`
+    不保证任务顺序，并且会同时执行任务，硬件允许的情况下。
+- en: The single-threaded scheduled `Executor` is Java’s equivalent of the `Looper`/`Handler`.
+    It’s similar to a single-threaded `Executor` except that, like the `Looper`/`Handler`,
+    its queue is sorted by execution time. Tasks are executed in time order, not submission
+    order. As with the `Looper`/`Handler`, of course, long-running tasks can prevent
+    subsequent tasks from being executed on time.
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 单线程调度的 `Executor` 是 Java 中的 `Looper`/`Handler` 的等效物。它类似于单线程的 `Executor`，但像 `Looper`/`Handler`
+    一样，它的队列按执行时间排序。任务按时间顺序执行，而不是提交顺序。当然，与 `Looper`/`Handler` 类似，长时间运行的任务可能会阻止后续任务按时执行。
+- en: If none of these standard execution utilities meets your needs, you can create
+    a custom instance of `ThreadPoolExecutor`, specifying details like the size and
+    ordering of its queue, number of threads in its thread pool and how they are created,
+    and what happens when the pool’s queue is full.
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果这些标准执行工具都不符合你的需求，你可以创建一个定制的 `ThreadPoolExecutor` 实例，指定诸如其队列的大小和顺序、线程池中的线程数及其创建方式，以及当池的队列满时会发生什么。
+- en: There is one more type of `Executor` that deserves special attention—the `ForkJoinPool`.
+    Fork-join pools exist because of the observation that sometimes a single problem
+    can be broken down into multiple subproblems which can be executed concurrently.
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有一种 `Executor` 类型值得特别关注——`ForkJoinPool`。Fork-join 池存在的原因是观察到有时单个问题可以分解为多个子问题，并可以并发执行。
+- en: A common example of this kind of problem is adding two same-size arrays together.
+    The synchronous solution is to iterate, `i = 0 .. n - 1`, where `n` is the size
+    of the array, and at each `i` to compute `s[i] = a1[i] + a2[i]`.
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种问题的一个常见示例是将两个大小相同的数组相加。同步解决方案是迭代，`i = 0 .. n - 1`，在每个 `i` 处计算 `s[i] = a1[i]
+    + a2[i]`。
+- en: There is a clever optimization that is possible, though, if the task is divided
+    into pieces. In this case, the task can be subdivided into `` n` `` subtasks,
+    each of which computes `s[i] = a1[i] + a2[i]` for some `i`.
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一个聪明的优化方法，但如果任务分成几部分的话就可能实现，这时任务可以细分为 `` n` `` 子任务，每个子任务计算 `s[i] = a1[i] +
+    a2[i]`。
+- en: Note that an execution service creating subtasks it expects to process *itself*
+    can enqueue the subtasks on a thread-local queue. Since the local queue is used
+    predominantly by the single thread, there is almost never contention for the queue
+    locks. Most of the time, the queue belongs to the thread—it alone puts things
+    on and takes them off. This can be quite an optimization.
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，一个执行服务创建的预计要自己处理的子任务可以将子任务排入线程本地队列。由于本地队列主要由单个线程使用，几乎不会争用队列锁。大部分时间队列属于线程本身，它独自放入和取出东西。这可以是一种相当的优化。
+- en: Consider a pool of these threads, each with its own fast, local queue. Suppose
+    that one of the threads finishes all of its work and is about to idle itself,
+    while at the same time another pool thread has a queue of 200 subtasks to execute.
+    The idle thread steals the work. It grabs the lock for the busy thread’s queue,
+    grabs half of the subtasks, puts them in its own queue, and goes to work on them.
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 考虑一组这些线程，每个线程都有自己的快速本地队列。假设其中一个线程完成了所有工作，准备使自己空闲，同时另一个线程池线程有一个包含 200 个子任务的队列要执行。空闲线程偷走了这些工作。它获取了忙线程队列的锁，拿走了一半的子任务，把它们放入自己的队列，并开始处理它们。
+- en: The work-stealing trick is most useful when concurrent tasks spawn their own
+    subtasks. As we will see, it turns out that Kotlin coroutines are exactly such
+    tasks.
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当并发任务衍生出其自身的子任务时，工作窃取技巧最为有用。正如我们将看到的，Kotlin协程恰好就是这样的任务。
+- en: Tools for Managing Jobs
+  id: totrans-137
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 作业管理工具
+- en: Just as there can be economies of scale in the production of, say, cars, there
+    are important optimizations that require the large-scale view of a system. Consider
+    the use of the radio on a mobile phone.
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像生产汽车时可能存在规模经济一样，有一些重要的优化需要系统的大规模视图。考虑手机上的无线电使用情况。
+- en: When an application needs to interact with a remote service, the phone, normally
+    in battery-saving mode, must power up its radio, connect to a nearby tower, negotiate
+    a connection, and then transmit its message. Because connection negotiation is
+    overhead, the phone holds the connection open for a while. The assumption is that,
+    when one network interaction takes place, it is likely that others will follow.
+    When more than a minute or so goes by without any use of the network, though,
+    the phone goes back to its quiescent, battery-saving state.
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当应用程序需要与远程服务交互时，手机通常处于节电模式，必须启动其无线电，连接到附近的基站，协商连接，然后传输其消息。由于连接协商是开销，手机会保持连接一段时间。假设一旦进行了一次网络交互，很可能会有其他的网络交互随之而来。然而，如果有一分钟左右没有使用网络，手机就会返回其静态的、节电的状态。
+- en: Given this behavior, imagine what happens when several applications phone home,
+    each at a different time. When the first app sends its ping, the phone powers
+    its radio up, negotiates the connection, transmits a message for the app, waits
+    a bit, and then goes back to sleep. Just as it goes back to sleep, though, the
+    next application tries to use the network. The phone has to power back up, renegotiate
+    a connection, and so on. If there are more than a handful of applications doing
+    this, the phone radio is at full power essentially all the time. It is also spending
+    a lot of that time renegotiating a network connection that it dropped just a few
+    seconds ago.
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 鉴于这种行为，想象一下当多个应用程序在不同时间发送请求时会发生什么情况。当第一个应用程序发送其请求时，手机会启动其无线电，协商连接，传输应用程序的消息，等待一段时间，然后进入休眠状态。然而，就在手机进入休眠状态时，下一个应用程序尝试使用网络。手机必须重新启动，重新协商连接等。如果有多个应用程序这样做，手机的无线电几乎始终处于全功率状态。同时，它也花费大量时间重新协商刚刚断开的网络连接。
+- en: No single application can prevent this kind of problem. It requires a system-wide
+    view of battery and network use to coordinate multiple apps (each with its own
+    requirements) and to optimize battery life.
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没有单个应用程序能够解决这类问题。需要系统级别的电池和网络使用视图来协调多个应用程序（每个应用程序有其自身的需求）并优化电池寿命。
+- en: 'Android 8.0 (API 26+) introduced limits on application resource consumption.
+    Included in these limitations are the following:'
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 8.0（API 26+）引入了对应用程序资源消耗的限制。这些限制包括以下内容：
+- en: An application is in the foreground only when it has a visible activity or is
+    running a foreground service. Bound and started `Service`s no longer prevent an
+    application from being killed.
+  id: totrans-143
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 当应用程序具有可见活动或运行前台服务时，应用程序才处于前台状态。绑定和启动的`Service`不再阻止应用程序被杀死。
+- en: Applications cannot use their manifest to register for implicit broadcasts.
+    There are also limitations on sending broadcasts.
+  id: totrans-144
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 应用程序不能使用其清单来注册隐式广播。同时，发送广播也有限制。
+- en: 'These constraints can make it difficult for an application to perform “background”
+    tasks: synching with a remote, recording location, and so on. In most cases, the
+    constraints can be mitigated using the `JobScheduler` or Jetpack’s `WorkManager`.'
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些限制可能会使应用程序难以执行“后台”任务：与远程同步、记录位置等。在大多数情况下，可以使用`JobScheduler`或Jetpack的`WorkManager`来减轻这些限制。
+- en: 'Whenever medium to large tasks have to be scheduled more than a few minutes
+    in the future, it is a best practice to use one of these tools. Size matters:
+    refreshing an animation every few milliseconds, or scheduling another location
+    check in a couple of seconds, is probably a fine thing to do with a thread-level
+    scheduler. Refreshing a database from its upstream every 10 minutes is definitely
+    something that should be done using the `JobScheduler`.'
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当需要安排中等到大型任务超过几分钟时，最佳做法是使用这些工具之一。任务的大小很重要：每隔几毫秒刷新动画或者几秒钟安排另一个位置检查可能适合使用线程级别的调度器。但是，每隔10分钟从上游刷新数据库则明显应该使用`JobScheduler`来完成。
+- en: JobScheduler
+  id: totrans-147
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: JobScheduler
+- en: The `JobScheduler` is Android’s tool for scheduling tasks—possibly repeating
+    tasks—in the future. It is quite adaptable and, in addition to optimizing battery
+    life, provides access to details of system state that applications used to have
+    to infer from heuristics.
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`JobScheduler`是Android用于安排未来任务（可能是重复任务）的工具。它非常灵活，并且除了优化电池寿命外，还提供了系统状态的详细信息，应用程序以前需要通过启发式推断。'
+- en: A `JobScheduler` job is, actually, a bound service. An application declares
+    a special service in its manifest to make it visible to the Android system. It
+    then schedules tasks for the service using `JobInfo`.
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事实上，`JobScheduler`作业实际上是一个绑定服务。应用程序在其清单中声明一个特殊服务，使其对Android系统可见。然后使用`JobInfo`为该服务安排任务。
+- en: When the `JobInfo`’s conditions are met, Android binds the task service, much
+    as we described in [“Bound Services”](ch03.html#bound_services). Once the task
+    has been bound, Android instructs the service to run and passes any relevant parameters.
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当满足`JobInfo`的条件时，Android会绑定任务服务，就像我们在[“绑定服务”](ch03.html#bound_services)中描述的那样。任务一旦绑定，Android就会指示服务运行并传递任何相关参数。
+- en: 'The first step in creating a `JobScheduler` task is registering it in the application
+    manifest. That is done as shown here:'
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建`JobScheduler`任务的第一步是在应用程序清单中注册它。如下所示：
+- en: '[PRE7]'
+  id: totrans-152
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: The important thing in this declaration is the permission. Unless the service
+    is declared with *exactly* the `android.permission.BIND_JOB_SERVICE` permission,
+    the `JobScheduler` will not be able to find it.
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个声明中，重要的是权限。除非服务声明了*确切的*`android.permission.BIND_JOB_SERVICE`权限，否则`JobScheduler`将无法找到它。
+- en: Note that the task service is not visible to other applications. This is not
+    a problem. The `JobScheduler` is part of the Android system and can see things
+    that normal applications cannot.
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，任务服务对其他应用程序不可见。这不是问题。`JobScheduler`是Android系统的一部分，可以查看普通应用程序无法看到的内容。
+- en: 'The next step in setting up a `JobScheduler` task is scheduling it, as shown
+    here, in the method `schedulePeriodically`:'
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 设置`JobScheduler`任务的下一步是在方法`schedulePeriodically`中调度它，如下所示：
+- en: '[PRE8]'
+  id: totrans-156
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: This particular task will be run every `SYNC_INTERVAL` seconds but only if there
+    is sufficient space on the device and if it is currently attached to an external
+    power source. These are only two of the wide variety of attributes available for
+    scheduling a task. The granularity and flexibility of scheduling is, perhaps,
+    the `JobScheduler`’s most appealing quality.
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个特定任务将每`SYNC_INTERVAL`秒运行一次，但仅在设备上有足够空间且当前连接到外部电源时才会运行。这些只是用于调度任务的众多属性中的两个。调度的粒度和灵活性可能是`JobScheduler`最吸引人的特性。
+- en: Note that `JobInfo` identifies the task class to be run in much the same way
+    that we identified the target for an `Intent` back in [Chapter 3](ch03.html#android_fundamentals).
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，`JobInfo`类似于我们在[第3章](ch03.html#android_fundamentals)中为`Intent`确定目标的方式来识别要运行的任务类。
+- en: The system will call the task’s `onStartJob` method based on the criteria set
+    in the `JobInfo` when the task is eligible to run. This is why the `JobScheduler`
+    exists. Because it knows the schedules and requirements for all scheduled tasks,
+    it can optimize scheduling, globally, to minimize the impact, especially on the
+    battery.
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 系统将根据`JobInfo`中设置的条件，在任务符合运行条件时调用任务的`onStartJob`方法。这也是`JobScheduler`存在的原因。由于它了解所有预定任务的调度和要求，因此可以全局优化调度，以最小化对电池的影响，特别是在电池寿命方面。
+- en: Beware! The `onStartJob` method is run on the main (UI) thread. If, as is very
+    likely, the scheduled task is something that will take more than a few milliseconds,
+    it must be scheduled on a background thread, using one of the techniques described
+    previously.
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 小心！`onStartJob`方法在主（UI）线程上运行。如果预定的任务很可能需要超过几毫秒，必须使用前面描述的某种技术在后台线程上安排它。
+- en: If `onStartJob` returns `true`, the system will allow the application to run
+    until either it calls `jobFinished` or the conditions described in the `JobInfo`
+    are no longer satisfied. If, for instance, the phone running the `RecurringTask`
+    in the previous example was unplugged from its power source, the system would
+    immediately call the running task’s `onStopJob()` method to notify it that it
+    should stop.
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果`onStartJob`返回`true`，系统将允许应用程序运行，直到它调用`jobFinished`或者`JobInfo`中描述的条件不再满足为止。例如，如果运行上一个示例中的`RecurringTask`的手机从其电源中断开连接，则系统将立即调用正在运行任务的`onStopJob()`方法通知它停止运行。
+- en: When a `JobScheduler` task receives a call to `onStopJob()` it must stop. The
+    documentation suggests that the task has a little bit of time to tidy up and terminate
+    cleanly. Unfortunately, it is quite vague about exactly how much time is a “little
+    bit.” It is quite dire, though, in its warning that “You are solely responsible
+    for the behavior of your application upon receipt of this message; your app will
+    likely start to misbehave if you ignore it.”
+  id: totrans-162
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 `JobScheduler` 任务接收到 `onStopJob()` 调用时，必须停止。文档建议任务有一点时间整理并干净地终止。不幸的是，它对“一点时间”的确切时间非常模糊。然而，它在警告上非常严厉，指出“在收到此消息后，您的应用程序行为由您完全负责；如果忽略此消息，您的应用程序可能开始运行不正常。”
+- en: 'If `onStopJob()` returns `false`, the task will not be scheduled again, even
+    if the criteria in its `JobInfo` are met: the job has been cancelled. A recurring
+    task should always return `true`.'
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果 `onStopJob()` 返回 `false`，即使其 `JobInfo` 中的条件得到满足，任务也不会再次被调度：该作业已被取消。重复任务应始终返回
+    `true`。
+- en: WorkManager
+  id: totrans-164
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: WorkManager
+- en: The `WorkManager` is an Android Jetpack library that wraps the `JobScheduler`.
+    It allows a single codebase to make optimal use of modern versions of Android—those
+    that support the `JobScheduler`—and still work on legacy versions of Android that
+    do not.
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`WorkManager` 是一个 Android Jetpack 库，它包装了 `JobScheduler`。它允许单个代码库充分利用支持 `JobScheduler`
+    的现代 Android 版本，并在不支持的旧版 Android 上运行。'
+- en: While the services provided by the `WorkManager`, as well as its API, are similar
+    to those provided by the `JobScheduler` that it wraps, they are one more step
+    away from the details of implementation, and one abstraction more concise.
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然 `WorkManager` 提供的服务及其 API 与包装它的 `JobScheduler` 提供的类似，但它们距离实现细节更远，抽象更为简洁。
+- en: 'Where the `JobScheduler` encodes the difference between a task that repeats
+    periodically and one that runs once in the `Boolean` return from the `onStopJob`
+    method, the `WorkManager` makes it explicit; there are two types of tasks: a `OneTimeWorkRequest`
+    and a `PeriodicWorkRequest`.'
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 `JobScheduler` 中，通过 `onStopJob` 方法的 `Boolean` 返回值编码了周期重复任务和一次性任务的区别，而 `WorkManager`
+    则显式地表明了这一点；有两种类型的任务：`OneTimeWorkRequest` 和 `PeriodicWorkRequest`。
+- en: Enqueuing a work request always returns a token, a `WorkRequest` that can be
+    used to cancel the task, when it is no longer necessary.
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 排队工作请求始终返回一个标记，即 `WorkRequest`，可用于在不再需要时取消任务。
+- en: 'The `WorkManager` also supports the construction of complex task chains: “run
+    this and that in parallel, and run the other when both are done.” These task chains
+    might even remind you of the chains we used to transform collections in [Chapter 2](ch02.html#the_kotlin_collections_framework).'
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`WorkManager` 还支持构建复杂的任务链：“并行运行这个和那个，并在两者都完成后运行另一个”。这些任务链甚至可能让您想起我们在 [第2章](ch02.html#the_kotlin_collections_framework)
+    中用于转换集合的链条。'
+- en: The `WorkManager` is the most fluent and concise way to both guarantee that
+    the necessary tasks are run (even when your application is not visible on the
+    device screen) and to do so in a way that optimizes battery use.
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`WorkManager` 是确保必要任务运行的最流畅、最简洁的方式（即使您的应用程序在设备屏幕上不可见），并以优化电池使用的方式执行这些任务。'
+- en: Summary
+  id: totrans-171
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 总结
+- en: 'In this chapter we introduced Android’s threading model, and some concepts
+    and tools to help you use it effectively. To summarize:'
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们介绍了 Android 的线程模型，以及一些概念和工具，帮助您有效地使用它。总结一下：
+- en: A thread-safe program is one that behaves, no matter how concurrent threads
+    execute it, in a way that could be reproduced if the same threads executed it
+    serially.
+  id: totrans-173
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 线程安全的程序是一种行为良好的程序，无论并发线程如何执行它，其行为都可以在串行执行时再现。
+- en: 'In the Android threading model, the UI thread is responsible for the following:'
+  id: totrans-174
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 在 Android 线程模型中，UI 线程负责以下任务：
+- en: Drawing the view
+  id: totrans-175
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 绘制视图
+- en: Dispatching events resulting from user interaction with the UI
+  id: totrans-176
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 处理由用户与 UI 的交互产生的事件
+- en: Android programs use multiple threads in order to ensure that the UI thread
+    is free to redraw the screen without dropping frames.
+  id: totrans-177
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Android 程序使用多个线程，以确保 UI 线程可以在不丢帧的情况下重新绘制屏幕。
+- en: 'Java and Android provide several language-level threading primitives:'
+  id: totrans-178
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Java 和 Android 提供了几种语言级别的线程原语：
+- en: A `Looper`/`Handler` is a queue of tasks serviced by a single, dedicated thread.
+  id: totrans-179
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`Looper`/`Handler` 是由单一专用线程处理的任务队列。'
+- en: '`Executor`s and `ExecutionService`s are Java constructs for implementing an
+    application-wide thread-management policy.'
+  id: totrans-180
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`Executor` 和 `ExecutionService` 是 Java 构造，用于实现应用程序范围的线程管理策略。'
+- en: Android offers the architectural components `JobScheduler` and `WorkManager`
+    to schedule tasks efficiently.
+  id: totrans-181
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Android 提供了架构组件 `JobScheduler` 和 `WorkManager` 来高效地调度任务。
+- en: The following chapters will turn to more complex topics in Android and concurrency.
+    In them we will explore how Kotlin makes managing concurrent processes clearer
+    and easier and less error-prone.
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来的章节将涉及 Android 和并发中更复杂的主题。在这些章节中，我们将探讨 Kotlin 如何使管理并发进程更加清晰、更容易，减少错误的发生。
+- en: ^([1](ch04.html#idm46669754182608-marker)) It is possible for processes to share
+    some memory (as with Binder), but they do so in very controlled ways.
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch04.html#idm46669754182608-marker)) 进程可以共享一些内存（如使用 Binder），但它们以非常受控制的方式进行。
+- en: '^([2](ch04.html#idm46669754063120-marker)) Goetz et al., 2006\. *Java Concurrency
+    in Practice.* Boston: Addison-Wesley.'
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([2](ch04.html#idm46669754063120-marker)) Goetz 等人，2006年。*Java Concurrency
+    in Practice.* 波士顿：Addison-Wesley.

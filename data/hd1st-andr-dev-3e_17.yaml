@@ -1,0 +1,2615 @@
+- en: 'Chapter 14\. Room Databases: *Room with a View*'
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第14章。Room数据库：*带视图的Room*
+- en: '![image](Images/f0569-01.png)'
+  id: totrans-1
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0569-01.png)'
+- en: '**Most apps need data that persists.**'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**大多数应用程序需要持久化的数据。**'
+- en: But if you don’t take steps to store this data somewhere, **it will be lost
+    forever** as soon as the app is closed down. You usually keep data safe in Androidville
+    by ***s*toring it in a database**, so in this chapter, we’ll introduce you to
+    the **Room persistence library**. You’ll learn how to **build databases**, **create
+    tables,** and **define data access methods** using annotated classes and interfaces.
+    You’ll find out how to **use coroutines** to run database code in the background.
+    And along the way, you’ll discover how to **transform your live data as soon as
+    it changes** with a little help from ***Transformations.map()***.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是，如果你不采取措施将这些数据存储在某个地方，**它将永远丢失**，一旦关闭应用程序。通常，你可以通过***将数据存储在数据库中***来在Android应用程序中保护数据安全，因此在本章中，我们将向你介绍**Room持久化库**。你将学习如何使用注解类和接口来**构建数据库**、**创建表**和**定义数据访问方法**。你将了解如何使用协程在后台运行数据库代码。在此过程中，你将学习如何通过一点帮助从***Transformations.map()***来**立即转换你的实时数据**，每当它发生变化时。
+- en: Most apps need to store data
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 大多数应用程序需要存储数据。
+- en: Nearly all of the apps that you’ve written so far have used a small amount of
+    static data in order to function. The Guessing Game app we built in [Chapter 11](ch11.xhtml#view_modelscolon_model_behavior)
+    to [Chapter 13](ch13.xhtml#data_bindingcolon_building_smart_layouts), for example,
+    holds an array of `String`s in its view model so that the game can select one
+    at random for you to guess.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，你编写的几乎所有应用程序都使用了少量静态数据来进行功能操作。例如，在[第11章](ch11.xhtml#view_modelscolon_model_behavior)到[第13章](ch13.xhtml#data_bindingcolon_building_smart_layouts)中构建的猜谜游戏应用程序，通过在其视图模型中保存一个字符串数组，游戏可以随机选择一个字符串让你来猜测。
+- en: In the real world, however, most apps require more than just static data; they
+    need to be able to save data that can change so that it doesn’t get lost when
+    the user shuts down the app. A music app might need to store playlists, for example,
+    and a game might need to record the user’s progress so that they can go back to
+    where they left off.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，在现实世界中，大多数应用程序需要的不仅仅是静态数据；它们需要能够保存可以更改的数据，以防用户关闭应用程序时数据丢失。例如，音乐应用可能需要存储播放列表，游戏可能需要记录用户的进度，以便用户可以回到上次离开的地方。
+- en: Apps can persist data using a database
+  id: totrans-7
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 应用程序可以使用数据库来持久化数据。
+- en: In most cases, the best way of persisting the user’s data is to use a database,
+    so in this chapter, you’re going to learn how to use one by building a Tasks app.
+    This app will let the user add tasks to a database, and display a list of all
+    the tasks they have already entered.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在大多数情况下，持久化用户数据的最佳方法是使用数据库。因此，在本章中，你将通过构建一个Tasks应用程序来学习如何使用数据库。该应用程序允许用户将任务添加到数据库，并显示已输入的所有任务列表。
+- en: 'Here’s what the app will look like:'
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以下是应用程序的外观：
+- en: '![image](Images/f0570-01.png)'
+  id: totrans-10
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0570-01.png)'
+- en: Before we start building the app, let’s run through how it will be structured.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们开始构建应用程序之前，让我们先了解其结构。
+- en: How the app will be structured
+  id: totrans-12
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 应用程序的结构
+- en: The app will contain a single activity (named `MainActivity`), which will be
+    used to display a fragment named `TasksFragment`.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序将包含一个名为`MainActivity`的单个活动，该活动将用于显示名为`TasksFragment`的片段。
+- en: '`TasksFragment` is the app’s main screen. Its layout file (*fragment_tasks.xml*)
+    will include an edit text and a button, which let the user enter a task name and
+    insert it into the database. It will also feature a text view, which will display
+    all of the tasks that have been entered into the database:'
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`TasksFragment`是应用程序的主屏幕。它的布局文件（*fragment_tasks.xml*）将包括一个编辑文本和一个按钮，用户可以在其中输入任务名称并将其插入到数据库中。它还将包括一个文本视图，用于显示已输入到数据库中的所有任务：'
+- en: '![image](Images/f0571-01.png)'
+  id: totrans-15
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0571-01.png)'
+- en: We’ll also add a view model (named `TasksViewModel`) to the app, which `TasksFragment`
+    will use for its business logic. It will include properties and methods that the
+    fragment will use to interact with the app’s database. We’ll also enable data
+    binding so that `TasksFragment`’s layout has direct access to the view model.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还将向应用程序添加一个视图模型（名为`TasksViewModel`），该模型将被`TasksFragment`用于业务逻辑。它将包括片段用来与应用程序数据库交互的属性和方法。我们还将启用数据绑定，以便`TasksFragment`的布局可以直接访问视图模型。
+- en: 'Here’s how these components will interact:'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些组件将如何互动：
+- en: '![image](Images/f0571-02.png)'
+  id: totrans-18
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0571-02.png)'
+- en: To create the database, we’re going to use an Android library called ***Room***.
+    So what’s Room?
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建数据库，我们将使用一个名为***Room***的Android库。那么，Room是什么？
+- en: Room is a database library that sits on top of SQLite
+  id: totrans-20
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Room 是建立在 SQLite 之上的数据库库。
+- en: '![image](Images/f0572-01.png)'
+  id: totrans-21
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0572-01.png)'
+- en: Behind the scenes, most Android databases use SQLite. SQLite is lightweight,
+    stable, fast, and optimized for a single user, and these features make it a good
+    choice for Android apps. Writing the code to create, manage, and interact with
+    SQLite databases, however, can be tricky.
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大多数 Android 数据库在后台使用 SQLite。SQLite 轻量级、稳定、快速，并且针对单用户进行了优化，这些特性使其成为 Android 应用程序的良好选择。然而，编写用于创建、管理和与
+    SQLite 数据库交互的代码可能会有些棘手。
+- en: To make things easier, Android Jetpack includes a persistence library named
+    ***Room*** that sits on top of SQLite. With Room, you get all the benefits of
+    using SQLite, but using simpler code. It provides you with convenient annotations,
+    for example, that let you quickly write database code in a way that’s less repetitive
+    and less error-prone.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了简化操作，Android Jetpack 包含一个名为 ***Room*** 的持久化库，它建立在 SQLite 之上。使用 Room，您可以获得使用
+    SQLite 的所有优点，但使用更简单的代码。例如，它提供了方便的注释，让您可以快速地编写数据库代码，减少了重复性和错误。
+- en: '****MVVM** is an architectural design pattern that’s used to structure apps.
+    It stands for Model-View-ViewModel.**'
+  id: totrans-24
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '****MVVM** 是一种用于结构化应用程序的架构设计模式。它代表 Model-View-ViewModel。**'
+- en: Room apps are usually structured using MVVM
+  id: totrans-25
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Room 应用程序通常使用 MVVM 结构。
+- en: 'Apps that use Room—including the Tasks app—are usually structured using an
+    architectural design pattern called ***MVVM***, which stands for Model-View-ViewModel.
+    The structure looks like this:'
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 Room 的应用程序（包括 Tasks 应用程序）通常使用一种称为 ***MVVM*** 的架构设计模式。该结构如下所示：
+- en: '![image](Images/f0572-02.png)'
+  id: totrans-27
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0572-02.png)'
+- en: This structure is similar to the one we used for the Guessing Game app we built,
+    except that there’s an extra Model layer for the database. It means that the activity
+    and fragment’s UI code is cleanly separated from the business logic that’s held
+    in the view model, and the view model is separated from any code that underpins
+    the database.
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个结构类似于我们用于构建“猜谜游戏”应用程序的结构，不同之处在于多了一个用于数据库的 Model 层。这意味着活动和片段的 UI 代码与保存在视图模型中的业务逻辑分离清晰，视图模型与支持数据库的任何代码也是分离的。
+- en: You’ll learn more about how to use the MVVM structure as we build the Tasks
+    app.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在构建 Tasks 应用程序过程中，您将学习更多关于如何使用 MVVM 结构的信息。
+- en: Here’s what we’re going to do
+  id: totrans-30
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们将要做的事情如下：
+- en: 'Here are the steps that we’ll go through to build the Tasks app:'
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些是构建 Tasks 应用程序的步骤：
+- en: '**Set up the basic app.**'
+  id: totrans-32
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**设置基本应用。**'
+- en: We’ll create the app, update its *build.gradle* files so that it uses the libraries
+    we need, and create the basic activity, fragment, and layout code.
+  id: totrans-33
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将创建应用程序，更新其 *build.gradle* 文件以使用所需的库，并创建基本的活动、片段和布局代码。
+- en: '![image](Images/f0573-01.png)'
+  id: totrans-34
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0573-01.png)'
+- en: '**Write the database code.**'
+  id: totrans-35
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**编写数据库代码。**'
+- en: In this step, we’ll add the code to create a database with a table, along with
+    the data access methods needed to interact with the table’s data.
+  id: totrans-36
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 在这一步中，我们将添加代码以创建带有表的数据库，并提供与表数据交互所需的数据访问方法。
+- en: '![image](Images/f0573-02.png)'
+  id: totrans-37
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0573-02.png)'
+- en: '**Insert task records.**'
+  id: totrans-38
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**插入任务记录。**'
+- en: We’ll create a view model and update the app’s fragment so that we can use the
+    app to insert records.
+  id: totrans-39
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将创建一个视图模型，并更新应用程序的片段，以便可以使用应用程序来插入记录。
+- en: '![image](Images/f0573-03.png)'
+  id: totrans-40
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0573-03.png)'
+- en: '**Display a list of task records.**'
+  id: totrans-41
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**显示任务记录列表。**'
+- en: Finally, we’ll update the view model and fragment code so that the app displays
+    a list of all the task records held in the database.
+  id: totrans-42
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 最后，我们将更新视图模型和片段代码，使应用程序显示数据库中保存的所有任务记录的列表。
+- en: '![image](Images/f0573-04.png)'
+  id: totrans-43
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0573-04.png)'
+- en: Create the Tasks project
+  id: totrans-44
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建 Tasks 项目
+- en: We’re going to use a new project for the Tasks app, so create one now using
+    the same steps you used in the previous chapters. Choose the Empty Activity option,
+    enter a name of “Tasks” and a package name of “com.hfad.tasks”, and accept the
+    default save location. Make sure the language is set to Kotlin and the minimum
+    SDK is API 21 so it will run on most Android devices.
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用一个新项目来开发 Tasks 应用程序，因此请按照与之前章节相同的步骤创建项目。选择“空活动”选项，输入名称“Tasks”和包名“com.hfad.tasks”，接受默认保存位置。确保语言设置为
+    Kotlin，最低 SDK 版本为 API 21，以便在大多数 Android 设备上运行。
+- en: Next, we’ll update the project’s *build.gradle* files so that they include all
+    the features and dependencies that are needed for the app.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们将更新项目的 *build.gradle* 文件，以包括所有需要的功能和依赖项。
+- en: Add a variable to the project build.gradle file…
+  id: totrans-47
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在项目的 build.gradle 文件中添加一个变量...
+- en: '![image](Images/f0574-01.png)'
+  id: totrans-48
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0574-01.png)'
+- en: 'We’re going to use two Room libraries in this chapter, so we’ll add a new variable
+    to the project’s *build.gradle* file to specify which version we’ll be using,
+    and to keep things consistent. To do this, open the file *Tasks/build.gradle*,
+    and add the following lines (in bold) to the `buildscript` section:'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们将使用两个 Room 库，因此我们将在项目的 *build.gradle* 文件中添加一个新变量，以指定我们将使用的版本，并保持一致性。为此，请打开文件
+    *Tasks/build.gradle*，并将以下行（用**加粗**标记的）添加到 `buildscript` 部分：
+- en: '![image](Images/f0574-02.png)'
+  id: totrans-50
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0574-02.png)'
+- en: …and update the app build.gradle file, too
+  id: totrans-51
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …并且也要更新应用的 build.gradle 文件
+- en: In the app’s *build.gradle* file, we need to enable data binding, and add dependencies
+    for the view model, live data, and Room libraries.
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在应用的 *build.gradle* 文件中，我们需要启用数据绑定，并添加 view model、live data 和 Room 库的依赖项。
+- en: 'Open the file *Tasks/app/build.gradle*, and add the following lines (in bold)
+    to the appropriate sections:'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开文件 *Tasks/app/build.gradle*，并将以下行（用**加粗**标记的）添加到适当的部分：
+- en: '![image](Images/f0574-03.png)'
+  id: totrans-54
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0574-03.png)'
+- en: Then click on the Sync Now option to sync the changes you’ve made with the rest
+    of the project.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后点击“立即同步”选项，将您所做的更改与项目的其余部分同步。
+- en: Create TasksFragment
+  id: totrans-56
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建 TasksFragment
+- en: The app will include a single fragment named `TasksFragment`, which we’ll use
+    to display a list of all the tasks in the database, and to insert new ones.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该应用程序将包含一个名为 `TasksFragment` 的单个片段，我们将使用它来显示数据库中所有任务的列表，并插入新任务。
+- en: To create `TasksFragment`, highlight the *com.hfad.tasks* package in the *app/src/main/java*
+    folder, then go to File→New→Fragment→Fragment (Blank). Name the fragment “TasksFragment”,
+    name its layout “fragment_tasks”, and make sure the language is set to Kotlin.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建 `TasksFragment`，请在 *app/src/main/java* 文件夹中突出显示 *com.hfad.tasks* 包，然后转到
+    文件→新建→Fragment→Fragment（空白）。将 fragment 命名为“TasksFragment”，命名其布局为“fragment_tasks”，并确保语言设置为
+    Kotlin。
+- en: '![image](Images/f0575-02.png)'
+  id: totrans-59
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0575-02.png)'
+- en: Update TasksFragment.kt
+  id: totrans-60
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 更新 TasksFragment.kt
+- en: 'Once you’ve added `TasksFragment` to the project, make sure that *TasksFragment.kt*
+    matches the code shown here:'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦您将 `TasksFragment` 添加到项目中，请确保 *TasksFragment.kt* 与此处显示的代码匹配：
+- en: '![image](Images/f0575-03.png)'
+  id: totrans-62
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0575-03.png)'
+- en: Update fragment_tasks.xml
+  id: totrans-63
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更新 fragment_tasks.xml
+- en: We also need to update `TasksFragment`’s layout so that it uses data binding,
+    and includes views to let us enter new tasks and display a list of existing ones.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还需要更新 `TasksFragment` 的布局，以便使用数据绑定，并包含视图以允许我们输入新任务并显示现有任务的列表。
+- en: 'Open the file *fragment_tasks.xml*, and update it so that it matches the code
+    shown here:'
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开文件 *fragment_tasks.xml*，并更新它，以便其与此处显示的代码匹配：
+- en: '![image](Images/f0576-02.png)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0576-02.png)'
+- en: Display TasksFragment in MainActivity’s layout…
+  id: totrans-67
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在 MainActivity 的布局中显示 TasksFragment…
+- en: In order to use `TasksFragment`, we need to add it to `MainActivity`’s layout
+    in a `FragmentContainerView`.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使用 `TasksFragment`，我们需要将它添加到 `MainActivity` 的布局中的 `FragmentContainerView` 中。
+- en: 'Update the file *activity_main.xml* so that it matches the code shown here:'
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更新文件 *activity_main.xml*，使其与此处显示的代码匹配：
+- en: '![image](Images/f0577-02.png)'
+  id: totrans-70
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0577-02.png)'
+- en: …and check the MainActivity.kt code
+  id: totrans-71
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …并检查 MainActivity.kt 代码
+- en: 'Once you’ve updated the layout, open *MainActivity.kt* and make sure its code
+    looks like this:'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更新布局后，打开 *MainActivity.kt* 并确保其代码如下所示：
+- en: '![image](Images/f0577-03.png)'
+  id: totrans-73
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0577-03.png)'
+- en: Now that we’ve updated the fragment and activity code, let’s get to work on
+    the Room database.
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经更新了 fragment 和 activity 代码，让我们开始处理 Room 数据库。
+- en: How Room databases are created
+  id: totrans-75
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Room 数据库的创建方式
+- en: '![image](Images/f0578-01.png)'
+  id: totrans-76
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0578-01.png)'
+- en: 'Room uses a set of annotated classes and interfaces to create and configure
+    a SQLite database for your app. It requires three main things:'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Room 使用一组带注解的类和接口来为您的应用程序创建和配置 SQLite 数据库。它需要三个主要的东西：
+- en: 1\. A database class
+  id: totrans-78
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 1\. 数据库类
+- en: This defines the database, including its name and version number. It’s used
+    to get an instance of the database.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这定义了数据库，包括其名称和版本号。用于获取数据库实例。
+- en: '![image](Images/f0578-02.png)'
+  id: totrans-80
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0578-02.png)'
+- en: 2\. Data classes for the tables
+  id: totrans-81
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 2\. 表的数据类
+- en: All of the data in a database is stored in tables. You define each table using
+    a data class, which includes annotations to specify the table’s name and columns.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据库中的所有数据都存储在表中。您可以使用数据类定义每个表，其中包括注解来指定表的名称和列。
+- en: Note
+  id: totrans-83
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: A Kotlin data class lets you create objects whose main purpose is to hold data.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 数据类允许您创建主要用于保存数据的对象。
+- en: '![image](Images/f0578-03.png)'
+  id: totrans-85
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0578-03.png)'
+- en: 3\. Interfaces for data access
+  id: totrans-86
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 3\. 数据访问的接口
+- en: You interact with each table using an interface, which specifies the data access
+    methods your app needs. If you need to insert records, for example, you can add
+    an `insert()` method to the interface, and to get all records, you can add a `getAll()`
+    method.
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以使用接口与每个表进行交互，接口指定应用程序需要的数据访问方法。例如，如果需要插入记录，则可以在接口中添加一个`insert()`方法；如果需要获取所有记录，则可以添加一个`getAll()`方法。
+- en: '![image](Images/f0578-04.png)'
+  id: totrans-88
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0578-04.png)'
+- en: Room uses these three things to generate all the code your app needs to create
+    the SQLite database, its tables, and any data access methods.
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Room使用这三个元素生成应用程序需要创建SQLite数据库、其表格和任何数据访问方法的所有代码。
+- en: Over the next few pages, we’re going to show you how to write the code for these
+    three components by defining a database for the Tasks app. We’ll begin by defining
+    its table.
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来的几页中，我们将展示如何通过定义Tasks应用的数据库来编写这三个组件的代码。我们将从定义其表格开始。
+- en: We’ll store tasks data in a table
+  id: totrans-91
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们将在表格中存储任务数据
+- en: As we said before, all of a database’s data is stored in one or more tables.
+    Each table is made up of rows and columns, where each row is a record, and each
+    column holds a single piece of data, like a number or piece of text.
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如前文所述，数据库中的所有数据都存储在一个或多个表中。每个表由行和列组成，每行是一条记录，每列保存一个数据片段，如数字或文本。
+- en: You create a separate table for each type of data you want to hold. A calendar
+    app, for example, might have a table to record events, and a weather app might
+    include a table for its locations.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每种数据类型都需创建单独的表。例如，日历应用可能有一个用于记录事件的表，而天气应用可能包含一个用于位置的表。
+- en: 'We want to store task records in the Tasks app, so we’re going to create a
+    table named “task_table”. The table will look something like this:'
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望在Tasks应用中存储任务记录，因此我们将创建一个名为“task_table”的表。表格将如下所示：
+- en: '![image](Images/f0579-02.png)'
+  id: totrans-95
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0579-02.png)'
+- en: You define tables with an annotated data class
+  id: totrans-96
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用带注解的数据类定义表格
+- en: You specify any tables you want the database to include by defining a data class
+    for each table. The data class needs to include a property for each of the table’s
+    columns, and you use annotations to tell Room how the table should be configured.
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果想要数据库包含某个表格，需为每个表格定义一个数据类。数据类需要包含表的每个列的属性，并使用注解告诉Room如何配置表格。
+- en: '![image](Images/f0579-03.png)'
+  id: totrans-98
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0579-03.png)'
+- en: To see how this works, we’re going to define a data class named `Task`, which
+    we’ll use to create a table in the Tasks app’s database.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了演示其工作原理，我们将定义一个名为`Task`的数据类，在Tasks应用的数据库中创建表。
+- en: Create the Task data class
+  id: totrans-100
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建 `Task` 数据类
+- en: We’ll begin by creating the data class. Highlight the *com.hfad.tasks* package
+    in the *app/src/main/java* folder, then go to File→New→Kotlin Class/File. Name
+    the file “Task” and choose the Class option.
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从创建数据类开始。在*app/src/main/java*文件夹中的*com.hfad.tasks*包中突出显示，然后转到File→New→Kotlin
+    Class/File。将文件命名为“Task”并选择Class选项。
+- en: 'When you’ve created the file, update its code so that it looks like this:'
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建文件后，请更新其代码，使其看起来像这样：
+- en: '![image](Images/f0579-04.png)'
+  id: totrans-103
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0579-04.png)'
+- en: Specify a table name with @Entity
+  id: totrans-104
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用 `@Entity` 指定表名
+- en: Now that we’ve created the `Task` data class, we need to add annotations to
+    tell Room how to configure the table. We’ll begin with the table name.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经创建了`Task`数据类，接下来需要添加注解来告诉Room如何配置表格。我们将从表名开始。
+- en: 'You name a table by adding an `**@Entity**` annotation to the data class, specifying
+    the table name. We want to give the table in the Tasks app a name of “task_table”,
+    and the code to do so looks like this:'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过在数据类中添加`@Entity`注解并指定表名来命名表格。我们希望在Tasks应用中为表格命名为“task_table”，相应的代码如下所示：
+- en: '![image](Images/f0580-02.png)'
+  id: totrans-107
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0580-02.png)'
+- en: Specify the primary key with @PrimaryKey
+  id: totrans-108
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 `@PrimaryKey` 指定主键
+- en: Next, we’ll specify the table’s primary key. This is used to uniquely identify
+    a single record, and can’t contain any duplicate values.
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们将指定表的主键。这用于唯一标识单个记录，不能包含任何重复值。
+- en: 'In the Tasks app, we’ll use the `taskId` property for `task_table`’s primary
+    key, and we’ll get the table to autogenerate its values so that they’re unique.
+    This is done using a `**@PrimaryKey**` annotation like this:'
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Tasks应用中，我们将使用`taskId`属性作为`task_table`的主键，并使表格自动生成其值以保证其唯一性。这通过类似以下方式的`@PrimaryKey`注解完成：
+- en: '![image](Images/f0580-04.png)'
+  id: totrans-111
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0580-04.png)'
+- en: Specify column names with @ColumnInfo
+  id: totrans-112
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 `@ColumnInfo` 指定列名
+- en: 'The final thing we’ll do is specify column names for the `taskName` and `taskDone`
+    properties. This is done using the `**@ColumnInfo**` annotation like this:'
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们最后要做的是为 `taskName` 和 `taskDone` 属性指定列名。这可以通过如下方式使用 `**@ColumnInfo**` 注解完成：
+- en: '![image](Images/f0580-05.png)'
+  id: totrans-114
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0580-05.png)'
+- en: Note that the `@ColumnInfo` annotation is *only needed if you want the column
+    name to be different to the property name*. If you omit the annotation, Room will
+    give the column the same name as the property.
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，只有在希望列名与属性名不同的情况下才需要使用 `@ColumnInfo` 注解。如果省略注解，Room 将使用属性名作为列名。
+- en: That’s everything that we need to know to complete the `Task` data class. We’ll
+    show you the full code on the next page.
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们完成`Task`数据类所需了解的一切。我们将在下一页上展示完整的代码。
+- en: The full code for Task.kt
+  id: totrans-117
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`Task.kt` 的完整代码'
+- en: 'Here’s the full code for the `Task` data class; update the code for *Task.kt*
+    so that it includes the changes shown (in bold):'
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 `Task` 数据类的完整代码；更新 *Task.kt* 的代码，以包括所示的更改（用粗体标记）：
+- en: '![image](Images/f0581-02.png)'
+  id: totrans-119
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0581-02.png)'
+- en: 'Room uses this file to create a table named `task_table` with an autogenerated
+    primary key named `taskId`, and two extra columns named `task_name` and `task_done`.
+    Here’s what the table looks like:'
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Room 使用此文件创建名为 `task_table` 的表，其中包含一个自动生成的名为 `taskId` 的主键，以及名为 `task_name` 和
+    `task_done` 的两列。表的样子如下所示：
+- en: '![image](Images/f0581-03.png)'
+  id: totrans-121
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0581-03.png)'
+- en: You’ll find out how Room adds this table to the database when we write the database
+    class a few pages ahead. First, we’ll define some database access methods so that
+    the app can insert, read, update, and delete the table’s data.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们在几页后编写数据库类时，您将了解到 Room 如何将此表添加到数据库中。首先，我们将定义一些数据库访问方法，以便应用程序可以插入、读取、更新和删除表的数据。
+- en: Use an interface to specify data operations
+  id: totrans-123
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用接口指定数据操作
+- en: You specify how the app will access the table’s data by creating an annotated
+    interface. This interface defines a DAO—or *Data Access Object*—which includes
+    all the methods the app needs to insert, read, update, and delete the data.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过创建带有注解的接口来指定应用程序访问表格数据的方式。此接口定义了一个DAO——或*数据访问对象*——其中包括应用程序需要的插入、读取、更新和删除数据的所有方法。
+- en: To see how this works, we’ll create a new interface named `TaskDao`, which the
+    Tasks app will use to interact with `task_table`’s data.
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要了解其工作原理，我们将创建一个名为 `TaskDao` 的新接口，Tasks 应用程序将使用它与 `task_table` 的数据进行交互。
+- en: Create the TaskDao interface
+  id: totrans-126
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建 `TaskDao` 接口
+- en: We’ll begin by creating the interface. Highlight the *com.hfad.tasks* package
+    in the *app/src/main/java* folder, then go to File→New→Kotlin Class/File. Name
+    the file “TaskDao” and choose the Interface option.
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从创建接口开始。在 *app/src/main/java* 文件夹中突出显示 *com.hfad.tasks* 包，然后转到 文件→新建→Kotlin
+    类/文件。将文件命名为 “TaskDao”，选择接口选项。
+- en: '![image](Images/f0582-02.png)'
+  id: totrans-128
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0582-02.png)'
+- en: 'When you’ve created the file, make sure that its code looks like this:'
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建文件后，请确保其代码如下所示：
+- en: '![image](Images/f0582-03.png)'
+  id: totrans-130
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0582-03.png)'
+- en: Use @Dao to mark the interface for data access
+  id: totrans-131
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 `@Dao` 标记接口以标记数据访问
+- en: 'Next, we need to tell Room that the `TaskDao` interface defines data access
+    methods. This is done by marking the interface with an `**@Dao**` annotation like
+    this:'
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们需要告诉 Room，`TaskDao` 接口定义了数据访问方法。这可以通过像这样使用 `**@Dao**` 注解来完成：
+- en: '![image](Images/f0582-04.png)'
+  id: totrans-133
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0582-04.png)'
+- en: Once you’ve annotated the interface with `@Dao`, you add annotated methods that
+    the app will use to interact with the data. If you want the app to insert records,
+    for example, you need to add a method for this to the interface, and if you want
+    it to get records, you need to add this method too.
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦您使用 `@Dao` 注释了接口，您可以添加应用程序用于与数据交互的带注释方法。例如，如果要应用程序插入记录，您需要向接口添加一个方法；如果要获取记录，您也需要添加此方法。
+- en: The great news is that Room provides four annotations—`@Insert`, `@Update`,
+    `@Delete`, and `@Query`—that make adding these methods a breeze. Let’s find out
+    how these are used by adding some data access methods to `TaskDao`.
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好消息是，Room 提供了四个注解——`@Insert`、`@Update`、`@Delete` 和 `@Query`——使添加这些方法变得轻而易举。我们通过向
+    `TaskDao` 添加一些数据访问方法来了解它们的用法。
+- en: Use @Insert to insert a record
+  id: totrans-136
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用 `@Insert` 插入记录
+- en: The first data access method we’ll define is an `insert()` method, which the
+    app will use to insert a task into `task_table`. The method will have one parameter—a
+    `Task`—for the task we want to insert. We’ll also mark the method with an `**@Insert**`
+    annotation, which tells Room that the method is used to insert records.
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们首先定义的第一个数据访问方法是一个`insert()`方法，该应用程序将使用它将任务插入到`task_table`中。该方法将有一个参数——一个`Task`对象，表示我们要插入的任务。我们还会用`**@Insert**`注解标记该方法，告诉
+    Room 该方法用于插入记录。
+- en: 'Here’s the full code for the `insert()` method:'
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以下是`insert()`方法的完整代码：
+- en: '![image](Images/f0583-02.png)'
+  id: totrans-139
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0583-02.png)'
+- en: 'When Room sees an `@Insert` annotation, it automatically generates all the
+    code the app needs to insert a record into the table so that you don’t have to
+    write it yourself. For the `insert()` method above, for example, it generates
+    all the code needed to insert a `Task` object’s data into `task_table` like this:'
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 Room 看到`@Insert`注解时，它会自动生成应用程序需要将记录插入表中的所有代码，因此您无需自己编写。例如，对于上面的`insert()`方法，它生成将`Task`对象的数据插入到`task_table`中所需的所有代码，如下所示：
+- en: '![image](Images/f0583-03.png)'
+  id: totrans-141
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0583-03.png)'
+- en: 'Any methods marked with `@Insert` can accept one or more entity objects for
+    their arguments—objects whose type is marked with `@Entity`. `@Insert` methods
+    can also accept collections of entity objects. The following method, for example,
+    will insert all the tasks that are included in the `List<Task>` argument:'
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 任何标记有`@Insert`的方法都可以接受一个或多个实体对象作为参数——对象的类型标记为`@Entity`。`@Insert`方法也可以接受实体对象的集合。例如，下面的方法将插入包含在`List<Task>`参数中的所有任务：
+- en: '![image](Images/f0583-04.png)'
+  id: totrans-143
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0583-04.png)'
+- en: Use @Update to update a record
+  id: totrans-144
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 @Update 更新记录
+- en: 'Room can also generate all the code that’s needed to update one or more existing
+    records in the table. This is done by adding a method to the DAO interface that’s
+    marked with `**@Update**`. The following `update()` method, for example, generates
+    all the code that’s needed to update an existing task record:'
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Room 还可以生成更新表中一个或多个现有记录所需的所有代码。这通过向 DAO 接口添加一个标记有`**@Update**`的方法来实现。例如，下面的`update()`方法生成更新现有任务记录所需的所有代码：
+- en: '![image](Images/f0583-05.png)'
+  id: totrans-146
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0583-05.png)'
+- en: When called, this method updates the record with a matching `taskId` so that
+    its data matches the `Task` object’s property values.
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当调用此方法时，它会更新具有匹配`taskId`的记录，使其数据与`Task`对象的属性值匹配。
+- en: Use @Delete to delete a record
+  id: totrans-148
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用 @Delete 删除记录
+- en: 'There’s also a `**@Delete**` annotation that’s used to mark any methods that
+    need to delete specific records from the table. To delete a single task record,
+    for example, you could use a method defined like so:'
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有一个`**@Delete**`注解，用于标记需要从表中删除特定记录的任何方法。例如，要删除单个任务记录，可以使用以下定义的方法：
+- en: '![image](Images/f0584-02.png)'
+  id: totrans-150
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0584-02.png)'
+- en: 'The code that Room generates for this method will delete the record with a
+    matching `taskId`:'
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Room 为此方法生成的代码将删除具有匹配`taskId`的记录：
+- en: '![image](Images/f0584-03.png)'
+  id: totrans-152
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0584-03.png)'
+- en: Use @Query for everything else
+  id: totrans-153
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 用 @Query 处理其他所有情况
+- en: Any other data access methods are marked with `@Query`. This annotation lets
+    you define a SQL statement (using `SELECT`, `INSERT`, `UPDATE`, or `DELETE`) that
+    will be run when the method is called.
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其他任何数据访问方法都标记有`@Query`。此注解允许您定义一个 SQL 语句（使用`SELECT`、`INSERT`、`UPDATE`或`DELETE`），在调用方法时将运行该语句。
+- en: Note
+  id: totrans-155
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: We’re not going to teach you how to use SQL in this book, but if you want to
+    learn more, we suggest reading Head First SQL by Lynn Beighley.
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不打算在本书中教授如何使用 SQL，但如果您想了解更多信息，建议阅读 Lynn Beighley 的《Head First SQL》。
+- en: 'In the Tasks app, for example, we can use the following code to define a method
+    named `get()` to return a live data `Task` for the record with a matching `taskId`:'
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，在 Tasks 应用程序中，我们可以使用以下代码定义一个名为`get()`的方法，以返回具有匹配`taskId`的 LiveData `Task`：
+- en: '![image](Images/f0584-05.png)'
+  id: totrans-158
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0584-05.png)'
+- en: 'We can also define a `getAll()` method, which will return a live data `List`
+    of all the records held in the table:'
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还可以定义一个`getAll()`方法，它将返回一个 LiveData `List`，其中包含表中保存的所有记录：
+- en: '![image](Images/f0584-06.png)'
+  id: totrans-160
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0584-06.png)'
+- en: As these methods return live data objects, the app can use them to be notified
+    when the data changes. We’ll use this feature later in the chapter to keep the
+    list of task records displayed in `TasksFragment` up-to-date.
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于这些方法返回 LiveData 对象，应用程序可以使用它们在数据发生更改时收到通知。我们稍后在本章中将使用此功能来保持在`TasksFragment`中显示的任务记录列表的最新状态。
+- en: You now know everything that’s needed to complete the code for `TaskDao`. We’ll
+    show you the full code on the next page.
+  id: totrans-162
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你已经了解了完成 `TaskDao` 代码所需的所有内容。我们将在下一页展示完整代码。
+- en: The full code for TaskDao.kt
+  id: totrans-163
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TaskDao.kt 的完整代码
+- en: '![image](Images/f0585-01.png)'
+  id: totrans-164
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0585-01.png)'
+- en: 'Here’s the full code for the `TaskDao` interface; update the code for *TaskDao.kt*
+    so that it includes the changes shown (in bold):'
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 `TaskDao` 接口的完整代码；更新 *TaskDao.kt* 的代码，使其包含所示的更改（加粗部分）：
+- en: '![image](Images/f0585-02.png)'
+  id: totrans-166
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0585-02.png)'
+- en: We’ve now written the code for the `Task` data class (which defines a table)
+    and the `TaskDao` interface (which specifies the data access methods). Next, we’ll
+    learn how to define the actual database.
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经编写了 `Task` 数据类（定义了一个表）和 `TaskDao` 接口（指定了数据访问方法）的代码。接下来，我们将学习如何定义实际的数据库。
+- en: Create a TaskDatabase abstract class
+  id: totrans-168
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建一个名为 TaskDatabase 的抽象类
+- en: You define the app’s database by creating an abstract class. The abstract class
+    specifies the database name and version number, and any classes or interfaces
+    that define the tables and data access methods.
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过创建一个抽象类来定义应用程序的数据库。抽象类指定了数据库名称和版本号，以及定义表和数据访问方法的任何类或接口。
+- en: In the Tasks app, we’re going to define the database using an abstract class
+    named `TaskDatabase`. Highlight the *com.hfad.tasks* package in the *app/src/main/java*
+    folder, then go to File→New→Kotlin Class/File. Name the file “TaskDatabase” and
+    choose the Class option.
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Tasks 应用程序中，我们将使用名为 `TaskDatabase` 的抽象类来定义数据库。在 *app/src/main/java* 文件夹中突出显示
+    *com.hfad.tasks* 包，然后转到 文件→新建→Kotlin 类/文件。将文件命名为 “TaskDatabase” 并选择“类”选项。
+- en: 'The `TaskDatabase` class needs to extend `RoomDatabase`, so update the code
+    for *TaskDatabase.kt* so that it looks like this:'
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`TaskDatabase` 类需要扩展 `RoomDatabase`，因此更新 *TaskDatabase.kt* 的代码，使其看起来像这样：'
+- en: '![image](Images/f0586-02.png)'
+  id: totrans-172
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0586-02.png)'
+- en: Annotate the class with @Database
+  id: totrans-173
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 @Database 对类进行注解
+- en: 'Next, we need to mark the class with `**@Database**`, which tells Room that
+    it defines a database. Here’s the code to do this:'
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们需要使用 `**@Database**` 标记该类，告诉 Room 这定义了一个数据库。以下是如何编写此代码的示例：
+- en: '![image](Images/f0586-03.png)'
+  id: totrans-175
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0586-03.png)'
+- en: 'As you can see, the `**@Database**` annotation includes three attributes: `**entities**`,
+    `**version**`, and `**exportSchema**`.'
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所见，`**@Database**` 注解包括三个属性：`**entities**`、`**version**` 和 `**exportSchema**`。
+- en: '`entities` specifies any classes—marked with `@Entity`—that define the tables
+    you want Room to add to the database. For the Tasks app, this is the `Task` data
+    class.'
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`entities` 指定了任何标有 `@Entity` 的类，这些类定义了要添加到数据库中的表。对于 Tasks 应用程序，这是 `Task` 数据类。'
+- en: '`version` is an `Int` that specifies the database version. In this case, it’s
+    1, as this is the first version of the database.'
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`version` 是一个 `Int`，指定数据库版本。在这种情况下，这是数据库的第一个版本，因此为 1。'
+- en: Finally, `exportSchema` tells Room whether to export the database schema into
+    a folder so that you can record its version history. Here, we’re setting it to
+    *false*.
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，`exportSchema` 告诉 Room 是否将数据库架构导出到文件夹中，以记录其版本历史。在这里，我们将其设置为 *false*。
+- en: Add properties for any DAO interfaces
+  id: totrans-180
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 为任何 DAO 接口添加属性
+- en: Next, we need to specify any interfaces (marked with `@Dao`) that will be used
+    for data access. This is done by adding a property for each interface.
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们需要指定任何数据访问接口（标记为`@Dao`）。为此，需要为每个接口添加一个属性。
+- en: 'In the Tasks app, for example, we’ve defined a single DAO interface named `TaskDao`,
+    so we need to add a new `taskDao` property to the `TaskDatabase` code like this:'
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，在 Tasks 应用程序中，我们已定义了一个名为 `TaskDao` 的单个 DAO 接口，因此需要向 `TaskDatabase` 代码添加一个新的
+    `taskDao` 属性，如下所示：
+- en: '![image](Images/f0587-02.png)'
+  id: totrans-183
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0587-02.png)'
+- en: Create and return an instance of the database
+  id: totrans-184
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建并返回数据库的实例
+- en: 'The final thing we need is a `getInstance()` method that will create the database
+    and return an instance of it. The code looks like this:'
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要的最后一件事是一个 `getInstance()` 方法，用于创建数据库并返回其实例。代码如下所示：
+- en: '![image](Images/f0587-03.png)'
+  id: totrans-186
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0587-03.png)'
+- en: That’s everything that we need for the `TaskDatabase` class. We’ll show you
+    the full code on the next page.
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们对 `TaskDatabase` 类所需的一切。我们将在下一页展示完整代码。
+- en: The full code for TaskDatabase.kt
+  id: totrans-188
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TaskDatabase.kt 的完整代码
+- en: 'Here’s the full code for the `TaskDatabase` abstract class; update the code
+    for *TaskDatabase.kt* so that it includes the changes shown (in bold):'
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 `TaskDatabase` 抽象类的完整代码；更新 *TaskDatabase.kt* 的代码，使其包含所示的更改（加粗部分）：
+- en: '![image](Images/f0588-02.png)'
+  id: totrans-190
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0588-02.png)'
+- en: We’ve now written all the database code needed by the Tasks app. Before we build
+    the rest of the app, try the following exercise.
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经编写了 Tasks 应用程序所需的所有数据库代码。在构建应用程序的其余部分之前，请尝试以下练习。
+- en: MVVM revisited
+  id: totrans-192
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: MVVM 再探讨
+- en: '![image](Images/f0591-01.png)'
+  id: totrans-193
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0591-01.png)'
+- en: 'Earlier in the chapter, we said we were going to structure the Tasks app using
+    the MVVM (or Model-View-ViewModel) architecture pattern. Here’s a reminder of
+    what this kind of structure looks like:'
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章的早些时候，我们说过要使用 MVVM（或模型-视图-视图模型）架构模式来构建 Tasks 应用程序。以下是此类结构的提醒：
+- en: '![image](Images/f0591-02.png)'
+  id: totrans-195
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0591-02.png)'
+- en: We’ve completed all the Model code…
+  id: totrans-196
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们已经完成了所有的模型代码…
+- en: So far, we’ve written all the database code that the app needs by creating its
+    entity, DAO, and database definition files (`Task`, `TaskDao`, and `TaskDatabase`).
+    Writing all the database code means that we’ve now completed the Model part of
+    the app’s architecture.
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们通过创建实体、DAO 和数据库定义文件（`Task`、`TaskDao` 和 `TaskDatabase`）编写了应用程序所需的所有数据库代码。编写所有数据库代码意味着我们已经完成了应用程序架构的模型部分。
+- en: …so let’s move on to the ViewModel
+  id: totrans-198
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …所以让我们继续进行 ViewModel
+- en: The next thing we’ll work on is the ViewModel part. To do this, we’ll create
+    a view model—named `TasksViewModel`—which will hold `TasksFragment`’s business
+    logic. The view model will include methods that will use `TaskDao` to insert records
+    into the database.
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们接下来要做的是 ViewModel 部分。为此，我们将创建一个名为 `TasksViewModel` 的视图模型，它将包含 `TasksFragment`
+    的业务逻辑。视图模型将包括使用 `TaskDao` 插入记录到数据库的方法。
+- en: Note
+  id: totrans-200
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: We want to display a list of the tasks held in the database as well, but for
+    now, we’re going to focus on inserting records.
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还希望显示数据库中保存的任务列表，但现在我们将专注于插入记录。
+- en: Let’s go ahead and create `TasksViewModel`.
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们继续创建 `TasksViewModel`。
+- en: Create TasksViewModel
+  id: totrans-203
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建 `TasksViewModel`
+- en: To create `TasksViewModel`, highlight the *com.hfad.tasks* package in the *app/src/main/java*
+    folder, then go to File→New→Kotlin Class/File. Name the file “TasksViewModel”
+    and choose the Class option.
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建 `TasksViewModel`，请在 *app/src/main/java* 文件夹中突出显示 *com.hfad.tasks* 包，然后转到
+    文件→新建→Kotlin 类/文件。将文件命名为 “TasksViewModel”，选择类选项。
+- en: 'We’re going to update the view model code so that `TasksFragment` can use it
+    to insert new task records. To do this, the code needs three things:'
+  id: totrans-205
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将更新视图模型代码，以便 `TasksFragment` 可以使用它来插入新的任务记录。为此，代码需要三件事：
+- en: '**A reference to a TaskDao object**'
+  id: totrans-206
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**对 TaskDao 对象的引用**'
+- en: '`TasksViewModel` will use this object to interact with the database, so we’ll
+    pass it to the view model in its constructor.'
+  id: totrans-207
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`TasksViewModel` 将使用此对象与数据库交互，因此我们将在其构造函数中将其传递给视图模型。'
+- en: '**A String property that holds the name of the new task**'
+  id: totrans-208
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**一个字符串属性，保存新任务的名称**'
+- en: When the user enters a new task name, `TasksFragment` will update this property
+    with its value.
+  id: totrans-209
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 当用户输入新任务名称时，`TasksFragment` 将更新该属性的值。
+- en: '**An addTask() method, which TasksFragment will call**'
+  id: totrans-210
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**一个 `addTask()` 方法，`TasksFragment` 将调用该方法**'
+- en: This method will create a new `Task` object, set its name, and insert it into
+    the database by calling `TaskDao`’s `insert()` method.
+  id: totrans-211
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 该方法将创建一个新的 `Task` 对象，设置其名称，并通过调用 `TaskDao` 的 `insert()` 方法将其插入到数据库中。
+- en: 'The basic view model code for these three things looks like this; update the
+    code for *TasksViewModel.kt* so that it matches the code below:'
+  id: totrans-212
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这三件事的基本视图模型代码看起来像这样；更新 *TasksViewModel.kt* 的代码，使其与下面的代码匹配：
+- en: '![image](Images/f0592-02.png)'
+  id: totrans-213
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0592-02.png)'
+- en: Before `TasksFragment` can call the `addTask()` method, however, there’s one
+    more change we need to make.
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，在 `TasksFragment` 能够调用 `addTask()` 方法之前，我们还需要做一些修改。
+- en: Database operations can run in slooooow-moooo
+  id: totrans-215
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 数据库操作可能运行得很慢…
+- en: Some tasks in Androidville, such as inserting records into a database, are potentially
+    quite time-consuming. For this reason, the Room persistence library insists that
+    ***any data access operations must be performed on a background thread*** so they
+    don’t block Android’s main thread and hold up the UI.
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Androidville 中的某些任务，例如将记录插入到数据库中，可能非常耗时。因此，Room 持久性库坚持要求 ***任何数据访问操作都必须在后台线程上执行***，以免阻塞
+    Android 的主线程并影响 UI。
+- en: Note
+  id: totrans-217
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Technically, there’s a setting you can use to override this, but it’s way better
+    to run tasks such as this on a background thread so they don’t hold up the rest
+    of the app.
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从技术上讲，有一个设置可以用来覆盖这一点，但最好还是在后台线程上运行诸如此类的任务，以免阻塞应用程序的其余部分。
+- en: As we’re developing Android apps using Kotlin, we’re going to use ***coroutines***
+    to make sure all of `TaskDao`’s data access methods run in the background.
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们使用 Kotlin 开发 Android 应用程序时，我们将使用 ***协程（coroutines）*** 来确保所有 `TaskDao` 的数据访问方法在后台运行。
+- en: We’ll use coroutines to run data access code in the background
+  id: totrans-220
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们将使用协程来在后台运行数据访问代码
+- en: As you may already know, a coroutine is like a lightweight thread that lets
+    you run multiple pieces of code asynchronously. Using coroutines means that you
+    can launch a background job—such as inserting records into a database—without
+    the rest of the code having to wait around for it to complete. This gives your
+    user a more fluid experience, so it’s not like trying to watch YouTube on Thanksgiving.
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您可能已经了解的那样，协程类似于轻量级线程，可以让您异步运行多个代码片段。使用协程意味着您可以启动后台作业（例如向数据库插入记录），而无需其余代码等待其完成。这使得用户体验更加流畅，不会像在感恩节时试图观看
+    YouTube 那样。
+- en: 'Changing your data access code to use coroutines is pretty straightforward.
+    You simply have to make these two changes:'
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 修改您的数据访问代码以使用协程非常简单。您只需做以下两个更改：
+- en: '**A coroutine is a piece of suspendable code that can be run in the background.**'
+  id: totrans-223
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**协程是一段可挂起的代码，可以在后台运行。**'
+- en: '**Mark each of the DAO’s data access methods with suspend.**'
+  id: totrans-224
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**将 DAO 的每个数据访问方法标记为 suspend。**'
+- en: 'This turns each method into a coroutine that’s run in the background and can
+    be suspended, for example:'
+  id: totrans-225
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这将每个方法转换为可以在后台运行并且可以挂起的协程，例如：
+- en: '![image](Images/f0593-03.png)'
+  id: totrans-226
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0593-03.png)'
+- en: '**Launch the DAO’s coroutines in the background.**'
+  id: totrans-227
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**在后台启动 DAO 的协程。**'
+- en: 'To call `TaskDao`’s `insert()` method from `TasksViewModel`, for example, you’d
+    use the code:'
+  id: totrans-228
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 例如，要从 `TasksViewModel` 调用 `TaskDao` 的 `insert()` 方法，您可以使用以下代码：
+- en: '![image](Images/f0593-04.png)'
+  id: totrans-229
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0593-04.png)'
+- en: '***These changes are needed for all data access methods except for ones that
+    return live data.*** Room already uses a background thread for methods that return
+    live data objects, which means you don’t need to make any extra changes to your
+    code.'
+  id: totrans-230
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '***这些更改适用于除了返回 LiveData 的方法外的所有数据访问方法。*** Room 已经为返回 LiveData 对象的方法使用后台线程，这意味着您无需对代码做任何额外的更改。'
+- en: Let’s update the code for `TaskDao` and `TasksViewModel` so they use coroutines.
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们更新 `TaskDao` 和 `TasksViewModel` 的代码，使它们使用协程。
+- en: 1\. Mark TaskDao’s methods with suspend
+  id: totrans-232
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 1\. 将 TaskDao 的方法标记为 suspend
+- en: The first thing we need to do is mark all of `TaskDao`’s data access methods
+    that don’t use live data with `suspend`. This means that we need to apply this
+    change to all of its methods except for `get()` and `getAll()`.
+  id: totrans-233
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要做的第一件事是将所有不使用 LiveData 的 `TaskDao` 数据访问方法标记为 `suspend`。这意味着我们需要将这些更改应用于除了
+    `get()` 和 `getAll()` 外的所有方法。
+- en: 'Here’s the full code for *TaskDao.kt*; update the code so that it includes
+    the changes shown here (in bold):'
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是 *TaskDao.kt* 的完整代码；更新代码以包含这里显示的更改（用粗体显示）：
+- en: '![image](Images/f0594-02.png)![image](Images/f0594-03.png)'
+  id: totrans-235
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0594-02.png)![image](Images/f0594-03.png)'
+- en: '**Marking methods with suspend turns each one into a suspendable coroutine.**'
+  id: totrans-236
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**将方法标记为 suspend 可以将每个方法转换为可挂起的协程。**'
+- en: That’s all the code that we need to turn `TaskDao`’s methods into coroutines
+    that can run in the background.
+  id: totrans-237
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们需要将 `TaskDao` 的方法转换为可以在后台运行的协程所需的所有代码。
+- en: 2\. Launch the insert() method in the background
+  id: totrans-238
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 2\. 在后台启动 insert() 方法
+- en: 'We next need to update `TasksViewModel`’s `addTask()` method so that it launches
+    `TaskDao`’s `insert()` method as a coroutine. The code to do this is shown below,
+    so update *TasksViewModel.kt* to include the changes (in bold):'
+  id: totrans-239
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们需要更新 `TasksViewModel` 的 `addTask()` 方法，以便它作为协程启动 `TaskDao` 的 `insert()`
+    方法。以下是更新 *TasksViewModel.kt* 的代码（用粗体显示）：
+- en: '![image](Images/f0595-02.png)'
+  id: totrans-240
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0595-02.png)'
+- en: This change means that each time the `addTask()` method gets called, it will
+    use `TaskDao`’s `insert()` method (a coroutine) to insert records in the background.
+  id: totrans-241
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这一更改意味着每次调用 `addTask()` 方法时，它将使用 `TaskDao` 的 `insert()` 方法（一个协程）在后台插入记录。
+- en: We’ve now written all the code we need for the Task app’s view model. Next,
+    we’ll add a `TasksViewModel` object to `TasksFragment` so that it can access the
+    view model’s properties and methods, and let the user insert task records.
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们已经编写了任务应用程序视图模型所需的所有代码。接下来，我们将在 `TasksFragment` 中添加一个 `TasksViewModel`
+    对象，以便它可以访问视图模型的属性和方法，并允许用户插入任务记录。
+- en: TasksViewModel needs a view model factory
+  id: totrans-243
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TasksViewModel 需要一个视图模型工厂
+- en: As you learned in [Chapter 11](ch11.xhtml#view_modelscolon_model_behavior),
+    you add a view model to fragment code by asking the view model provider to provide
+    one. The view model provider will return the fragment’s current view model object
+    if one exists, or create a new one if it doesn’t.
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您在 [第 11 章](ch11.xhtml#view_modelscolon_model_behavior) 中学到的，通过请求视图模型提供程序提供一个视图模型，您可以将视图模型添加到片段代码中。如果存在，则视图模型提供程序将返回片段当前的视图模型对象；如果不存在，则创建一个新的视图模型对象。
+- en: If the view model includes a no-argument constructor, the view model provider
+    can create an instance of it with no extra help. But if the constructor has arguments,
+    it needs the assistance of a view model factory.
+  id: totrans-245
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果视图模型包含无参数构造函数，则视图模型提供程序可以无需额外帮助创建其实例。但是，如果构造函数具有参数，则它需要视图模型工厂的帮助。
+- en: In the Tasks app, we need the view model provider to get a `TasksViewModel`
+    object. Since `TasksViewModel`’s constructor requires a `TaskDao` argument, we
+    must first define a `TasksViewModelFactory` class.
+  id: totrans-246
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Tasks 应用程序中，我们需要视图模型提供程序来获取 `TasksViewModel` 对象。由于 `TasksViewModel` 的构造函数需要一个
+    `TaskDao` 参数，因此我们必须首先定义一个 `TasksViewModelFactory` 类。
+- en: '![image](Images/f0596-02.png)'
+  id: totrans-247
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0596-02.png)'
+- en: Create TasksViewModelFactory
+  id: totrans-248
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建 `TasksViewModelFactory`。
+- en: To create the factory, highlight the *com.hfad.tasks* package in the *app/src/main/java*
+    folder, then go to File→New→Kotlin Class/File. Name the file “TasksViewModelFactory”
+    and choose the Class option.
+  id: totrans-249
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建工厂，请在 *app/src/main/java* 文件夹中突出显示 *com.hfad.tasks* 包，然后转到 文件→新建→Kotlin Class/File。将文件命名为
+    “TasksViewModelFactory” 并选择“Class”选项。
+- en: 'The `TasksViewModelFactory` code is almost identical to the view model factory
+    code you wrote in [Chapter 11](ch11.xhtml#view_modelscolon_model_behavior), so
+    update *TasksViewModelFactory.kt* so that it looks like this:'
+  id: totrans-250
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`TasksViewModelFactory` 代码几乎与您在 [第 11 章](ch11.xhtml#view_modelscolon_model_behavior)
+    中编写的视图模型工厂代码相同，因此请更新 *TasksViewModelFactory.kt*，使其看起来像这样：'
+- en: '![image](Images/f0596-03.png)'
+  id: totrans-251
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0596-03.png)'
+- en: Now that we’ve written the view model factory, let’s use it to add a `TasksViewModel`
+    object to `TasksFragment`.
+  id: totrans-252
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经编写了视图模型工厂，让我们使用它来向 `TasksFragment` 添加一个 `TasksViewModel` 对象。
+- en: TasksViewModelFactory needs a TaskDao
+  id: totrans-253
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`TasksViewModelFactory` 需要一个 `TaskDao`。'
+- en: To add a `TasksViewModel` to `TasksFragment`, we need to create a `TasksViewModelFactory`
+    object and pass it to the view model provider. The provider will then use the
+    factory to create the view model.
+  id: totrans-254
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要向 `TasksFragment` 添加 `TasksViewModel`，我们需要创建一个 `TasksViewModelFactory` 对象，并将其传递给视图模型提供程序。然后提供程序将使用工厂来创建视图模型。
+- en: 'But there’s a problem: `TasksViewModelFactory`’s constructor requires a `TaskDao`
+    argument, so we need to get one of these before we can create the `TasksViewModelFactory`
+    object. `TaskDao`, however, is an interface, not a concrete class, so how can
+    we get a `TaskDao` object?'
+  id: totrans-255
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是存在一个问题：`TasksViewModelFactory` 的构造函数需要一个 `TaskDao` 参数，因此我们需要在创建 `TasksViewModelFactory`
+    对象之前获取一个 `TaskDao` 对象。然而，`TaskDao` 是一个接口，而不是具体的类，那么我们如何获取 `TaskDao` 对象呢？
+- en: The TaskDatabase code has a TaskDao property
+  id: totrans-256
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: '`TaskDatabase` 代码具有 `TaskDao` 属性。'
+- en: 'When we wrote the code for `TaskDatabase`, we included two key things: a `TaskDao`
+    property named `taskDao`, and a `getInstance()` method to return an instance of
+    the database. Here’s a reminder of what that code looks like:'
+  id: totrans-257
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们编写 `TaskDatabase` 的代码时，我们包括了两个关键内容：一个名为 `taskDao` 的 `TaskDao` 属性和一个 `getInstance()`
+    方法以返回数据库的实例。这里是那段代码的提醒：
+- en: '![image](Images/f0597-02.png)'
+  id: totrans-258
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0597-02.png)'
+- en: 'To get a reference to a `TaskDao` object in the `TasksFragment` code, we can
+    therefore call `TaskDatabase`’s `getInstance()` method, and access its `taskDao`
+    property. The code to do so looks like this:'
+  id: totrans-259
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要在 `TasksFragment` 代码中获取对 `TaskDao` 对象的引用，因此我们可以调用 `TaskDatabase` 的 `getInstance()`
+    方法，并访问其 `taskDao` 属性。这样做的代码如下所示：
+- en: '![image](Images/f0597-03.png)'
+  id: totrans-260
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0597-03.png)'
+- en: The above code gets a reference to the current application, builds the database
+    if it doesn’t already exist, and returns an instance of it. It then assigns its
+    `TaskDao` object to a local variable named `dao`.
+  id: totrans-261
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述代码获取当前应用的引用，如果数据库不存在则构建数据库，并返回其实例。然后将其 `TaskDao` 对象赋给名为 `dao` 的本地变量。
+- en: Now that we know how to get a reference to a `TaskDao` object, we can update
+    the `TasksFragment` code to create a `TasksViewModelFactory` object, which we’ll
+    use to get a `TasksViewModel`. Let’s see what the code looks like.
+  id: totrans-262
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们知道如何获取对 `TaskDao` 对象的引用后，我们可以更新 `TasksFragment` 代码以创建 `TasksViewModelFactory`
+    对象，然后使用它来获取 `TasksViewModel`。让我们看看代码是什么样子的。
+- en: The updated code for TasksFragment.kt
+  id: totrans-263
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`TasksFragment.kt` 的更新代码。'
+- en: The updated `TasksViewModel` code is shown below. As you can see, it now includes
+    code to get a `TaskDao` object and create a `TasksViewModelFactory`. The code
+    then passes the factory to the view model provider, which uses it to get an instance
+    of `TasksViewModel`.
+  id: totrans-264
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面显示了更新后的 `TasksViewModel` 代码。您可以看到，它现在包括获取 `TaskDao` 对象和创建 `TasksViewModelFactory`
+    的代码。然后，代码将工厂传递给视图模型提供程序，后者使用它来获取 `TasksViewModel` 的实例。
+- en: 'Update the code in *TasksFragment.kt* so that it includes these changes (in
+    bold):'
+  id: totrans-265
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更新 *TasksFragment.kt* 中的代码，以包含这些更改（用粗体标出）：
+- en: '![image](Images/f0598-02.png)'
+  id: totrans-266
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0598-02.png)'
+- en: TasksFragment can use data binding
+  id: totrans-267
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TasksFragment 可以使用数据绑定
+- en: Now that we’ve added a `TasksViewModel` object to `TasksFragment`, we can make
+    the fragment use its properties and methods to insert a record into the database.
+    We’ll do this using data binding, which will give the layout direct access to
+    the view model’s properties and methods.
+  id: totrans-268
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经向 `TasksFragment` 添加了一个 `TasksViewModel` 对象，我们可以使片段使用其属性和方法来将记录插入到数据库中。我们将使用数据绑定来实现这一点，这将使布局直接访问视图模型的属性和方法。
+- en: 'To set up data binding, we first need to add a data binding variable to the
+    fragment’s layout, so we’ll add the code shown here (in bold) to the `<data>`
+    section of *fragment_tasks.xml*:'
+  id: totrans-269
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要设置数据绑定，我们首先需要将数据绑定变量添加到片段的布局中，因此我们将向 *fragment_tasks.xml* 的 `<data>` 部分添加以下代码（用粗体标出）：
+- en: '![image](Images/f0599-02.png)'
+  id: totrans-270
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0599-02.png)'
+- en: 'We’ll then assign the fragment’s `viewModel` property to the data binding variable
+    by adding the line shown below (in bold) to `TasksFragment`’s `onCreateView()`
+    method:'
+  id: totrans-271
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，我们将通过向 `TasksFragment` 的 `onCreateView()` 方法添加下面显示的行（用粗体标出）来将片段的 `viewModel`
+    属性分配给数据绑定变量：
+- en: '![image](Images/f0599-03.png)'
+  id: totrans-272
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0599-03.png)'
+- en: We’ll show you the full code for both files a few pages ahead. First, let’s
+    update *fragment_tasks.xml* so that it uses its `viewModel` variable to insert
+    records into the database.
+  id: totrans-273
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在后面的几页上为两个文件显示完整的代码。首先，让我们更新 *fragment_tasks.xml*，以便使用其 `viewModel` 变量将记录插入到数据库中。
+- en: We’ll use data binding to insert a record
+  id: totrans-274
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们将使用数据绑定来插入记录
+- en: 'To insert a new task record into the database, we need to do two things: set
+    `TasksViewModel`’s `newTaskName` property to the name of the new task, and call
+    its `addTask()` method. We can do both of these in `TasksFragment`’s layout with
+    data binding.'
+  id: totrans-275
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要将新任务记录插入到数据库中，我们需要做两件事：将 `TasksViewModel` 的 `newTaskName` 属性设置为新任务的名称，并调用其
+    `addTask()` 方法。我们可以在 `TasksFragment` 的布局中使用数据绑定来完成这两件事情。
+- en: Set TasksViewModel’s newTaskName property
+  id: totrans-276
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 设置 TasksViewModel 的 newTaskName 属性
+- en: 'To set the view model’s `newTaskName` property, we’ll bind it to the `task_name`
+    edit text in the fragment’s layout. The code to do so looks like this:'
+  id: totrans-277
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要设置视图模型的 `newTaskName` 属性，我们将其绑定到片段布局中的 `task_name` 编辑文本。要执行此操作的代码如下：
+- en: '![image](Images/f0600-02.png)'
+  id: totrans-278
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0600-02.png)'
+- en: 'Notice that we’re using `**@=**` to bind the property to the edit text instead
+    of `@`. The `@=` means that the edit text can update the property it’s bound to:
+    in this case `newTaskName`.'
+  id: totrans-279
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，我们使用了 `**@=**` 将属性绑定到编辑文本上，而不是 `@`。`@=` 意味着编辑文本可以更新其绑定的属性：在这种情况下是 `newTaskName`。
+- en: Call TasksViewModel’s addTask() method
+  id: totrans-280
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 调用 TasksViewModel 的 addTask() 方法
+- en: 'To insert the task, we’ll use data binding to make the layout’s Save Task button
+    call the view model’s `addTask()` method when clicked. You’re already familiar
+    with how to do this, so here’s the code:'
+  id: totrans-281
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要插入任务，我们将使用数据绑定使布局的保存任务按钮在点击时调用视图模型的 `addTask()` 方法。您已经熟悉如何做到这一点，所以这里是代码：
+- en: '![image](Images/f0600-03.png)'
+  id: totrans-282
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0600-03.png)'
+- en: Those are all the code changes we need to make to *fragment_tasks.xml* for it
+    to insert a record into the database. Let’s see what the full code looks like.
+  id: totrans-283
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些是我们需要对 *fragment_tasks.xml* 进行的所有代码更改，以便将记录插入到数据库中。让我们看看完整的代码是什么样的。
+- en: The full fragment_tasks.xml code
+  id: totrans-284
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 完整的 fragment_tasks.xml 代码
+- en: 'Here’s the full code for `TasksFragment`’s layout; make sure that the code
+    in *fragment_tasks.xml* includes the changes shown (in bold):'
+  id: totrans-285
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 `TasksFragment` 布局的完整代码；确保 *fragment_tasks.xml* 中的代码包含以下更改（用粗体标出）：
+- en: '![image](Images/f0601-02.png)'
+  id: totrans-286
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0601-02.png)'
+- en: The full TasksFragment.kt code
+  id: totrans-287
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 完整的 TasksFragment.kt 代码
+- en: '![image](Images/f0602-01.png)'
+  id: totrans-288
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0602-01.png)'
+- en: 'Before running the app, we also need to make sure that `TasksFragment` includes
+    all the code that’s needed to set the layout’s data binding variable. Here’s the
+    full code; update *TasksFragment.kt* (if you haven’t already done so) to include
+    the changes below (in bold):'
+  id: totrans-289
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在运行应用程序之前，我们还需要确保 `TasksFragment` 包含设置布局的数据绑定变量所需的所有代码。以下是完整的代码；更新 *TasksFragment.kt*（如果尚未这样做）以包含以下更改（用粗体标出）：
+- en: '![image](Images/f0602-02.png)'
+  id: totrans-290
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0602-02.png)'
+- en: Let’s go through what happens when the code runs.
+  id: totrans-291
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看代码运行时会发生什么。
+- en: What happens when the code runs
+  id: totrans-292
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码运行时会发生什么
+- en: 'The following things happen when the app runs:'
+  id: totrans-293
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序运行时会发生以下事情：
+- en: '**TasksFragment calls TaskDatabase.getInstance(), which builds the database
+    if it doesn’t already exist.**'
+  id: totrans-294
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment 调用 TaskDatabase.getInstance()，如果数据库不存在则构建数据库。**'
+- en: It names the database `tasks_database`, and uses the `Task` data class to create
+    a table named `task_table`. It then returns an instance of the database.
+  id: totrans-295
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它将数据库命名为 `tasks_database`，并使用 `Task` 数据类创建名为 `task_table` 的表。然后返回数据库的实例。
+- en: '![image](Images/f0603-01.png)'
+  id: totrans-296
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0603-01.png)'
+- en: '**TasksFragment gets the database instance’s TaskDao object, and uses it to
+    create a TasksViewModelFactory.**'
+  id: totrans-297
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment 获取数据库实例的 TaskDao 对象，并使用它创建一个 TasksViewModelFactory。**'
+- en: The view model provider uses the newly created `TasksViewModelFactory` object
+    to create a `TasksViewModel`.
+  id: totrans-298
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 视图模型提供程序使用新创建的 `TasksViewModelFactory` 对象来创建 `TasksViewModel`。
+- en: '![image](Images/f0603-02.png)'
+  id: totrans-299
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0603-02.png)'
+- en: '**TasksFragment sets the layout’s viewModel data binding variable to the TasksViewModel
+    object.**'
+  id: totrans-300
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment 将布局的 viewModel 数据绑定变量设置为 TasksViewModel 对象。**'
+- en: '![image](Images/f0603-03.png)'
+  id: totrans-301
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0603-03.png)'
+- en: '**The user enters a task name in the layout’s edit text view.**'
+  id: totrans-302
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用户在布局的编辑文本视图中输入任务名称。**'
+- en: The layout uses data binding to set the view model’s `newTaskName` property
+    to this value.
+  id: totrans-303
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 布局使用数据绑定将视图模型的 `newTaskName` 属性设置为此值。
+- en: '![image](Images/f0604-02.png)'
+  id: totrans-304
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0604-02.png)'
+- en: '**The user clicks on the Save Task button.**'
+  id: totrans-305
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用户单击“保存任务”按钮。**'
+- en: This uses data binding to call the `TaskViewModel` object’s `addTask()` method.
+  id: totrans-306
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这使用数据绑定调用 `TaskViewModel` 对象的 `addTask()` 方法。
+- en: '![image](Images/f0604-03.png)'
+  id: totrans-307
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0604-03.png)'
+- en: '**The addTask() method creates a new Task object, and sets its taskName property
+    to the value of newTaskName.**'
+  id: totrans-308
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**addTask() 方法创建一个新的 Task 对象，并将其 taskName 属性设置为 newTaskName 的值。**'
+- en: '![image](Images/f0604-04.png)'
+  id: totrans-309
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0604-04.png)'
+- en: '**The addTask() method calls TaskDao’s insert() method.**'
+  id: totrans-310
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**addTask() 方法调用 TaskDao 的 insert() 方法。**'
+- en: This inserts a record for the `Task` object’s data into the database table.
+    The table autogenerates a value for the `taskId` primary key.
+  id: totrans-311
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这将 `Task` 对象的数据插入到数据库表中。表会为 `taskId` 主键自动生成一个值。
+- en: '![image](Images/f0604-05.png)'
+  id: totrans-312
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0604-05.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-313
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们带着这个应用程序去测试驾驶。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-314
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/car.png) 测试驾驶'
+- en: When we run the app, `TasksFragment` is displayed in `MainActivity`. When we
+    try entering two new tasks, nothing seems to happen when we click on the Save
+    Task button.
+  id: totrans-315
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，`TasksFragment` 显示在 `MainActivity` 中。当我们尝试输入两个新任务时，单击“保存任务”按钮时似乎没有任何反应。
+- en: '![image](Images/f0605-02.png)'
+  id: totrans-316
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0605-02.png)'
+- en: Clicking on the button has added the new task records to the database, but we
+    can’t yet see them. To see these records in the app, we need to make further changes.
+  id: totrans-317
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 单击按钮已将新任务记录添加到数据库，但我们还不能看到它们。要在应用程序中查看这些记录，我们需要进一步进行更改。
+- en: A bunch of components, in full costume, are playing a party game, “Who am I?”
+    They’ll give you a clue—you try to guess who they are based on what they say.
+    Assume they always tell the truth about themselves. Fill in the blanks to the
+    right to identify the attendees. Also, for each attendee, write down whether the
+    component is part of the Model, View, or ViewModel layer of the app’s architecture.
+  id: totrans-318
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一群穿着整齐的组件正在玩一个派对游戏，“我是谁？”他们会给你一个线索——你根据他们说的话猜测他们是谁。假设他们总是诚实地告诉自己的事情。填写右边的空白来识别出参与者。另外，对于每个参与者，请写下组件是否属于应用程序架构的
+    Model、View 或 ViewModel 层。
+- en: '![image](Images/f0606-01.png)'
+  id: totrans-319
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0606-01.png)'
+- en: '**Tonight’s attendees:**'
+  id: totrans-320
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**今晚的参与者：**'
+- en: '![image](Images/f0606-02.png)'
+  id: totrans-321
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0606-02.png)'
+- en: '|   | **Name** | **Model, View, or ViewModel?** |'
+  id: totrans-322
+  prefs: []
+  type: TYPE_TB
+  zh: '|   | **名称** | **Model、View 或 ViewModel？** |'
+- en: '| I take care of what the app’s screens look like. | ______________ | ______________
+    |'
+  id: totrans-323
+  prefs: []
+  type: TYPE_TB
+  zh: '| 我负责应用程序的屏幕外观。 | ______________ | ______________ |'
+- en: '| I persist data after the app’s shut down. | ______________ | ______________
+    |'
+  id: totrans-324
+  prefs: []
+  type: TYPE_TB
+  zh: '| 我在应用程序关闭后持久化数据。 | ______________ | ______________ |'
+- en: '| I have a lifecycle, but I can’t exist on my own. | ______________ | ______________
+    |'
+  id: totrans-325
+  prefs: []
+  type: TYPE_TB
+  zh: '| 我有一个生命周期，但我不能单独存在。 | ______________ | ______________ |'
+- en: '| I’m used for business logic. | ______________ | ______________ |'
+  id: totrans-326
+  prefs: []
+  type: TYPE_TB
+  zh: '| 我用于业务逻辑。 | ______________ | ______________ |'
+- en: '| Room uses me to create a table. | ______________ | ______________ |'
+  id: totrans-327
+  prefs: []
+  type: TYPE_TB
+  zh: '| Room 使用我来创建表格。 | ______________ | ______________ |'
+- en: '| I have a lifecycle, and I’m a type of context. | ______________ | ______________
+    |'
+  id: totrans-328
+  prefs: []
+  type: TYPE_TB
+  zh: '| 我有一个生命周期，我是一种上下文类型。 | ______________ | ______________ |'
+- en: '| I help you interact with the data in the database. | ______________ | ______________
+    |'
+  id: totrans-329
+  prefs: []
+  type: TYPE_TB
+  zh: '| 我帮助您与数据库中的数据进行交互。 | ______________ | ______________ |'
+- en: '![Images](Images/arr.png) **Answers in [“![Images](Images/common05.png) Mixed
+    Messages Solution”](#mixed_messages_solution).**'
+  id: totrans-330
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '![Images](Images/arr.png) **答案在[“![Images](Images/common05.png) 混合消息解决方案”](#mixed_messages_solution)中。**'
+- en: TasksFragment needs to display records
+  id: totrans-331
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TasksFragment需要显示记录
+- en: '![image](Images/f0607-01.png)'
+  id: totrans-332
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0607-01.png)'
+- en: You’ve now learned how to build an app that inserts records into a Room database.
+    The next thing we’ll do is update the app so that `TasksFragment` displays a list
+    of all the records that have been inserted.
+  id: totrans-333
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您现在已经学会了如何构建一个将记录插入到Room数据库中的应用程序。接下来，我们将更新应用程序，以便`TasksFragment`显示已插入的所有记录的列表。
+- en: 'Here’s what the new version of `TasksFragment` will look like:'
+  id: totrans-334
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是新版本的`TasksFragment`将会是什么样子：
+- en: '![image](Images/f0607-02.png)'
+  id: totrans-335
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0607-02.png)'
+- en: To do this, we’ll use `TaskDao`’s `getAll()` method to get all of the task records
+    from the database. We’ll then display them in `TasksFragment`’s text view by formatting
+    them as a single `String`.
+  id: totrans-336
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为此，我们将使用`TaskDao`的`getAll()`方法从数据库中获取所有任务记录。然后，我们将通过将它们格式化为单个`String`来在`TasksFragment`的文本视图中显示它们。
+- en: Let’s get started.
+  id: totrans-337
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们开始吧。
+- en: Use getAll() to get all tasks from the database
+  id: totrans-338
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用getAll()从数据库中获取所有任务
+- en: 'We’ll begin by adding a property named `tasks` to `TasksViewModel`, which will
+    hold a list of all the tasks in the database. We’ll add the tasks to the property
+    by setting it to `TaskDao`’s `getAll()` method like this:'
+  id: totrans-339
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将首先向`TasksViewModel`添加一个名为`tasks`的属性，它将保存数据库中所有任务的列表。我们将通过将其设置为`TaskDao`的`getAll()`方法来将任务添加到属性中，就像这样：
+- en: '![image](Images/f0608-02.png)'
+  id: totrans-340
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0608-02.png)'
+- en: 'As you may remember, we defined the `getAll()` method in *TaskDao.kt* using
+    the following code:'
+  id: totrans-341
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你可能记得的，我们在*TaskDao.kt*中使用以下代码定义了`getAll()`方法：
+- en: '![image](Images/f0608-04.png)'
+  id: totrans-342
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0608-04.png)'
+- en: 'As you can see, the method returns a `LiveData<List<Task>>` object: a live
+    data list of `Task` objects. This means that `TasksViewModel`’s `tasks` property
+    also has a type of `LiveData<List<Task>>`:'
+  id: totrans-343
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如你所见，该方法返回一个`LiveData<List<Task>>`对象：一个包含`Task`对象的实时数据列表。这意味着`TasksViewModel`的`tasks`属性也具有`LiveData<List<Task>>`类型：
+- en: '![image](Images/f0608-05.png)'
+  id: totrans-344
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0608-05.png)'
+- en: As the `tasks` property uses live data, it always includes the user’s latest
+    changes. If a new task is added to `task_table`, for example, the `tasks` property’s
+    value is automatically updated to include the new record.
+  id: totrans-345
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于`tasks`属性使用实时数据，它始终包含用户的最新更改。例如，如果向`task_table`添加了一个新任务，`tasks`属性的值会自动更新以包含新记录。
+- en: Using live data in this way is good news for the Tasks app because we can use
+    it to display a list of tasks in `TasksFragment` that’s always up-to-date. Before
+    we can do this, however, there’s one more thing we need to learn about.
+  id: totrans-346
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种方式使用实时数据对Tasks应用程序来说是个好消息，因为我们可以使用它来在`TasksFragment`中显示一个始终保持最新的任务列表。然而，在我们能够做到这一点之前，还有一件事情我们需要了解。
+- en: A LiveData<List<Task>> is a more complex type
+  id: totrans-347
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 一个`LiveData<List<Task>>`是一个更复杂的类型
+- en: '![image](Images/f0609-01.png)'
+  id: totrans-348
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0609-01.png)'
+- en: When we introduced you to data binding, we showed you how to bind a view to
+    a `String` or number, including live data values. We were able to do this because
+    `String`s and numbers are simple objects that can easily be displayed in a text
+    view.
+  id: totrans-349
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们向您介绍数据绑定时，我们向您展示了如何将视图绑定到`String`或数字，包括实时数据值。我们之所以能够做到这一点，是因为`String`和数字是可以轻松在文本视图中显示的简单对象。
+- en: This time, however, the situation is different. The `tasks` property’s type
+    is `LiveData<List<Task>>`, which is much more complex than, say, `LiveData<String>`.
+    Because of this, we can’t simply bind the layout’s text view to the `tasks` property
+    directly because the text view wouldn’t know how to display it.
+  id: totrans-350
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，这一次情况有所不同。`tasks`属性的类型是`LiveData<List<Task>>`，比如说`LiveData<String>`要复杂得多。因此，我们不能简单地将布局的文本视图直接绑定到`tasks`属性，因为文本视图不知道如何显示它。
+- en: So what’s the solution?
+  id: totrans-351
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么解决方案是什么呢？
+- en: '![image](Images/f0609-02.png)'
+  id: totrans-352
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0609-02.png)'
+- en: Use Transformations.map() to transform live data objects
+  id: totrans-353
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用Transformations.map()来转换实时数据对象
+- en: Before we can use data binding to display the user’s tasks, we first need to
+    transform the `LiveData<List<Task>>` into something simpler that the text view
+    knows how to display. To do this, we’ll create a new property named `tasksString`,
+    which will hold a `LiveData<String>` version of the `tasks` property.
+  id: totrans-354
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们可以使用数据绑定来显示用户的任务之前，我们首先需要将`LiveData<List<Task>>`转换为一些更简单的东西，以便文本视图知道如何显示。为此，我们将创建一个名为`tasksString`的新属性，它将保存`tasks`属性的`LiveData<String>`版本。
+- en: We’ll create the `LiveData<String>` using the `**Transformations.map()**` method.
+    This method accepts a `LiveData` argument, and a lambda that specifies how the
+    live data object should be transformed. It then returns a new `LiveData` object.
+  id: totrans-355
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用 `**Transformations.map()**` 方法来创建 `LiveData<String>`。该方法接受一个 `LiveData`
+    参数和一个指定 LiveData 对象应如何转换的 lambda 表达式。然后返回一个新的 `LiveData` 对象。
+- en: 'To transform the `tasks` property into a `LiveData<String>`, for example, we
+    could use the code:'
+  id: totrans-356
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，要将 `tasks` 属性转换为 `LiveData<String>`，我们可以使用以下代码：
+- en: '**Transformations.map() observes a LiveData object and transforms it into another
+    type of LiveData object.**'
+  id: totrans-357
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**Transformations.map() 观察一个 LiveData 对象，并将其转换为另一种类型的 LiveData 对象。**'
+- en: '[PRE0]'
+  id: totrans-358
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: where `formatTasks()` is a method (which we need to write) that formats the
+    `tasks` property’s list of tasks as a `String`. The `Transformations.map()` method
+    then wraps this `String` in a `LiveData` object, so that it returns a `LiveData<String>`.
+  id: totrans-359
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其中 `formatTasks()` 是一个方法（我们需要编写），用于将 `tasks` 属性的任务列表格式化为 `String`。然后 `Transformations.map()`
+    方法将这个 `String` 包装在一个 `LiveData` 对象中，以便返回 `LiveData<String>`。
+- en: The `Transformations.map()` method observes the `LiveData` object that’s passed
+    to it, and executes the lambda each time it’s notified of changes. This means
+    that in the above code, `tasksString` will ***automatically include any new task
+    records the user enters***.
+  id: totrans-360
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Transformations.map()` 方法观察传递给它的 `LiveData` 对象，并在每次接收到更改通知时执行 lambda 表达式。这意味着在上述代码中，`tasksString`
+    将***自动包含用户输入的任何新任务记录***。'
+- en: Over the next few pages, we’re going to add the `tasksString` property to `TasksViewModel`,
+    and then use data binding to display its value in `TasksFragment`’s layout. This
+    approach means that we’ll be able to display all of the user’s tasks in a text
+    view that always stays up-to-date.
+  id: totrans-361
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接下来的几页中，我们将向 `TasksViewModel` 中添加 `tasksString` 属性，然后使用数据绑定将其值显示在 `TasksFragment`
+    的布局中。这种方法意味着我们可以在一个始终保持更新的文本视图中显示用户的所有任务。
+- en: '![image](Images/f0609-03.png)'
+  id: totrans-362
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0609-03.png)'
+- en: Let’s update the TasksViewModel code
+  id: totrans-363
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 让我们更新 `TasksViewModel` 代码
+- en: We’ll begin by updating the `TasksViewModel` code so that it includes the new
+    `tasks` and `tasksString` properties. We’ll also add two methods—`formatTasks()`
+    and `formatTask()`—to help us transform the `LiveData<List<Task>>` into a `LiveData<String>`.
+  id: totrans-364
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将首先更新 `TasksViewModel` 代码，以便包含新的 `tasks` 和 `tasksString` 属性。我们还将添加两个方法 — `formatTasks()`
+    和 `formatTask()` — 来帮助我们将 `LiveData<List<Task>>` 转换为 `LiveData<String>`。
+- en: 'Here’s the full code for `TasksViewModel`, so update *TasksViewModel.kt* so
+    that it includes the changes below (in bold):'
+  id: totrans-365
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 `TasksViewModel` 的完整代码，因此请更新 *TasksViewModel.kt*，以包含下面的更改（用粗体标出）：
+- en: '![image](Images/f0610-02.png)'
+  id: totrans-366
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0610-02.png)'
+- en: We’ll bind the tasksString property to the layout’s text view
+  id: totrans-367
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们将把 tasksString 属性绑定到布局的文本视图上
+- en: 'Next, we’ll use data binding to bind the `tasks` text view in `TasksFragment`’s
+    layout to the `tasksString` property in `TasksViewModel`. Here’s the code to do
+    this; update *fragment_tasks.xml* to include this change (in bold):'
+  id: totrans-368
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们将使用数据绑定将 `TasksFragment` 布局中的 `tasks` 文本视图绑定到 `TasksViewModel` 中的 `tasksString`
+    属性。以下是执行此操作的代码；请更新 *fragment_tasks.xml* 以包括这些更改（用粗体标出）：
+- en: '![image](Images/f0611-02.png)![image](Images/f0612-02.png)'
+  id: totrans-369
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0611-02.png)![image](Images/f0612-02.png)'
+- en: That’s the only change we need to make to *fragment_tasks.xml* in order for
+    it to display a `String` of the user’s tasks. Before we take the app for a test
+    drive, however, there’s just one more tweak we need to make.
+  id: totrans-370
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们需要对 *fragment_tasks.xml* 做的唯一更改，以便它能够显示用户任务的 `String`。然而，在我们进行应用程序测试之前，我们还需要进行一次微调。
+- en: We need to make the layout respond to live data updates
+  id: totrans-371
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们需要使布局响应 LiveData 的更新
+- en: As you already know, the `tasksString` property is a `LiveData<String>`, which
+    means that it automatically includes any updates that are made to the records
+    held in the database. If the user inserts a new record, for example, its data
+    gets added to `tasksString`’s value.
+  id: totrans-372
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你已经了解的那样，`tasksString` 属性是一个 `LiveData<String>`，这意味着它会自动包含对数据库中记录的任何更新。例如，如果用户插入了一个新的记录，其数据将添加到
+    `tasksString` 的值中。
+- en: As we’re using data binding to display the value of the `tasksString` property
+    in the `tasks` text view, we need to make sure that the layout gets notified whenever
+    the `tasksString` property’s value gets updated. Doing so means that the text
+    view will display any new records as soon as they’re inserted.
+  id: totrans-373
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于我们使用数据绑定来显示 `tasksString` 属性的值在 `tasks` 文本视图中，我们需要确保每当 `tasksString` 属性的值更新时，布局都会收到通知。这样做意味着文本视图将会在插入新记录时显示任何新的记录。
+- en: 'You’ve already learned how to make a layout respond to live data updates: by
+    setting the layout’s lifecycle owner in the fragment code like this:'
+  id: totrans-374
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您已经学会如何使布局响应实时数据更新：通过在片段代码中设置布局的生命周期所有者，如下所示：
+- en: '[PRE1]'
+  id: totrans-375
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: We therefore need to update the code for `TasksFragment` so that it includes
+    this line. We’ll show you the full code on the next page, and then go through
+    what happens when the app runs.
+  id: totrans-376
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们需要更新`TasksFragment`的代码，以便包含这行。我们将在下一页上显示完整的代码，然后讨论应用程序运行时发生的情况。
+- en: The full TasksFragment.kt code
+  id: totrans-377
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 完整的`TasksFragment.kt`代码
+- en: 'Here’s the full code for TasksFragment; update *TasksFragment.kt*: to include
+    the extra line (in bold):'
+  id: totrans-378
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是`TasksFragment`的完整代码；要包含额外的行（加粗部分）：
+- en: '![image](Images/f0613-02.png)'
+  id: totrans-379
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0613-02.png)'
+- en: What happens when the code runs
+  id: totrans-380
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码运行时发生了什么
+- en: 'The following things happen when the app runs:'
+  id: totrans-381
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序运行时发生以下情况：
+- en: '**TasksFragment creates a TasksViewModelFactory object, which the view model
+    provider uses to create a TasksViewModel.**'
+  id: totrans-382
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`TasksFragment`创建一个`TasksViewModelFactory`对象，视图模型提供程序用于创建`TasksViewModel`。**'
+- en: '![image](Images/f0614-02.png)'
+  id: totrans-383
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0614-02.png)'
+- en: '**The TasksViewModel’s tasks property is set to TaskDao’s getAll() method,
+    which returns a LiveData<List<Task>>.**'
+  id: totrans-384
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`TasksViewModel`的`tasks`属性设置为`TaskDao`的`getAll()`方法，该方法返回一个`LiveData<List<Task>>`。**'
+- en: It holds a live data list of all the task records from the database.
+  id: totrans-385
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它保存来自数据库的所有任务记录的实时数据列表。
+- en: '![image](Images/f0614-03.png)'
+  id: totrans-386
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0614-03.png)'
+- en: '**TasksViewModel’s tasksString property uses the Transformations.map() method
+    to transform the tasks property’s value into a LiveData<String>.**'
+  id: totrans-387
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`TasksViewModel`的`tasksString`属性使用`Transformations.map()`方法将`tasks`属性的值转换为`LiveData<String>`。**'
+- en: It returns the `tasks` property’s records formatted as a single `String`.
+  id: totrans-388
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它以单个`String`格式返回`tasks`属性的记录。
+- en: '![image](Images/f0614-04.png)'
+  id: totrans-389
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0614-04.png)'
+- en: '**The layout’s text view uses data binding to display tasksString’s value.**'
+  id: totrans-390
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**布局的文本视图使用数据绑定来显示`tasksString`的值。**'
+- en: '![image](Images/f0615-01.png)'
+  id: totrans-391
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0615-01.png)'
+- en: '**The user enters a new task record into the database.**'
+  id: totrans-392
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用户将新任务记录输入到数据库中。**'
+- en: The `TasksViewModel`’s `tasks` property is automatically updated (using live
+    data) to include the new record.
+  id: totrans-393
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 使用实时数据，`TasksViewModel`的`tasks`属性自动更新，包括新记录。
+- en: '![image](Images/f0615-02.png)'
+  id: totrans-394
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0615-02.png)'
+- en: '**The tasksString property responds to the tasks property’s update.**'
+  id: totrans-395
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`tasksString`属性响应于`tasks`属性的更新。**'
+- en: As it uses live data, it automatically includes the new record in its `String`.
+  id: totrans-396
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 由于使用了实时数据，它会自动将新记录包含在其`String`中。
+- en: '![image](Images/f0615-03.png)'
+  id: totrans-397
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0615-03.png)'
+- en: '**The layout responds to the tasksString property’s update.**'
+  id: totrans-398
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**布局响应于`tasksString`属性的更新。**'
+- en: The record the user just entered is included in the text view.
+  id: totrans-399
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 用户刚刚输入的记录包含在文本视图中。
+- en: '![image](Images/f0615-04.png)'
+  id: totrans-400
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0615-04.png)'
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-401
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/car.png) 试驾'
+- en: When we run the app, `TasksFragment` is displayed as before, but this time,
+    it shows us the tasks we entered earlier.
+  id: totrans-402
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，`TasksFragment`与以前一样显示，但这次它显示了我们之前输入的任务。
+- en: When we enter a new task, it gets added to the list of tasks as soon as we click
+    on the Save Task button.
+  id: totrans-403
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们输入新任务时，只要点击“保存任务”按钮，它就会立即添加到任务列表中。
+- en: '![image](Images/f0616-02.png)'
+  id: totrans-404
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0616-02.png)'
+- en: Congratulations! You’ve now learned how to build an app that uses the MVVM pattern
+    to interact with a Room database. The user’s records get saved to the database
+    so that they persist when the app gets closed, and the app displays any new records
+    as soon as they’re inserted.
+  id: totrans-405
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恭喜！您现在已经学会如何构建一个使用MVVM模式与Room数据库交互的应用程序。用户的记录保存到数据库中，这样当应用程序关闭时它们就会持久化，并且应用程序在插入新记录时会立即显示它们。
+- en: '![Images](Images/common05.png) Mixed Messages'
+  id: totrans-406
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/common05.png) 混合消息'
+- en: Some view model code is listed below, but the `refresh()` method’s code is missing.
+    Your challenge is to match each candidate block of code (on the left) with the
+    `result` property’s final value if the candidate code were added to the `refresh()`
+    method, and the method was called once. Not all the values will be used, and some
+    values may be used more than once.
+  id: totrans-407
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面列出了一些视图模型代码，但`refresh()`方法的代码缺失。您的挑战是将候选代码块（左侧）与`result`属性的最终值匹配，假设将候选代码添加到`refresh()`方法中并调用一次。并非所有的值都会被使用，有些值可能会被多次使用。
+- en: '![image](Images/f0617-01.png)![image](Images/f0617-02.png)'
+  id: totrans-408
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0617-01.png)![图片](Images/f0617-02.png)'
+- en: '![Images](Images/common05.png) Mixed Messages Solution'
+  id: totrans-409
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/common05.png) 混合消息解决方案'
+- en: Some view model code is listed below, but the `refresh()` method’s code is missing.
+    Your challenge is to match each candidate block of code (on the left), with the
+    `result` property’s final value if the candidate code were added to the `refresh()`
+    method, and the method was called once. Not all the values will be used, and some
+    values may be used more than once.
+  id: totrans-410
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面列出了一些视图模型代码，但`refresh()`方法的代码缺失。你的挑战是将每个候选代码块（在左侧）与`refresh()`方法中添加候选代码后`result`属性的最终值进行匹配，并且该方法被调用一次。并非所有值都会被使用，有些值可能会被多次使用。
+- en: '![image](Images/f0618-01.png)![image](Images/f0618-02.png)'
+  id: totrans-411
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0618-01.png)![image](Images/f0618-02.png)'
+- en: A bunch of components, in full costume, are playing a party game, “Who am I?”
+    They’ll give you a clue—you try to guess who they are based on what they say.
+    Assume they always tell the truth about themselves. Fill in the blanks to the
+    right to identify the attendees. Also, for each attendee, write down whether the
+    component is part of the Model, View, or ViewModel layer of the app’s architecture.
+  id: totrans-412
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一群穿着全副武装的组件正在玩一个派对游戏，“我是谁？” 他们会给你一个线索，你根据他们说的话来猜出他们是谁。假设他们总是对自己说实话。在右边的空白处填写以识别出与会者。此外，对于每个与会者，请写下该组件是否属于应用程序架构的Model、View或ViewModel层。
+- en: '![image](Images/f0619-01.png)![image](Images/f0619-02.png)'
+  id: totrans-413
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0619-01.png)![image](Images/f0619-02.png)'
+- en: Your Android Toolbox
+  id: totrans-414
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 你的Android工具箱
+- en: '![image](Images/tools.png)'
+  id: totrans-415
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/tools.png)'
+- en: '**You’ve got [Chapter 14](#room_databasescolon_room_with_a_view) under your
+    belt and now you’ve added the Room persistence library to your toolbox.**'
+  id: totrans-416
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**你已经掌握了[第14章](#room_databasescolon_room_with_a_view)，现在你已经将Room持久性库添加到你的工具箱中。**'
+- en: '![image](Images/f0620-01.png)'
+  id: totrans-417
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0620-01.png)'

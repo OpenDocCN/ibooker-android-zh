@@ -1,0 +1,1436 @@
+- en: Chapter 1\. UI Controllers
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第一章 UI 控制器
+- en: User interface (UI) controllers serve as a connection between your UI and any
+    business logic in your application that controls, or is instructed by, that UI.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户界面（UI）控制器用作连接您的 UI 与控制或被该 UI 控制的应用程序中的任何业务逻辑的桥梁。
+- en: If your application were a Shakespearean play put on in some elaborate, Old
+    World theater, the UI controller would play the part of stage manager. It would
+    be ushering actors out to the stage, taking commands from the director, and helping
+    transition between scenes.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你的应用程序是在某个精美的老式剧院上演的莎士比亚戏剧，UI 控制器将扮演舞台经理的角色。它将引导演员走上舞台，听取导演的指令，并帮助过渡场景。
+- en: Any time you want to display an image, list, or piece of text in an app, you’ll
+    need a UI. The presentation of the UI—how it’s rendered on the screen—is usually
+    controlled by layout instructions (often markup, like XML or HTML); the UI Controller
+    acts as the bridge between input commands, database queries, IPC requests, messages,
+    and much more. In a sense, it’s the heart of any app.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在应用中显示图像、列表或文本时，都需要一个用户界面（UI）。UI 的呈现——如何在屏幕上渲染——通常由布局指令（通常是标记语言，如XML或HTML）控制；UI
+    控制器充当输入命令、数据库查询、IPC 请求、消息等的桥梁。从某种意义上说，它是任何应用的核心。
+- en: All of this juggling requires an incredibly complex series of events with one
+    technology built on top of another, operating in concert. Fortunately, both Android
+    and iOS have provided some common tools and abstractions to handle the heavy lifting
+    of this process. Let’s learn about some core tasks in this area that are central
+    to both platforms.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有这些操控需要一个非常复杂的事件系列，一种技术建立在另一种技术之上，协同操作。幸运的是，Android 和 iOS 都提供了一些共同的工具和抽象来处理这个过程的重活。让我们了解一些对两个平台都至关重要的核心任务。
+- en: Tasks
+  id: totrans-5
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 任务
+- en: 'In this chapter, you’ll learn:'
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这一章中，你将学习：
+- en: How to create your app’s starting UI controller.
+  id: totrans-7
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 如何创建应用程序的起始 UI 控制器。
+- en: How to change the active UI controller.
+  id: totrans-8
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 如何更改活动的 UI 控制器。
+- en: The UI controller life cycle.
+  id: totrans-9
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: UI 控制器生命周期。
+- en: Android
+  id: totrans-10
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android
+- en: Less than a year prior to the time of this writing, Google announced that its
+    recommended style of navigation was for an application to use a single `Activity`
+    instance, and `Fragment` class instances within that single `Activity` to represent
+    operations and manage views. The new `Navigation` component released in the Jetpack
+    suite should be used to manage interactions between fragments and display history.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不到一年前，Google 宣布其推荐的导航风格是应用程序使用单个 `Activity` 实例，并在该单个 `Activity` 中使用 `Fragment`
+    类实例来表示操作并管理视图。Jetpack 套件中发布的新 `Navigation` 组件应用于管理片段之间的交互和显示历史记录。
+- en: 'Note that this goes against recommended practices that have been provided since
+    Android was launched over a decade ago, where an `Activity` was recommended for
+    any “activity” (roughly approximate to a “screen” or a single web page), and nesting
+    `Fragments` was intermittently (!) discouraged. In fact, even today the Android
+    dev-docs start the chapter on `Activity` with this:'
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，这与 Android 推出十多年前提供的推荐实践相悖，当时推荐任何“活动”（大致相当于“屏幕”或单个网页）使用一个 `Activity`，而间歇性地不推荐嵌套
+    `Fragment`。事实上，即使在今天，Android 开发文档在 `Activity` 章节中也是这样开始的：
+- en: An activity is a single, focused thing that the user can do.
+  id: totrans-13
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 活动（Activity）是用户可以执行的单一、专注的事情。
+- en: There are valid arguments for both sides, but since Google is the maintainer
+    of Android, we believe we need to accede to its recommendation going forward.
+    That said, we know there are a *lot* of legacy apps out in the wild that do not
+    use the pattern and don’t plan on re-architecting several years of work to conform
+    to it. We won’t take a side, so we will show the basics of both approaches. When
+    in doubt, we’ll defer to the prevalent, existing patterns—launching new `Activity`
+    instances, passing data as `Bundle` instances of primitive information, and managing
+    modular content with `Fragment` instances and `Activity` controller methods, rather
+    than the newer `Navigation` architecture component and its siblings.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于双方都有有效的论点，但由于 Google 是 Android 的维护者，我们认为我们需要接受其未来的建议。话虽如此，我们知道野外有许多不使用该模式的传统应用程序，并且不打算重新架构数年的工作来符合它。我们不会站在任何一边，所以我们将展示两种方法的基础知识。在疑惑时，我们将遵循普遍存在的模式——启动新的
+    `Activity` 实例，将数据作为 `Bundle` 实例传递给原始信息，并使用 `Fragment` 实例和 `Activity` 控制器方法管理模块化内容，而不是使用较新的
+    `Navigation` 架构组件及其衍生物。
+- en: How to Create Your App’s Starting UI Controller
+  id: totrans-15
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 如何创建您的应用程序的起始 UI 控制器
+- en: Let’s jump right in. When your app launches, it will perform some initialization
+    logic, during which time you’ll see the “window background” (usually just a solid
+    color, depending on your screen, but this can be set to any valid `Drawable` instance).
+    This work occurs on the main thread and cannot be preempted or interrupted—it’s
+    just going to happen. Note that if you provide a custom `Application` class for
+    your app, anything in the `onCreate` method will happen at this time. Again, it’s
+    extremely important to remember that this is happening on the main (UI) thread,
+    so this will block anything else from happening. However, you’re free to perform
+    asynchronous work on your own background threads at this time.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们马上开始吧。当您的应用程序启动时，它将执行一些初始化逻辑，在此期间您将看到“窗口背景”（通常只是一个纯色，具体取决于您的屏幕，但可以设置为任何有效的`Drawable`实例）。此工作发生在主线程上，不能被抢占或中断——它就会发生。请注意，如果为您的应用程序提供了自定义的`Application`类，`onCreate`方法中的任何内容都将在此时发生。再次强调，这是在主（UI）线程上进行的，因此这将阻塞其他任何操作。但是，在此时您可以在自己的后台线程上执行异步工作。
+- en: Once application initialization is complete, the application will launch a single
+    instance of the `Activity` class that you defined in your application manifest
+    with the `android.intent.category.LAUNCHER` value for its category node. This
+    `Activity` entry should also include an `action` name equal to `android.intent.action.MAIN`,
+    which should be present for any of your app’s entry points (e.g., launcher icon,
+    deep link, system-wide broadcast, etc.).
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦应用程序初始化完成，应用程序将启动一个您在应用程序清单中定义的`Activity`类的单个实例，其类别节点具有值`android.intent.category.LAUNCHER`。此`Activity`条目还应包括一个`action`名称等于`android.intent.action.MAIN`，这应该存在于您应用程序的任何入口点（例如启动器图标、深链接、系统广播等）。
+- en: Tip
+  id: totrans-18
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: Remember that you just provide the class’s canonical name, and instantiation,
+    references, and setup are performed in the background automagically (meaning the
+    process is entirely opaque to us as developers or users).
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请记住，您只需提供类的规范名称，实例化、引用和设置将在后台自动完成（这意味着这个过程对我们开发者或用户来说完全不透明）。
+- en: '[PRE0]'
+  id: totrans-20
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'In a complete manifest, the preceding might look like this:'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在完整的清单中，前述内容可能如下所示：
+- en: '[PRE1]'
+  id: totrans-22
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: Note
+  id: totrans-23
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Note that any `Activity` you intend to use in your application must be registered
+    in your *ApplicationManifest.xml* as a child of the `application` node (`manifest`
+    → `application` → all activity nodes). Check the code block immediately following
+    this note.
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，您打算在应用程序中使用的任何`Activity`都必须在您的*ApplicationManifest.xml*中注册为`application`节点的子节点（`manifest`
+    → `application` → 所有活动节点）。请查看此备注后紧随其后的代码块。
+- en: '[PRE2]'
+  id: totrans-25
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: While you’re interacting with an Android app, you are always considered to be
+    within an `Activity` (unless you’re dealing with remote operations like status
+    bar interactions with a `Service`, but that’s a little too in the weeds for this
+    chapter). You will never have a usable piece of UI that is not within an `Activity`
+    (the one exception to this is the `RemoteViews` class—a small, simple subset of
+    `View` classes—which is available in notification windows).
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您与Android应用程序交互时，始终被视为在一个`Activity`中（除非涉及与`Service`一样的远程操作，例如状态栏交互，但这对于本章来说有点复杂）。您永远不会有一个可用的UI部分不在`Activity`内（唯一的例外是`RemoteViews`类——`View`类的一个小而简单的子集，可在通知窗口中使用）。
+- en: Note that you cannot nest `Activity` instances. Generally speaking, a single
+    `Activity` occupies the entire screen at any one time (or at least, the portion
+    of the screen delegated to your app).
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，您不能嵌套`Activity`实例。一般来说，单个`Activity`在任何时候都占据整个屏幕（或者至少是您的应用程序分配的屏幕部分）。
+- en: As referenced, remember that we’re not creating a new instance of an `Activity`;
+    we’re simply supplying the `Activity` class we want to start. Behind the scenes,
+    the Android framework will generate the instance and perform infrastructure tasks
+    before displaying it to the user. Furthermore, this is an *asynchronous* operation,
+    and the system will decide exactly when the new `Activity` starts.
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如上所述，请记住我们不是创建一个`Activity`的新实例；我们只是提供我们想要启动的`Activity`类。在幕后，Android框架将生成实例并执行基础设施任务，然后显示给用户。此外，这是一个*异步*操作，系统会决定何时启动新的`Activity`。
+- en: This is also important because of various launch modes that are assigned to
+    `Activity` classes in your manifest file. A particular launch mode might allow
+    any number of a particular `Activity` class to exist at any time. For example,
+    you may want to allow the user to have any number of `ComposeEmailActivity` instances
+    in a single task stack. However, you may wish to impose limits on other kinds
+    of `Activity` classes, like only allowing a single instance of a `LoginActivity`,
+    which might either bring the last used `LoginActivity` to the top of the task
+    stack or possibly destroy everything between the current `Activity` and the last
+    used `LoginActivity`, depending on the launch mode. We won’t do a deep dive on
+    launch modes here, but definitely check out the developer docs on this subject
+    if you’re curious.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也很重要，因为在您的清单文件中为`Activity`类分配了各种启动模式。特定的启动模式可能允许任意数量的特定`Activity`类在任何时候存在。例如，您可能希望允许用户在单个任务堆栈中拥有任意数量的`ComposeEmailActivity`实例。但是，您可能希望对其他类型的`Activity`类施加限制，例如仅允许一个`LoginActivity`的实例，它可能会将上次使用的`LoginActivity`带到任务堆栈的顶部，或者可能销毁当前`Activity`和上次使用的`LoginActivity`之间的所有内容，具体取决于启动模式。我们不会在这里深入研究启动模式，但如果您感兴趣，绝对可以查看开发人员文档。
+- en: So we’ve successfully started an `Activity`—why is nothing showing up on the
+    screen? Because an `Activity` is a controller-level class and is not a view itself.
+    In order to render elements on the screen, it needs at least a single `View` instance,
+    and probably several (as children of the single `View` used as the `Activity`
+    root). This is generally done with the `setContentView` method and passing in
+    an XML layout resource. See [Chapter 2](ch02.html#topics_views), where we discuss
+    views.
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，我们成功启动了一个`Activity`，为什么屏幕上什么都没有显示？因为`Activity`是一个控制器级别的类，本身不是一个视图。为了在屏幕上呈现元素，它至少需要一个`View`实例，可能还需要几个（作为用作`Activity`根的单个`View`的子级）。通常使用`setContentView`方法并传入XML布局资源来实现这一点。请参阅[第2章](ch02.html#topics_views)，我们在那里讨论视图。
+- en: How to Change the Active UI Controller
+  id: totrans-31
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 如何更改活动的UI控制器
+- en: 'Once your initial (“launch”) `Activity` is presented to the user, you can start
+    any other `Activity` by calling the `startActivity(Intent intent)` method from
+    any `Context` instance (the `Activity` class inherits from `Context`, so it has
+    a “is-a” relationship with `Context`—an `Activity` instance *is* a `Context` instance).
+    The `Intent` requires a `Context` instance as well, as the first parameter, and
+    a reference to the `Activity` class to launch:'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦您的初始（“启动”）`Activity`呈现给用户，您可以通过从任何`Context`实例调用`startActivity(Intent intent)`方法来启动任何其他`Activity`（`Activity`类继承自`Context`，因此它与`Context`具有“is-a”关系——`Activity`实例*是*`Context`实例）。`Intent`还需要一个`Context`实例作为第一个参数，并引用要启动的`Activity`类：
+- en: Warning
+  id: totrans-33
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: It’s critical to understand that the system will handle instantiation, initialization,
+    and configuration of `Activity` classes you’ll show to your user, and they cannot
+    be instantiated with the `new` keyword or configured or otherwise modified when
+    being started. We send an `Intent` to the system that indicates what `Activity`
+    we want to present to the user, and the system does the rest. For this reason,
+    `Activity` instances cannot be assigned variables or have methods called directly
+    as they are being started (with standard library methods).
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 非常重要的是要理解，系统将处理您向用户显示的`Activity`类的实例化、初始化和配置，它们不能使用`new`关键字实例化，也不能在启动时配置或以其他方式修改。我们向系统发送一个指示要向用户呈现哪个`Activity`的`Intent`，系统会处理剩下的事情。因此，`Activity`实例在启动时不能分配变量或直接调用方法（使用标准库方法）。
+- en: So if we can’t modify variables on an `Activity` instance or call methods directly
+    on the `Activity` as we launch it, how do we pass information to it? In many UI
+    frameworks, you can create a new view controller class instance, assign it some
+    data, and allow it to render that data.
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，如果我们不能在`Activity`实例上修改变量或直接调用`Activity`上的方法来启动它，那么我们如何向其传递信息呢？在许多UI框架中，您可以创建一个新的视图控制器类实例，为其分配一些数据，并允许其呈现该数据。
+- en: 'In the Android framework, your options are much more limited. The classic approach
+    is to attach primitive values to the `Intent` object, like so:'
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android框架中，您的选择要少得多。经典方法是将原始值附加到`Intent`对象，如下所示：
+- en: 'The `Intent` instance that started the `Activity` is available via the `getIntent`
+    method:'
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 启动`Activity`的`Intent`实例可以通过`getIntent`方法获得：
+- en: 'This is perfectly fine for passing small, primitive data like an identifier
+    or URL but is not appropriate for large data (like serialized Java classes or
+    even large `Strings` like JSON representing complex class instances). That data
+    is contained within a particular system-level data store that is capped at 1 MB
+    and can be shared among any process on the device. From the documentation for
+    the `Bundle` API:'
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种方法完全适合传递小型的、原始的数据，比如标识符或URL，但不适合大型数据（如序列化的Java类或甚至大型的`Strings`，如表示复杂类实例的JSON）。这些数据包含在一个特定的系统级数据存储中，其大小限制为1
+    MB，并且可以在设备上的任何进程之间共享。从`Bundle` API的文档中可以看到：
+- en: The Binder transaction buffer has a limited fixed size, currently 1MB, which
+    is shared by all transactions in progress for the process. Since this limit is
+    at the process level rather than at the per activity level, these transactions
+    include all binder transactions in the app such as onSaveInstanceState, startActivity
+    and any interaction with the system.
+  id: totrans-39
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: Binder事务缓冲区具有固定的有限大小，当前为1MB，该大小由进程中所有正在进行的事务共享。由于此限制是在进程级别而不是每个活动级别上，因此这些事务包括应用中的所有Binder事务，如onSaveInstanceState、startActivity以及与系统的任何交互。
+- en: To pass complex information to a newly created `Activity` requires either saving
+    that information to disk before starting the new `Activity`, to be read back out
+    once that `Activity` has been created, or passing a reference to a “globally reachable”
+    data structure. This is often simple a class-level variable (`static`), but there
+    are drawbacks to using `static` variables in this case. Android engineers have
+    previously endorsed a `Map` of `WeakReferences` as a static member on a utility
+    class, or you might find the `Application` instance (which is always accessible
+    from any `Context` instance via `Context.getApplicationContext`) to be a little
+    cleaner. It’s important to note that as long as your application is running, the
+    `Application` instance will be reachable, which some would argue means it could
+    never meet the traditional definition of a memory leak. In Kotlin, global contextuality
+    is handled a little differently, but generally speaking, the warnings about passing
+    information still apply.
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要将复杂信息传递给新创建的`Activity`，要么是在启动新`Activity`之前将该信息保存到磁盘上，然后在创建该`Activity`后读取出来，要么是传递一个“全局可达”的数据结构的引用。通常这是一个类级变量（`static`），但在这种情况下使用`static`变量存在一些缺点。Android工程师以前曾推荐在实用类的静态成员上使用`Map`
+    of `WeakReferences`，或者您可能会发现`Application`实例（始终可以通过`Context.getApplicationContext`从任何`Context`实例访问）更清晰一些。重要的是要注意，只要您的应用程序在运行，`Application`实例就是可达的，这意味着它永远不会符合内存泄漏的传统定义。在Kotlin中，全局上下文处理方式略有不同，但通常仍适用于传递信息的警告。
+- en: Fragments
+  id: totrans-41
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 片段
+- en: A `Fragment`, in Android framework parlance, is kind of a lightweight `Activity`;
+    it can be thought of as a *controller* for a view, rather than a view itself,
+    but it must have a root view delegation (in Android, the role of the “view” pattern
+    implementer from Model-View-Presenter [MVP], Model-View-Controller [MVC], Model-View-ViewModel
+    [MVVM], etc., is filled by the `View` class, which is usually an atomic visual
+    element, like a piece of text, an image, or a container of other `View` instances;
+    see [Chapter 2](ch02.html#topics_views) where views are discussed in more detail).
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android框架术语中，`Fragment`可以看作是一种轻量级的`Activity`；它可以被视为视图的*控制器*，而不是视图本身，但它必须具有根视图委托（在Android中，“视图”模式实现者的角色来自Model-View-Presenter
+    [MVP]、Model-View-Controller [MVC]、Model-View-ViewModel [MVVM]等，通常由`View`类来填充，它通常是原子视觉元素，如文本片段、图像或其他`View`实例的容器；详细讨论视图的章节见[第2章](ch02.html#topics_views)）。
+- en: The nice thing about `Fragments`, compared to `Activities`, is that we can instantiate
+    them directly with custom constructor signatures, configurations, member and method
+    access, etc. We create `Fragment` instances like we would any other class instance
+    in `Java`. In addition, `Fragments`, unlike `Activities`, *can* be nested—however,
+    there has historically been some unreliability around that, and more specifically
+    around life-cycle callbacks, but that too is really out of scope for this chapter.
+    Google “android fragment controversy” and you’ll find plenty of material on the
+    topic. Again, this book chooses to remain neutral in this senseless, bloody feud.
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与`Activities`相比，`Fragments`的好处在于我们可以直接使用自定义构造函数签名、配置、成员和方法访问等来实例化它们，就像在`Java`中实例化任何其他类实例一样。此外，与`Activities`不同，`Fragments`可以*嵌套*——但是，历史上在此方面有一些不可靠性，尤其是在生命周期回调周围，但这也超出了本章的范围。谷歌“android
+    fragment controversy”即可找到大量相关资料。再次强调，本书选择在这场毫无意义的激烈争论中保持中立。
+- en: 'So you create a `Fragment` like anything else:'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，您可以像创建任何其他内容一样创建`Fragment`：
+- en: 'Ideally, you can add your `Fragment` to your layout XML like you would any
+    `View`:'
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 理想情况下，您可以像处理任何`View`一样将`Fragment`添加到您的布局XML中：
+- en: '[PRE3]'
+  id: totrans-46
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: However, we are faced again with system-level, opaque instantiation. In order
+    to configure a custom `Fragment` class programmatically, you’ll need to instantiate
+    it with the `new` keyword and use a `FragmentManager` and a `FragmentTransaction`
+    to add it to the existing view hierarchy.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，我们再次面临系统级的不透明实例化。为了以编程方式配置自定义`Fragment`类，您需要使用`new`关键字实例化它，并使用`FragmentManager`和`FragmentTransaction`将其添加到现有的视图层次结构中。
+- en: Note you could have a custom constructor with configuration parameters here
+    if you so choose, although when the `Fragment` is reconstructed, it will lose
+    constructor arguments, so Android suggests developers use no-arg constructors
+    and assume `Fragment` instances may be created with the `Class.newInstance` method.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，如果愿意，您可以在此处使用具有配置参数的自定义构造函数，尽管在重新构造`Fragment`时，它将丢失构造函数参数，因此Android建议开发人员使用无参数构造函数，并假设`Fragment`实例可以使用`Class.newInstance`方法创建。
+- en: From this point, since a `Fragment` is not a `View` itself, but rather a view
+    or UI controller, it must be instructed to render using a specific `View` or `View`
+    tree. It’s common to use a single, empty container `ViewGroup` like a `FrameLayout`
+    to hold the `View` instances that represent `Fragment` instances.
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从这一点来看，由于`Fragment`本身不是`View`，而是视图或UI控制器，必须指示其使用特定的`View`或`View`树进行渲染。通常使用单个空容器`ViewGroup`，如`FrameLayout`，来容纳代表`Fragment`实例的`View`实例是很常见的。
+- en: 'The `FragmentTransaction` is able to perform a variety of update tasks for
+    any `Fragment` instances you have references to. Generally, open a transaction,
+    make all the atomic changes you want, and then `commit` the transaction:'
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`FragmentTransaction`能够为您引用的任何`Fragment`实例执行各种更新任务。通常情况下，打开一个事务，进行您想要的所有原子更改，然后提交事务：'
+- en: Unlike `Activity`, the `Fragment` class does not extend `Context` and so loses
+    direct access to many APIs; however, `Fragment` instances do have both a `getContext`
+    and a `getActivity` method, so in most cases you’re just one lookup away.
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与`Activity`不同，`Fragment`类不继承`Context`，因此失去了许多API的直接访问权限；然而，`Fragment`实例既有`getContext`方法也有`getActivity`方法，因此在大多数情况下，您只需查找一次即可。
+- en: Warning
+  id: totrans-52
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: As of this writing, while the `Navigation` component is stable, some associated
+    features (like the Navigation Editor UI) are not. There is some controversy about
+    including UI code generation tools as future-proof Android tools. That said, the
+    `Navigation` component is capable of handling `Fragment` actions like the preceding
+    without traditional `FragmentTransaction`s or `FragmentManager`s.
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 截至目前，虽然`Navigation`组件是稳定的，但某些相关功能（如导航编辑器UI）并不稳定。关于包括UI代码生成工具作为未来Android工具存在一些争议。尽管如此，`Navigation`组件能够处理类似前面的`Fragment`操作，而无需传统的`FragmentTransaction`或`FragmentManager`。
+- en: Understanding the UI Controller Life Cycle
+  id: totrans-54
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 理解UI控制器生命周期
+- en: As UI controllers travel through various states from inception through termination,
+    a number of life-cycle callbacks are called and can be a great place to hook into
+    application events. Both `Activity` and `Fragment` classes have life-cycle events
+    (in fact, so do `View` instances, but those are rather limited and outside the
+    scope of this chapter).
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于UI控制器从创建到终止经历各种状态，会调用许多生命周期回调，并且可以成为挂钩应用程序事件的绝佳地点。`Activity`和`Fragment`类都具有生命周期事件（实际上，`View`实例也有生命周期事件，但这些事件相对有限，超出了本章的范围）。
+- en: There’s a [well-known diagram](https://oreil.ly/LW_u1) describing the `Activity`
+    life cycle that has a tremendously detailed write-up, but we’ll go over the critical
+    points now.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一个[著名的图表](https://oreil.ly/LW_u1)描述了 `Activity` 生命周期，有着极其详细的解释，但我们现在将重点介绍关键点。
+- en: '[Figure 1-1](#activity_lifecycle) presents a copy of that diagram as a baseline.'
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[图1-1](#activity_lifecycle) 将该图表作为基线呈现。'
+- en: When an `Activity` is first created, the `onCreate` method is called.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 `Activity` 首次创建时，将调用 `onCreate` 方法。
+- en: '*It is critical to understand that* `onCreate` *is* also *called when an* `Activity`
+    *is re-created.* Occasionally, an app’s resources will be reclaimed by the system
+    for other use; in this case, your app is completely destroyed behind the scenes,
+    with some primitive values about the current state saved on the local disk.'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*理解* `onCreate` *也是* 当 `Activity` *被重新创建时调用* 是 *至关重要的*。偶尔，应用程序的资源将被系统回收以供其他用途；在这种情况下，您的应用程序在幕后完全被销毁，当前状态的一些原始值保存在本地磁盘上。'
+- en: When an `Activity` is first created, the single method parameter—a `Bundle`—will
+    be `null`. If it is being re-created after resource reclamation (as happens during
+    a “configuration change,” like rotating the device or plugging in a new display),
+    the value passed to the `onCreate` method will be a nonnull `Bundle` instance.
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 `Activity` 首次创建时，单个方法参数——一个 `Bundle`——将为 `null`。如果它在资源被回收后重新创建（如在“配置更改”期间发生，比如旋转设备或插入新显示器），传递给
+    `onCreate` 方法的值将是一个非空的 `Bundle` 实例。
+- en: '`onStart` is called when the `Activity` becomes visible to the user, after
+    being not visible (for example, when behind another `Activity`). `onStart` will
+    always follow `onCreate`, but not all `onStart` events are preceded by an `onCreate`
+    event.'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onStart` 在 `Activity` 变得对用户可见时被调用，之前不可见（例如，被另一个 `Activity` 遮挡）后。`onStart`
+    总是在 `onCreate` 之后调用，但并非所有 `onStart` 事件都是由 `onCreate` 事件引发的。'
+- en: '`onResume` is called any time an `Activity` regains focus. An `Activity` can
+    lose focus if the containing app is minimized, or anything else takes the foreground,
+    whether that’s another app, a phone call, or even a `Dialog` overlaying the `Activity`’s
+    content, despite much of that content still being visible. When that focus is
+    regained—by closing the other app, hanging up the phone call, or dismissing the
+    `Dialog`—`onResume` will fire. `onResume` will always follow an `onStart`, but
+    not all `onResume` events are preceded by `onStart` events.'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onResume` 在 `Activity` 重新获得焦点时被调用。如果包含应用程序被最小化，或者其他任何东西占据前台，无论是另一个应用程序、电话呼叫，甚至是覆盖
+    `Activity` 内容的 `Dialog`，导致 `Activity` 失去焦点，当焦点重新获得时——关闭其他应用程序、挂断电话呼叫或关闭 `Dialog`——`onResume`
+    将被触发。`onResume` 总是在 `onStart` 之后调用，但并非所有 `onResume` 事件都是由 `onStart` 事件引发的。'
+- en: '![Activity Lifecycle](assets/nmdv_0101.png)'
+  id: totrans-63
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Activity 生命周期](assets/nmdv_0101.png)'
+- en: Figure 1-1\. Activity life cycle
+  id: totrans-64
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图1-1\. Activity 生命周期
+- en: Now let’s start down the other trail, to destruction.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在让我们开始另一条路，走向毁灭。
+- en: '`onPause` is called any time the `Activity` loses focus (see `onResume`).'
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onPause` 在 `Activity` 失去焦点时被调用（参见 `onResume`）。'
+- en: '`onStop` is a tricky one, and one that’s often misrepresented in casual conversation.
+    `onStop` is effectively called when an `Activity` is destroyed but can be re-created—for
+    example, if the system reclaims your app’s resources. An `onStop` will be followed
+    by either an `onDestroy` event (see the following) or an `onRestart` event, which
+    means the `Activity` is being rebuilt from saved “hints” after it has been stopped.
+    All `onStop` events are preceded by `onPause`, but not all `onPause` events are
+    followed by an `onStop`. See [the documentation on this particular event](https://oreil.ly/POytI)
+    if you’re interested. Here’s a relevant piece directly from that source:'
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onStop` 是一个棘手的事件，经常在随意对话中被错误解释。`onStop` 在 `Activity` 被销毁时有效调用，但可以重新创建——例如，如果系统回收您应用程序的资源。`onStop`
+    将被 `onDestroy` 事件（见下文）或 `onRestart` 事件跟随，这意味着 `Activity` 在停止后正在从保存的“提示”中重建。所有
+    `onStop` 事件都是由 `onPause` 引发的，但并非所有 `onPause` 事件都会被 `onStop` 跟随。如果您感兴趣，请参阅[关于此特定事件的文档](https://oreil.ly/POytI)。以下是直接从该来源中提取的相关内容：'
+- en: When your activity is no longer visible to the user, it has entered the *Stopped*
+    state, and the system invokes the `onStop()` callback. This may occur, for example,
+    when a newly launched activity covers the entire screen. The system may also call
+    `onStop()` when the activity has finished running, and is about to be terminated.
+  id: totrans-68
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 当您的活动对用户不再可见时，它已进入*已停止*状态，系统会调用 `onStop()` 回调。例如，当新启动的活动覆盖整个屏幕时，可能会发生这种情况。当活动完成运行并即将终止时，系统也可能调用
+    `onStop()`。
+- en: '`onDestroy` fires when the `Activity` is about to be terminated (gracefully)
+    and cannot be re-created. If you tap back out of an `Activity`, it will call `onDestroy`.
+    This is a great opportunity for cleanup. All `onDestroy` events are preceded by
+    `onStop`, but not all `onStop` events are followed by `onDestroy`.'
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onDestroy`在`Activity`即将（优雅地）终止且无法重新创建时触发。如果您从一个`Activity`中返回，则会调用`onDestroy`。这是进行清理的绝佳时机。所有的`onDestroy`事件都在`onStop`之前发生，但并非所有的`onStop`事件都会被`onDestroy`跟随。'
+- en: The documentation clearly states that you cannot count on `onDestroy` to fire
+    to clean up large objects or asynchronous operations. This is true, but it’s often
+    interpreted to mean that you *can* count on `onStop` or `onPause`, which is no
+    more true. Imagine that your device gets run over by a truck (or, more likely,
+    the battery dies). Your app is going to shut down immediately, without any chance
+    to fire callbacks or perform cleanup operations. You’re no safer doing this kind
+    of work in `onPause` than you are in `onDestroy`. That said, since `onDestroy`
+    generally means that the `Activity` is going to become unreachable and eligible
+    for garbage collection, it often doesn’t matter—you don’t need to worry about
+    cleaning up something that’s about to be nuked.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 文档明确指出，不能指望`onDestroy`来清理大对象或异步操作。尽管如此，人们经常理解为可以依赖于`onStop`或`onPause`，这也不完全正确。想象一下，您的设备被卡车压过（或者更可能的是电池没电了）。您的应用将立即关闭，没有任何机会触发回调或执行清理操作。在`onPause`中进行这类工作并不比在`onDestroy`中更安全。尽管如此，由于`onDestroy`通常意味着`Activity`将变得不可访问并且有资格进行垃圾回收，因此通常没有关系——您不需要担心清理即将被销毁的对象。
+- en: The `Fragment` life cycle is very similar but includes callbacks for `onCreateView`
+    (which is critical—the return of this method must return a `View` instance in
+    order for the `Fragment` to have a visible UI) and `onDestroyView`. There’s also
+    a callback for `onActivityCreated`, and callbacks that fire when a `Fragment`
+    is added (`onAttached`) to, or removed from (`onDetached`), the UI using `FragmentTransaction`
+    methods.
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Fragment`的生命周期非常相似，但包括`onCreateView`的回调（这是关键的一步——此方法的返回必须返回一个`View`实例，以便`Fragment`有一个可见的UI），以及`onDestroyView`的回调。还有一个`onActivityCreated`的回调，以及在使用`FragmentTransaction`方法将`Fragment`添加（`onAttached`）到UI或从UI移除（`onDetached`）时触发的回调。'
+- en: Note that the `Fragment`, `FragmentManager`, and `FragmentTransaction` classes
+    have changed between OS releases. For consistency, and to make sure you’re always
+    dealing with the latest release, we recommend using the support library classes.
+    For *most* uses, they are interchangeable—just import `android.support.v4.app.Fragment`
+    rather than `android.app.Fragment`; when you call `new Fragment();`, you’ll get
+    a `Fragment` from the support library package. Similarly, use `android.support.v7.app.AppCompatActivity`
+    rather than `android.app.Activity`, which will have a `getSupportFragmentManager`
+    method, which will provide updated APIs to use with support library `Fragments`.
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，在操作系统发布之间，`Fragment`、`FragmentManager`和`FragmentTransaction`类已经发生了变化。为了保持一致性，并确保您始终使用最新的发布版本，我们建议使用支持库中的类。对于*大多数*用途来说，它们可以互换使用——只需导入`android.support.v4.app.Fragment`而不是`android.app.Fragment`；当您调用`new
+    Fragment();`时，您将得到支持库包中的`Fragment`。类似地，使用`android.support.v7.app.AppCompatActivity`而不是`android.app.Activity`，它将具有`getSupportFragmentManager`方法，该方法将为支持库`Fragments`提供更新的API。
+- en: In addition, the AndroidX version of identical classes (and some new ones) is
+    available as well, but in reality even after a year is not entirely stable (although
+    it does have multiple released marked “stable”). The Jetpack libraries can serve
+    a lot of these same functions, and in new projects Google encourages their use
+    where possible, but let’s keep in mind that greenfield development is much rarer
+    than maintenance. Feel free to explore these alternatives and see what works best
+    for you and your team; we (the authors) have opted to use the libraries and toolsets
+    we have simply because that’s what currently powers the majority of these features.
+    That’s sure to change in time, and as with any technology, it’s almost a full-time
+    job keeping up to date with best and recommended practices.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此外，AndroidX版本的相同类（以及一些新类）也可用，但实际上即使过了一年也还不完全稳定（尽管已发布多个标记为“稳定”的版本）。Jetpack库可以完成许多相同的功能，在新项目中Google鼓励尽可能使用它们，但是让我们记住，绿地开发比维护要少得多。请随时探索这些替代方案，并找出对您和您的团队最合适的解决方案；我们（作者）选择使用目前支持大多数功能的库和工具集。这种情况肯定会随着时间而改变，就像任何技术一样，跟进最佳和推荐做法几乎是全职工作。
+- en: iOS
+  id: totrans-74
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: iOS
+- en: 'UIKit, the UI framework that almost all iOS apps rely on, is rooted in an MVC
+    architecture. In iOS, the UI controller, or “C,” part of this framework refers,
+    more specifically, to `UIViewController`. Within a typical app, there are a number
+    of `UIViewController` instances and subclasses linked together to manage the behavior
+    and hierarchy of the objects they control: views.'
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: UIKit，几乎所有iOS应用程序依赖的UI框架，根植于MVC架构。在iOS中，这个框架的UI控制器部分更具体地指的是`UIViewController`。在典型的应用程序中，有许多链接在一起以管理它们控制的对象（视图）的`UIViewController`实例和子类。
+- en: How to Create Your App’s Starting UI Controller
+  id: totrans-76
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 如何创建您应用程序的起始UI控制器
+- en: Before we get into the details of actually creating the app’s initial UI controller,
+    we need to discuss views, windows, controllers, and how they relate to the functionality
+    we’re about to cover.
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们实际创建应用程序的初始UI控制器的详细信息之前，我们需要讨论视图、窗口、控制器及其与我们即将涵盖的功能相关的关系。
+- en: Views and UI Controllers
+  id: totrans-78
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 视图和UI控制器
+- en: 'Views and `UIViewController`s are inextricably linked in iOS, such that discussing
+    one necessitates some discussion of the other. Now, views are covered in greater
+    depth in [Chapter 2](ch02.html#topics_views), but they’re important to note here
+    because the root of an app’s view controller hierarchy starts on a single property
+    of a specialized view: the app’s window, an instance of `UIWindow`. Every iOS
+    application has a single `UIWindow` instance that the `UIApplication` presents.
+    The property where the root view controller lives is the aptly named `rootViewController`.
+    Setting the `rootViewController` of a `UIWindow` to a defined view controller
+    can be done in one line:'
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在iOS中，视图和`UIViewController`紧密相连，因此讨论一个必然需要涉及另一个。现在，视图在[第二章](ch02.html#topics_views)中有更深入的讲解，但在这里需要注意的是，应用程序的视图控制器层次结构的根始于专用视图的一个属性：应用程序的窗口，即`UIWindow`的一个实例。每个iOS应用程序都有一个`UIWindow`实例，由`UIApplication`呈现。根视图控制器所在的属性被恰当地命名为`rootViewController`。将`UIWindow`的`rootViewController`设置为定义的视图控制器可以在一行内完成：
+- en: '[PRE4]'
+  id: totrans-80
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'When the root view controller is set this way, it is almost always done during
+    an application’s launch, usually within `application(_:didFinishLaunchingWithOptions:)`.
+    However, going into Xcode and creating a new Single View Application project will
+    create an application delegate that has the following code within the same method:'
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当以这种方式设置根视图控制器时，几乎总是在应用程序启动时进行，通常是在`application(_:didFinishLaunchingWithOptions:)`中。但是，进入Xcode并创建一个新的Single
+    View Application项目将创建一个应用程序委托，该委托在同一方法中具有以下代码：
+- en: '[PRE5]'
+  id: totrans-82
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: Notice that nowhere in that method body is the `rootViewController` property
+    set. In fact, there isn’t even a mention of a `UIWindow`—only a `true` return
+    value. And yet, the application launches and displays a view controller created
+    within a storyboard and seemingly never linked to or set anywhere. How very mysterious.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，在该方法体中没有设置`rootViewController`属性。事实上，甚至没有提到`UIWindow`，只有一个`true`返回值。然而，应用程序启动并显示了一个在故事板中创建的视图控制器，似乎从未链接或设置过。多么神秘啊。
+- en: Xcode isn’t magic, so what’s going on here? Well, if you look closer at some
+    other important files within this sample Xcode project, the mystery reveals itself
+    fairly quickly.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Xcode并非魔术，那么这里到底发生了什么？好吧，如果你更仔细地查看一些这个示例Xcode项目中的其他重要文件，谜团很快就会显现出来。
+- en: The hunt begins
+  id: totrans-85
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 猎手的追踪开始了
+- en: 'First, let’s start our detective work in a file within the project named *Info.plist*.
+    This is a special file that is set within the Xcode project settings. It provides
+    configuration values for our app via known XML keys. Within this file, there is
+    a value for a property defined like so:'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，让我们从项目中名为*Info.plist*的文件开始我们的侦探工作。这是在Xcode项目设置中设置的特殊文件。它通过已知的XML键为我们的应用程序提供配置值。在此文件中，有一个定义如下的属性值：
+- en: '[PRE6]'
+  id: totrans-87
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: The `key` for this property, `UIMainStoryboardFile`, indicates the storyboard
+    filename the application should use when it’s starting up. The value given to
+    this property is `Main`, which just happens to map to a file within this sample
+    project named *Main.storyboard*. Let’s continue our hunt for clues with that file.
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该属性的`key`，`UIMainStoryboardFile`，指示应用程序在启动时应使用的故事板文件名。赋予此属性的值是`Main`，这恰好映射到此示例项目中名为*Main.storyboard*的文件。让我们继续以这个文件为线索进行寻找。
+- en: If we open up *Main.storyboard* in the visual editor within Xcode, we’ll see
+    a single scene with a large arrow pointing toward it. Each scene in a storyboard
+    is mapped to a `UIViewController` that is set within the Identity inspector on
+    the righthand side of the screen. This is, by default, just a standard `UIViewController`
+    instance, but by using the inspector it can be set to a custom subclass by typing
+    the name of the subclass into the `Class` field. Our sample project has its custom
+    class set to “ViewController,” which is a subclass defined in the project inside
+    of *ViewController.swift* ([Figure 1-2](#topics_ui_controllers_xcode_storyboard)).
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们在 Xcode 的可视化编辑器中打开 *Main.storyboard*，我们会看到一个单一的场景，其中有一个大箭头指向它。故事板中的每个场景都映射到一个
+    `UIViewController`，在屏幕右侧的标识检查器中设置。默认情况下，这只是一个标准的 `UIViewController` 实例，但通过检查器可以将其设置为自定义子类，方法是在
+    `Class` 字段中输入子类的名称。我们的示例项目将其自定义类设置为 “ViewController”，这是项目中 *ViewController.swift*
+    中定义的子类（[图 1-2](#topics_ui_controllers_xcode_storyboard)）。
+- en: 'Now, about the large arrow on the left of the view controller scene: this just
+    happens to be the “smoking gun” in our root view controller search. In the Attributes
+    inspector within Xcode, there is a checkbox labeled “Is Initial View Controller”
+    that is currently checked on our view controller scene. Unchecking this box makes
+    the large arrow disappear. Build and run the app with the checkbox unchecked and
+    you’ll get some warnings and the following error in Xcode’s console:'
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，关于视图控制器场景左侧的大箭头：这恰好是我们搜索根视图控制器的 “关键”。在 Xcode 的属性检查器中，有一个名为 “Is Initial View
+    Controller” 的复选框，当前在我们的视图控制器场景上选中了此复选框。取消选中此框并构建并运行应用程序，你将收到一些警告和以下错误在 Xcode 的控制台中显示：
+- en: '[PRE7]'
+  id: totrans-91
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: Success! We’ve found the source of our root view controller. But, how does this
+    all string together to add our root view controller to the app’s window?
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 成功！我们找到了根视图控制器的来源。但是，如何将所有这些内容串联起来，以将根视图控制器添加到应用程序的窗口中呢？
+- en: Well, on startup, the app looks for the `UIMainStoryboardFile` key within its
+    *Info.plist* file. Inside the main storyboard file, the view controller scene
+    that’s been set via our checkbox as our initial view controller is instantiated
+    for the subclass given. Because it’s the initial view controller in the main storyboard,
+    the application adds this view controller to the app window’s `rootViewController`
+    property and voila! The app now has a root view controller that is displayed and
+    active.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧，在启动时，应用程序会在其 *Info.plist* 文件中查找 `UIMainStoryboardFile` 键。在主故事板文件中，通过我们的复选框设置为初始视图控制器的视图控制器场景被实例化为给定的子类。因为它是主故事板中的初始视图控制器，所以应用程序将此视图控制器添加到应用程序窗口的
+    `rootViewController` 属性中，完成！现在应用程序有了一个显示且活动的根视图控制器。
+- en: '![The Storyboard Editor in Xcode](assets/nmdv_0102.png)'
+  id: totrans-94
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Xcode 中的故事板编辑器](assets/nmdv_0102.png)'
+- en: Figure 1-2\. Storyboard editor in Xcode
+  id: totrans-95
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图1-2. Xcode 中的故事板编辑器
+- en: 'You could, if you desired, achieve the same result with the following code
+    inside the application delegate:'
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你愿意，你可以通过在应用程序委托中使用以下代码来实现相同的结果：
+- en: '[PRE8]'
+  id: totrans-97
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: Let’s walk through this.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们详细了解一下。
+- en: First, we set the `window` variable that’s defined as part of the `UIApplicationDelegate`
+    protocol to a `UIWindow` instance that is the same size as the device’s main,
+    and most likely only, screen via `UIScreen.main.bounds`. Next, the root view controller
+    on our window object is set to a view controller. This could be any view controller
+    we have, but in our example, we’re using the initial view controller defined in
+    the `Main.storyboard` file; this is done by calling the `instantiateInitialViewController()`
+    method on our `UIStoryboard` object.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们将 `window` 变量设置为 `UIApplicationDelegate` 协议的一部分，并将其设置为与设备的主要屏幕大小相同的 `UIWindow`
+    实例，通常是唯一的屏幕，通过 `UIScreen.main.bounds`。接下来，在我们的窗口对象上设置根视图控制器为一个视图控制器。这可以是任何我们有的视图控制器，但在我们的示例中，我们使用了
+    `Main.storyboard` 文件中定义的初始视图控制器；这是通过在我们的 `UIStoryboard` 对象上调用 `instantiateInitialViewController()`
+    方法完成的。
+- en: Finally, we show this window by calling `makeKeyAndVisible()`. This method takes
+    the window object and makes it the primary window of the application, displacing
+    any other windows currently displayed.
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们通过调用 `makeKeyAndVisible()` 方法来显示这个窗口。该方法将窗口对象作为应用程序的主窗口，替换当前显示的任何其他窗口。
+- en: Note
+  id: totrans-101
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Generally speaking, iOS apps display only one window at a time, but this is
+    not *always* the case. Apps that need to output video to another screen might
+    need need more than one window; a Keynote-like app is a good example of when this
+    might necessary. However, consider this the exception to the rule, not the default.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一般来说，iOS 应用程序一次只显示一个窗口，但这并不*总是*如此。需要将视频输出到另一个屏幕的应用程序可能需要多个窗口；类似 Keynote 的应用程序就是这种情况的一个很好的例子。然而，要把这种情况视为例外而不是默认情况。
+- en: Code versus storyboard
+  id: totrans-103
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 代码与故事板
+- en: Now, the recommended approach for any simple app is to stick with configuration
+    via *Info.plist* and the main storyboard detailed earlier. However, as an app
+    gets more and more complex, it could become necessary, or convenient, to dive
+    directly into the code. It’s also possible that you might *prefer* the codebase
+    over storyboard configuration. There isn’t really a truly “right” way to set up
+    your application’s starting UI controller; it’ll come down to personal preference
+    and the requirements of the project.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，对于任何简单的应用程序，推荐的方法是坚持通过*Info.plist*和前面详细介绍的主故事板进行配置。然而，随着应用程序变得越来越复杂，直接深入代码可能会变得必要或方便。你可能也*更喜欢*代码库而不是故事板配置。设置应用程序的起始
+    UI 控制器并没有真正的“正确”方式；这将取决于个人偏好和项目的要求。
+- en: Quickly, however, an application with a only single UI controller is going to
+    become pretty limiting or incredibly complex. Let’s look at how UI controllers
+    switch out which view is currently displayed and provide a richer experience for
+    the app.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，一个只有单个 UI 控制器的应用程序将变得非常有限或非常复杂。让我们看看 UI 控制器如何切换当前显示的视图并为应用程序提供更丰富的体验。
+- en: How to Change the Active UI Controller
+  id: totrans-106
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 如何更改活动 UI 控制器
+- en: There are a number of different ways to switch active UI controllers in iOS,
+    some directly in code and some code-free transitions wired up through “segues”
+    in the storyboard editor. More than likely, you’ll encounter both approaches in
+    the wild, often within the same codebase. Let’s start with the code first, because
+    it’ll help understand what’s happening under the scenes and provide better context
+    for understanding the magic of segues.
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 iOS 中有许多不同的方法可以切换活动 UI 控制器，有些直接在代码中，有些是通过故事板编辑器中的“segues”进行无代码转换。很可能你会在同一个代码库中遇到这两种方法。让我们先从代码开始，因为这将有助于理解幕后发生的事情，并为理解
+    segues 的魔力提供更好的背景。
+- en: It’s showtime!
+  id: totrans-108
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 表演时间到！
+- en: 'Let’s say we have two view controllers: one named `primaryViewController` and
+    another named `secondaryViewController`. In this example, our currently active
+    view controller is `primaryViewController`. To present `secondaryViewController`
+    to the user, the simplest method would be an inherited method on `UIViewController`
+    named `show(_:sender:)`. Let’s do this in the code that follows:'
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设我们有两个视图控制器：一个名为`primaryViewController`，另一个名为`secondaryViewController`。在这个例子中，我们当前活动的视图控制器是`primaryViewController`。要向用户呈现`secondaryViewController`，最简单的方法是在`UIViewController`上继承的一个名为`show(_:sender:)`的方法。让我们在接下来的代码中这样做：
+- en: '[PRE9]'
+  id: totrans-110
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'In this simple example, invoking the `show(_:sender:)` method would probably
+    cause `secondaryViewController` to be presented modally from the bottom of the
+    screen in front of `primaryViewController`. However, a key word in that previous
+    sentence was “probably.” We don’t know with 100% certainty without more context—`show(_:sender:)`
+    decouples the process of presenting the view controller from the view controller
+    that is calling for the presentation. This is powerful and leads to simpler logic
+    most of the time. For example, consider the following code that doesn’t use `show(_:sender:)`:'
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个简单的例子中，调用`show(_:sender:)`方法可能会导致`secondaryViewController`以模态方式从屏幕底部显示在`primaryViewController`的前面。然而，上述句子中的一个关键词是“可能”。没有更多的上下文，我们不能百分之百确定—`show(_:sender:)`将呈现视图控制器的过程与调用呈现的视图控制器分离。这是强大的，并且大多数情况下会导致更简单的逻辑。例如，考虑以下不使用`show(_:sender:)`的代码：
+- en: '[PRE10]'
+  id: totrans-112
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: 'The first thing you might notice is that we’ve introduced a new class: `UINavigationController`.
+    This is a common class in iOS that helps manage a stack of view controllers; usually
+    pushing onto or popping off a navigation controller’s stack is demonstrated in
+    the app with a sideways transition from the right or left of the application.
+    This is arguably the most common type of active view controller transition in
+    iOS, possibly only behind a tab bar controller. In our preceding example, `primaryViewController`
+    is added at the root of the navigation stack on the `UINavigationController` at
+    instantiation.'
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能注意到的第一件事是，我们引入了一个新的类：`UINavigationController`。这是 iOS 中常见的一个类，用于管理一堆视图控制器；通常在应用程序中，从右侧或左侧推入或弹出导航控制器的堆栈会展示出一个侧向过渡。这可以说是
+    iOS 中最常见的活动视图控制器过渡类型，可能仅次于标签栏控制器。在我们之前的示例中，`primaryViewController` 在实例化时被添加到 `UINavigationController`
+    的导航堆栈的根部。
+- en: As shown in our `show`-less example let’s say we wanted to add a new view controller
+    to the stack of view controllers and make it the active view controller. First,
+    we’d have to check if the `navigationController` property on `primaryViewController`
+    is `nil`. If it’s not, the view controller is part of a navigation controller’s
+    hierarchy, so we can then proceed to push the new view controller, `secondaryViewController`
+    in this example, onto the stack by capturing the `navigationController` property’s
+    value and calling the method `push(_:animated:completion:)` on it. If, however,
+    the view controller doing the presenting is not on a navigation controller’s stack,
+    we need to present this view controller in another way. In the example, we use
+    a more direct, and older, style of presenting by calling `present(_:animated:completion:)`.
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如我们在没有 `show` 的示例中所示，假设我们想要将一个新的视图控制器添加到视图控制器堆栈中并使其成为活动视图控制器。首先，我们需要检查 `primaryViewController`
+    上的 `navigationController` 属性是否为 `nil`。如果不是，那么该视图控制器是导航控制器层次结构的一部分，因此我们可以继续通过捕获
+    `navigationController` 属性的值并在其上调用 `push(_:animated:completion:)` 方法来将新的视图控制器，例如本示例中的
+    `secondaryViewController` 推入堆栈。然而，如果进行呈现的视图控制器不在导航控制器的堆栈上，我们需要以另一种方式呈现该视图控制器。在本示例中，我们使用了一种更直接、更古老的呈现方式，通过调用
+    `present(_:animated:completion:)`。
+- en: 'There is more control in the code just shown, but it’s considerably more complex—and
+    this is a simple example! What’s more, `show(_:sender:)` allows for some customization
+    in how a view controller is presented as shown:'
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在刚才展示的代码中有更多的控制，但它要复杂得多——这只是一个简单的示例！此外，`show(_:sender:)` 允许对视图控制器的呈现进行一些自定义，如下所示：
+- en: '[PRE11]'
+  id: totrans-116
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: Here `modalPresentationStyle` changes the state in which the view controller
+    is displayed, and `modalTransitionStyle` changes the transition that happens to
+    get that view controller to that state. In this example, the presentation style
+    is a Form Sheet, a specially formatted display mode for the iPad that takes up
+    only part of the screen. The transition style is a horizontal flip that flips
+    the view around to reveal itself.
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里 `modalPresentationStyle` 改变了视图控制器显示的状态，而 `modalTransitionStyle` 改变了发生的过渡以使该视图控制器达到该状态。在本示例中，演示样式是
+    Form Sheet，这是 iPad 的一种特殊格式的显示模式，只占据屏幕的一部分。过渡样式是水平翻转，将视图翻转以展示自身。
+- en: Note
+  id: totrans-118
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: On iPhones, or other `.compact` size classes, the presentation style `.formSheet`
+    is ignored and UIKit adapts the style to a full-screen view. On larger iPhones,
+    like iPhone XS Max or iPhone 8 Plus, the Form Sheet in landscape is displayed
+    the same as it is on a tablet because these devices have a `.regular` size class
+    in landscape; in a portrait orientation, these devices have a `.compact` size
+    class, and the Form Sheet is displayed as a full-screen view just like on smaller
+    phones. We point this out because there are always exceptions and edge cases.
+    It’s important to test on a wide variety of simulators or devices.
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 iPhone 或其他 `.compact` 大小类中，演示样式 `.formSheet` 会被忽略，UIKit 会将样式调整为全屏视图。在较大的 iPhone
+    上，如 iPhone XS Max 或 iPhone 8 Plus，在横向模式下，Form Sheet 的显示方式与平板电脑上的显示方式相同，因为这些设备在横向模式下具有
+    `.regular` 大小类；在纵向方向上，这些设备具有 `.compact` 大小类，Form Sheet 会像在较小的手机上一样显示为全屏视图。我们指出这一点是因为总会有例外和边缘情况。在各种模拟器或设备上进行广泛测试非常重要。
+- en: We’ve only scratched the surface of switching out active view controllers in
+    the app programmatically. Before we go much further, we should discuss a (somewhat)
+    code-free option in iOS called segues.
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们只是浅尝辄止地通过编程方式切换活动视图控制器。在我们进一步探讨之前，我们应该讨论一种（在某种程度上）无需代码的 iOS 选项，称为 segues。
+- en: Segues
+  id: totrans-121
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: Segues
+- en: Everything that’s been shown in code can be done in some form inside of a storyboard
+    using segues. Segues are transitions between two view controllers; they are used
+    to present view controllers within an app. They are most easily created within
+    the storyboard editor in Xcode.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一切在代码中展示的内容都可以在Storyboard中使用转场以某种形式完成。转场是两个视图控制器之间的过渡；它们用于在应用程序中呈现视图控制器。在Xcode的Storyboard编辑器中最容易创建它们。
+- en: 'To create a new segue, you must first have two view controller scenes to transition
+    between. Control-click on the source view controller scene and drag the mouse
+    to the destination view controller within the storyboard editor. This will highlight
+    the whole scene in blue to indicate the scene you are targeting with the mouse.
+    Releasing the mouse will cause a pop-up to display that allows you to select the
+    kind of segue. The options presented correspond with the options shown so far:
+    using `show(_:sender:)` under the hood and letting UIKit figure out the best segue
+    or explicitly using a modal segue, among other options.'
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建新的转场，首先必须有两个视图控制器场景之间的过渡。在Storyboard编辑器中，控制点击源视图控制器场景，并将鼠标拖动到目标视图控制器上。这将使整个场景变为蓝色以指示你正在目标鼠标的场景。释放鼠标将导致弹出窗口显示，允许你选择转场类型。所提供的选项与迄今为止显示的选项对应：在幕后使用`show(_:sender:)`，让UIKit找出最佳的转场或显式地使用模态转场，以及其他选项。
+- en: After you create the segue, if it’s from a view controller to a view controller,
+    you’ll need a way to programmatically call the segue. Click on the segue itself
+    (e.g., the line connecting the scenes in the storyboard of the segue listed out
+    as part of the scene itself like an object), open up the attributes inspector,
+    and add a unique identifier. For our example, let’s use the name ExampleSegue.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建转场后，如果是从一个视图控制器到另一个视图控制器，你需要一种方法来通过编程方式调用转场。点击转场本身（例如，在Storyboard中连接场景的线，作为场景本身的一部分列出，像一个对象），打开属性检查器，添加一个唯一标识符。对于我们的示例，让我们使用名为ExampleSegue的名称。
+- en: Tip
+  id: totrans-125
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 小贴士
+- en: The identifier you use for segues needs to be unique to the storyboard in which
+    the view controller resides.
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用于转场的标识符需要在包含视图控制器的Storyboard中保持唯一。
+- en: 'Calling the segue is done like so:'
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调用转场的方法如下：
+- en: '[PRE12]'
+  id: totrans-128
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: The `performSegue(withIdentifier:sender:)` method takes a string (ExampleSegue
+    from earlier) and a `sender`, which could be any object. It’s common to pass a
+    reference to a button if the segue was triggered via a button press, but it’s
+    acceptable to pass in `nil` as we’re doing in the example.
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`performSegue(withIdentifier:sender:)`方法接受一个字符串（之前的ExampleSegue）和一个sender，它可以是任何对象。如果转场是通过按钮按下触发的，通常会传递一个对按钮的引用，但在我们的示例中传递`nil`也是可以接受的。'
+- en: It’s also possible to wire up a button, or other control, to trigger a segue
+    explicitly. This is done through the same Control-click mechanism in the storyboard
+    editor, but instead of clicking and dragging on a whole scene, click and drag
+    on a specific button within the source view controller. This makes it easy because
+    the segue doesn’t need to be called programmatically like before using `performSegue(withIdentifier:sender:)`
+    to make the transition between view controllers occur.
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还可以将按钮或其他控件连接起来，显式触发转场。这通过在Storyboard编辑器中使用相同的控制点击机制完成，但不是在整个场景上点击和拖动，而是在源视图控制器内的特定按钮上点击和拖动。这样做很容易，因为转场不需要像以前那样通过`performSegue(withIdentifier:sender:)`来以编程方式调用，以使视图控制器之间的过渡发生。
+- en: 'Sometimes additional data needs to be provided between view controllers during
+    a segue. There are methods called between the source and destination view controllers
+    whenever a segue is performed allowing you to pass data or state to help set up
+    a destination view controller or perform an action. Here is an example of a view
+    controller presenting another view controller with the ExampleSegue, defined previously:'
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时在视图控制器之间进行转场时需要提供额外的数据。每当执行转场时，源视图控制器和目标视图控制器之间会调用方法，允许你传递数据或状态，帮助设置目标视图控制器或执行操作。以下是一个示例，展示了如何使用之前定义的ExampleSegue呈现另一个视图控制器：
+- en: '[PRE13]'
+  id: totrans-132
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: Within this example `UIViewController` subclass, there is a method named `buttonPressed(_:)`
+    that is triggered whenever a button is pressed. This code uses `performSegue(withIdentifier:sender:)`
+    to trigger the segue. (This could also be accomplished by directly linking the
+    button within the storyboard editor, but is shown to demonstrate what is happening
+    within this class.)
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个示例的 `UIViewController` 子类中，有一个名为 `buttonPressed(_:)` 的方法，每当按钮被按下时触发。此代码使用
+    `performSegue(withIdentifier:sender:)` 来触发 segue。（这也可以通过直接在故事板编辑器中链接按钮来实现，但此处展示了正在该类中发生的事情。）
+- en: Now, before the segue starts, the method `shouldPerformSegue(withIdentifier:sender:)`
+    is called. This is an optional method within a view controller that can be overridden
+    to provide some customization around the decision about whether or not a segue
+    should be performed. The default value returned is `true`. The destination view
+    controller has not been created before this method is called. Returning `false`
+    will cause the segue to be cancelled, and nothing further will occur. It’s not
+    all that common to use `shouldPerformSegue(withIdentifier:sender:)` to cancel
+    segues; however, it is a useful integration point at times.
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，在 segue 开始之前，将调用方法 `shouldPerformSegue(withIdentifier:sender:)`。这是视图控制器中的一个可选方法，可以重写以在关于是否执行
+    segue 的决定方面提供一些定制。默认返回值为 `true`。在调用此方法之前，目标视图控制器尚未被创建。返回 `false` 将导致取消 segue，并且不会发生任何进一步的操作。通常不会使用
+    `shouldPerformSegue(withIdentifier:sender:)` 来取消 segues；然而，有时它是一个有用的集成点。
+- en: Finally, in the chain of events, `prepare(for:sender:)` is the last to occur.
+    At this point, the destination view controller has now been instantiated and is
+    one step away from being presented. This is the last chance for the source view
+    controller to pass some state or contextual information to help the destination
+    view controller during or after the segue.
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，在事件链中，`prepare(for:sender:)` 是最后发生的。此时，目标视图控制器现已被实例化，并且离被呈现仅一步之遥。这是源视图控制器在
+    segue 期间或之后传递一些状态或上下文信息的最后机会。
+- en: We know how to create and set up the initial view controller in an app, and
+    we know how to transition between active view controllers. Let’s take a step back
+    and make sure understand the life of a view controller in iOS.
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们知道如何在应用程序中创建和设置初始视图控制器，并且知道如何在活动视图控制器之间进行过渡。让我们退一步，确保理解 iOS 中视图控制器的生命周期。
+- en: Understanding the Controller Life Cycle
+  id: totrans-137
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 理解控制器生命周期
+- en: In order to create a UI controller in iOS, you have a number of methods at your
+    disposal, but the most common method is to use storyboards to design and define
+    your app’s UI controllers.
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要在 iOS 中创建 UI 控制器，您可以使用多种方法，但最常见的方法是使用故事板来设计和定义应用程序的 UI 控制器。
+- en: Creating UI controllers from storyboards
+  id: totrans-139
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 从故事板创建 UI 控制器
+- en: 'In order to create a view controller from a storyboard, first you must create
+    a view controller scene in the storyboard. You can do this in Xcode by adding
+    a view controller to the editing stage. After this has been done, make sure to
+    open up the Identity inspector and add any custom subclass used in the Class field.
+    Additionally, give the view controller a specific Storyboard ID. This identifier
+    is used to identify the specific view controller scene to use when creating the
+    view controller programmatically from a storyboard. Usually the identifier is
+    just the name of the class, like this:'
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要从故事板创建视图控制器，首先必须在故事板中创建一个视图控制器场景。您可以在 Xcode 中通过将视图控制器添加到编辑阶段来完成此操作。完成后，请确保打开“Identity
+    inspector”并在“Class”字段中添加任何自定义子类。另外，给视图控制器指定一个特定的 Storyboard ID。此标识符用于在从故事板程序化地创建视图控制器时识别特定的视图控制器场景。通常，标识符就是类的名称，如下所示：
+- en: '[PRE14]'
+  id: totrans-141
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: Tip
+  id: totrans-142
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: While the strings are easy to use, things can get out of control fast. It’s
+    best to store storyboard identifiers separately in a constants `struct`, an `enum`,
+    or through some other abstraction for compile-time safety and to prevent future
+    maintenance woes.
+  id: totrans-143
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然字符串易于使用，但事情可能会迅速失控。最好将故事板标识符单独存储在常量 `struct`、`enum` 或通过其他抽象化方式中，以确保编译时安全性，并预防未来维护困难。
+- en: 'When view controllers are created through storyboards, UIKit uses a special
+    method that can be overridden in the class to help with initialization. This method,
+    `init(coder:)`, is a great place to perform any setup or customization that needs
+    doing before the view is loaded into the class and before it’s placed in the hierarchy
+    of view controllers. Overriding this method is done like so:'
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当视图控制器通过 Storyboard 创建时，UIKit 使用一个特殊的方法，可以在类中被重写以帮助初始化。这个方法，`init(coder:)`，是在视图加载到类中之前以及在它被放置在视图控制器层级之前执行任何设置或定制的好地方。重写这个方法的方式如下：
+- en: '[PRE15]'
+  id: totrans-145
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: Warning
+  id: totrans-146
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: While `init(coder:)` is easy to override, you cannot use custom parameters in
+    the method itself. Injecting properties into view controllers at initialization
+    via the object’s constructor is easier in Android than in iOS with the use of
+    storyboards. Often, injection of values is done by setting properties directly
+    or calling a setup method after the view controller has already been instantiated.
+    Each has its own set of trade-offs, and often both patterns will be used throughout
+    a project.
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然`init(coder:)`很容易重写，但是你不能在方法本身中使用自定义参数。通过对象的构造函数在初始化时向视图控制器注入属性比在 iOS 中使用
+    Storyboard 更容易。通常，通过直接设置属性或在视图控制器已经实例化后调用设置方法来完成值的注入。每种方法都有其自己的权衡，通常在项目中会同时使用这两种模式。
+- en: The life cycle of the UI controller is tied to the life cycle of the view it
+    controls. There is a set of events besides the initializer the view controller
+    receives from the view and other objects that control it to help make managing
+    the view, and other dependent objects, easier. Let’s talk about a few of these.
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: UI 控制器的生命周期与其控制的视图的生命周期密切相关。除了从视图和其他控制它的对象接收的初始化器之外，还有一组事件可以帮助更轻松地管理视图和其他依赖对象。让我们来谈谈其中的几个。
+- en: viewDidLoad
+  id: totrans-149
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: viewDidLoad
+- en: This method is called after the UI controller’s view has loaded. It’s called
+    only once during the life cycle of a view controller, and it’s the place where
+    any view setup occurs. All outlets and actions set up inside a storyboard are
+    wired up and ready for use at this point. Typically, things like setting a view’s
+    background color, fonts on labels, and other stylistic operations are done within
+    this method. Occasionally, notifications are set up here (see [Chapter 11](ch11.html#topics_preferences)).
+    If that is the case, make sure to unsubscribe from notification in `deinit` or
+    another method to prevent crashes or memory leaks.
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种方法在 UI 控制器的视图加载后被调用。它在视图控制器的生命周期中只被调用一次，是进行任何视图设置的地方。在 Storyboard 中设置的所有输出和操作都在这一点被连接并准备好使用。通常情况下，在这个方法中完成设置视图背景颜色、标签上的字体和其他样式操作。偶尔会在这里设置通知（见[第11章](ch11.html#topics_preferences)）。如果是这种情况，请确保在`deinit`或其他方法中取消订阅通知，以防止崩溃或内存泄漏。
+- en: viewWillAppear and viewDidAppear
+  id: totrans-151
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: viewWillAppear 和 viewDidAppear
+- en: This set of methods is called before and after a view is presented on the tree
+    of views that form the view hierarchy. At this point, the view often has a known
+    size (but not always—modals do not have a view size determined until `viewDidAppear`)
+    and that can be used for some last-minute size adjustments. This is also a good
+    place to turn on memory- or CPU-intensive things like GPS tracking or accelerometer
+    events.
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在视图呈现在形成视图层次结构的视图树之前和之后，这组方法被调用。此时，视图通常具有已知的大小（但并不总是—模态窗口直到`viewDidAppear`时才确定视图大小），这可以用于一些最后时刻的大小调整。这也是打开内存或
+    CPU 密集型事物（如 GPS 跟踪或加速计事件）的好地方。
+- en: viewWillDisappear and viewDidDisappear
+  id: totrans-153
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: viewWillDisappear 和 viewDidDisappear
+- en: These methods are similar to `viewWillAppear` and `viewDidAppear`, but they
+    are triggered whenever a view is about to be, or has been, removed from the view
+    hierarchy and is no longer visible. This is a great place to disable the things
+    enabled in the previous set of methods.
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些方法类似于`viewWillAppear`和`viewDidAppear`，但它们在视图即将从视图层次结构中移除或已经移除时被触发。这是一个很好的地方来禁用前一组方法中启用的东西。
+- en: Tip
+  id: totrans-155
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: Interactive swipe back gestures that are used by the user do not call `viewDidDisappear`.
+    Be sure to test by tapping on the OS-provided back button and by swiping to pop
+    a view off the screen.
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户使用的交互式滑动返回手势不会调用`viewDidDisappear`。请确保通过点击操作系统提供的返回按钮和通过滑动从屏幕上弹出视图进行测试。
+- en: didReceiveMemoryWarning
+  id: totrans-157
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: didReceiveMemoryWarning
+- en: It’s important to handle memory warnings in iOS because memory is sometimes
+    very constrained on mobile devices. Clear up unnecessary resource caching, clear
+    outlets created from storyboards, etc. If the app doesn’t recover from this, it
+    will eventually shut down and the application will be terminated.
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理iOS内存警告非常重要，因为移动设备上的内存有时非常有限。清理不必要的资源缓存，清理从故事板创建的输出等。如果应用程序无法从中恢复，最终将关闭并终止应用程序。
+- en: 'Here’s an example of a class that handles all these methods:'
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是一个处理所有这些方法的类的示例：
+- en: '[PRE16]'
+  id: totrans-160
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: Notice that all the methods are `override` methods that call their `super` equivalents
+    in the method body. *It’s important to do this*, otherwise subsequent view controllers
+    in the view controller hierarchy won’t receive calls for any missing calls. Why
+    this isn’t a compiler addition handled just like `retain` and `release` calls
+    is beyond the scope of this book. Just don’t forget to include these method calls
+    in your overrides!
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，所有方法都是`override`方法，在方法体中调用它们的`super`等效方法。*这一点非常重要*，否则视图控制器层次结构中的后续视图控制器将不会接收任何缺失调用的调用。为什么这不是像`retain`和`release`调用那样由编译器处理的问题超出了本书的范围。只需不要忘记在您的重写中包含这些方法调用即可！
+- en: Warning
+  id: totrans-162
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: Both Android and iOS support the use of an MVC architecture. This architecture
+    is sometimes given pejoratively as “Massive View Controller” because without discipline,
+    it lends itself to dumping all controlling logic for views into classes that are
+    thousands of lines long. It’s important to be diligent in maintaining single-use
+    responsibility of a class as much as possible and using container views appropriately.
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android和iOS都支持使用MVC架构。这种架构有时被贬低地称为“Massive View Controller”，因为缺乏纪律，它倾向于将所有控制逻辑倾入数千行长的类中。尽可能保持类的单一用途责任并适当使用容器视图非常重要。
+- en: Navigation controllers, tab bars, and split view controllers
+  id: totrans-164
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 导航控制器，选项卡栏和分割视图控制器
+- en: There are special classes in iOS that have special behavior specifically for
+    managing view controllers. The three you’ll most likely encounter are navigation
+    controllers (`UINavigationController`), tab bar controllers (`UITabBarController`),
+    and split view controllers (`UISplitViewController`).
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在iOS中有特殊的类，具有专门用于管理视图控制器的特殊行为。您可能会遇到的三个类是导航控制器（`UINavigationController`），选项卡控制器（`UITabBarController`）和分割视图控制器（`UISplitViewController`）。
+- en: Navigation controllers are used to handle stacks of view controllers and make
+    transitioning between them consistent and easier to spatially navigate and reason
+    about versus a series of modal view controllers stacked visually on top of each
+    other.
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导航控制器用于处理视图控制器的堆栈，并使它们之间的过渡一致且易于在视觉上进行空间导航和推理，而不是一系列模态视图控制器在视觉上堆叠在一起。
+- en: Tab bar controllers are a special class that handle managing active view controllers
+    with an anchored tab bar at the bottom of the screen. This is a common method
+    of segmenting distinct sections within an app (e.g., a tab for Search, Checkout,
+    and Orders in a shopping app).
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 选项卡控制器是一种特殊的类，用于管理带有底部锚定选项卡栏的活动视图控制器。这是在应用程序中分割不同部分的常见方法（例如，购物应用程序中的搜索，结账和订单选项卡）。
+- en: Split view controllers originated from the iPad but have since migrated to the
+    iPhone. They are used to display a master set of data, typically in list form,
+    and then provide a detail view of that data whenever an item is selected.
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 分割视图控制器起源于iPad，但已迁移到iPhone。它们用于显示一组数据的主数据，通常以列表形式，然后在选择项目时提供该数据的详细视图。
+- en: showDetail(_:sender:)
+  id: totrans-169
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: '`showDetail(_:sender:)`'
+- en: If you’re using a `UISplitController`, you can use `showDetail(_:sender:)` to
+    present a detail view controller in lieu of `show(_:sender:)`. This will adapt
+    to a full-screen modal view when a `UISplitController` isn’t available for a device
+    (as on `.compact` size class devices like the smaller-sized iPhones).
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您使用`UISplitController`，可以使用`showDetail(_:sender:)`来代替`show(_:sender:)`来呈现详细视图控制器。当设备上没有`UISplitController`时（例如在小型iPhone等`.compact`尺寸类设备上），这将适应全屏模态视图。
+- en: What We’ve Learned
+  id: totrans-171
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: 'Within this chapter we’ve covered a lot of information about UI controllers:'
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们涵盖了关于UI控制器的大量信息：
+- en: We talked about the different architectures present within Android and iOS and
+    showed how an `Activity` stacks up to a `UIViewController`.
+  id: totrans-173
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们讨论了Android和iOS中存在的不同架构，并展示了`Activity`如何与`UIViewController`对比。
+- en: The startup logic for an app to display a view on the screen at the direction
+    of a UI controller was demonstrated in both platforms. In Android, there was more
+    configuration versus the more convention-based approach of iOS.
+  id: totrans-174
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 演示了应用程序启动逻辑在两个平台上如何在 UI 控制器的指导下在屏幕上显示视图。在 Android 上，相比 iOS 的更加基于约定的方法，有更多的配置。
+- en: We covered scene transitions and changing the active view, along with some tools
+    in Android like `Fragment` objects to make controlling those views a bit simpler.
+  id: totrans-175
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们涵盖了场景过渡和更改活动视图，以及 Android 中的一些工具，比如`Fragment`对象，使得控制这些视图变得更加简单。
+- en: We discussed the various methods that are called as part of a UI controller
+    for Android and iOS.
+  id: totrans-176
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们讨论了作为 Android 和 iOS UI 控制器一部分称为的各种方法。
+- en: We introduced storyboards in iOS and their role in connecting different scenes.
+  id: totrans-177
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们介绍了 iOS 中的故事板（storyboards）及其在连接不同场景中的作用。
+- en: It’s surprising that even with this broad knowledge base there is a huge amount
+    of information that wasn’t covered. We talk more about some of the details of
+    views outside of the context of UI controllers in [Chapter 2](ch02.html#topics_views).
+    There is also additional information in [Part II](part02.html#part_2_app) where
+    we walk through building a sample application for both platforms.
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 令人惊讶的是，即使有了这么广泛的知识基础，仍有大量信息没有涵盖。我们在[第 2 章](ch02.html#topics_views)中更多地讨论了一些视图细节，超出了
+    UI 控制器的上下文。在[第 II 部分](part02.html#part_2_app)，我们还介绍了构建两个平台的示例应用程序时的额外信息。
+- en: If you’re ready to learn about views now, though, head to the next chapter for
+    a great comparison!
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，如果你现在准备学习视图方面的内容，请前往下一章进行一次精彩的比较！

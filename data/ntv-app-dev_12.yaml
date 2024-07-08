@@ -1,0 +1,566 @@
+- en: Chapter 11\. User Preferences
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第 11 章 用户偏好设置
+- en: Allowing personalization of an app is a great way to help the user experience
+    and provide a way for users to tailor an application to suit their needs. Android
+    and iOS provide a set of frameworks, along with a set of patterns, in order to
+    achieve this goal. There are, of course, heavy-handed and cumbersome technologies
+    one could use—and often must—for more complex scenarios. However, most developers
+    can get by with reading and writing user preferences in a simple and out-of-the-box
+    method.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 允许个性化应用是帮助用户体验的绝佳方式，并为用户提供了一种根据需求定制应用程序的途径。Android 和 iOS 提供了一套框架以及一套模式，以实现此目标。当然，对于更复杂的场景，开发者可能需要使用笨重和繁琐的技术。然而，大多数开发者可以通过简单且开箱即用的方法来读取和写入用户偏好设置。
+- en: Tasks
+  id: totrans-2
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 任务
+- en: 'In this chapter, you’ll learn to:'
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，你将学习以下内容：
+- en: Write user preferences.
+  id: totrans-4
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 写入用户偏好设置。
+- en: Read user preferences.
+  id: totrans-5
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 读取用户偏好设置。
+- en: Work with user preferences in a multiple user application.
+  id: totrans-6
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 在多用户应用中处理用户偏好设置。
+- en: Android
+  id: totrans-7
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android
+- en: In Android, it’s possible to use the filesystem, or a database, to store user
+    preferences if you prefer to roll your own, but Android does provide the `SharedPreferences`
+    API out of the box. While this API is generally encouraged for constancy, it’s
+    not rigorously required or even referenced, and if you find that your requirements
+    make other approaches easier for you, feel free.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Android 中，如果你喜欢自己实现，也可以使用文件系统或数据库来存储用户偏好设置，但 Android 提供了开箱即用的 `SharedPreferences`
+    API。虽然通常鼓励使用此 API 以保持一致性，但并不严格要求，也不一定适用于所有场景，如果你发现其他方法更适合你的需求，可以随意选择。
+- en: 'From [the Android developer docs](https://oreil.ly/Bw8Eq):'
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 来自 [Android 开发者文档](https://oreil.ly/Bw8Eq)：
+- en: 'If you don’t need to store a lot of data and it doesn’t require structure,
+    you should use SharedPreferences. The SharedPreferences APIs allow you to read
+    and write persistent key-value pairs of primitive data types: booleans, floats,
+    ints, longs, and strings.'
+  id: totrans-10
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 如果不需要存储大量数据且不需要结构化数据，应使用 SharedPreferences。SharedPreferences API 允许读取和写入原始数据类型的持久化键值对：布尔值、浮点数、整数、长整数和字符串。
+- en: '`SharedPreferences` is not secure by default—values are stored in an XML file
+    in the application’s file directory. The framework-provided `KeyStore` API does
+    provide some security, but there are issues on older operating systems that may
+    complicate that statement. There are third-party libraries that (claim to) provide
+    a similar API to that of `SharedPreferences`, with some level of security.'
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 默认情况下，`SharedPreferences` 并不安全——值存储在应用程序文件目录中的 XML 文件中。框架提供的 `KeyStore` API
+    提供了一些安全性，但在较旧的操作系统上可能存在问题。有第三方库声称提供与 `SharedPreferences` 类似的 API，并具有一定级别的安全性。
+- en: Whatever its limitations, the `SharedPreferences` API is simple, easy to use,
+    and provides built-in background threading, so give it a shot!
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管有其局限性，`SharedPreferences` API 简单易用，并提供了内置的后台线程处理，所以不妨一试！
+- en: Write User Preferences
+  id: totrans-13
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 写入用户偏好设置
+- en: To write a key-value pair, we first need a `SharedPreference` object instance—Android
+    provides a preconfigured one by calling the method `getSharedPreferences(String
+    fileName, Context.MODE_PRIVATE);` from any `Context` instance. Alternatively,
+    `Activity` instances have a `getPreferences` method that returns the default preferences
+    file and allows you to omit the first parameter (`fileName`).
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要写入键值对，我们首先需要一个 `SharedPreferences` 对象实例——Android 通过从任何 `Context` 实例调用 `getSharedPreferences(String
+    fileName, Context.MODE_PRIVATE);` 方法提供了一个预配置的实例。或者，`Activity` 实例具有一个 `getPreferences`
+    方法，返回默认的偏好设置文件，并允许省略第一个参数（`fileName`）。
+- en: 'From there, you’ll need an `Editor` instance, which is available by calling
+    the `edit` method from that `SharedPreferences` instance:'
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从那里，你将需要一个 `Editor` 实例，可以通过调用 `edit` 方法从 `SharedPreferences` 实例中获取：
+- en: 'At this point, you can `put` key-value pairs using methods like `putBoolean(String
+    key, boolean value)` and `putString(String key, String value)`. When you’re done,
+    you can either call `commit` on the `Editor` instance to have the changes saved
+    synchronously, or call `apply`, which saves them asynchronously:'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此时，你可以使用诸如 `putBoolean(String key, boolean value)` 和 `putString(String key,
+    String value)` 等方法放置键值对。完成后，你可以在 `Editor` 实例上调用 `commit` 方法以同步保存更改，或者调用 `apply`
+    方法以异步保存它们：
+- en: As mentioned, `SharedPreferences` is meant for simple, primitive values, and
+    can only accept basic data types like `boolean`, `int`, `long`, `float`, and `String`,
+    although it also can manage a `Set<String>`.
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如前所述，`SharedPreferences` 用于简单的原始值，只能接受基本数据类型，如`boolean`、`int`、`long`、`float`
+    和 `String`，尽管它也可以管理 `Set<String>`。
+- en: Read User Preferences
+  id: totrans-18
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 读取用户偏好
+- en: Reading a user preference from `SharedPreferences` is even easier than writing—and
+    you don’t need the `Editor` instance or need to worry about threading since a
+    copy is saved in memory (which also makes it fast).
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从`SharedPreferences`中读取用户偏好比写入更容易——你不需要`Editor`实例或者担心线程安全，因为数据的副本保存在内存中（这也使得它非常快）。
+- en: 'To read back the `boolean` we saved in the preceding example, it’s as simple
+    as:'
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要读取之前示例中保存的布尔值，只需这样简单：
+- en: That’s all there is to it!
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就是这样！
+- en: Work with User Preferences in a Multiple User Application
+  id: totrans-22
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在多用户应用程序中处理用户偏好
+- en: 'So this becomes a little trickier. Technically, `SharedPreferences` is meant
+    for the entire application—one file, *shared* by anyone who uses the app. However,
+    it’s become a relatively common practice to use different `SharedPreference` files
+    for different users—you just need to supply unique file names to the getter. It’s
+    entirely up to you how you determine that, but it’s conceivable that you might
+    just grab a `sha` of their user ID:'
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这变得有点棘手。技术上讲，`SharedPreferences`是为整个应用程序而设计的——一个文件，被任何使用该应用程序的人*共享*。然而，为不同用户使用不同的`SharedPreferences`文件已经成为一种相对普遍的做法——你只需给获取器提供唯一的文件名即可。如何确定这个文件名完全取决于你，但你可能只是获取他们用户ID的`sha`：
+- en: iOS
+  id: totrans-24
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: iOS
+- en: 'There are multiple ways to store user data in iOS: user defaults, filesystem,
+    Core Data, or the Keychain. Often, an application needs to persist bits of information
+    that are unique to a particular user, but not necessarily private or secure information.
+    The best place for data like this is user defaults—it’s a great place to store
+    things like a user’s locale, UI styling preferences, or choices regarding unit
+    of measurements a user wants used for displaying data.'
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: iOS中有多种存储用户数据的方式：用户偏好，文件系统，Core Data或Keychain。通常，应用程序需要持久化特定用户唯一但不一定私密或安全的信息。像这样的数据最适合存储在用户偏好中——非常适合存储用户的语言环境，UI样式偏好或者关于显示数据的测量单位选择。
+- en: 'Thankfully, iOS (and macOS) provide a battled-tested way to store this data
+    at an app level: `UserDefaults`. Let’s dive in!'
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幸运的是，iOS（和macOS）提供了一个经过测试的方法来在应用级别存储这些数据：`UserDefaults`。让我们深入了解一下！
+- en: Write User Preferences
+  id: totrans-27
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 写入用户偏好
+- en: 'Before we can read data, it’s important that we learn to store data first.
+    Persisting preferences for users through `UserDefaults` is fairly straightforward.
+    Here’s a simple example of how to persist a basic string value:'
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们能够读取数据之前，首先学会存储数据是很重要的。通过`UserDefaults`持久化用户偏好非常简单。下面是一个存储基本字符串值的简单示例：
+- en: '[PRE0]'
+  id: totrans-29
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: First, we’re grabbing the shared `UserDefaults` instance, and then we’re pairing
+    a string that equals “some string value” to a key named `someKey`. This key is
+    what we use for looking up that data, as shown later in this chapter.
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们获取共享的`UserDefaults`实例，然后我们将一个字符串“some string value”与名为`someKey`的键配对。这个键是我们查找数据的关键，如本章后面所示。
+- en: What’s happening under the hood
+  id: totrans-31
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 发生在幕后的事情
+- en: Within the app folder of every iOS application there is a `Library` folder that
+    contains a `Preferences` folder. Under the hood, iOS is creating or updating a
+    property list file whenever an application writes a value to `UserDefaults.standard`.
+    The individual types stored conform to the `NSCoding` protocol, which allows them
+    to be serialized and deserialized. It’s possible to make custom classes conform
+    to this protocol as well—more on that later!
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个iOS应用程序的应用文件夹中都有一个`Library`文件夹，其中包含一个`Preferences`文件夹。在幕后，iOS在应用程序向`UserDefaults.standard`写入值时创建或更新属性列表文件。存储的各个类型都符合`NSCoding`协议，允许它们被序列化和反序列化。也可以使自定义类符合这个协议——稍后详细介绍！
+- en: Warning
+  id: totrans-33
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: This property list file is updated and managed by `UserDefaults`. It should
+    be considered an implementation detail left up to the underlying subsystem as
+    it’s possible it could change in a future version of iOS.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个属性列表文件由`UserDefaults`更新和管理。应该将其视为实现细节，由底层子系统处理，因为可能会在未来的iOS版本中发生变化。
+- en: Data types
+  id: totrans-35
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 数据类型
+- en: '`UserDefaults` is capable of storing multiple types of data including booleans,
+    numbers, strings, URLs, dictionaries, arrays, and custom objects. Here’s a more
+    complex example that demonstrates a wider variety of usage:'
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`UserDefaults`能够存储多种类型的数据，包括布尔值，数字，字符串，URL，字典，数组和自定义对象。这里有一个更复杂的示例，展示了更广泛的用法：'
+- en: '[PRE1]'
+  id: totrans-37
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: Swift provides a number of convenience methods to pass specific data type values
+    into `UserDefault`. Each value is mapped to a `String` key. Using standard Swift
+    objects will provide sufficient functionality most of the time. But what about
+    those times when you would like to persist a custom class?
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Swift提供了许多方便的方法，可以将特定数据类型值传递给`UserDefault`。每个值都映射到一个`String`键。大多数情况下，使用标准的Swift对象就足够了。但是当您想要持久化自定义类时呢？
+- en: 'Thankfully, there is a solution: `NSCoding`.'
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幸运的是，有一个解决方案：`NSCoding`。
+- en: NSCoding conformance
+  id: totrans-40
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: NSCoding遵循
+- en: 'Objects that wish to be eligible for persistence with `UserDefault` need to
+    conform to the `NSCoding` protocol. This protocol consists of two methods: `init(coder:)`
+    and `encode(with:)`. Each of these methods plays a role in the encoding and decoding
+    functionality of storing an object. Let’s take a look at a simple example.'
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 希望在`UserDefault`中持久化的对象需要符合`NSCoding`协议。该协议包含两个方法：`init(coder:)`和`encode(with:)`。这两个方法在存储对象的编码和解码功能中起着重要作用。让我们看一个简单的示例。
+- en: '[PRE2]'
+  id: totrans-42
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: First, we declare an explicit `@objc` name to a class. This is done because
+    of the importance of the class name in unarchiving the object. We also declare
+    that the class conforms to `NSCoding` conformance. Next, we have a string property
+    named `someProperty` that is set in an initializer of the class. Further in the
+    class, in the `encode(with:)` method, we use the given `NSCoder` passed into the
+    method to encode the `someProperty` value for the key `someProperty`. This is
+    the method that is called under the hood whenever we call `set(value:forKey:)`
+    on `UserDefaults`.
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们为一个类声明了显式的`@objc`名称。这是因为类名在解档对象时非常重要。我们还声明该类符合`NSCoding`协议。接下来，我们有一个名为`someProperty`的字符串属性，在类的初始化器中设置该属性。在类的更深层部分，在`encode(with:)`方法中，我们使用传入该方法的给定`NSCoder`来为键`someProperty`编码`someProperty`的值。这是在我们在`UserDefaults`上调用`set(value:forKey:)`时在幕后调用的方法。
+- en: Later, whenever we need to decode that object, `UserDefaults` instantiates the
+    object by calling the `init?(coder:)` initializer. Inside that method, we attempt
+    to set each property that’s encoded by first decoding the property for the given
+    key and then passing that into our default object initializer. Because we are
+    deciding what properties to encode and decode manually, it’s possible to exclude
+    certain properties that are initialized based on different data or that get set
+    by other objects.
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 稍后，每当我们需要解码该对象时，`UserDefaults`会通过调用`init?(coder:)`初始化器来实例化该对象。在该方法内部，我们尝试设置每个已编码属性，首先解码给定键的属性，然后将其传递给我们的默认对象初始化器。因为我们手动决定哪些属性进行编码和解码，所以可以排除某些根据不同数据初始化或由其他对象设置的属性。
+- en: Warning
+  id: totrans-45
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: 'This is a “stringly typed” example that is easy to break if the key names are
+    mistyped, or change between versions of your app. There are ways around this using
+    enums and some built-in `NSKeyedUnarchiver` functionality like `NSKeyedUnarchiver.setClass(SomeObject.self,
+    forClassName: "SomeObject")`.'
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '这是一个“字符串类型”的示例，如果键名拼写错误或在应用程序版本之间更改，则很容易出错。有方法可以绕过这些问题，例如使用枚举和一些内置的`NSKeyedUnarchiver`功能，如`NSKeyedUnarchiver.setClass(SomeObject.self,
+    forClassName: "SomeObject")`。'
+- en: Use Codable instead of NSCoding
+  id: totrans-47
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 使用Codable而不是NSCoding
+- en: 'It’s possible to skip `NSCoding` conformance for custom objects that need persisting
+    in `UserDefaults` and just use `Codable` conformance to encode and decode the
+    object as JSON. One of the benefits of using `Codable` over `NSCoding` is that
+    you skip the entire Objective-C runtime. Here’s an example:'
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于需要在`UserDefaults`中持久保存的自定义对象，可以跳过`NSCoding`遵循，只需使用`Codable`遵循来对对象进行JSON编码和解码。使用`Codable`而不是`NSCoding`的一个好处是，您可以跳过整个Objective-C运行时。以下是一个示例：
+- en: '[PRE3]'
+  id: totrans-49
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: For a given type that conforms to `Codable`, we can encode it using `JSONEncoder`
+    and then set the `Data` generated directly to a key (`myObject` in our example).
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于符合`Codable`协议的给定类型，我们可以使用`JSONEncoder`对其进行编码，然后将生成的`Data`直接设置为一个键（在我们的示例中是`myObject`）。
+- en: 'Decoding the JSON is straightforward. It can be accomplished with the following
+    code:'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 解码JSON很简单。可以通过以下代码实现：
+- en: '[PRE4]'
+  id: totrans-52
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: First, we grab the object from `UserDefaults` as `Data` (with a force unwrap
+    to keep this example simple). Then, we decode it using `JSONDecoder` and explicitly
+    declare it as a type of `SomeObject`.
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们从`UserDefaults`中获取对象作为`Data`（强制解包以保持示例简单）。然后，我们使用`JSONDecoder`对其进行解码，并显式声明其类型为`SomeObject`。
+- en: Deleting keys
+  id: totrans-54
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 删除键
+- en: 'It’s possible that you might create a key and then decide in a future version
+    of the app that you no longer want that key around. Deleting a key in `UserDefaults`
+    is nothing more than a call like so:'
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能您创建了一个键，然后决定在应用程序的将来版本中不再需要该键。在`UserDefaults`中删除键只是一个如下的调用：
+- en: '[PRE5]'
+  id: totrans-56
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: Now that we’ve written (and deleted) data, let’s take a look at reading it so
+    we can use it in our apps!
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经写入（和删除）了数据，让我们来看看如何读取它，以便我们可以在我们的应用程序中使用它！
+- en: Read User Preferences
+  id: totrans-58
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 读取用户偏好设置
+- en: 'Reading data from `UserDefaults` can be done with a call like so:'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以通过以下方式调用从`UserDefaults`读取数据：
+- en: '[PRE6]'
+  id: totrans-60
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: 'This creates an object named `someValue` that holds our data. `UserDefaults`
+    unfortunately doesn’t explicitly know what type our data is being decoded to,
+    so it defaults to `Any?`. It’s possible, however, to change the method we’re calling
+    to get our data slightly with some special-built methods for a set of common types.
+    Here’s some code to show a few of these methods in action:'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将创建一个名为`someValue`的对象，用于保存我们的数据。不幸的是，`UserDefaults`并不明确知道我们的数据被解码为什么类型，因此默认为`Any?`。但是，可以通过稍微更改我们调用以获取数据的方法来改变这种情况，使用一些专门为一组常见类型构建的方法。下面的代码展示了其中一些方法的示例：
+- en: '[PRE7]'
+  id: totrans-62
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: Iterating through the list of methods called here, we can see `bool(forKey:)`
+    returns a `Boolean` type, `double(forKey:)` returns a `Double`, `string(forKey:)`
+    returns a `String`, and `url(forKey:)` returns a URL instance. There are some
+    other types available, namely, other number types like `Int` and `Float`. Check
+    out the [Apple developer docs](https://oreil.ly/uIDX_) for more information on
+    the types available for decoding for `UserDefaults`.
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 遍历此处调用的方法列表，我们可以看到`bool(forKey:)`返回`Boolean`类型，`double(forKey:)`返回`Double`，`string(forKey:)`返回`String`，而`url(forKey:)`返回一个URL实例。还有其他可用的类型，比如其他数字类型如`Int`和`Float`。查看[Apple开发者文档](https://oreil.ly/uIDX_)以获取有关`UserDefaults`解码可用类型的更多信息。
+- en: 'That being said, there is one type conspicuously missing: the `SomeObject`
+    class type we declared earlier in the chapter! In order to get a `SomeObject`
+    returned, we need to use the `object(forKey:)` method like so:'
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 话虽如此，有一种类型显然缺失：我们在本章前面声明的`SomeObject`类类型！为了返回一个`SomeObject`，我们需要像这样使用`object(forKey:)`方法：
+- en: '[PRE8]'
+  id: totrans-65
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: Notice that we explicitly cast the object returned by `UserDefaults` to `SomeObject`.
+    This can be skipped if there aren’t explicit type requirements and `Any?` will
+    suffice.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，我们显式地将由`UserDefaults`返回的对象转换为`SomeObject`。如果没有显式类型要求，而`Any?`足够的话，可以跳过此步骤。
+- en: So far, we’ve only talked about how to store data for a single user. Let’s talk
+    about multiple users using your app and how we manage them in `UserDefaults`.
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们只讨论了如何为单个用户存储数据。让我们讨论一下在您的应用程序中使用多个用户以及我们如何在`UserDefaults`中管理它们。
+- en: Work with User Preferences in a Multiple User Application
+  id: totrans-68
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在多用户应用程序中处理用户偏好设置
+- en: 'Unfortunately, this is not a piece of out-of-the-box functionality provided
+    by iOS, despite some tantalizingly close functionality available for macOS. That
+    being said, it’s possible to work through this by storing user preferences in
+    a separate file and restoring whenever it’s necessary to switch users. Here’s
+    an example of how this might be accomplished:'
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不幸的是，尽管macOS提供了一些诱人的接近功能，iOS并未提供此类开箱即用的功能。话虽如此，可以通过将用户偏好设置存储在单独的文件中，并在必要时恢复来解决这个问题。以下是如何完成这一点的示例：
+- en: '[PRE9]'
+  id: totrans-70
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: Let’s walk through what’s happening.
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们一起看看正在发生什么。
+- en: First, we get a `Dictionary` representation of our `UserDefaults` data. This
+    is used to back up our existing user’s data. Let’s call this user “User 1.” We
+    take that dictionary and use `NSKeyedArchiver` to transform that dictionary into
+    a `Data` instance that can then be written to a shared area of the app, most likely
+    inside the app’s *Library/Preferences* folder, but that is an exercise left to
+    the reader. In our example, we store it to a file path of *user1.plist*.
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们获得我们的`UserDefaults`数据的`Dictionary`表示。这用于备份我们现有用户的数据。我们称这个字典，并使用`NSKeyedArchiver`将该字典转换为一个`Data`实例，然后可以写入到应用程序的共享区域，最有可能是在应用程序的*Library/Preferences*文件夹内，但这留给读者去练习。在我们的示例中，我们将其存储到一个文件路径*user1.plist*中。
+- en: Going further in the code, we iterate through each key inside the dictionary
+    and then call `removeObject(forKey:)` on `UserDefaults` to clear out all that
+    data from `UserDefaults`.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在代码中进一步进行时，我们遍历字典中的每个键，然后在`UserDefaults`上调用`removeObject(forKey:)`来清除所有这些数据。
+- en: 'Finally, it’s time to start using the new user’s data; let’s call this user
+    “User 2.” User 2 has a preferences file stored at *user2.plist*, so we take that
+    file’s `Data` representation, pass it to `NSKeyedUnarchiver`, and decode it to
+    a dictionary object as `[String: Any]`, which is the same type that it was originally
+    written from. To add the data to `UserDefaults`, we iterate over each key in our
+    new dictionary and manually set it to `UserDefaults` directly.'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '最后，是时候开始使用新用户的数据了；让我们称呼这位用户为“用户2”。用户2在*user2.plist*中有一个偏好文件，因此我们将该文件的`Data`表示形式传递给`NSKeyedUnarchiver`，并解码为一个字典对象`[String:
+    Any]`，这与最初写入的类型相同。要将数据添加到`UserDefaults`中，我们遍历新字典中的每个键，并直接将其手动设置到`UserDefaults`中。'
+- en: This is not the cleanest, simplest process, but it works. Future versions of
+    iOS could offer support for multiple user accounts. For now, this solution is
+    workable. It’s possible that a large user preferences list could take some time
+    to write. Thankfully, `UserDefaults` is thread-safe, so all this work could easily
+    be done in a background thread.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这并不是最干净简单的过程，但它有效。iOS的未来版本可能会支持多个用户账户。目前，这个解决方案可行。可能需要一些时间来写入大量用户偏好列表。幸运的是，`UserDefaults`是线程安全的，所以所有这些工作可以轻松地在后台线程中完成。
+- en: What We’ve Learned
+  id: totrans-76
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: 'There are few things to take away from this chapter:'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从本章中可以得出几个要点：
+- en: Using an out-of-the-box technology provided by the operating system is a great
+    way to get started storing user preferences. In fact, it’s possible to build powerful
+    systems and processes that apps can follow just using this approach.
+  id: totrans-78
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 使用操作系统提供的开箱即用技术是开始存储用户偏好的好方法。实际上，可以仅使用这种方法构建强大的系统和流程，应用程序可以遵循这种方法。
+- en: Both Android and iOS have similar approaches to storing and reading back user
+    preferences. Android uses `SharedPreferences`, and iOS uses `UserDefaults`. The
+    both provide a key-value store in which to save data between sessions.
+  id: totrans-79
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Android和iOS都有类似的方法来存储和读取用户偏好。Android使用`SharedPreferences`，iOS使用`UserDefaults`。它们都提供了一个键值存储，用于在会话之间保存数据。
+- en: We’ve talked mostly about storing data on-device with regards to user preferences.
+    There are other standard formats, such as XML and JSON, that both platforms have
+    excellent support for as well. Let’s learn about more advanced serialization of
+    data in the next chapter on serialization and transports.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们主要讨论了关于用户偏好的设备内数据存储。还有其他标准格式，如XML和JSON，在这两个平台上都有很好的支持。让我们在下一章中学习更高级的数据序列化和传输。

@@ -1,0 +1,787 @@
+- en: Chapter 7\. Persistence
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第7章。持久性
+- en: The persistence of data allows an app to form what might appear to be a memory.
+    There are a number of ways to accomplish this within mobile software development,
+    but the most common is through the use of a relational database. From the start
+    Android and iOS have had the ability to connect, read, and write to databases.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数据的持久性允许应用程序形成一个看似是内存的东西。在移动软件开发中有许多实现这一点的方法，但最常见的是通过使用关系数据库。从一开始，Android和iOS就具有连接、读取和写入数据库的能力。
+- en: The result of this is that a user’s session within an app is no longer an ephemeral
+    existence, but one that is anchored to a point in time. Data can be stored, information
+    can be saved, and state can be restored. Through very different architectures
+    and approaches, there is a shared set of functionality that powers both Android
+    and iOS in a way that makes it similar enough to discuss side by side.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样做的结果是，用户在应用程序中的会话不再是短暂的存在，而是与时间点相关联的存在。数据可以被存储，信息可以被保存，状态可以被恢复。通过非常不同的架构和方法，Android和iOS都具有一组共享的功能，以一种使其足够相似以便进行并行讨论的方式来驱动它们。
+- en: Tasks
+  id: totrans-3
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 任务
+- en: 'In this chapter, you’ll learn to:'
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，您将学习：
+- en: Establish a database connection.
+  id: totrans-5
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 建立数据库连接。
+- en: Create a database table or persistent object.
+  id: totrans-6
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 创建数据库表或持久对象。
+- en: Write data to that table or persistent object.
+  id: totrans-7
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 将数据写入该表或持久对象。
+- en: Read data from that table or persistent object.
+  id: totrans-8
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 从该表或持久对象中读取数据。
+- en: Android
+  id: totrans-9
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android
+- en: In Android, the framework-provided database management system is SQLite. The
+    exact version depends on the Android OS level, but at the time of this writing
+    it ranges from 3.4 in Android 1 to 3.19 in Android 27\. See [Android’s developer
+    documentation](https://oreil.ly/lQegA) for up-to-date information.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android中，框架提供的数据库管理系统是SQLite。确切的版本取决于Android操作系统的级别，但在撰写本文时，它的版本范围从Android
+    1的3.4到Android 27的3.19。查看[Android的开发者文档](https://oreil.ly/lQegA)获取最新信息。
+- en: SQLite is a SQL-based relational database management system (DBMS) and is very
+    similar to MySQL and PostgreSQL. There are differences, in datatypes, functions,
+    and implementation details for things like `ALTER TABLE`, but they’re still very
+    similar, and if you’ve had experience with any SQL database, you’ll find yourself
+    at home with SQLite in no time.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: SQLite是一种基于SQL的关系型数据库管理系统（DBMS），非常类似于MySQL和PostgreSQL。在数据类型、函数和实现细节（如`ALTER
+    TABLE`）方面存在差异，但它们仍然非常相似，如果您有任何SQL数据库的经验，您将很快熟悉SQLite。
+- en: Establish a Database Connection
+  id: totrans-12
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 建立数据库连接。
+- en: 'In Android (but not traditional Java), the primary class you’ll use is `SqliteOpenHelper`,
+    but it is `abstract`, so *it must be a subclass*. Here’s a stripped-down example:'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android中（但不是传统的Java），您将使用的主要类是`SqliteOpenHelper`，但它是`abstract`的，因此*必须是一个子类*。这里是一个简化的示例：
+- en: The `onUpgrade` method is useful for adding or migrating data when changes are
+    made to your database schema. This happens when the version number of your database
+    (the fourth argument of the helper constructor) has changed and runs only once
+    per change. Really we should say “increased” rather than “changed” because running
+    a lower DB version than exists on a device will crash immediately.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onUpgrade`方法在更改数据库架构时添加或迁移数据非常有用。当您的数据库版本号（助手构造函数的第四个参数）发生变化时，此方法仅运行一次。实际上，我们应该说“增加”而不是“改变”，因为在设备上运行低于存在的数据库版本将立即崩溃。'
+- en: Note that convention is to use public constants for table and column names;
+    that’ll make things easier when reading or writing data from the table in other
+    classes.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，约定是使用公共常量作为表和列名称；这将使在其他类中从表中读取或写入数据变得更容易。
+- en: To get a database instance from this helper class, we call either the `getWritableDatabase`
+    or `getReadableDatabase` method, depending on what we need. The writable does
+    everything the readable does, so if you plan on doing both reads and writes, use
+    the former. The only time you’d want the readable version is to make sure that
+    the underlying data does not get changed when performing operations.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要从此帮助类获取数据库实例，我们调用`getWritableDatabase`或`getReadableDatabase`方法，取决于我们的需求。可写的执行所有可读的操作，因此如果您计划进行读取和写入操作，请使用前者。唯一需要可读版本的情况是确保在执行操作时底层数据不会发生更改。
+- en: 'Here’s how you’d get a writable database instance from your helper class:'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是如何从您的帮助类中获取可写数据库实例的方法：
+- en: From that point on, you’ve got access to a `SqliteDatabase` instance, which
+    has APIs for common operations like querying and inserting, and broader APIs for
+    executing arbitrary SQL strings, like `execSql`.
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从那时起，你就可以访问一个 `SqliteDatabase` 实例，它具有用于常见操作如查询和插入的 API，以及用于执行任意 SQL 字符串的更广泛的
+    API，如 `execSql`。
+- en: Create a Database Table or Persistent Object
+  id: totrans-19
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建数据库表或持久对象
+- en: In the subclass, you’ll have an opportunity to override `onCreate` and `onUpgrade`
+    methods; let’s concentrate on just the former for now, which will be fired once,
+    when the helper is first created (generally speaking, this will happen the first
+    time the helper is instantiated, and it is a persistent value, so this will happen
+    shortly after the first installation of the app). Subsequent launches will not
+    trigger `onCreate`.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在子类中，你将有机会重写 `onCreate` 和 `onUpgrade` 方法；现在让我们专注于前者，它将在帮助程序第一次创建时触发一次（一般来说，这将在帮助程序第一次实例化时发生，并且是一个持久值，因此这将在应用程序第一次安装后不久发生）。后续启动不会触发
+    `onCreate`。
+- en: '`onCreate` is a great opportunity to create your initial schema. For example,
+    let’s say we want to create a database with a single table (for now), `USAGE_EVENTS`,
+    which has an identifier, an event name, and a timestamp when the event occurred.
+    We’ll use standard SQL to create the database in our helper’s `onCreate` method;
+    let’s extend the simple example shown earlier, but really we’re just adding some
+    `String` constants to compose a SQL `create table` statement and execute it `onCreate`:'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onCreate` 是创建初始模式的绝佳机会。例如，假设我们想要创建一个只有一个表（暂时）`USAGE_EVENTS` 的数据库，其中包含一个标识符、一个事件名称和事件发生时的时间戳。我们将使用标准
+    SQL 在我们的帮助程序的 `onCreate` 方法中创建数据库；让我们扩展之前显示的简单示例，但实际上我们只是添加一些 `String` 常量来组成一个
+    SQL `create table` 语句并在 `onCreate` 中执行它：'
+- en: Write Data to That Table or Persistent Object
+  id: totrans-22
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 将数据写入该表或持久对象
+- en: The framework provides the `SQLiteDatabase` API, which as we’ve already seen
+    is perfectly capable of executing arbitrary SQL commands, but also provides methods
+    for CRUD functions, including insertion. Further, the API supports database transactions,
+    which we can leverage for extra control of database writes. In the following simple
+    example, it may appear that the transaction isn’t doing much for us, but in reality
+    it will catch errors and give us an opportunity to react to them; further, and
+    perhaps more critically, if the insert operation fails—or if we add more database
+    operations in the `try` block that fail—the transaction would *not* be set to
+    successful and would silently roll back the entire block of statements in the
+    `try` portion.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 框架提供了 `SQLiteDatabase` API，正如我们已经看到的，它完全能够执行任意的 SQL 命令，但也提供了用于 CRUD 函数的方法，包括插入。此外，API
+    支持数据库事务，我们可以利用它来额外控制数据库写入。在以下简单示例中，可能看起来事务对我们没有太多帮助，但实际上它将捕获错误并给我们一个机会来对其做出反应；此外，也许更关键的是，如果插入操作失败——或者如果我们在
+    `try` 块中添加更多失败的数据库操作——事务将 *不会* 被设置为成功，并且会悄悄地回滚 `try` 部分的所有语句块。
+- en: 'While this example does appear simple, it demonstrates the pattern that you’ll
+    probably want to use for any or all of your database transactions—just add more
+    operations to the `try` block, and do anything extra in the `catch` block. (Remember,
+    throwing an `Exception` will cause the transaction to roll back implicitly; there
+    is no explicit “roll back” method.) This pattern is appropriate for much more
+    complicated modifying operations:'
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管这个示例看起来很简单，但它展示了你可能想要用于任何或所有数据库事务的模式——只需在 `try` 块中添加更多操作，并在 `catch` 块中执行任何额外操作。（记住，抛出一个
+    `Exception` 将导致事务隐式回滚；没有显式的“回滚”方法。）这种模式适用于更复杂的修改操作：
+- en: Read Data from That Table or Persistent Object
+  id: totrans-25
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 从该表或持久对象中读取数据
+- en: The `SqliteDatabase` method `query` is the most direct way to get information
+    back out of your database. That said, the signature you’ll probably want to use
+    takes eight parameters! Let’s pretend everything is fine and dive right in.
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`SqliteDatabase` 方法 `query` 是从数据库中获取信息的最直接方式。话虽如此，你可能会想要使用的签名需要八个参数！让我们假装一切都很好，直接开始吧。'
+- en: 'Here’s the most basic version (with only seven parameters!). This will grab
+    everything from the table—all rows populated with all columns—and return a `Cursor`
+    instance to navigate that data set. This is effectively `"SELECT * FROM EVENTS"`:'
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是最基本的版本（只有七个参数！）。这将从表中获取所有内容——所有行填充了所有列——并返回一个 `Cursor` 实例来浏览该数据集。这实际上是 `"SELECT
+    * FROM EVENTS"`：
+- en: 'Let’s take a look inside, with a more realistic query:'
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看一个更现实的查询：
+- en: The preceding is effectively `SELECT ID FROM EVENTS WHERE NAME = \"Request Data\"
+    LIMIT 1` in most SQL flavors. The placeholders are a common concept and can help
+    with constancy and provide some recognition of SQL injection.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在大多数SQL语言中，上述内容实际上是`SELECT ID FROM EVENTS WHERE NAME = \"Request Data\" LIMIT
+    1`。占位符是一个常见的概念，可以帮助保持一致性，并提供一些防止SQL注入的识别。
+- en: 'So now that we’ve successfully executed our query, where’s our data? It’s in
+    an in-memory dataset we can access with the `Cursor` API; the `query` method returns
+    a `Cursor` instance. Here’s an example:'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们成功执行了查询，那么我们的数据在哪里？它在一个内存数据集中，我们可以使用`Cursor` API访问；`query`方法返回一个`Cursor`实例。这里是一个例子：
+- en: 'You can see we used the cursor to access each column by its index, but there’s
+    a `Cursor` method to look up that index by name as well, `getColumnByIndex`, so
+    you might do something like:'
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以看到我们使用游标通过其索引访问每一列，但也有一个`Cursor`方法通过名称查找该索引的`getColumnByIndex`，因此您可能会这样做：
+- en: That’s it! There are a ton of other APIs available (and third-party object-relational
+    mappers [ORM]) and really unlimited things you can do with raw SQL. If you’re
+    working on an application that regularly uses database reads, you should check
+    out the `compileStatement` method, which compiles a SQL string and allows you
+    to redefine the values with each invocation. This method is extremely fast and
+    can really improve perceived performance if working with large data sets.
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就是这样！还有大量其他可用的API（和第三方对象关系映射器[ORM]），以及您可以使用原始SQL做的事情几乎是无限的。如果您正在开发一个经常使用数据库读取的应用程序，您应该查看`compileStatement`方法，该方法编译一个SQL字符串，并允许您在每次调用时重新定义值。这种方法非常快速，可以在处理大型数据集时真正提高感知性能。
+- en: 'At the time of this writing, Google recommended we use Room (from the [Android
+    dev docs](https://oreil.ly/rtG9C)):'
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在撰写本文时，Google建议我们使用Room（来自[Android开发文档](https://oreil.ly/rtG9C)）：
+- en: 'Although these APIs (SQLiteDatabase, etc.) are powerful, they are fairly low-level
+    and require a great deal of time and effort to use:'
+  id: totrans-34
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 尽管这些API（SQLiteDatabase等）功能强大，但它们相当低级，并且需要大量的时间和精力来使用：
+- en: ''
+  id: totrans-35
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: There is no compile-time verification of raw SQL queries. As your data graph
+    changes, you need to update the affected SQL queries manually. This process can
+    be time consuming and error prone.
+  id: totrans-36
+  prefs:
+  - PREF_BQ
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 没有原始SQL查询的编译时验证。随着数据图的变化，您需要手动更新受影响的SQL查询。这个过程可能耗时且容易出错。
+- en: ''
+  id: totrans-37
+  prefs:
+  - PREF_BQ
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: ''
+  id: totrans-38
+  prefs:
+  - PREF_BQ
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: You need to use lots of boilerplate code to convert between SQL queries and
+    data objects.
+  id: totrans-39
+  prefs:
+  - PREF_BQ
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 您需要使用大量样板代码在SQL查询和数据对象之间进行转换。
+- en: ''
+  id: totrans-40
+  prefs:
+  - PREF_BQ
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: ''
+  id: totrans-41
+  prefs:
+  - PREF_BQ
+  - PREF_IND
+  type: TYPE_NORMAL
+- en: ''
+  id: totrans-42
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: For these reasons, we highly recommended using the Room Persistence Library
+    as an abstraction layer for accessing information in your app’s SQLite databases.
+  id: totrans-43
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 出于这些原因，我们强烈建议使用Room持久性库作为访问应用程序SQLite数据库中信息的抽象层。
+- en: Why SQLite? Why not room? Why not realm? Why not <insert my favorite ORM here>?
+  id: totrans-44
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 为什么选择SQLite？为什么不用Room？为什么不用realm？为什么不用<插入我喜欢的ORM名称>？
+- en: 'We (the authors) have used SQLite as our working example for a couple reasons:
+    first, and as with other patterns and toolsets in the Android ecosystem, this
+    predates Room by some distance. Second, SQL is something that developers coming
+    from virtually any language are likely to have some knowledge of and will be able
+    to carry between platforms.'
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们（作者）之所以选择SQLite作为我们的工作示例，有几个原因：首先，与Android生态系统中的其他模式和工具集一样，这比Room早了一段距离。其次，SQL是开发人员从几乎任何语言都可能具有一些了解并能够在平台之间传递的东西。
+- en: iOS
+  id: totrans-46
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: iOS
+- en: The primary difference in persistence of data between iOS and Android is related
+    to the technology used. In Android, as you’ve seen, a SQLite database is a common
+    approach, and there are classes and objects that interact directly with the database
+    through database connections and SQL. Now iOS, on the other hand, abstracts the
+    database layer technology away from the developer and has a first-party object
+    graph that’s used for data persistence called Core Data. Although Core Data *can*
+    use a SQLite database (and usually does) for persistence of data, it can operate
+    wholly in-memory as transient storage or output to XML files. The database, then,
+    becomes an implementation detail that the developer can, mostly, ignore.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: iOS和Android之间数据持久性的主要区别与所使用的技术有关。在Android中，如您所见，SQLite数据库是一种常见的方法，有直接与数据库进行交互的类和对象，通过数据库连接和SQL。而iOS则将数据库层技术抽象化，有一个用于数据持久性的第一方对象图称为Core
+    Data。虽然Core Data *可以*使用SQLite数据库（通常是这样）来持久化数据，但它可以完全在内存中作为临时存储，或输出到XML文件。然后，数据库成为开发人员可以大部分忽略的实现细节。
+- en: Set Up and Connect to a Persistence Layer
+  id: totrans-48
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 设置并连接到持久性层
+- en: Even though developers are supposed to forget about the differences between
+    the object graph that is Core Data and a raw SQLite database, there are equivalences
+    between the two that we’ll use to direct this chapter about data persistence to
+    compare and contrast with Android. Establishing a database connection is *not*
+    something you’ll need to do with Core Data; the raw SQL queries and connections
+    are handled by Core Data itself. An equivalent part of setup, however, is spinning
+    up the Core Data “stack.”
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管开发人员应该忘记 Core Data 对象图与原始 SQLite 数据库之间的差异，但两者之间存在等价物，我们将利用这些等价物来指导本章关于数据持久化的内容，以与
+    Android 进行比较和对比。建立数据库连接 *并不* 是您需要使用 Core Data 进行的操作；原始的 SQL 查询和连接由 Core Data 自身处理。然而，设置的一个等效部分是启动
+    Core Data 的“堆栈”。
+- en: Set up Core Data stack
+  id: totrans-50
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 设置 Core Data 堆栈
+- en: Getting started with Core Data in a new or existing project isn’t too hard,
+    but you first need to understand what, exactly, Core Data is. Let’s start with
+    the persistence layer. For our purposes, we’ll assume that we’re dealing with
+    a Core Data stack that has, at its root, a SQLite database. This is, arguably,
+    the most common approach to Core Data development.
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在新项目或现有项目中开始使用 Core Data 并不太困难，但首先需要明确 Core Data 到底是什么。让我们从持久化层开始。对于我们的目的，我们假设我们处理的是一个以
+    SQLite 数据库为根的 Core Data 堆栈。这可以说是 Core Data 开发中最常见的方法。
+- en: Above the SQLite database and persistent store is an object called an `NSPersistentStoreCoordinator`.
+    This object handles the communication between the database, the managed object
+    model, and the managed object context. It uses the managed object model that’s
+    defined with the different model object and translates those objects and relationships
+    into database tables and SQL. It also optimizes a lot of the objects delivered
+    and is really the “brains” behind a lot of the magic and optimization built into
+    Core Data. You could think of it as a traffic coordinator between SQLite and the
+    rest of the app.
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 SQLite 数据库和持久存储之上是一个称为 `NSPersistentStoreCoordinator` 的对象。此对象处理数据库、托管对象模型和托管对象上下文之间的通信。它使用定义的托管对象模型，将这些对象和关系转换为数据库表和
+    SQL。它还优化了大部分交付的对象，并且真正是内置于 Core Data 中的许多魔法和优化背后的“大脑”。您可以将其视为 SQLite 和应用程序其余部分之间的交通协调员。
+- en: 'A managed object model, or `NSManagedObjectModel`, is defined with every project
+    with an *.xcdatamodeld* file. This is what the persistent store coordinator uses
+    to determine how everything is structured. It is a file that a developer uses
+    to add new entities, relationship, and properties; it’s how the data model is,
+    essentially, created and defined in a project. The objects that are created as
+    part of this are called “managed objects,” and they inherit from `NSManagedObject`,
+    which is part of the Core Data framework. Most of the work involved in maintaining
+    and working with Core Data is done at this level, along with the next class we
+    need to discuss: the managed object context.'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个项目都使用一个 *.xcdatamodeld* 文件定义托管对象模型，或者 `NSManagedObjectModel`。这是持久化存储协调器用于确定所有结构的方式。开发人员使用此文件添加新的实体、关系和属性；这本质上是创建和定义项目中的数据模型的方式。作为其一部分创建的对象称为“托管对象”，它们继承自
+    `NSManagedObject`，这是 Core Data 框架的一部分。在此级别及我们需要讨论的下一个类别中，大多数与维护和处理 Core Data 相关的工作都是在此完成：托管对象上下文。
+- en: You can think of a managed object context, or `NSManagedObjectContext`, as a
+    scratchpad of sorts where you can change data contained in instances of your data
+    model objects before they’re persisted in the database. A managed object context
+    is the object you’ll use to provide context to Core Data for how your object should
+    be created and updated. There are typically two types of contexts in a Core Data
+    application, the view context (which operates on the main thread) and a background,
+    or private, context that’s used for saving objects—effectively translating them
+    from `NSManagedObject` instances to database table row `INSERT` and `UPDATE` commands.
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以将托管对象上下文，或者 `NSManagedObjectContext`，看作是一种草稿本，您可以在其中更改数据模型对象实例中包含的数据，然后将其持久化到数据库中。托管对象上下文是您将用于为
+    Core Data 提供对象创建和更新上下文的对象。在 Core Data 应用程序中通常有两种类型的上下文，视图上下文（在主线程上运行）和后台或私有上下文，用于保存对象，有效地将它们从
+    `NSManagedObject` 实例翻译成数据库表行 `INSERT` 和 `UPDATE` 命令。
+- en: In order to work with Core Data, this stack must be set up and functional before
+    persistence is needed. Typically, this means when the application starts. In fact,
+    most setup is done in the `application(_:didFinishLaunchingWithOptions:)` method
+    inside the application delegate.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了使用核心数据，这个堆栈必须在需要持久性之前设置并正常运行。通常，这意味着当应用程序启动时。事实上，大多数设置都是在应用程序委托内的`application(_:didFinishLaunchingWithOptions:)`方法中完成的。
+- en: 'All this setup used to be cumbersome, but Core Data now has a handy class for
+    initializing our Core Data stack called `NSPersistentContainer`. The persistent
+    container handles the initialization required for a managed object model file
+    and has a convenience method that can load persistent stores asynchronously. Here’s
+    an example of how it’s used:'
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有这些设置过去都很繁琐，但现在核心数据有一个方便的类来初始化我们的核心数据堆栈，称为`NSPersistentContainer`。持久容器处理了为托管对象模型文件所需的初始化，并具有一个方便的方法，可以异步加载持久存储。以下是它的使用示例：
+- en: '[PRE0]'
+  id: totrans-57
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: This creates a container targeting a managed object model named “MyModel” and
+    stores it in a variable named `persistentContainer`. The next line loads the persistent
+    store, ultimately the SQLite database in our example, from the disk with a completion
+    handler to check for any errors and execute code afterward. If you place this
+    code in the application delegate’s startup code, the application will look for
+    the managed object model file *MyModel.xcdatamodeld* in the application bundle
+    and use that to create or load a SQLite database file named *MyModel.sqlite* in
+    the *Application Support* directory.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将创建一个针对名为“MyModel”的托管对象模型的容器，并将其存储在名为`persistentContainer`的变量中。下一行加载持久存储，最终在我们的示例中是SQLite数据库，从磁盘加载，并使用完成处理程序检查任何错误并在之后执行代码。如果将此代码放在应用程序委托的启动代码中，应用程序将在应用程序包中查找名为*MyModel.xcdatamodeld*的托管对象模型文件，并使用它来创建或加载名为*MyModel.sqlite*的SQLite数据库文件，存储在*Application
+    Support*目录中。
+- en: Note
+  id: totrans-59
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: You can customize the location where the database files are placed. Historically
+    the *Documents* directory has been used as a place to store the SQLite database.
+    Your needs will vary, but you can do this by adding an `NSPersistentStoreDescription`
+    after creating the `NSPersistentContainer` and adding it to `persistentStoreDescriptions`.
+    There are other options available used to describe the persistent container, but
+    those are outside the scope of this chapter.
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以自定义数据库文件存放的位置。历史上*文档*目录一直被用作存储SQLite数据库的地方。您的需求会有所不同，但您可以在创建`NSPersistentContainer`并将其添加到`persistentStoreDescriptions`后添加`NSPersistentStoreDescription`来实现这一点。还有其他选项可用于描述持久容器，但这些选项超出了本章的范围。
+- en: 'Inside the completion closure, you should check for errors and then update
+    any user interface that might be waiting for the persistent store to load. An
+    example of a more complete persistent container load might look like this:'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在完成闭包内部，您应该检查错误，然后更新任何可能正在等待持久存储加载的用户界面。一个更完整的持久容器加载示例可能如下所示：
+- en: '[PRE1]'
+  id: totrans-62
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: Now that our Core Data stack is up and running, let’s look at how we can define
+    our objects.
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们的核心数据堆栈已经运行起来了，让我们看看如何定义我们的对象。
+- en: Define and Create a Database Table or Persistent Object
+  id: totrans-64
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 定义并创建数据库表或持久对象
+- en: Our model objects are defined in the managed object model file created in Xcode.
+    To add to an existing project, go to File > New > File and select Data Model under
+    the Core Data section. The name of the file is the name you’ll pass to the persistent
+    container during initialization.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的模型对象是在Xcode中创建的托管对象模型文件中定义的。要添加到现有项目中，请转到文件 > 新建 > 文件，并在核心数据部分下选择数据模型。文件的名称是您在初始化期间将传递给持久容器的名称。
+- en: Inside Xcode, you can edit this file to create a new managed object by clicking
+    the Add Entity button. Inside the entity description, there will be areas for
+    Attributes, Relationships, and Fetched Properties. You can add individual properties
+    to an entity, change the name of the entity, and assign a backing class to this
+    entity all within this editor.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Xcode中，您可以通过单击“添加实体”按钮来编辑此文件，以创建一个新的托管对象。在实体描述中，将有属性、关系和获取的属性的区域。您可以向实体添加单个属性，更改实体的名称，并在此编辑器内为此实体分配一个支持类。
+- en: The individual properties are added as Attributes. These correspond to raw data
+    types like `String` and `Int` in Swift classes that are generated (or provided
+    manually) for each entity in a managed object model. It’s important to remember
+    that the managed object model only defines the description of the entities and
+    doesn’t actually interact with the database at all. It just provides, essentially,
+    a mapping from the Swift code that the persistent store coordinator can understand.
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 个别属性被添加为属性。这些对应于在托管对象模型中为每个实体生成（或手动提供）的原始数据类型，如Swift类中的`String`和`Int`。重要的是要记住，托管对象模型仅定义实体的描述，实际上根本不与数据库交互。它只是提供了从持久化存储协调器可以理解的Swift代码的映射。
+- en: 'To add a new attribute, click the “+” button underneath the Attributes area
+    of the editor. If you were adding a new property named `title` with a type of
+    `String` on an entity named `MyEntity`, Xcode would automatically generate a class
+    for you during compilation that’s hidden from the Xcode project. The class might
+    look like this:'
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要添加新属性，请单击编辑器的属性区域下面的“+”按钮。如果你要在名为`MyEntity`的实体上添加一个名为`title`且类型为`String`的新属性，Xcode在编译期间会为你自动生成一个隐藏在Xcode项目中的类。该类可能看起来像这样：
+- en: '[PRE2]'
+  id: totrans-69
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: 'The class itself inherits from `NSManagedObject` and is the same name as our
+    entity description of `MyEntity`. It could, however, be anything we’d like it
+    to be. That’s an important distinction: the class that backs a model object can
+    be named separately from the entity description. Also notice that the `@NSManaged`
+    attribute denotes that Core Data manages the storage of this property. That means
+    this is not a normal property that’s stored. It is, in fact, backed by `setValue:`
+    whenever the property is written to.'
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类本身继承自`NSManagedObject`，与我们的实体描述`MyEntity`同名。但实际上，它可以是任何我们想要的名字。这是一个重要的区别：支持模型对象的类可以与实体描述分开命名。还要注意，`@NSManaged`属性表示Core
+    Data管理该属性的存储。这意味着这不是一个普通的存储属性。事实上，每当写入属性时，它实际上是由`setValue:`支持的。
+- en: 'This kind of flexibility allows us to add properties to managed objects that
+    aren’t written to a database. Fundamentally, this means that we can do things
+    like having a computed property that’s added as a convenience property for a managed
+    object that doesn’t have to interact with the database at all. For example, we
+    could define a managed object ourselves called `Person` that has `firstName` and
+    `lastName` attributes stored in Core Data, but that offers a `fullName` property
+    that just combines these properties without duplicating data in the database:'
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种灵活性使我们能够向托管对象添加不写入数据库的属性。从根本上讲，这意味着我们可以做一些事情，比如为根本不必与数据库交互的托管对象添加作为便捷属性的计算属性。例如，我们可以定义一个名为`Person`的托管对象，它在Core
+    Data中有`firstName`和`lastName`属性，但提供了一个`fullName`属性，它只是组合了这些属性，而不在数据库中重复数据：
+- en: '[PRE3]'
+  id: totrans-72
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: Using our `Person` managed object as an example (after we’ve created a corresponding
+    entity description in the managed object model), let’s continue to see how we
+    can persist some data.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以我们的`Person`托管对象为例（在托管对象模型中创建了相应的实体描述之后），让我们继续看看如何持久化一些数据。
+- en: Write and Persist Data to SQLite
+  id: totrans-74
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 写入和持久化数据到SQLite
+- en: 'The first, and very important, thing to note about writing data in Core Data
+    is that you *don’t* want to write on the main thread. There is, in fact, a handy
+    convenience method in our persistent container to allow us to quickly and easily
+    hop over to a background thread to write some data as shown here:'
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于在Core Data中写入数据的第一点非常重要的事情是，你*不希望*在主线程上进行写入。事实上，我们的持久化容器中实际上有一个方便的方法，让我们可以快速轻松地切换到后台线程来写入一些数据，如下所示：
+- en: '[PRE4]'
+  id: totrans-76
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: Now, the operation being performed could be a read. It could also be a write.
+    We’re going to focus on the write aspect of this for now. In fact, let’s look
+    at our earlier `Person` managed object and see how we can create a new one and
+    add it to the data store.
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，正在执行的操作可能是读取。它也可能是写入。我们现在将专注于写入这一方面。实际上，让我们看看我们之前的`Person`托管对象，看看我们如何创建一个新对象并将其添加到数据存储中。
+- en: 'When creating and updating objects in Core Data, all the operations first take
+    place inside a managed object context. We can change the objects as much as we
+    want in this context without it affecting the database until we explicitly save
+    the changes. Because of this, we also need a context to create a new object. Here’s
+    an example of how we can create a new `Person` instance and assign some properties
+    to it:'
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Core Data 中创建和更新对象时，所有操作首先在托管对象上下文中进行。我们可以在这个上下文中随意修改对象，而不会影响数据库，直到我们明确保存更改为止。因此，我们还需要一个上下文来创建新对象。以下是如何创建一个新的`Person`实例并为其分配一些属性的示例：
+- en: '[PRE5]'
+  id: totrans-79
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: Really, it’s that simple. We’ve created a new `Person` named `person` inside
+    the managed object context passed into our closure. Then, we’ve assigned values
+    to `firstName` and `lastName`.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，这很简单。我们在传递给我们的闭包的托管对象上下文中创建了一个名为`person`的新`Person`。然后，我们为`firstName`和`lastName`赋值。
+- en: 'This object is not persisted yet, however. In fact, this object will exist
+    until that closure completes, and then it’ll be destroyed along with the managed
+    object context. Luckily, persisting the data isn’t hard either. It’s just one
+    line with some error checking in a `do` and `try` block, like so:'
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，这个对象还没有被持久化。事实上，这个对象将存在，直到闭包完成，然后它将与托管对象上下文一起被销毁。幸运的是，持久化数据也并不困难。只需一行代码，加上一些错误检查的`do`和`try`块，就像这样：
+- en: '[PRE6]'
+  id: totrans-82
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: You’ll notice that we only save the *context*, not the object itself. This operation
+    saves all the changes that are inside that context. So, if we created a million
+    `Person`s, all of them would be saved at the same time. If we created different
+    object types and changed properties in others, they would all be persisted at
+    the same time as well. The entirety of the context is saved instead of individual
+    objects. This can lead to performance issues. So profiling and testing with large
+    data sets is recommended to prevent things like that.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你会注意到，我们只保存*上下文*，而不是对象本身。这个操作保存了所有在该上下文中的更改。所以，如果我们创建了一百万个`Person`，它们都会同时保存。如果我们创建了不同的对象类型，并在其他对象中更改了属性，它们也将同时持久化。保存整个上下文而不是单个对象可能会导致性能问题。因此，建议使用大数据集进行分析和测试，以防止出现这类问题。
+- en: In order to update an object, you only need to fetch it from Core Data within
+    a managed object context, update the properties desired, and then save the context.
+    Let’s look at how we can fetch and read data from our SQLite store that’s been
+    saved.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要更新一个对象，你只需在托管对象上下文中获取它，更新所需的属性，然后保存上下文即可。让我们看看如何从已保存的 SQLite 存储中获取和读取数据。
+- en: Read Data from SQLite
+  id: totrans-85
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 从 SQLite 读取数据
+- en: Although the title of this section says “Read Data *from SQLite*,” we’re actually
+    going to read data through the managed object context. If it *chooses* to head
+    back out to the SQLite store, it’ll contact the persistent store coordinator for
+    help. Using an `NSFetchRequest` as we show in a moment will cause a trip to the
+    persistent store and may wind up being a very slow path. However, managed object
+    contexts often have a lot of data cached in-memory for performance reasons, and
+    the data that’s fetched can be utilized and operated on just like a normal object
+    after the fetch occurs.
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管本节标题称“从 SQLite 读取数据*”，但实际上我们将通过托管对象上下文读取数据。如果*选择*返回到 SQLite 存储，它将联系持久化存储协调器寻求帮助。如我们稍后展示的使用`NSFetchRequest`将导致访问持久存储，可能会成为一个非常缓慢的路径。然而，托管对象上下文通常在内存中缓存了大量数据以提升性能，并且在获取后获取的数据可以像普通对象一样被利用和操作。
+- en: 'In order to find an object, we have to create a fetch request and execute it
+    against a managed object context like so:'
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要查找一个对象，我们必须创建一个获取请求，并像这样对托管对象上下文执行它：
+- en: '[PRE7]'
+  id: totrans-88
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: Let’s walk through what’s happening here.
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们一起看看这里发生了什么。
+- en: First, we grab a read-only managed object context from the persistent container
+    via the `viewContext` property. This allows us to view objects, but not save changes.
+    Next, we create a fetch request with a type of `Person` for an entity in the managed
+    object model named “Person.” After that, we use that fetch request to `fetch(_:)`
+    from our managed object context. This call can `throw`, so it’s wrapped in a `do`
+    and `catch` block. If the fetch can’t be completed, we throw a fatal error with
+    the message, “Fetch could not be completed.”
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们通过`viewContext`属性从持久化容器中获取一个只读的托管对象上下文。这允许我们查看对象，但不能保存更改。接下来，我们为托管对象模型中名为“Person”的实体创建一个类型为`Person`的获取请求。然后，我们使用该获取请求从我们的托管对象上下文中进行`fetch(_:)`操作。这个调用可能会`throw`异常，因此它被包裹在一个`do`和`catch`块中。如果无法完成获取操作，我们将抛出一个致命错误，错误消息为“无法完成获取操作”。
+- en: At this point, we should have a populated `persons` object we can use to iterate
+    through to read a list of all the people we’ve persisted.
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此时，我们应该有一个填充了的`persons`对象，我们可以用它来迭代读取我们已经持久化的所有人的列表。
+- en: There’s a lot more you can do with Core Data. It’s a very powerful tool in every
+    iOS developer’s toolkit that can be utilized to create a performant and optimized
+    object graph to make persisting data easy. Its largest downsides include a bit
+    more verbose text and a lot of setup initially. However, some legwork in the beginning
+    of a project could save you from having to write intricate and brittle SQL statements
+    and instead get some compile-time checking of property names and values.
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Core Data还有很多功能。它是每个iOS开发者工具包中非常强大的工具，可以用来创建性能优化的对象图，以便轻松持久化数据。它的最大缺点包括初始时较为冗长的文本和大量的设置工作。然而，项目开始时的一些准备工作可能会避免您编写复杂且脆弱的SQL语句，而是获得一些属性名称和值的编译时检查。
+- en: Tip
+  id: totrans-93
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: When fetching results for table views, it’s possible to use an object named
+    `NSFetchedResultsController` that takes the results and an `NSFetchRequest` and
+    updates the table whenever the data changes automatically. This makes interacting
+    with Core Data easier for things like `UITableView` and `UICollectionView`.
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当为表视图获取结果时，可以使用名为`NSFetchedResultsController`的对象，它接受结果和一个`NSFetchRequest`，并在数据变化时自动更新表格。这使得与Core
+    Data的交互更容易，例如对于`UITableView`和`UICollectionView`。
+- en: What We’ve Learned
+  id: totrans-95
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: Android and iOS are similar in so many ways as you have seen—and will continue
+    to see—throughout this book. However, this chapter really demonstrates that, at
+    times, they could not be further apart.
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android和iOS在许多方面都很相似，正如您在本书中已经看到并将继续看到的那样。然而，本章确实表明，有时它们可能大相径庭。
+- en: The raw SQLite interaction method of Android offers an architectural simplicity
+    not present with Core Data on iOS that allows developers to jump in with knowledge
+    they might already have with server-side languages.
+  id: totrans-97
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Android的原始SQLite交互方法提供了在iOS上使用Core Data时所不具备的架构简单性，允许开发人员利用他们可能已经具备的服务器端语言知识跳入其中。
+- en: Core Data is not a database. It is a complex object graph framework that is
+    *extremely* powerful and decoupled from SQLite itself in a way that attempts to
+    mask its complexity.
+  id: totrans-98
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Core Data不是一个数据库。它是一个复杂的对象图框架，*非常*强大，并且在某种程度上与SQLite本身解耦，试图隐藏其复杂性。
+- en: Both approaches allow for persistence of data and require a good deal of planning
+    and maintenance within future versions of the apps.
+  id: totrans-99
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 这两种方法都允许数据的持久化，并且在应用的未来版本中需要进行充分的规划和维护。
+- en: Once you start talking about object persistence, the next logical step is concurrency,
+    which just happens to be what the next chapter is about. Let’s queue up and head
+    over right now!
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦开始讨论对象持久化，下一个逻辑步骤就是并发，这恰好是下一章要讨论的内容。让我们排队并立即前往那里！

@@ -1,0 +1,699 @@
+- en: Chapter 8\. Concurrency (Multi-Threading)
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第8章。并发性（多线程）
+- en: Concurrency, also sometimes known as parallelism or multi-threading, is the
+    concept of performing multiple tasks at the same time, dividing the computer’s
+    resources into distinct entities that very quickly alternate between each other
+    until any entity has its entire workload completed, at which time it’s removed
+    from this procedure. The act of computation jumping between different processes
+    (small-p) is known as “context switching,” which has a more common, and very different,
+    definition in computer science (switching your brain’s resources from one domain
+    to another).
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并发性，有时也称为并行性或多线程，是同时执行多个任务的概念，将计算机资源划分为不同的实体，这些实体非常快地在彼此之间交替，直到任何实体完成其整个工作负载，此时它将从此过程中移除。计算在不同进程（小写p）之间跳转的行为被称为“上下文切换”，在计算机科学中具有更常见且非常不同的定义（将你的大脑资源从一个领域切换到另一个领域）。
+- en: Tasks
+  id: totrans-2
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 任务
+- en: 'In this chapter, you’ll learn to:'
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，您将学习：
+- en: Perform a task in a background thread.
+  id: totrans-4
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 在后台线程执行任务。
+- en: Act on the results of work performed in the background thread on the main thread.
+  id: totrans-5
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 在主线程上对后台线程执行的工作结果进行操作。
+- en: Android
+  id: totrans-6
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android
+- en: 'In Java, a processing context is known as a `Thread`. A `Thread` is an object
+    instance and is created exactly as you’d expect:'
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Java中，处理上下文被称为 `Thread`。`Thread` 是一个对象实例，并且被创建正如你所期望的那样：
+- en: A `Thread` is passed in a `Runnable` instance. Once a thread is started (by
+    calling the `start` method), the thread invokes the `run` method of that `Runnable`.
+    As soon as that method is complete (by returning or throwing), the thread terminates.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个 `Thread` 实例被传递给一个 `Runnable` 实例。一旦线程启动（通过调用 `start` 方法），线程将调用该 `Runnable`
+    的 `run` 方法。一旦该方法完成（通过返回或抛出异常），线程终止。
+- en: 'In Android, there is a single `Thread` instance that all work is performed
+    on by default, including and especially UI work. That is important—in fact, the
+    concept is sometimes called the “UI thread,” but is more commonly known as the
+    “main” thread. Since the first release of Android to the time of this writing,
+    the main thread has drawn pixels on the screen 60 times per second—that’s about
+    once every 16 milliseconds and is known as a “frame.” This is an extremely resource-intensive
+    process, and it’s absolutely critical that we allow the system to have unfettered
+    access to as much power as possible to do this work. For this reason, extremely
+    computationally expensive tasks should be done “off” the main thread (meaning
+    on any other thread; a thread like this—one that is *not* responsible for UI,
+    or the original thread the program runs on—is sometimes known as a “background
+    thread”). Any I/O work, like filesystem access, or database transactions, should
+    be done in a background thread, and long-lasting operations like network requests
+    should definitely be done off the main thread as well. In fact, you may see errors
+    or warnings when you do something obvious like make a network request on the main
+    thread. Further, when the main thread is doing too much work, you’ll see “jank”
+    in the UI. For example, a `RecyclerView` might scroll unevenly, or the screen
+    might freeze for some time. Android Studio is kind enough to alert us in logcat;
+    you’ll often see messages like this:'
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android中，默认情况下有一个 `Thread` 实例，所有工作都在其上执行，包括并尤其是UI工作。这非常重要——事实上，这个概念有时被称为“UI线程”，但更常被称为“主”线程。从Android首次发布到本文撰写时，主线程每秒绘制屏幕60次——大约每16毫秒一次，并称为“帧”。这是一个极其消耗资源的过程，我们绝对必须允许系统尽可能地获得足够的资源来完成这项工作。因此，极其消耗计算资源的任务应该在“非”主线程上完成（意味着在任何其他线程上；像这样一个*不*负责UI或程序原始运行的线程有时被称为“后台线程”）。任何I/O工作，如文件系统访问或数据库事务，都应该在后台线程中完成，而像网络请求这样的长时间操作也应该在主线程之外完成。事实上，如果在主线程上执行网络请求等明显的操作，您可能会看到错误或警告。此外，当主线程执行过多工作时，您会在UI中看到“卡顿”。例如，`RecyclerView`
+    可能会不均匀滚动，或者屏幕可能会冻结一段时间。Android Studio很友好地在Logcat中警告我们；您经常会看到如下消息：
+- en: 'I/Choreographer(1234): Skipped 20 frames! The application may be doing too
+    much work on its main thread.'
+  id: totrans-10
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 'I/Choreographer(1234): 跳过了 20 帧！应用程序可能在其主线程上执行了过多的工作。'
+- en: That means that the system tried *twenty times* to draw your UI but was unable
+    to do so because it was deprived of the resources necessary.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着系统尝试*二十次*绘制您的UI，但由于缺乏必要的资源而无法执行。
+- en: Perform a Task in a Background Thread
+  id: totrans-12
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在后台线程执行任务
+- en: 'So how do we do work off the main thread? It’s pretty simple, actually. As
+    we’ve described, create a new `Thread` instance, do some work in the `run` method
+    of the `Runnable` instance passed to the constructor, and fire it off by calling
+    `start`:'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么我们如何在主线程之外进行工作呢？实际上很简单。正如我们所描述的，创建一个新的`Thread`实例，在传递给构造函数的`Runnable`实例的`run`方法中执行一些工作，并通过调用`start`来启动它：
+- en: That’s it! There also exist a number of classes that help manage `Threads`,
+    including `ThreadPoolExecutor` and the `Executors` static helper functions (which
+    generally return preconfigured instances of `ThreadPoolExecutor`). The benefit
+    of a thread pool is that you control exactly how much work is happening in the
+    background at any time, and you can queue and remove tasks as they are requested
+    and completed. Check the developer docs for [ThreadPoolExecutor](https://oreil.ly/9pV5G)
+    and [Executors](https://oreil.ly/WKIRY).
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就是这样！还有一些帮助管理`Thread`的类，包括`ThreadPoolExecutor`和`Executors`静态帮助函数（通常返回预配置的`ThreadPoolExecutor`实例）。线程池的好处在于你可以精确控制在任何时间后台发生的工作量，并且可以在任务请求和完成时排队和删除任务。查看[ThreadPoolExecutor](https://oreil.ly/9pV5G)和[Executors](https://oreil.ly/WKIRY)的开发者文档获取更多信息。
+- en: You may have heard that concurrency is one of the hardest things to master in
+    computer science, and we won’t pretend that there aren’t some extremely sophisticated
+    concepts in play, but most of these are under the covers, provided by the system,
+    or easily avoidable. Mike has been known to say that “threading is easy; synchronization
+    is hard.” That’s to say that, as we can see, it’s simple enough to fire off some
+    work in a background thread, but there are about 3,500 asterisks attached to that
+    statement (excuse the hyperbole). For example, in the Android framework, you can’t
+    access any `View` instance whatsoever, except on the main thread. That’s kind
+    of a big deal! In the `Runnable.run` method passed in the preceding example, you
+    couldn’t even *reference* a `View` instance without a `RuntimeException`. Further,
+    you have no guarantee in what order multiple background threads will resolve;
+    this is where we start to get into the weeds of concurrency—the byte code your
+    Java generates doesn’t always look exactly like the Java you write.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能听说过并发是计算机科学中最难掌握的东西之一，我们不会假装这里没有一些非常复杂的概念存在，但大多数情况下这些概念都是在幕后由系统提供的，或者可以轻松避免的。迈克曾经说过，“线程很容易；同步很难。”
+    这意味着，正如我们所看到的，通过后台线程启动一些工作是相当简单的，但在这个陈述中有大约3500个星号附加（请原谅这种夸张）。例如，在Android框架中，除了在主线程上，你不能访问任何`View`实例。这是一件大事！在前面示例中传递的`Runnable.run`方法中，你甚至不能*引用*
+    `View` 实例，否则会抛出`RuntimeException`。此外，你无法保证多个后台线程的解决顺序；这就是我们开始深入讨论并发问题的地方——你的Java生成的字节码并不总是完全像你编写的Java代码一样。
+- en: 'The classic example of an “unsafe” thread would be something like the following:'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 典型的“不安全”线程示例可能如下：
+- en: 'Depending on your hardware and environment, the exact number of concurrent
+    tasks may need to be higher (or lower) to see the effect, but play around with
+    that basic task, and sooner or later you’ll see a final log that is *not* 9,999\.
+    Without spending a ton of time on the nuances of thread safety, we know that the
+    bytecode for the increment operator probably looks something like this when converted
+    to byte code:'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 根据你的硬件和环境，确切的并发任务数量可能需要更高（或更低）以看到效果，但玩弄基本任务，迟早会看到一个*不是* 9,999 的最终日志。虽然没有花费大量时间在线程安全性的细节上，但我们知道递增运算符的字节码在转换为字节码时可能看起来像这样：
+- en: Get the value of `mCounter` from memory.
+  id: totrans-18
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 从内存中获取`mCounter`的值。
+- en: Add 1 to the value of `mCounter`.
+  id: totrans-19
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 将`mCounter`的值加1。
+- en: Write the value of `mCounter` back to memory.
+  id: totrans-20
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 将`mCounter`的值写回内存。
+- en: 'Since concurrent threads switch between each other rapidly to simulate simultaneous
+    operations (this is known as “context switching”), thread #391 might read the
+    value right between steps 1 and 2 occurring in thread #390\. This specific example
+    is called a race condition, and this problem generally is known as thread interference,
+    or thread interleaving, and is one example of a *lack* of *thread safety*. This
+    is far from a complete examination of the perils of concurrent programming—some
+    implementations of Java allow individual threads to make copies of variables to
+    avoid expensive IPC (interprocess communication) calls, so when multiple threads
+    mutate a single object instance, state cannot be guaranteed.'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '由于并发线程快速切换以模拟同时操作（这称为“上下文切换”），线程 #391 可能在线程 #390 执行步骤 1 和 2 之间读取值。这个具体的例子被称为竞态条件，这个问题通常被称为线程干扰或线程交错，并且是*线程安全*的*缺失*的一个例子。这远非对并发编程危险的全面考察
+    - Java 的一些实现允许单个线程复制变量以避免昂贵的 IPC（进程间通信）调用，因此当多个线程变异单个对象实例时，状态不能被保证。'
+- en: There are mechanisms to avoid this, like the `synchronized` and `volatile` keywords,
+    and the `Atomic` classes, and since data structures are especially vulnerable
+    (imagine one thread looping through a data structure while another adds or removes
+    items to it), there are a number of thread-safe (but less performant) versions
+    of several data structures or helper methods to mitigate the threat.
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一些机制可以避免这种情况，例如 `synchronized` 和 `volatile` 关键字，以及 `Atomic` 类，由于数据结构特别容易受到影响（想象一个线程在循环遍历数据结构时，另一个线程在添加或删除项目），因此存在多种线程安全（但性能较低）版本的几种数据结构或辅助方法，以减轻这种威胁。
+- en: That said, this is all well beyond the scope of this chapter. It can takes years
+    to master multi-threaded programming in even a single technology stack, and some
+    developers never truly understand what’s happening under the hood—and in many
+    cases, this is perfectly appropriate! A terrific UI programmer might use concurrent
+    programming very differently than a programmer who works with big data. One simple
+    trick in the Android framework is to do your computation on a background thread,
+    then either `Activity.runOnUiThread`, `View.post`, or `Handler.post` those results
+    back to the main thread, where you’re guaranteed serial execution and immune to
+    competition from other processes.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 话虽如此，在本章的范围之外，这是一个良好的多线程编程的领域。即使在单个技术栈中，掌握多线程编程可能需要多年时间，有些开发人员甚至永远无法真正理解底层发生了什么
+    - 在许多情况下，这是完全合适的！出色的 UI 程序员可能会以非常不同的方式使用并发编程，与处理大数据的程序员完全不同。在 Android 框架中的一个简单技巧是在后台线程上执行计算，然后将这些结果通过
+    `Activity.runOnUiThread`、`View.post` 或 `Handler.post` 发送回主线程，从而确保串行执行并免于其他进程的竞争。
+- en: Act on the Results of Work Performed in the Background Thread on the Main Thread
+  id: totrans-24
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在主线程上执行后台线程中执行的工作结果
+- en: As just mentioned, whenever you’re updating your UI as the result of some background
+    thread operation (which is a very common occurrence—you may want to get data from
+    a local database, a remote server, the filesystem, etc.), you’ll need to return
+    to the main/UI thread before referencing any `View` instances. Even beyond `View`
+    classes, it can be helpful to update common objects on a single thread (the main
+    thread) to avoid the synchronization issues described earlier.
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如刚才提到的，每当您更新用户界面以反映某些后台线程操作的结果时（这是非常常见的情况 - 您可能需要从本地数据库、远程服务器、文件系统等获取数据），您需要在引用任何
+    `View` 实例之前返回到主/UI线程。甚至在 `View` 类之外，更新常见对象到单个线程（主线程）上也很有帮助，以避免前面描述的同步问题。
+- en: 'There are three primary ways to send a message from a background thread to
+    the main thread:'
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有三种主要方法可以从后台线程发送消息到主线程：
+- en: The `View.post` method will accept a `Runnable` instance and call that instance’s
+    `run` method on the main thread.
+  id: totrans-27
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '`View.post` 方法将接受一个 `Runnable` 实例，并在主线程上调用该实例的 `run` 方法。'
+- en: The `Activity.runOnUiThread` functions almost identically to `View.post` but
+    does make a check first to see if the invocation is already happening on the main
+    thread—if it is, the `run` method will be called immediately, rather than posted
+    to the end of a message queue (see the following code).
+  id: totrans-28
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '`Activity.runOnUiThread` 函数几乎与 `View.post` 函数相同，但首先会检查调用是否已经在主线程上进行 - 如果是，则会立即调用
+    `run` 方法，而不是将其发布到消息队列的末尾（请参见下面的代码）。'
+- en: A `Handler` instance will `post` messages to the `Looper` it is associated with,
+    so a `Handler` created with `new Handler(Looper.getMainLooper())` will post messages
+    on the main thread. Again, this method accepts a `Runnable` instance and will
+    call that instance’s `run` method. Note that both of the preceding operations
+    actually end up here, unless `Activity.runOnUiThread` is called from the UI thread
+    directly.
+  id: totrans-29
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '`Handler`实例将向其关联的`Looper`中`post`消息，因此使用`new Handler(Looper.getMainLooper())`创建的`Handler`将在主线程上发布消息。同样，该方法接受一个`Runnable`实例，并调用该实例的`run`方法。请注意，除非直接从UI线程调用`Activity.runOnUiThread`，否则这两个前述操作实际上都会在此处结束。'
+- en: 'Here’s a simple example:'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是一个简单的示例：
+- en: Terminating a Thread
+  id: totrans-31
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 终止线程
+- en: Again, this is a topic with some controversy and perhaps a lack of consensus.
+    Normally, a thread will terminate when it has completed its work—when the `run`
+    method of the `Runnable` would normally return. However, it’s often desirable
+    to stop a background thread prematurely. For example, if a user started downloading
+    a large video clip, which could be several hundred megabytes, they might decide
+    after a few minutes that it’s not worth the bandwidth or space and terminate the
+    download.
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次强调，这是一个有争议的话题，也许缺乏共识。通常，线程将在完成其工作（当`Runnable`的`run`方法通常返回时）时终止。然而，经常希望过早停止后台线程。例如，如果用户开始下载一个可能有几百兆字节的大视频剪辑，几分钟后可能会决定不值得占用带宽或空间并终止下载。
+- en: 'If you were doing this same process in your own thread and used some third-party
+    downloader library, which had an atomic `download` method, it’d be impossible
+    to break out:'
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您在自己的线程中执行相同的过程并使用某些第三方下载器库，其中有一个原子的`download`方法，将无法中断：
+- en: There is a deprecated `Thread` method, `stop`, but its use is discouraged and
+    it may be removed from the standard library in the future.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Thread`类还有一个被废弃的方法叫做`stop`，但不建议使用，将来可能会从标准库中删除。'
+- en: 'The `join` method is often tempting to those learning the `Thread` API, but
+    it’s commonly misunderstood. The Java 8 docs at the time of this writing explain
+    the `join` method like so:'
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`join`方法经常吸引那些学习`Thread` API的人，但它常常被误解。截至本文撰写时，Java 8文档解释了`join`方法如下：'
+- en: This implementation uses a loop of this.wait calls conditioned on this.isAlive.
+    As a thread terminates the this.notifyAll method is invoked. It is recommended
+    that applications not use wait, notify, or notifyAll on Thread instances.
+  id: totrans-36
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 这个实现使用了一个循环的`this.wait`调用，条件是`this.isAlive`。当线程终止时，将调用`this.notifyAll`方法。建议应用程序不要在`Thread`实例上使用`wait`、`notify`或`notifyAll`。
+- en: This may *seem* like the thread functionally terminates, especially when working
+    with a “main” or UI thread, but in reality it’s still in memory, and continues
+    to maintain all references as reachable, until the thread that invoked the method
+    itself terminates. So, in the case of Android that does use a UI thread, which
+    serves as the default context, if you start a “background” thread and call `join`
+    on it, it’ll exist but just spin until the main thread terminates (typically the
+    end of the application or resource reclamation). Since this often involves the
+    entire process collapsing, you may not even notice the background thread, but
+    know that it *is* still there, holding on to references (memory leaks) and spinning
+    until the program itself exits.
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可能会*看起来*像线程功能终止了，特别是在处理“主”线程或UI线程时，但实际上它仍然在内存中，并继续保持所有引用可达，直到调用该方法的线程本身终止。因此，在使用UI线程作为默认上下文的Android中，如果启动一个“后台”线程并对其调用`join`，它会存在，但只是在主线程终止（通常是应用程序的结尾或资源回收）之前继续旋转。由于这通常涉及整个进程的崩溃，您可能甚至注意不到后台线程，但要知道它*确实*还在那里，保持引用（内存泄漏）并旋转直到程序本身退出。
+- en: There is another very misunderstood method on the `Thread` class called `interrupt`,
+    but this does not do what most people think it does. It simply sets a boolean
+    flag on the thread; prior to calling `interrupt`, calls to `isInterrupted` will
+    return `false`. Subsequent to calling `interrupt`, calls will return `true`. *By
+    itself, `interrupt` does nothing to stop the `Thread`’s operation*.
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有另一个非常被误解的`Thread`类方法叫做`interrupt`，但这并不是大多数人所认为的。它只是在线程上设置一个布尔标志；在调用`interrupt`之前，调用`isInterrupted`将返回`false`。在调用`interrupt`之后，调用将返回`true`。*仅仅通过`interrupt`无法停止`Thread`的操作*。
+- en: 'This API was created almost as a convention; library writers should periodically
+    check `isInterrupted` and either `throw` an `Exception` or return out immediately
+    when it’s true, *but this is in no way guaranteed*. We can *hope* the authors
+    of the `Downloader` library did this, and did this in a fashion that makes sense,
+    but we can’t be sure of it, which may mean you need to handle delicate tasks like
+    this yourself. Again using download as an example, you may want to check `isInterrupted`
+    in each iteration of the `InputStream.read`/`OutputStream.write` loop. For example,
+    let’s refer to the simple download method in [Networking](ch09.html#topics_networking)
+    and modify it to be cancellable:'
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个API几乎是按照一个约定来创建的；库的编写者应定期检查`isInterrupted`，并在其为真时`throw`一个`Exception`或立即返回，*但这并不是任何方式的保证*。我们*希望*`Downloader`库的作者这样做了，并且这样做是有意义的，但我们不能确定，这可能意味着您需要自己处理这些复杂的任务。例如，再次以下载为例，您可能希望在每次`InputStream.read`/`OutputStream.write`循环中检查`isInterrupted`。例如，让我们参考[Networking](ch09.html#topics_networking)中的简单下载方法，并修改以支持取消：
+- en: 'In the `try/catch` block that performs the `downloadBinaryData` operation,
+    you’d probably want to delete the partially written file and possibly update the
+    UI to hide progress or show the status to the user. You’d probably also want a
+    `cancel` method that’d call `Thread.interrupt()` on the background thread. Something
+    like this (modified to be Android-ready and dressed up a bit) might do the trick:'
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在执行`downloadBinaryData`操作的`try/catch`块中，您可能希望删除部分写入的文件，并可能更新UI以隐藏进度或向用户显示状态。您可能还希望有一个`cancel`方法，该方法会在后台线程上调用`Thread.interrupt()`。类似这样（修改为适用于Android并稍作修饰）可能会起到作用：
+- en: The [RxJava](https://oreil.ly/HyJnl) library provides a robust set of APIs for
+    dealing with concurrent work, with layers of abstraction to separate your development
+    code from the perils of low-level thread unsafety. This can be a nice tool to
+    get your team up to speed quickly, and share a common codebase, and is a great
+    fit for many people. That said, as with most abstractions, you’ll find the finest-grained
+    control with standard library classes, like `Thread`.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[RxJava](https://oreil.ly/HyJnl)库提供了一套强大的API来处理并发工作，通过抽象层分离开发代码与低级线程不安全性的风险。这可以是一个很好的工具，帮助您的团队快速掌握，并共享一个通用的代码库，非常适合许多人。不过，与大多数抽象一样，您将在标准库类（如`Thread`）中找到最精细的控制。'
+- en: The `AsyncTask` class in the Android framework provides a way to do background
+    work and post results back to the main thread. However, be aware that there are
+    valid criticisms of the class. For one, the earliest versions used multiple threads
+    from a `ThreadPoolExecutor` but was later changed to use a single thread, which
+    again was reversed in a later version. Similarly, there’s no way to break out
+    of an `AsyncTask`s worker method if the task needs to be cancelled. There seems
+    to be a community consensus that `AsyncTask` does not provide enough value to
+    justify the drawbacks—the authors believe that in almost all cases, the simple
+    `Thread` and `post` back pattern described previously is more simple, reliable,
+    and controllable.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 框架中的`AsyncTask`类提供了一种在后台执行工作并将结果返回到主线程的方式。然而，需要注意的是，对该类存在有效的批评意见。首先，最早的版本使用了`ThreadPoolExecutor`中的多个线程，但后来改为使用单个线程，而后又在后续版本中进行了反转。同样地，在`AsyncTask`的工作方法中无法中断任务的情况下，也没有办法中断任务。社区普遍认为，`AsyncTask`并没有提供足够的价值来弥补其缺点——作者们认为，在几乎所有情况下，前面描述的简单`Thread`和`post`方式更加简单、可靠和可控。
+- en: Also, many of the higher-level topics touched on in this chapter are covered
+    in great detail in *Efficient Android Threading* by Anders Göransson (O’Reilly).
+    And of course, Joshua Bloch’s *Efficient Java* (O’Reilly) can be helpful to programmers
+    across a wide range of expertise.
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此章节中涉及的许多高级主题在安德斯·戈兰松（O’Reilly）的《*高效Android多线程*》中有详细介绍。当然，约书亚·布洛赫（O’Reilly）的《*高效Java*》对各种专业水平的程序员都很有帮助。
+- en: iOS
+  id: totrans-44
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: iOS
+- en: 'Concurrency in iOS can best be described as being fundamentally rooted in the
+    classical antiquity of C, while being modernized through the clever mechanics
+    of Grand Central Dispatch. There are primarily three options available to get
+    work done in the background that a developer is likely to see within an application:
+    `DispatchQueue`s, `Operation`s, and `Thread`s.'
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: iOS中的并发最好可以描述为根植于C语言的古典时代，同时通过Grand Central Dispatch的巧妙机制进行现代化。在应用程序中，开发者可能会看到主要有三种选项来在后台完成工作：`DispatchQueue`、`Operation`和`Thread`。
+- en: There are times to use both, but for the purposes of this chapter, we’ll focus
+    on Grand Central Dispatch and `DispatchQueue`s; they are arguably used the most
+    despite being slightly lower level in iOS. This is due to their simplicity and
+    ease of creation.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时可以同时使用两者，但在本章节中，我们将专注于Grand Central Dispatch和`DispatchQueue`；尽管它们在iOS中略显低级，但它们由于简单和易于创建而被广泛使用。
+- en: Perform a Task in a Background Thread
+  id: totrans-47
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在后台线程执行任务
+- en: 'So how do you perform work in the background on iOS? Here’s a simple example:'
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么在iOS中如何在后台执行工作呢？以下是一个简单的例子：
+- en: '[PRE0]'
+  id: totrans-49
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: The first line accesses a global background work queue that’s part of Grand
+    Central Dispatch, or “GCD.” We take this global queue and call `async` on a closure
+    that’s passed in. The second line is the body of that closure, which just `print`s
+    a line of text in our simple example.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一行访问了Grand Central Dispatch中的全局后台工作队列，或者“GCD”。我们取得这个全局队列并在一个传入的闭包上调用`async`。第二行是该闭包的主体，仅在我们的简单例子中`print`了一行文本。
+- en: 'There are two options for completing operations in GCD: asynchronous and synchronous.
+    Synchronous calls can be made by using the `sync()` method instead of `async()`;
+    they are guaranteed to be called in the order they are made. Asynchronous calls
+    will be executed some time in the future, with little to no visibility into when.'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在GCD中完成操作有两个选项：异步和同步。同步调用可以使用`sync()`方法而不是`async()`，它们保证按照调用顺序执行。异步调用将在未来某个时候执行，对其具体时间几乎没有可见性。
+- en: 'Honestly, the preceding code is sufficient for most calls, but often it’s necessary
+    to have a little bit more control on the priority of a particular background operation
+    that needs to be completed. This is possible with code that might look something
+    like this:'
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 说实话，前面的代码对大多数调用已足够，但通常需要对特定后台操作的优先级有更多控制。这可以通过类似以下的代码实现：
+- en: '[PRE1]'
+  id: totrans-53
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: 'A new argument is passed into the `global()` method from before named `qos`.
+    This parameter is an enum that maps to a set priority of execution within iOS.
+    The different options available are:'
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 新的参数被传递给之前的`global()`方法，命名为`qos`。这个参数是一个枚举，映射到iOS内的一组执行优先级。可用的不同选项包括：
+- en: '`userInteractive`'
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`userInteractive`'
+- en: Highest priority and used for operations that are interactive with the user.
+    Operations that are slow running here make the user interface appear frozen.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最高优先级，用于与用户交互的操作。这里运行缓慢的操作会导致用户界面冻结。
+- en: '`userInitiated`'
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`userInitiated`'
+- en: Slightly lower priority, and more commonly used for background work than `userInteractive`.
+    Officially, this is an operation the user has started, and it needs results quickly.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 优先级略低，并且比`userInteractive`更常用于后台工作。官方上，这是用户启动的操作，需要快速得到结果。
+- en: '`default`'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`default`'
+- en: The default level at which work without a quality of service (QoS) is performed.
+    It’s not meant to be specified by developers directly.
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 执行没有服务质量（QoS）的工作的默认级别。不建议开发者直接指定它。
+- en: '`utility`'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`utility`'
+- en: Lower priority than `default` and meant to be used for utility-type operations,
+    such as downloading a book or video, within an application that are still user-facing.
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 低于`default`的优先级，用于某些仍面向用户的实用类型操作，比如在应用程序中下载书籍或视频。
+- en: '`background`'
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`background`'
+- en: Lowest priority of operation. This work isn’t visible to the user.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最低优先级的操作。这项工作对用户不可见。
+- en: '`unspecified`'
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`unspecified`'
+- en: The system is intended to infer what the QoS should be. More than likely, you
+    shouldn’t use this.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 系统意图推断QoS应该是什么。很可能，你不应该使用这个。
+- en: Note
+  id: totrans-67
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: These levels of quality also map to levels of performance and energy efficiency.
+    Work performed at the `userInteractive` level is more performant but less energy
+    efficient. Work done at the `background` service level is not as performant, but
+    it is more energy efficient.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些质量级别也与性能和能效水平相关联。在`userInteractive`级别执行的工作性能更高，但能效较低。在`background`服务级别执行的工作性能不如前者，但更节能。
+- en: In our preceding example, we’ve passed in `userInitiated`, indicating that the
+    operation should be performed outside of the main thread in the global queue with
+    a fairly high priority.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们之前的例子中，我们传入了`userInitiated`，表示操作应该在全局队列中以较高优先级在主线程外执行。
+- en: 'Quality of service rules are one of the only ways to customize the global dispatch
+    queues available. However, there is another level of customization:'
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 质量服务规则是定制全局调度队列可用的唯一方式之一。但是，还有另一种定制级别：
+- en: '[PRE2]'
+  id: totrans-71
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: In this example, we start by creating our own `DispatchQueue` instance. Every
+    dispatch queue needs a unique label. Apple recommends reverse DNS-style labels
+    as the default, but as long as the label provided is unique, that is sufficient.
+    For our example, we’ve passed in a `qos` value of `background`, which means operations
+    in this queue will run at the lowest priority.
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此示例中，我们首先创建了自己的 `DispatchQueue` 实例。每个调度队列都需要一个唯一的标签。苹果建议默认使用反向 DNS 风格的标签，但只要提供的标签是唯一的，那就足够了。在我们的示例中，我们传入了一个
+    `qos` 值为 `background`，这意味着此队列中的操作将以最低优先级运行。
+- en: In addition, we’ve passed in the `.concurrent` option inside the `attributes`
+    parameter. Doing this means each operation—or closure in this instance—we pass
+    into the queue will run concurrent of the other operations. The default for the
+    global dispatch queue is `.concurrent`. The opposite is true for custom dispatch
+    queues—they do not run concurrently by default.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此外，我们已在 `attributes` 参数内传入了 `.concurrent` 选项。这样做意味着我们传递到队列中的每个操作或闭包都将并发运行。全局调度队列的默认值是
+    `.concurrent`。而自定义调度队列则相反，它们默认不会并发运行。
+- en: We’re storing this new dispatch queue in the `queue` variable. The next line
+    takes that `queue` object and calls the same `async(_:)` as our previous examples
+    to execute a bit of code.
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将这个新的调度队列存储在 `queue` 变量中。接下来的一行代码将使用 `queue` 对象调用与前面示例中相同的 `async(_:)` 方法，来执行一些代码。
+- en: Act on the Results of Work Performed in the Background Thread on the Main Thread
+  id: totrans-75
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在后台线程上完成的工作结果，在主线程上执行操作
+- en: Now, we’ve shown how to perform an operation on a background thread. But sometimes
+    you need to get back to the main thread to do some important work. You’ll often
+    see this on iOS whenever the UI needs updating because all UI work happens on
+    the main thread within iOS.
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们展示了如何在后台线程上执行操作。但有时您需要回到主线程执行一些重要的工作。在 iOS 上，每当 UI 需要更新时，通常会看到这种情况，因为所有
+    UI 工作都发生在主线程中。
+- en: 'It’s simple enough to head back over to the main thread on iOS:'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 iOS 上很容易返回到主线程：
+- en: '[PRE3]'
+  id: totrans-78
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: 'Notice the `main` property on `DispatchQueue`. This is a shared queue that
+    all the UI objects operate on within the run loop. Any updates to the UI require
+    a call like this. As an example, after making a network call using `URLSessionDataTask`,
+    it might be necessary to provide some updated information to the UI. The following
+    code accomplishes this task:'
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意 `DispatchQueue` 上的 `main` 属性。这是一个共享队列，在运行循环中所有 UI 对象操作的地方。UI 的任何更新都需要像这样调用。例如，使用
+    `URLSessionDataTask` 进行网络调用后，可能需要向 UI 提供一些更新的信息。以下代码完成了这个任务：
+- en: '[PRE4]'
+  id: totrans-80
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: Without too much explanation about how `URLSession` works in iOS (see [Chapter 9](ch09.html#topics_networking)),
+    notice the `DispatchQueue.main.async(_:)` call within the body of the completion
+    handler passed to the request operation. This could be used to update text in
+    a label, change the UI, or just jump to the main thread for simple data synchronization.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不过，在不深入解释 `URLSession` 在 iOS 中的工作原理的情况下（请参阅[第9章](ch09.html#topics_networking)），请注意完成处理程序的主体中的
+    `DispatchQueue.main.async(_:)` 调用。这可以用于更新标签中的文本，更改 UI，或者只是为了简单的数据同步而跳转到主线程。
+- en: Note
+  id: totrans-82
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Cancelling a GCD operation is not for the faint of heart. It’s generally recommended
+    that if you need cancellable operations, switch to `Operation` objects with `OperationQueue`s.
+    This is beyond the scope of this chapter, however. Feel free to check out Apple’s
+    developer documentation on `Operation` and `OperationQueue`.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 取消 GCD 操作并不是一件容易的事情。通常建议，如果您需要可取消的操作，请切换到使用带有 `OperationQueue` 的 `Operation`
+    对象。但这超出了本章的范围。可以查阅苹果关于 `Operation` 和 `OperationQueue` 的开发者文档。
+- en: What We’ve Learned
+  id: totrans-84
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们所学到的
+- en: Concurrent operations can get remarkably complex beyond the confines of a simple
+    line or two of example code. There are classes of bugs that exist solely because
+    of concurrent programming.
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并发操作可能因并发编程而变得异常复杂，远远超出了简短的示例代码的范围。由于并发编程而存在的错误类别。
+- en: Android has a few methods by which to run concurrent operation, but `Thread`
+    is one of the most widely used and standard approaches to exercising control over
+    the operations being run.
+  id: totrans-86
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Android 有几种方法可以运行并发操作，但 `Thread` 是其中最常用和标准的方法之一，用于控制正在运行的操作。
+- en: GCD offers a convenient scheduling library through which iOS (and macOS) applications
+    can leverage concurrent programming.
+  id: totrans-87
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: GCD 通过一个方便的调度库提供了一种调度方式，通过它，iOS（和 macOS）应用程序可以利用并发编程。
+- en: It’s important to make sure the main thread is not blocked on Android and iOS.
+    Doing so will cause the UI to stutter or appear locked up to the user, which results
+    in a negative experience.
+  id: totrans-88
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 在 Android 和 iOS 平台上，确保主线程不被阻塞是非常重要的。如果阻塞主线程，用户界面会出现卡顿或看起来像是锁死，这会给用户带来负面体验。
+- en: We’ve also seen that there are some places in code where background threads
+    are inherently useful—like networking code. Now that we’ve learned how to kick
+    off operations in the background of our apps, let’s learn a little bit more about
+    networking within Android and iOS in the next chapter.
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还发现在代码中有一些地方后台线程是非常有用的，比如网络代码。既然我们已经学会如何在应用程序的后台启动操作，那么在下一章中让我们更深入地了解 Android
+    和 iOS 中的网络通信。

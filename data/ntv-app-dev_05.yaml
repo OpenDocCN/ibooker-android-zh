@@ -1,0 +1,905 @@
+- en: Chapter 4\. User Input
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第四章 用户输入
+- en: For decades, the primary means by which to interface with computers was by keyboard
+    and mouse. A user was, quite literally, tethered to the device that they were
+    using. The only way to get work done was to sit down at a workstation and get
+    started. Eventually, laptops and notebooks allowed more mobility, but the input
+    mechanisms were mostly the same.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 数十年来，与计算机交互的主要手段是键盘和鼠标。用户与使用的设备是紧密相连的。唯一的工作方式是坐在工作站前开始工作。最终，笔记本电脑和便携电脑增加了更多的灵活性，但输入机制基本保持不变。
+- en: Then came touch.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后是触摸。
+- en: Today, Android and iOS devices are no longer kept an arm’s length away from
+    a user. They exist in intimate, physical contact with users. When a button is
+    pressed, it is, from the user’s perspective, tapped directly instead of through
+    a trackpad or keyboard shortcut. This makes input one of the most critically important
+    aspects of transforming any old app into a dynamic work of art that understands
+    its user.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如今，安卓和iOS设备已不再与用户保持一段距离。它们与用户保持亲密的物理接触。当用户按下按钮时，从用户的角度来看，它们直接被轻点，而不是通过触摸板或键盘快捷键。这使得输入成为将任何旧应用程序转变为理解用户的动态艺术品的关键要素之一。
+- en: 'Input can take many shapes and form: tapping links in a web view, typing a
+    password into a login form, or swiping across the screen at faces to see if there
+    is an emotional connection with another lonely soul that might lead to the start
+    of a relationship—or maybe even eventually blossom into love. The stakes are high,
+    but the platforms are there to support you with a robust set of tools to take
+    raw input from a user and transform it into an action that has a result they can
+    see, hear, or touch.'
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输入可以采用多种形式和方式：在Web视图中点击链接，输入登录表单中的密码，或在屏幕上滑动以查看面孔，以了解是否与另一个孤独的灵魂有情感上的联系，或者最终可能演变成爱情。风险很高，但平台提供了一套强大的工具来获取用户的原始输入并将其转换为用户可以看到、听到或触摸到的操作结果。
+- en: Tasks
+  id: totrans-5
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 任务
+- en: 'In this chapter, you’ll learn to:'
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，你将学习：
+- en: Receive and react to a tap.
+  id: totrans-7
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 接收并响应点击。
+- en: Receive and react to keyboard input.
+  id: totrans-8
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 接收并响应键盘输入。
+- en: Handle compound gestures.
+  id: totrans-9
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 处理复合手势。
+- en: Android
+  id: totrans-10
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 安卓
+- en: While Android gesture APIs can be a little cumbersome, they are fairly transparent,
+    and as a developer, you’ll have all the information and access required to satisfy
+    even the most demanding touch-heavy apps.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然安卓手势API可能有点繁琐，但它们相当透明，作为开发者，你将拥有满足最苛刻的触摸密集型应用程序所需的所有信息和访问权限。
+- en: Receive and React to a Tap
+  id: totrans-12
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 接收并响应点击
+- en: The tap is perhaps the most common form of user input in most modern mobile
+    applications. Whether it’s tapping a button to submit a form, tapping an input
+    text field to set focus to it, long tapping to reveal contextual options, or double
+    tapping to zoom in or out of a map, this event is an intuitive expression of selection
+    and acceptance.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在大多数现代移动应用程序中，点击或许是最常见的用户输入形式。无论是点击按钮提交表单，点击输入文本字段将焦点设置到它上面，长按以显示上下文选项，还是双击缩放地图以放大或缩小，此事件都是选择和接受的直观表达。
+- en: It’s no surprise then that the Android framework makes capturing taps both simple
+    and highly available.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，安卓框架让捕捉点击变得简单且高效可用。
+- en: Tip
+  id: totrans-15
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: For legacy reasons, the Android framework still uses the term “click” in some
+    cases. In most touchscreen frameworks, “click” is synonymous with “tap.”
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基于传统原因，安卓框架在某些情况下仍然使用术语“点击”。在大多数触摸屏框架中，“点击”与“轻点”是同义词。
+- en: 'All `View` instances (including `ViewGroups`) accept a `View.OnClickListener`
+    as a settable property (via `setOnClickListener`). Once set, the framework handles
+    the underlying complexity, and the listener’s `onClick` method will be fired when
+    any gesture matches the framework’s qualifications. To remove an action due to
+    a tap on a given view, simply set the listener to null: `myView.setOnClickListener(null);`.'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有的`View`实例（包括`ViewGroups`）都可以接受`View.OnClickListener`作为一个可设置的属性（通过`setOnClickListener`）。一旦设置，框架会处理底层复杂性，当任何手势符合框架的条件时，监听器的`onClick`方法将被触发。要移除对给定视图的点击操作，只需将监听器设置为null：`myView.setOnClickListener(null);`。
+- en: 'Note that `View.OnClickListener` is a simple functional interface with a single
+    method: `onClick(View view)`. This is literally copied and pasted from [the source
+    code](https://oreil.ly/NGg8e) at the time of this writing:'
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，`View.OnClickListener` 是一个简单的函数接口，只有一个方法：`onClick(View view)`。这是根据[源代码](https://oreil.ly/NGg8e)在撰写时的直接复制粘贴：
+- en: '[PRE0]'
+  id: totrans-19
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: This kind of architecture means that the interface can be implemented at virtually
+    any level—on a controller like an `Activity` or `Fragment`, on the `View` instance
+    itself, or on an anonymous class, a lambda, or a method reference. Additionally,
+    click listeners can be assigned in XML layouts. We’ll take a look at each of these
+    approaches.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种架构意味着界面可以在几乎任何级别实现——在像 `Activity` 或 `Fragment` 这样的控制器上，或者直接在 `View` 实例上，或者在匿名类、lambda
+    或方法引用上。此外，点击监听器可以在 XML 布局中分配。我们将逐一查看这些方法。
+- en: 'Using a controller to implement `View.OnClickListener`:'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用控制器实现 `View.OnClickListener`：
+- en: 'Using a controller to implement a method reference:'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用控制器实现方法引用：
+- en: 'Using a lambda:'
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 lambda 表达式：
+- en: 'Using an anonymous class instance:'
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用匿名类实例：
+- en: 'On a `View` subclass that will always have the same click behavior:'
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在总是具有相同点击行为的 `View` 子类上：
+- en: 'Finally, you can use a method name (as a `String`) in the XML of a layout to
+    assign a click listener. The containing `Activity` must have a public method with
+    that name, which matches the signature of `View.OnClickListener.onClick`:'
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，您可以在布局的 XML 中使用方法名（作为 `String`）来分配点击监听器。包含的 `Activity` 必须具有与 `View.OnClickListener.onClick`
+    签名匹配的公共方法：
+- en: '[PRE1]'
+  id: totrans-27
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: 'Note the `Activity` will automatically pick up the relationship and create
+    the binding logic, without explicit references to either the method or the `View`:'
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，`Activity` 将自动接管关系并创建绑定逻辑，无需明确引用方法或 `View`：
+- en: '[PRE2]'
+  id: totrans-29
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: 'Note that a `View` can have at most a single `OnClickListener` set at any given
+    time. In order to have multiple click listeners, you’ll either need to update
+    the listener to call other listeners, or create a small framework to support it.
+    For example, you could use the following to manage a list of callbacks in a single
+    listener:'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，一个 `View` 最多只能同时设置一个 `OnClickListener`。要有多个点击监听器，您可以更新监听器以调用其他监听器，或者创建一个支持多个监听器的小框架。例如，您可以使用以下方式在单个监听器中管理回调列表：
+- en: 'This could be used as follows:'
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以如下使用：
+- en: While this might seem like a broad range of options to handle tap events, this
+    is really just the tip of the iceberg. The Android framework provides access to
+    touch events at multiple levels, and you could implement your own tap logic if
+    you so choose—for example, you might want to fire a tap only after some delay,
+    or you might want a more liberal (or more conservative) “wander” area (how far
+    the original touch event can have traveled before it is no longer considered a
+    tap). Fortunately, it’s unlikely you’ll ever need to do that, but we’ll dig into
+    gesture management later in this chapter.
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管处理轻触事件的选项似乎很广泛，但实际上这只是冰山一角。Android 框架提供了多个级别的触摸事件访问，如果需要，您可以自行实现轻触逻辑——例如，您可能希望仅在一段延迟后触发轻触，或者您可能希望有一个更宽容（或更保守）的“漫游”区域（原始触摸事件在不再被视为轻触之前可以漫游多远）。幸运的是，您可能永远不需要这样做，但我们稍后将深入研究手势管理。
+- en: Receive and React to Keyboard Input
+  id: totrans-33
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 接收并响应键盘输入
+- en: 'The Android framework handles key events quite differently than other UI frameworks
+    you might have dealt with. Even `KeyEvent`—which is probably the API you’d expect
+    to be dealing with directly—is very rarely accessed directly by a developer. Note
+    that even the current documentation states:'
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 框架处理键事件的方式与您可能处理过的其他 UI 框架有很大不同。即使是 `KeyEvent` —— 这可能是您期望直接处理的 API ——
+    也很少被开发人员直接访问。请注意，即使是当前的文档也指出：
+- en: 'As soft input methods can use multiple and inventive ways of inputting text,
+    there is no guarantee that any key press on a soft keyboard will generate a key
+    event: this is left to the IME’s discretion, and in fact sending such events is
+    discouraged. You should never rely on receiving KeyEvents for any key on a soft
+    input method.'
+  id: totrans-35
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 由于软输入方法可以使用多种创新方式输入文本，不能保证软键盘上的任何按键都会生成键事件：这取决于输入法编辑器的决定，事实上，不鼓励发送此类事件。您不应依赖于接收软输入法上任何按键的键事件。
+- en: This simply states that key events from “soft” (on-screen) keyboards are not
+    guaranteed. They are guaranteed for “hard” keyboards (physical keyboards, like
+    you’d find on a small selection of modern smartphones, or a portable keyboard
+    attached via Bluetooth or USB); however, this isn’t very helpful since the great
+    majority of key input events you’ll want to react to will be generated from a
+    soft keyboard. Further, even hooking into these events requires some fairly complicated
+    setup, including binding to an “IME” (input method), registering for focus, expanding
+    and contracting a keyboard as required, etc.
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这仅仅说明了来自“软件”（屏幕上的）键盘的键事件不能保证。对于“硬件”键盘（物理键盘，如您在少数现代智能手机或通过蓝牙或USB连接的便携式键盘上找到的那种），它们是有保证的；然而，这并不是非常有帮助，因为您将要对其做出反应的大多数键输入事件将来自软键盘。此外，即使是钩住这些事件，也需要一些相当复杂的设置，包括绑定到“IME”（输入法）、注册焦点、根据需要扩展和收缩键盘等。
+- en: 'When digging deeper into the developer documentation, we find a section entitled
+    “Handle Keyboard Actions.” Sounds promising, but again we’re immediately presented
+    with an attention-grabbing banner:'
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在深入研究开发人员文档时，我们找到了一个名为“处理键盘操作”的部分。听起来很有前途，但我们立刻又看到了一个引人注目的横幅：
+- en: When handling keyboard events with the KeyEvent class and related APIs, you
+    should expect that such keyboard events come only from a hardware keyboard. You
+    should never rely on receiving key events for any key on a soft input method (an
+    on-screen keyboard).
+  id: totrans-38
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 当使用KeyEvent类和相关API处理键盘事件时，您应该期望这些键盘事件仅来自硬件键盘。您不应该依赖于从软输入法（屏幕键盘）接收任何键的键事件。
+- en: So what do we do? We have a couple strategies…
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以我们该怎么办？我们有几个策略…
+- en: 'First, and more commonly, we might actually be more interested in change events
+    fired when the value of an edit text changes, rather than the actual `KeyEvent`.
+    In these cases, we have access to the `TextWatcher` interface, which requires
+    three method implementations:'
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，更常见的是，我们实际上可能更感兴趣的是在编辑文本更改其值时触发的更改事件，而不是实际的`KeyEvent`。在这些情况下，我们可以访问`TextWatcher`接口，该接口需要实现三个方法：
+- en: '`onTextChanged`'
+  id: totrans-41
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onTextChanged`'
+- en: '`beforeTextChanged`'
+  id: totrans-42
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`beforeTextChanged`'
+- en: '`afterTextChanged`'
+  id: totrans-43
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`afterTextChanged`'
+- en: '`TextWatchers` can listen for text change events on `TextView` instances, including
+    `EditText`, using the `addTextChangedListener` listener.'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`TextWatchers`可以监听`TextView`实例（包括`EditText`）上的文本更改事件，使用`addTextChangedListener`监听器。'
+- en: Note
+  id: totrans-45
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注
+- en: This is one of the few listener APIs that allow multiple listeners to be attached.
+    To support that, there’s a corresponding `removeTextChangedListener` method as
+    well.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是少数几个允许附加多个监听器的监听器API之一。为了支持这一点，还有一个对应的`removeTextChangedListener`方法。
+- en: 'Using a `TextWatcher`, we can detect when the value of an input text field
+    has changed, which is often exactly what we’re looking to do when listening for
+    key events. While the method signatures of the `TextWatcher` interface can vary
+    significantly, each provides access to the text that was changed, either as an
+    `Editable` instance or as a `CharSequence` instance:'
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`TextWatcher`，我们可以检测输入文本字段的值何时发生更改，这通常正是我们在监听键事件时要做的事情。虽然`TextWatcher`接口的方法签名可能会有很大不同，但每个方法都提供对已更改的文本的访问，可以作为`Editable`实例或`CharSequence`实例：
+- en: Beyond text changes, and assuming our users are only rarely going to be using
+    an external, physical keyboard, we need to concede that we’re mostly interested
+    in soft keyboard behavior and understand the concept of “IME” a little. “IME”
+    stands for “input method editor,” which is technically anything that can handle
+    events from hardware components, but in reality is almost exclusively referring
+    to soft keyboard management, usually through a `TextView`, and most commonly through
+    an `EditText` instance, a subclass of `TextView` that has editing functionality
+    built in.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了文本更改之外，假设我们的用户只很少使用外部物理键盘，我们需要承认我们主要感兴趣的是软键盘行为，并稍微了解“IME”的概念。“IME”代表“输入法编辑器”，在技术上是指任何可以处理来自硬件组件的事件的东西，但实际上几乎完全是指通过`TextView`管理软键盘的内容，通常通过`EditText`实例，这是`TextView`的子类，具有内置的编辑功能。
+- en: 'Like most `View` configurations, an IME can usually be handled in either XML
+    instructions or programmatic statements. The most common IME API is “IME options”:
+    either `android:imeOptions` or `TextView.setImeOptions`, either of which accepts
+    an integer representing various IME flags, thinks like “go,” “next,” “previous,”
+    “search,” “done,” and “send” (among others). While the option semantic is sometimes
+    expressed with behavior, that’s not always the case. For example, while “next”
+    and “previous” will change the screen’s focus, “go,” “done,” and “send” may do
+    nothing explicitly different, but should pass different values to attached listeners.'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像大多数`View`配置一样，IME通常可以通过XML指令或编程语句来处理。最常见的IME API是“IME options”：即`android:imeOptions`或`TextView.setImeOptions`，接受表示各种IME标志的整数，例如“go”、“next”、“previous”、“search”、“done”和“send”（还有其他）。虽然选项的语义有时会随行为表达，但并非总是如此。例如，虽然“next”和“previous”将改变屏幕的焦点，“go”、“done”和“send”可能没有明确的不同，但应该向附加的监听器传递不同的值。
+- en: For example, you can create an `EditText` with `android:imeOptions="actionSend"`.
+    When that `EditText` receives focus, it will open a soft keyboard on the screen,
+    with a button dedicated to the “Send” action (often this will appear as a button
+    on the keyboard labeled “Send” in the device’s local language). Tapping this button
+    will then trigger a registered `TextView.OnEditorActionListener` to fire its `onEditorAction`
+    events (more on that in just a moment).
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，你可以使用`android:imeOptions="actionSend"`创建一个`EditText`。当该`EditText`获得焦点时，屏幕上将会打开软键盘，并且会有一个专门用于“发送”操作的按钮（通常这个按钮会显示为键盘上标记为“发送”的按钮，使用设备的本地语言）。点击这个按钮将会触发注册的`TextView.OnEditorActionListener`来执行其`onEditorAction`事件（稍后我们会详细介绍）。
+- en: Similarly, you might have `android:imeOptions="actionNext"`, which suggests
+    the soft keyboard render a button with a “next” representation (often a right-pointing
+    arrow). Tapping this button will generally send focus to the next available IME
+    (probably an `EditText`) in the view tree.
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类似地，你可能会使用`android:imeOptions="actionNext"`，这表示软键盘会呈现一个带有“下一个”表示的按钮（通常是一个向右指向的箭头）。点击这个按钮通常会将焦点发送到视图树中的下一个可用IME（可能是一个`EditText`）。
+- en: If you want more specific control over the behavior of IME buttons, you have
+    access to the `TextView.OnEditorActionListener`. You can assign an instance of
+    this listener to an IME (like an `EditText`) using the `setOnEditorActionListener`
+    method, just like you would any listener (and similarly, set this value to `null`
+    to remove previously attached listeners).
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你想对IME按钮的行为有更具体的控制，可以使用`TextView.OnEditorActionListener`。你可以使用`setOnEditorActionListener`方法将这个监听器的实例分配给IME（如一个`EditText`），就像分配任何监听器一样（类似地，将此值设置为`null`以删除先前附加的监听器）。
+- en: '`OnEditorActionListener` instances implement a single method: `public boolean
+    onEditorAction(TextView view, int actionId, KeyEvent event)`. Feel free to use
+    any of the arguments passed to the listener, but generally the `actionId` flag
+    will be the most interesting. In the last example, when the right-pointing button
+    is tapped, any attached `OnEditActionListener` instances will fire their `onEditAction`
+    methods, with the following parameters: the `View` instance that opened the keyboard,
+    an integer constant equal to `EditorInfo.IME_ACTION_NEXT`, and a `KeyEvent` describing
+    the “next” [key press event](https://oreil.ly/pOZn8).'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`OnEditorActionListener`实例实现了一个方法：`public boolean onEditorAction(TextView view,
+    int actionId, KeyEvent event)`。请随意使用传递给监听器的任何参数，但通常`actionId`标志最有趣。在上一个例子中，当点击右指向按钮时，任何附加的`OnEditActionListener`实例将触发它们的`onEditAction`方法，参数包括：打开键盘的`View`实例，一个等于`EditorInfo.IME_ACTION_NEXT`的整数常量，以及描述“下一个”[按键事件](https://oreil.ly/pOZn8)的`KeyEvent`。'
+- en: Handle Compound Gestures
+  id: totrans-54
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 处理复合手势
+- en: If you need gesture functionality beyond what’s provided out of the box, you
+    have a couple mechanisms available. The most straightforward approach in our opinion
+    is to simply override the `onTouchEvent` of a `ViewGroup` (or an `Activity`!)
+    and manage each event in whatever fashion suits your needs. Each motion event
+    has a type flag (e.g., a finger begins a gesture [`ACTION_DOWN`], moves across
+    the screen [`ACTION_MOVE`], ends a gesture [`ACTION_UP`], or other, similar methods
+    for multitouch). With this information and the judicious use of timestamps, you
+    can accomplish any custom behavior your app may require.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你需要超出预设功能的手势功能，你有几种可用的机制。我们认为最直接的方法是简单地重写`ViewGroup`（或`Activity`！）的`onTouchEvent`方法，并以任何适合你需求的方式处理每个事件。每个运动事件都有一个类型标志（例如，一个手指开始一个手势[`ACTION_DOWN`]，在屏幕上移动[`ACTION_MOVE`]，结束一个手势[`ACTION_UP`]，或其他类似的方法用于多点触控）。有了这些信息和恰当使用时间戳，你可以实现你的应用可能需要的任何自定义行为。
+- en: There are additional APIs available that can make complex tasks easier when
+    writing custom gesture functionality, like `Scroller`, which despite its name
+    doesn’t actually perform any scroll movement but does have some very handy calculation
+    methods for flings or inertial scroll decay. `VelocityTracker` is available to
+    record motion events and provide information about velocity and acceleration across
+    either axis.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在编写自定义手势功能时，还有其他可用的API可以使复杂任务变得更加容易，例如`Scroller`，尽管其名称并不实际执行任何滚动运动，但确实具有一些非常方便的惯性滚动衰减或抛物线计算方法。`VelocityTracker`用于记录运动事件并提供关于任一轴上的速度和加速度的信息。
+- en: 'If these are not enough or your needs don’t require that fine-grain control,
+    a simple way to access gestures is to use `GestureDetector` (or `GestureDetectorCompat`
+    from the support library). A `GestureDetector` instance can be passed a `GestureListener`,
+    and provided touch events, to pass back common callbacks, including:'
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果这些还不够或者你的需求不需要如此精细的控制，一个简单的访问手势的方法是使用`GestureDetector`（或来自支持库的`GestureDetectorCompat`）。`GestureDetector`实例可以传递一个`GestureListener`，并提供触摸事件，以返回常见的回调，包括：
+- en: '`onDown`'
+  id: totrans-58
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onDown`'
+- en: '`onFling`'
+  id: totrans-59
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onFling`'
+- en: '`onLongPress`'
+  id: totrans-60
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onLongPress`'
+- en: '`onScroll` (think of this as “drag”)'
+  id: totrans-61
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onScroll`（可以将其视为“拖动”）'
+- en: '`onShowPress`'
+  id: totrans-62
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onShowPress`'
+- en: '`onSingleTapUp`'
+  id: totrans-63
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onSingleTapUp`'
+- en: 'To accomplish that, you’ll need an instance of `GestureDetector`, which requires
+    a `Context` instance and a `GestureListener` instance:'
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要实现这一点，你需要一个`GestureDetector`实例，它需要一个`Context`实例和一个`GestureListener`实例：
+- en: The `GestureDetector` instance takes care of most of the accounting; it’ll use
+    system-provided values for things like gravity and touch slop, so you can be assured
+    that your app will start a fling under the same conditions that a `ScrollView`
+    or `RecyclerView` would.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`GestureDetector`实例负责大部分核算；它将使用系统提供的值，如重力和触摸误差，因此你可以确信你的应用将在与`ScrollView`或`RecyclerView`相同的条件下启动一个抛掷动作。'
+- en: When a parent `ViewGroup` contains `View` children that can consume touch events
+    (even by having a simple `View.onClickListener`), an already complicated gesture
+    management system can quickly become hard to manage. Generally speaking, you can
+    use `onInterceptTouchEvent` in conjunction with `onTouchEvent` (see the [developer
+    docs on the former](https://oreil.ly/qCLNx)); between the two you’re pretty sure
+    to be able to at least get access to touch events happening within any container.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当一个父`ViewGroup`包含能够消耗触摸事件的`View`子项（甚至通过简单的`View.onClickListener`），一个已经复杂的手势管理系统很快就会变得难以管理。通常情况下，你可以结合使用`onInterceptTouchEvent`和`onTouchEvent`（参见[开发者文档关于前者](https://oreil.ly/qCLNx)）；在这两者之间，你几乎可以至少访问到在任何容器内发生的触摸事件。
+- en: Other event callbacks available to `View` class instances include:^([1](ch04.html#idm46177237148968))
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`View`类实例可用的其他事件回调包括：^([1](ch04.html#idm46177237148968))'
+- en: '`onKeyDown(int, KeyEvent)`: Called when a new key event occurs.'
+  id: totrans-68
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onKeyDown(int, KeyEvent)`: 当新的按键事件发生时调用。'
+- en: '`onKeyUp(int, KeyEvent)`: Called when a key up event occurs.'
+  id: totrans-69
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onKeyUp(int, KeyEvent)`: 当按键弹起事件发生时调用。'
+- en: '`onTrackballEvent(MotionEvent)`: Called when a trackball motion event occurs.'
+  id: totrans-70
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onTrackballEvent(MotionEvent)`: 当轨迹球事件发生时调用。'
+- en: '`onTouchEvent(MotionEvent)`: Called when a touch screen motion event occurs.'
+  id: totrans-71
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onTouchEvent(MotionEvent)`: 当触摸屏幕动作事件发生时调用。'
+- en: '`onFocusChanged(boolean, int, Rect)`: Called when the view gains or loses focus.'
+  id: totrans-72
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`onFocusChanged(boolean, int, Rect)`: 当视图获得或失去焦点时调用。'
+- en: To learn more about gesture detection, check out [Android’s great guide](https://oreil.ly/tFb5K).
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要了解更多关于手势检测的信息，请查阅[Android的优秀指南](https://oreil.ly/tFb5K)。
+- en: iOS
+  id: totrans-74
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: iOS
+- en: 'In 2007, Apple introduced the iPhone, and with it, Multi-Touch was born. Despite
+    the ubiquity now, having the ability to use more than one finger on a glass screen
+    was revolutionary at the time and transformed user interfaces. Touch is currently
+    the primary method of interaction with a smartphone, but certainly not the only
+    one. This chapter covers two of the most common input methods: touches and keyboards.
+    Let’s dig in.'
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 2007年，苹果推出了iPhone，随之而来的是多点触控技术的诞生。尽管现在它已经无处不在，但在当时，能够在玻璃屏幕上使用多个手指是一个革命，并改变了用户界面。触摸目前是与智能手机交互的主要方式，但绝不是唯一的方式。本章涵盖了两种最常见的输入方法：触摸和键盘。让我们深入探讨一下。
+- en: Receive and React to a Tap
+  id: totrans-76
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 接收并响应轻击
+- en: 'The touch event APIs available in iOS are, arguably, the best in the industry.
+    They’ve evolved slightly over time but have largely remained the same since iOS
+    4, which introduced gesture recognizers. This is by far the simplest method of
+    intercepting touch events. Here’s an example of how to listen for a single tap
+    on an image view within a view controller:'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: iOS中可用的触摸事件API可以说是行业最佳。它们随时间略有变化，但自iOS 4以来引入手势识别器后基本保持不变。这绝对是拦截触摸事件最简单的方法。以下是如何在视图控制器内监听图像视图上的单次轻击的示例：
+- en: '[PRE3]'
+  id: totrans-78
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: We begin by declaring our `UIViewController` subclass, `SomeViewController`.
+    Most of the action in this class happens within `viewDidLoad()`. This is part
+    of the view life cycle in iOS and is where setup for a view controller’s view
+    can often occur. Check out [Chapter 2](ch02.html#topics_views) for more information
+    on views.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们从声明我们的`UIViewController`子类`SomeViewController`开始。在这个类中，大部分操作发生在`viewDidLoad()`中。这是iOS中视图生命周期的一部分，通常在这里可以对视图控制器的视图进行设置。查看[第二章](ch02.html#topics_views)获取关于视图的更多信息。
+- en: Within this method, the class’s image view, `imageView`, is set up. On the next
+    line we declare a gesture recognizer of type `UITapGestureRecognizer` that is
+    targeting this class via `self` and providing the `handleTap(_:)` method as the
+    function to call when this gesture recognizer fires.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个方法中，类的图像视图`imageView`被设置。在下一行，我们声明了一个类型为`UITapGestureRecognizer`的手势识别器，它通过`self`指向这个类，并提供了`handleTap(_:)`方法作为触发此手势识别器时要调用的函数。
+- en: After setting the `numberOfTapsRequired` property on the gesture recognizer
+    to `1`, indicating it’s a single tap recognizer, we add the gesture recognizer
+    to the image view defined before. Attaching a gesture recognizer to a view is
+    required to get that recognizer to fire. In our example, this means whenever the
+    image view is touched or tapped, it’ll go through the list of recognizer associated
+    with it and attempt to resolve what touches are valid to trigger a particular
+    gesture recognizer.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在将手势识别器的`numberOfTapsRequired`属性设置为`1`后，表示它是一个单击识别器，我们将手势识别器添加到之前定义的图像视图上。将手势识别器附加到视图是必需的，以使该识别器触发。在我们的示例中，这意味着每当触摸或点击图像视图时，它将遍历与之关联的识别器列表，并尝试解析哪些触摸有效地触发特定的手势识别器。
+- en: Assuming a touch registers for our gesture recognizers, the recognizer itself
+    will call `handleTap(_:)`, which we defined as the action a moment ago.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设一个触摸被我们的手势识别器注册，识别器本身将调用`handleTap(_:)`，这是我们刚刚定义的动作。
+- en: Note
+  id: totrans-83
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Note that `handleTap(_:)` is an `@objc` method. This is because `UIGestureRecognizer`
+    and subclasses require a `#selector(...)` to be passed in as the action fired
+    when a gesture recognizer is activated.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意`handleTap(_:)`是一个`@objc`方法。这是因为`UIGestureRecognizer`和其子类在激活手势识别器时需要传入`#selector(...)`作为触发的动作。
+- en: 'There’s a little bit of boilerplate for our example, but it essentially comes
+    down to two lines:'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的示例中有一些样板代码，但基本上归结为两行：
+- en: '[PRE4]'
+  id: totrans-86
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: We declare the gesture recognizer and attach it to a view.
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们声明手势识别器并将其附加到一个视图上。
+- en: 'Gesture recognizers are incredibly powerful. We’ll talk about them later in
+    the chapter. For now, let’s turn our attention to another primary input source
+    on iOS: the keyboard.'
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 手势识别器非常强大。我们稍后将在本章讨论它们。现在，让我们把注意力转向iOS上的另一个主要输入源：键盘。
+- en: Receive and React to Keyboard Input
+  id: totrans-89
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 接收并响应键盘输入
+- en: Unlike on Android, there have never been iPhones or iPads with physical keyboards
+    built into them. It’s theoretically possible this might change in the future but
+    is *highly* unlikely given Apple’s stance in the past. There are external keyboards
+    (including a case made by Apple) for iPads, and certainly a Bluetooth keyboard
+    can be connected to a device to serve as a replacement for the on-screen keyboard.
+    That said, for an ecosystem so dependent on “soft keyboards,” the keyboard and
+    text field libraries in UIKit are frustratingly—and shockingly—complex given how
+    easy to use some of the other areas of UIKit are.
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与Android不同，从未有过带有物理键盘的iPhone或iPad。从理论上讲，这种情况可能会在未来发生变化，但考虑到苹果过去的立场，这种可能性非常小。iPad有外部键盘（包括苹果制造的一种外壳），当然也可以连接蓝牙键盘作为屏幕键盘的替代品。尽管如此，在如此依赖“软键盘”的生态系统中，UIKit中的键盘和文本字段库却令人沮丧地复杂——而且令人震惊，考虑到UIKit的其他一些区域使用起来是多么简单。
+- en: For example, the primary way to edit text on iOS is via `UITextField`s or `UITextView`s.
+    There are separate delegate protocols for each of these user interface controls,
+    and they differ slightly in functionality, but mostly in name. Each of these delegate
+    protocols, although robust, does not have a purpose-built method to get updates
+    whenever a text field changes.
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，在iOS上编辑文本的主要方式是通过`UITextField`或`UITextView`。这些用户界面控件每个都有单独的委托协议，它们在功能上略有不同，但主要是名称上的区别。尽管每个委托协议都很强大，但没有一个专门的方法可以在文本字段更改时获取更新。
+- en: 'There are other approaches to consider. For example, it’s possible to wire
+    up a text field to call a handler for edit events like so:'
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有其他考虑的方法。例如，可以将文本字段连接到编辑事件处理程序，如下所示：
+- en: '[PRE5]'
+  id: totrans-93
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: In the example, within the `SomeViewController` view controller, we define a
+    `UITextField` named `textField` that adds a target action for `textFieldDidChange(_:)`
+    on the `.editingChanged` event. Whenever a user edits text in a text field, the
+    `textFieldDidChange(_:)` method will get called for each character that is added
+    or updated; in our example, we `print()` out the text field’s text via `print(textField.text)`.
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在示例中，在名为`SomeViewController`的视图控制器中，我们定义了一个名为`textField`的`UITextField`，在`.editingChanged`事件上添加了一个目标动作`textFieldDidChange(_:)`。每当用户在文本字段中编辑文本时，`textFieldDidChange(_:)`方法将会为每个添加或更新的字符调用一次；在我们的示例中，我们通过`print(textField.text)`打印出文本字段的文本。
+- en: This works most of the time until the text field is edited programmatically.
+    Then, our `textFieldDidChange(_:)` method falls silent, and our text changes surreptitiously
+    without notification.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大多数情况下这很有效，直到文本字段通过程序编辑时。然后，我们的`textFieldDidChange(_:)`方法会变得静默，并且我们的文本更改会在没有通知的情况下悄悄地进行。
+- en: 'A more foolproof method to capture text field edits is by adding a notification
+    observer like so:'
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 捕获文本字段编辑的更可靠方法是通过添加类似以下方式的通知观察者：
+- en: '[PRE6]'
+  id: totrans-97
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: This example is similar to the previous example, but has a few differences.
+    First of all, after defining our `UITextField`, we are no longer listening for
+    the `.editingChanged` event; we are now listening for the `UITextField.textDidChangeNotification`.
+    Our same method from before, `textFieldDidChange(_:)`, is called whenever the
+    notification observer fires; however, in order to target the text field, we cast
+    the `notification.object` to a `UITextField` in order to read out the `text` value
+    in the subsequent `print(textField.text)` line.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此示例与上一个示例类似，但有几点不同之处。首先，在定义我们的`UITextField`后，我们不再监听`.editingChanged`事件；现在我们监听`UITextField.textDidChangeNotification`。我们之前的同名方法`textFieldDidChange(_:)`在每次通知观察者触发时被调用；但是，为了针对文本字段，我们需要将`notification.object`强制转换为`UITextField`，以便在后续的`print(textField.text)`行中读取`text`值。
+- en: 'Up to now, we’ve been operating only on `UITextField`. What happens when you
+    need to observe multiple text inputs and a mix of `UITextField` and `UITextView`
+    objects? Your code quickly might spiral into something such as this:'
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们只对`UITextField`进行操作。当您需要观察多个文本输入以及混合使用`UITextField`和`UITextView`对象时会发生什么？您的代码很快可能会变成这样：
+- en: '[PRE7]'
+  id: totrans-100
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: Sad.
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 伤心。
+- en: But let’s take these melancholy thoughts and incomplete frameworks and focus
+    on something different. Let’s bring it back around to touch input again and discuss
+    more complex gesture recognizers. This is an area of UIKit that scales successfully
+    from straightforward logic to elaborate experiences without too much weight placed
+    upon the developer.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是让我们将这些忧郁的想法和不完整的框架放在一边，专注于不同的事物。让我们重新回到触摸输入，并讨论更复杂的手势识别器。这是UIKit的一个领域，它可以从简单的逻辑成功扩展到复杂的体验，而不会给开发者带来太多负担。
+- en: Handle Compound Gestures
+  id: totrans-103
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 处理复合手势
+- en: 'Gesture recognizers are great for simple tap gestures with one finger. But
+    they are also handy for complex interaction chains. Let’s take a look at the following
+    example:'
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 手势识别器非常适合用于单指简单的轻击手势。但是它们对于复杂的交互链也非常有用。让我们来看一个示例：
+- en: '[PRE8]'
+  id: totrans-105
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: This code is similar to our code from before for our single-tap gesture recognizer.
+    However, by simply changing one property value we can transform it into a double-tap
+    gesture recognizer.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这段代码与我们之前为单击手势识别器编写的代码类似。然而，通过简单地更改一个属性值，我们可以将其转换为双击手势识别器。
+- en: 'There are other gesture recognizers prebuilt into UIKit. If you’re looking
+    to recognize three-finger pan gestures, you can create one with the following
+    code:'
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: UIKit 中预先构建了其他手势识别器。如果您希望识别三指滑动手势，可以使用以下代码创建一个：
+- en: '[PRE9]'
+  id: totrans-108
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'Or, if you’d rather listen for something that requires a physicality beyond
+    our reach, we present the five-fingered, triple-tap gesture:'
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者，如果您更愿意监听一些需要超出我们能够触及的物理动作，我们介绍五指三次轻击手势：
+- en: '[PRE10]'
+  id: totrans-110
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: 'You’re probably not likely to see that in many shipping apps. However, a common
+    problem in touch interfaces is that you’re often listening for multiple touch
+    events on a single view. How do you listen for a single-tap gesture *and* a double-tap
+    gesture without accidentally firing the single-tap gesture first? Here’s how it
+    might look:'
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能不太可能在许多发布的应用程序中看到这种情况。然而，在触摸界面中的一个常见问题是，您通常会在一个视图上监听多个触摸事件。如果没有意外地先触发单击手势识别器，那么您如何监听单击手势*和*双击手势呢？以下是可能的解决方法：
+- en: '[PRE11]'
+  id: totrans-112
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: First, we create a double-tap gesture recognizer named `doubleTapRecognizer`.
+    We set the `numberOfTapRequired` to `2`. Next, we create a single-tap gesture
+    recognizer named `singleTapRecognizer`. We set the number of taps to `1`, but
+    then call a separate method, `require(toFail:)`, and pass in the double-tap gesture
+    recognizer from before.
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们创建一个名为`doubleTapRecognizer`的双击手势识别器。我们将`numberOfTapRequired`设置为`2`。接下来，我们创建一个名为`singleTapRecognizer`的单击手势识别器。我们将轻击次数设置为`1`，然后调用一个单独的方法`require(toFail:)`，并传入之前的双击手势识别器。
+- en: The `require(toFail:)` method is a method that all gesture recognizers have
+    that allows them to fire only if another recognized gesture recognizer fails first.
+    Wiring the recognizers up this way allows the single-tap recognizer to wait until
+    the double-tap gesture recognizer fails before it’ll call its handler. Not linking
+    the two gesture recognizers would mean that the single-tap recognizer would fire
+    on the first tap of the double-tap gesture recognizer and on the second tap.
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`require(toFail:)` 方法是所有手势识别器都具有的方法，允许它们仅在另一个已识别的手势识别器首次失败时才触发。以这种方式连接识别器使得单击识别器等待双击手势识别器失败后才调用其处理程序。不连接这两个手势识别器意味着单击识别器将在双击手势识别器的第一次和第二次轻击时触发。'
+- en: Ideally, this makes it easy to see how it’s possible to wire up multiple compound
+    gestures with defined execution priority. The number of gesture recognizer combinations
+    you can create is essentially infinite; it’s beyond the scope of this book to
+    catalog them all, but if you’re interested in finding out about more gesture types,
+    check out the Apple developer documentation on `UIGestureRecognizer`.
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 理想情况下，这使得可以轻松看到如何连接多个定义了执行优先级的复合手势。您可以创建的手势识别器组合数量基本上是无限的；它超出了本书范围以列出它们所有，但如果您有兴趣了解更多手势类型，请查看
+    Apple 开发者文档中关于`UIGestureRecognizer`的内容。
+- en: Touch Events API
+  id: totrans-116
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 触摸事件 API
+- en: One of the features of the responder chain on iOS is the fine-grained touch
+    events API available to all responders (e.g., views and view controllers). It’s
+    an incredibly powerful set of methods that are fired whenever a touch begins,
+    moves, ends, or is cancelled. However, given the simplicity and powerful functionality
+    of gesture recognizers, they are almost always the preferred method except in
+    specific circumstances where a custom user interface requires a bit more fine-grained
+    touch interaction. For these cases, check out touch events available to `UIResponder`
+    objects.
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: iOS 响应链的一个特性是面向所有响应者（例如视图和视图控制器）的细粒度触摸事件 API。这是一组非常强大的方法，每当触摸开始、移动、结束或取消时都会触发。然而，考虑到手势识别器的简单性和强大功能，除了在特定情况下需要更精细的触摸交互的自定义用户界面外，它们几乎总是首选的方法。对于这些情况，请查看`UIResponder`对象可用的触摸事件。
+- en: What We’ve Learned
+  id: totrans-118
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: In this chapter we’ve seen the similarities and differences in listening for
+    and receiving user input in Android and iOS. User input can be in the form of
+    simple touches, complex gestures, or on-screen and external keyboards.
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们看到了 Android 和 iOS 中监听和接收用户输入的相似之处和差异。用户输入可以是简单的触摸、复杂手势，或者是屏幕上和外部键盘的输入。
+- en: Both platforms have similar mechanisms for listening to and responding to simple
+    touch events.
+  id: totrans-120
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 两个平台都有类似的机制来监听和响应简单的触摸事件。
+- en: Both Android and iOS can receive text input from a variety of sources, but iOS
+    requires a bit of hand-holding due to a slightly unwieldy pattern for receiving
+    said input.
+  id: totrans-121
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Android 和 iOS 都可以从各种来源接收文本输入，但由于接收此类输入的模式略显复杂，iOS 需要一些辅助。
+- en: There are ways to detect and respond to complex gestures built in to the operating
+    systems, but both platforms have gestures that aren’t typically used in the other
+    platform.
+  id: totrans-122
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 操作系统中内置了检测和响应复杂手势的方法，但两个平台都有不常用于另一个平台的手势。
+- en: Touch input is what makes Android and iOS devices so intuitive and intimate.
+    It’s important to understand how to handle and construct an app that receives
+    input to build an app that is usable.
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 触摸输入使得 Android 和 iOS 设备如此直观和亲密。了解如何处理和构建能够接收输入的应用程序是非常重要的。
+- en: In the next chapter, we’ll dive a bit more into the objects and patterns that
+    aren’t as directly user facing as what’s been covered so far. Let’s go!
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在下一章中，我们将更深入地探讨那些对象和模式，它们并非像前面讨论的直接面向用户。让我们开始吧！
+- en: ^([1](ch04.html#idm46177237148968-marker)) From [Android developer documentation](https://oreil.ly/HvEKV)
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch04.html#idm46177237148968-marker)) 来自 [Android 开发者文档](https://oreil.ly/HvEKV)

@@ -1,0 +1,953 @@
+- en: Chapter 9\. Networking
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第9章 网络
+- en: While it’s certainly possible to have a largely self-contained app—perhaps it
+    only makes HTTP requests to update its version using built-in, automagic Play
+    update infrastructure—it’s rare in our connected world. Whether you need to authenticate
+    users, post usage metrics to your analytics account, read content or media, download
+    or upload files, listen for push notifications, or just sync up with a time server,
+    you’ll want to know how to make an HTTP request and understand an HTTP response.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管自包含应用程序完全可能——也许它只是使用内置的、自动更新的Play更新基础设施进行HTTP请求来更新其版本——在我们相互连接的世界中却很少见。无论您需要对用户进行身份验证、将使用情况指标发布到分析帐户、读取内容或媒体、下载或上传文件、侦听推送通知，还是只需与时间服务器同步，您都需要知道如何发出HTTP请求并理解HTTP响应。
+- en: 'Fortunately, the HTTP spec has a very simple rules set, and most people find
+    it easy to understand and learn. At the risk of being too simplistic, imagine
+    an HTTP transaction consists of two parts: a request and a response. Both are
+    represented as simple (and often human-readable) text files. The first line of
+    each describes some basic attributes about the file (like the URL for a request,
+    and the status for a response). The next lines are header information in traditional
+    key-value-pair syntax: `header-name: Header Value`. Then a “blank” (empty) line,
+    and you’re at the body. That’s it! For more info, check out [“HTTP Made Really
+    Easy”](https://oreil.ly/Qh4ZZ).'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '幸运的是，HTTP规范具有非常简单的规则集，大多数人发现它易于理解和学习。冒着过于简化的风险，想象一下HTTP事务由两部分组成：请求和响应。两者都以简单（通常是人类可读的）文本文件表示。每个文件的第一行描述了关于文件的一些基本属性（例如请求的URL和响应的状态）。接下来的行是传统的键值对语法的头信息：`header-name:
+    Header Value`。然后是一个“空白”（空）行，然后就是主体。就是这样！要了解更多信息，请查看[“HTTP Made Really Easy”](https://oreil.ly/Qh4ZZ)。'
+- en: From high-level authentication protocols to streaming encrypted video data to
+    uploading every image on your phone in the background, all of these operations
+    use the same basic tenets described previously.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从高级认证协议到在后台流式传输加密视频数据到上传手机上的每张图片，所有这些操作都使用了前面描述的相同基本原则。
+- en: Tasks
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 任务
+- en: 'In this chapter, you’ll learn to:'
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，您将学习：
+- en: Read and print a text file from a remote server.
+  id: totrans-6
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 读取并从远程服务器打印文本文件。
+- en: Make an HTTP POST request.
+  id: totrans-7
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 发出HTTP POST请求。
+- en: Download a binary file.
+  id: totrans-8
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 下载二进制文件。
+- en: Android
+  id: totrans-9
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android
+- en: With the fantastically open nature of Android development, some really terrific
+    third-party libraries have come up around potentially complex tasks like networking.
+    The most popular is probably OkHttp, developed by a well-known and trusted Android
+    developer named Jake Wharton, who wrote a ton of great open source software while
+    working for a company called Square and continues to contribute now directly from
+    Google. If you check the links in the notes block at the end of this Android section,
+    you’ll see a disproportionate number of links are from Square’s GitHub account.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 借助Android开发的开放特性，一些非常出色的第三方库已经涌现，围绕着像网络这样潜在复杂的任务。其中最受欢迎的可能是OkHttp，由著名且值得信赖的Android开发者Jake
+    Wharton开发，他在Square公司工作时编写了大量优秀的开源软件，并继续在Google直接贡献。如果您检查本Android部分末尾的注释块中的链接，您会发现大量链接来自Square的GitHub帐户。
+- en: Remember that any time you’re dealing with anything other than main memory (RAM),
+    you should probably be working on a background thread. Reading a local file, querying
+    a database, and even saving preferences should all happen off the main UI thread.
+    *This is especially important when dealing with network requests and responses*.
+    Imagine that a small file probably only takes a few milliseconds to touch, open,
+    read, close, and convert to a `String` value—but even that few milliseconds can
+    make the fling of a `RecyclerView` stutter or a `NavigationDrawer` seem to open
+    fully and immediately. Now, imagine this along the lines of a network request.
+    I’m sure we’ve all seen requests that take 10 seconds or 20 seconds or even longer
+    to resolve—some servers won’t even timeout for a minute! Imagine blocking the
+    drawing thread that whole time with a spinning for loop just waiting for data.
+    *When preforming network operations, in almost all cases, you should be working
+    on a background thread*.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 记住，除了主存储器（RAM）以外的任何时候，你都应该考虑使用后台线程。读取本地文件、查询数据库，甚至保存偏好设置都应该在主 UI 线程之外进行。*处理网络请求和响应时尤为重要*。想象一下，一个小文件可能只需几毫秒就能触及、打开、读取、关闭并转换为`String`值，但即使这几毫秒也足以使`RecyclerView`的滑动或`NavigationDrawer`的打开显得有些卡顿。现在，想象一下进行网络请求的情况。我确信我们都见过需要
+    10 秒、20 秒甚至更长时间来处理的请求——有些服务器甚至不会在一分钟内超时！想象一下，在绘图线程上整个时间都在一个旋转的`for`循环中等待数据。*几乎所有情况下，在执行网络操作时，都应该使用后台线程*。
+- en: Read and Print a Text File on a Remote Server
+  id: totrans-12
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在远程服务器上读取和打印文本文件
+- en: 'That said, making a network request with straight Java is really not that complicated—here
+    are six lines (just counting statements) of magic that’ll print out any publicly
+    accessible remote file:'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 话虽如此，使用纯 Java 发起网络请求并不复杂——以下六行（仅计算语句）的神奇代码将打印出任何公共可访问的远程文件：
+- en: Let’s break this down line by line.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们逐行分解这个过程。
+- en: First, we need a `URL` instance. A `URL` instance represents a *resource*, not
+    the *location* of that resource, despite the name. The location is most accurately
+    represented by the `String` passed in to the `URL` constructor.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们需要一个`URL`实例。`URL`实例代表一个*资源*，而不是*资源的位置*，尽管名称可能会让人误解。位置最准确地由传递给`URL`构造函数的`String`表示。
+- en: By upping our game from `String` to `URL`, we get a ton of standard library
+    goodies out of the box—like an `HttpUrlConnection` via the `openConnection` method.
+    While there’s a lot that can be done with the connection, the most straightforward
+    thing we can do with it happens on the next few lines—grab its `InputStream` and
+    read it out! This may look a lot like how we dealt with stream data back in the
+    [Chapter 6](ch06.html#topics_files) section—check that out for a refresher.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过将我们的操作从`String`升级到`URL`，我们可以在开箱即用的标准库中获得大量好用的功能——例如通过`openConnection`方法获取`HttpUrlConnection`。虽然连接可以做很多事情，但我们可以在接下来的几行中做的最简单的事情是——获取其`InputStream`并读取出来！这看起来很像我们在[第
+    6 章](ch06.html#topics_files)中处理流数据的方式——可以查看以获取复习。
+- en: That’s it! Pretty simple, right? Well, let’s dress it up a little.
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就是这样！相当简单，对吧？好吧，让我们稍微加工一下。
+- en: Make an HTTP POST Request
+  id: totrans-18
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 发起 HTTP POST 请求
+- en: We’ll make use of the publicly available *jsonplaceholder.typicode.com* free
+    service to emulate POSTing data so that we can see that our code really is sending
+    up data that we can read back out later. We’ll use the [Create A Resource](https://oreil.ly/2iZxz)
+    endpoint.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将利用公开可用的*jsonplaceholder.typicode.com*免费服务来模拟POST数据，这样我们可以看到我们的代码确实发送了我们稍后可以读取的数据。我们将使用[创建资源](https://oreil.ly/2iZxz)端点。
+- en: 'Let’s modify our reader example with a simple, empty post:'
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们用一个简单的空POST来修改我们的读取示例：
+- en: 'If you look closely, you’ll see only a couple very minor things changed:'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你仔细观察，你会发现只有一些非常细微的变化：
+- en: We cast the return of `openConnection` to `HttpsUrlConnection`, rather than
+    `HttpUrlConnection`, simply because the location used the HTTPS scheme.
+  id: totrans-22
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 我们将`openConnection`的返回强制转换为`HttpsUrlConnection`，而不是`HttpUrlConnection`，因为该位置使用了HTTPS方案。
+- en: We set the request method of the connection to POST, instead of the default,
+    GET.
+  id: totrans-23
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 我们将连接的请求方法设置为POST，而不是默认的GET。
+- en: While this does in fact work and your output should give you some new ID for
+    the object you created, there’s not a lot more going on. In a slightly closer
+    to real-life example, we’d probably want to add some data to the request. This
+    might happen in the form of query parameters, headers, or the post body. For this
+    service, we’ll use a JSON post body.
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然这确实有效，并且您的输出应该给您创建的对象提供一个新的ID，但没有太多其他的事情发生。在一个稍微接近真实生活的例子中，我们可能希望在请求中添加一些数据。这可能以查询参数、头信息或者POST主体的形式进行。对于这个服务，我们将使用JSON
+    POST主体。
+- en: Just like the connection object has a built-in `InputStream` to read from, it
+    also handily has an `OutputStream` to write to. However, that requires a little
+    extra housekeeping—we have to call `connection.setDoOutput(true)` in order to
+    be able to write to that `OutputStream`.
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像连接对象有一个内置的`InputStream`用于读取一样，它也方便地具有一个`OutputStream`用于写入。但是，这需要一些额外的管理 -
+    我们必须调用`connection.setDoOutput(true)`才能写入那个`OutputStream`。
+- en: 'Let’s update the example again:'
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们再次更新例子：
+- en: Now we’re sending some data that the server can handle however it likes. Again,
+    with each extension of functionality, there’s a little more work and a little
+    more consideration required, but if you start at the fundamentals (the first example),
+    you can get a pretty good idea of how the whole thing works.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们正在发送一些数据，服务器可以根据需要处理。同样，对于每个功能扩展，都需要更多的工作和更多的考虑，但如果从基础（第一个例子）开始，您可以对整个工作原理有一个相当好的理解。
+- en: 'Developers will find that when working with networking libraries, a lot of
+    the work is very similar, even if the libraries use dramatically different operations
+    behind the scenes. When we first wrote our binary downloader for my current employer,
+    I used all standard libraries. Later, we wanted to use a single HTTP client for
+    all our network requests (images, REST, downloads, etc), so I sat down with a
+    cup o’ joe and planned on spending the afternoon refitting our downloader to work
+    with OkHttp. I don’t remember exactly how long it took, or exactly how many lines
+    where changed, but I’ll say I was writing tests by lunch and in QA before EOD
+    (read: it was a simple task).'
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 开发者会发现，在使用网络库时，很多工作是非常相似的，即使这些库在幕后使用的操作可能完全不同。当我为当前雇主编写我们的二进制下载器时，我使用了所有标准库。后来，我们想要为所有网络请求（图片、REST、下载等）使用单一的HTTP客户端，所以我坐下来喝了一杯咖啡，计划在下午花点时间来重新调整我们的下载器，使其能够与OkHttp一起工作。我不记得这花了多长时间，或者改变了多少行，但我会说，午餐前我就在写测试了，而在QA之前已经完成（即：这是一个简单的任务）。
+- en: Download a Binary File
+  id: totrans-29
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 下载二进制文件
+- en: We’ll combine the information presented so far with some of the things we learned
+    in [Chapter 6](ch06.html#topics_files) to download a binary file. Don’t worry,
+    it’s not a heck of a lot different from what we’ve already done.
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将结合到目前为止所呈现的信息，并结合我们在[第6章](ch06.html#topics_files)中学到的一些内容来下载一个二进制文件。别担心，这与我们已经做过的事情并没有太大不同。
+- en: 'Here’s the URL to the header image I use on my personal site: *[*http://moagrius.com/assets/images/hero-trips.png*](http://moagrius.com/assets/images/hero-trips.png)*.
+    It’s just an image, but it is binary data—the same logic would work for a video
+    or an executable, or even just a couple bits of arbitrary binary data.'
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我在个人网站上使用的标题图片的URL：*[*http://moagrius.com/assets/images/hero-trips.png*](http://moagrius.com/assets/images/hero-trips.png)*。它只是一张图片，但它是二进制数据
+    - 相同的逻辑也适用于视频、可执行文件，甚至只是几位任意的二进制数据。
+- en: 'Let’s think what we’ll need to do differently. We know we’ll get back an `InputStream`
+    with the bytes that make up the image, so what do we do with them? Well, if we
+    remember the lessons in [Chapter 6](ch06.html#topics_files) on files, we know
+    we’ll want a `FileOutputStream` on our local device to save those bytes to. That’s
+    really about the only difference! Let’s give it a shot:'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们考虑一下需要做些什么不同的事情。我们知道我们将得到一个包含图片字节的`InputStream`，那我们该怎么处理呢？嗯，如果我们记得第6章关于文件的教训，我们知道我们会想要一个`FileOutputStream`来将这些字节保存到我们的本地设备上。那真的就是唯一的区别！让我们试试吧：
+- en: After running this method, you should find a fully decoded, visually accurate
+    copy of the file on my site—congratulations!
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行此方法后，您应该会在我的网站上找到一个完全解码的、视觉上准确的文件副本 - 祝贺您！
+- en: Note
+  id: totrans-34
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'Networking really includes a lot more than we can cover in this chapter, but
+    we’ll point you in the right direction:'
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 网络编程确实涵盖了比我们在本章中能够涵盖的更多内容，但我们将指导您正确的方向：
+- en: '[OkHttp](https://oreil.ly/_Lk9z) and [Volley](https://oreil.ly/1fSIz) both
+    provide additional networking APIs.'
+  id: totrans-36
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[OkHttp](https://oreil.ly/_Lk9z)和[Volley](https://oreil.ly/1fSIz)都提供了额外的网络API。'
+- en: '[Picasso](https://oreil.ly/0VyGt), [Glide](https://oreil.ly/_D3HE), and [Volley](https://oreil.ly/2gaY5)
+    all offer very simple APIs for loading and displaying remote images, combining
+    the network, and decoding layers.'
+  id: totrans-37
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[Picasso](https://oreil.ly/0VyGt)、[Glide](https://oreil.ly/_D3HE) 和 [Volley](https://oreil.ly/2gaY5)
+    都提供了非常简单的 API，用于加载和显示远程图像，结合了网络和解码层。'
+- en: '[Gson](https://oreil.ly/RRhOS) and [Jackson](https://oreil.ly/e95wK) are great
+    JSON parsers for reading from REST APIs.'
+  id: totrans-38
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[Gson](https://oreil.ly/RRhOS) 和 [Jackson](https://oreil.ly/e95wK) 是用于从 REST
+    API 读取的优秀 JSON 解析器。'
+- en: '[Retrofit](https://oreil.ly/lT-5Z) combines OkHttp for the network request
+    and Gson for JSON parsing to allow for some simple API readers.'
+  id: totrans-39
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[Retrofit](https://oreil.ly/lT-5Z) 结合了 OkHttp 进行网络请求和 Gson 进行 JSON 解析，以允许一些简单的
+    API 读取器。'
+- en: iOS
+  id: totrans-40
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: iOS
+- en: Networking has historically been a strength of macOS and, in turn, iOS. The
+    suite of objects purpose-built and provided by the system are comprehensive and
+    well thought out. In fact, most of the third-party networking libraries available
+    sit lightly on top of the classes provided by the operating system. There are
+    some very strong choices available, Alamofire for one, but for a large percentage
+    of apps the built-in tools are the best choice. As such, in this chapter, we’ll
+    use those very objects to demonstrate the powerful tools available right at your
+    fingertips within iOS.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 网络通信一直是 macOS 和 iOS 的一个优势。系统提供的专门构建和提供的对象套件既全面又深思熟虑。事实上，大多数第三方网络库只是轻量级地放在操作系统提供的类之上。有一些非常强大的选择可供选择，例如
+    Alamofire，但对于大多数应用程序来说，内置工具是最佳选择。因此，在本章中，我们将使用这些工具来演示 iOS 中直接在您指尖可用的强大工具。
+- en: Let’s dig in!
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们深入了解！
+- en: Read and Print a Text File on a Remote Server
+  id: totrans-43
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在远程服务器上读取和打印文本文件
+- en: 'Reading data from a web server somewhere in the world is, at its root, the
+    simplest thing you can do with networking. In iOS, you can request information
+    from a server with the following naive example:'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从全球某个 Web 服务器读取数据，在其根本上是您可以通过网络执行的最简单的操作。在 iOS 中，您可以通过以下简单示例向服务器请求信息：
+- en: '[PRE0]'
+  id: totrans-45
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: Let’s walk through what’s happening here.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们逐步了解这里发生了什么。
+- en: First, we create a `URL` that points to a specific file, website, or API—the
+    O’Reilly Media homepage in this example. Next, we use a shared `URLSession` object
+    to generate a `URLSessionDataTask` for our URL and give it a completion handler
+    as a trailing closure. Inside the completion handler, we convert the raw data
+    (passed in as a `Data` object) to a `String` instance and then `print` that data,
+    which just happens to be the HTML normally displayed by a web browser. Finally,
+    we call `resume()` on the task that was created to kickstart the whole process.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们创建一个指向特定文件、网站或 API 的`URL`——以此示例中的 O’Reilly Media 主页为例。接下来，我们使用共享的`URLSession`对象为我们的
+    URL 生成一个`URLSessionDataTask`，并在其后添加一个完成处理程序作为尾随闭包。在完成处理程序内部，我们将原始数据（作为`Data`对象传入）转换为一个`String`实例，然后`print`出该数据，这恰好是通常由
+    Web 浏览器显示的 HTML。最后，我们调用创建的任务上的`resume()`来启动整个过程。
+- en: Warning
+  id: totrans-48
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: You might notice in the example code we’re using an HTTPS URL. Since iOS 9,
+    all HTTP requests need to be HTTPS, unless they are explicitly allowed (or fully
+    disabled) within an app’s *Info.plist* file via the `NSAppTransportSecurity` key.
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可能会注意到在示例代码中，我们使用的是 HTTPS URL。自 iOS 9 以来，除非在应用程序的 *Info.plist* 文件中通过`NSAppTransportSecurity`键明确允许（或完全禁用），否则所有
+    HTTP 请求都需要是 HTTPS。
+- en: There are some new classes that have shown up in this example. The first of
+    these new classes is `URLSession`. This is the class that drives most of the functionality
+    within the top-level networking APIs within iOS. At its most basic function, each
+    `URLSession` is a coordinator of different network tasks; the tasks are associated
+    directly with a `URLSession` object during creation. The session objects themselves
+    can have their behavior configured by passing in a `URLSessionConfiguration` object
+    in the initializer. You can create multiple sessions or, for simple needs, just
+    use the shared session that is accessible by the aptly named `URLSession.shared`
+    property as used previously.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此示例中出现了一些新的类。其中第一个新类是`URLSession`。这是驱动 iOS 中顶层网络 API 大部分功能的类。在其最基本的功能中，每个`URLSession`都是不同网络任务的协调器；在创建期间，任务直接与`URLSession`对象关联。会话对象本身可以通过在初始化器中传递`URLSessionConfiguration`对象来配置其行为。您可以创建多个会话，或者对于简单的需求，只需使用先前使用的名为`URLSession.shared`的共享会话属性。
+- en: Tip
+  id: totrans-51
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: '`URLSession` instances can be configured in a variety of ways. `URLSessionConfiguration`
+    also has some standard configurations provided for convenience. These include
+    `default`, `ephemeral`, and `background(with:)`. Check out the [Apple developer
+    docs](https://oreil.ly/_ldvZ) for more information.'
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`URLSession` 实例可以以多种方式进行配置。`URLSessionConfiguration` 也提供了一些标准配置以便于使用，包括 `default`、`ephemeral`
+    和 `background(with:)`。查看[苹果开发者文档](https://oreil.ly/_ldvZ)获取更多信息。'
+- en: A `URLSession` instance is the originator of the tasks too. It’s easy to think
+    of a network task as an operation; they provide all the actual functionality of
+    a network request and response. Like operations, they also typically run asynchronously.
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`URLSession` 实例也是任务的发起者。将网络任务看作操作是很容易的；它们提供了网络请求和响应的所有实际功能。与操作类似，它们通常也以异步方式运行。'
+- en: 'There are three types of tasks:'
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有三种类型的任务：
+- en: '`URLSessionDataTask`, which is used for receiving data (returned as a `Data`
+    object) from a server'
+  id: totrans-55
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`URLSessionDataTask`，用于从服务器接收数据（以 `Data` 对象返回）'
+- en: '`URLSessionDownloadTask`, which is primarily used for retrieving files from
+    a server and can be paused and resumed, as well as provide updates on download
+    progress (this will be covered later in the chapter)'
+  id: totrans-56
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`URLSessionDownloadTask`，主要用于从服务器检索文件，并可以暂停和恢复，同时提供下载进度更新（将在本章节的后面介绍）'
+- en: '`URLSessionUploadTask`, which *sends* data or files to a server (this is covered
+    in the next section in this chapter)'
+  id: totrans-57
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`URLSessionUploadTask`，用于向服务器发送数据或文件（将在本章节的下一部分中介绍）'
+- en: It’s important to know when to use one task over another. Rarely would a developer
+    use a data task to download a large file. In addition, it would be unwise (and
+    quite cumbersome) to use a download task to receive a simple JSON response from
+    an endpoint. Tasks are specialized to make your job, as a developer, easier and
+    the logic simpler.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 知道何时使用一种任务而不是另一种任务是很重要的。开发者很少会使用数据任务来下载大文件。此外，使用下载任务来接收简单的 JSON 响应也是不明智的（而且相当繁琐）。任务专门用于使开发者的工作更轻松，逻辑更简单。
+- en: 'Now, the preceding example is somewhat sparse and a bit naive in its approach.
+    Here is a much fuller and complete example that checks for any client errors,
+    for valid server response status codes, and for empty data:'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，前面的示例有些简单和方法有些幼稚。以下是一个更完整和全面的示例，检查客户端错误、有效的服务器响应状态码以及空数据：
+- en: '[PRE1]'
+  id: totrans-60
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: Receiving data from a server is useful, and certainly the majority of network
+    calls made are requests for data. However, if you spend any time with a REST API,
+    you’ll quickly need to learn how to send data as well as receive data.
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接收来自服务器的数据很有用，而且绝大多数网络调用都是用于请求数据。但是，如果你花时间使用 REST API，你很快就会需要学习如何发送数据以及接收数据。
+- en: Let’s see how it works in iOS.
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看它在 iOS 中是如何工作的。
+- en: Make an HTTP POST Request
+  id: totrans-63
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 发起一个 HTTP POST 请求
+- en: 'The easiest way to get started sending data to the server is to send a bit
+    of text to a URL. This can be accomplished with the following code:'
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 向服务器发送数据的最简单方法是发送一小段文本到一个 URL。可以使用以下代码完成：
+- en: '[PRE2]'
+  id: totrans-65
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: 'This is a simple example, but usually data that we wanted to send to a server
+    isn’t unstructured text strings. Often it’s JSON or key-value form data. Luckily,
+    there is a helpful object one can use called `URLComponents` to create a percent-encoded
+    key-value data string from a set of values. You can use it like so:'
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这只是一个简单的示例，但通常我们想要发送到服务器的数据并不是无结构的文本字符串。通常是 JSON 或键值对形式的数据。幸运的是，有一个有用的对象可以使用，称为
+    `URLComponents`，用于从一组值创建一个百分比编码的键值对数据字符串。你可以像这样使用它：
+- en: '[PRE3]'
+  id: totrans-67
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: First, we create an instance of `URLComponents`. Next, we add query items to
+    the `queryItems` property that consist of key-value objects of the type `URLQueryItem`.
+    These objects are then transformed into a percent-encoded text string whenever
+    the `httpBody` property is assigned to the `URLRequest` created.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们创建一个 `URLComponents` 的实例。接下来，我们向 `queryItems` 属性添加查询项，这些项是 `URLQueryItem`
+    类型的键值对象。每当将 `httpBody` 属性赋给创建的 `URLRequest` 时，这些对象就会被转换为一个百分比编码的文本字符串。
+- en: 'Often we might want to send more than just key-value data, though. Here is
+    an example of how a file might be uploaded to a server:'
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，通常我们可能想发送的不仅仅是键值对数据。以下是如何上传文件到服务器的示例：
+- en: '[PRE4]'
+  id: totrans-70
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'Walking through this code, we first create a string of data representing our
+    mock file, “file data,” that is converted to a `Data` object in preparation for
+    being sent later. Next, we define a URL pointing to *http://www.example.com* as
+    a placeholder. This is then passed to a new object type called `URLRequest` that
+    we used in our simple `POST` example. A `URLRequest` is an abstraction of the
+    request we are making. It’s done this way so we can specify some changes to the
+    way we are sending this request to the server. In the preceding example, we’re
+    specifying the HTTP method used: `POST`. This maps directly to the standard REST
+    verbs available, with the default being `GET`.'
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此代码中进行漫步时，我们首先创建一个表示我们模拟文件“文件数据”的数据字符串，该字符串将转换为准备稍后发送的`Data`对象。接下来，我们定义了一个指向*http://www.example.com*的URL作为占位符。然后，将其传递给我们在简单的`POST`示例中使用的新对象类型`URLRequest`。`URLRequest`是我们正在进行的请求的抽象。这样做是为了我们可以指定一些更改，以更改我们向服务器发送此请求的方式。在前面的示例中，我们指定了使用的HTTP方法：`POST`。这直接映射到可用的标准REST动词中，默认为`GET`。
+- en: Finally, within this example, similar to our examples in the previous section,
+    we are creating a `URLSessionTask` using the shared URL session; in this case,
+    however, we are creating a `URLSessionUploadTask` with the `uploadTask` method.
+    To kick off the task and perform the request, we call `resume()` to send the `data`
+    object passed in off to the server.
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，在此示例中，类似于前一节中的示例，我们正在使用共享URL会话创建一个`URLSessionTask`；但在这种情况下，我们正在使用`uploadTask`方法创建一个`URLSessionUploadTask`。为了启动任务并执行请求，我们调用`resume()`将传递的`data`对象发送到服务器。
+- en: 'This is a simple example. It’s likely data will be returned from the server
+    about the request sent, including information about whether the outcome was successful
+    or if it failed. However, it’s possible to keep the simplicity of this example
+    by using an overloaded method of `uploadTask` to pass in a completion handler
+    like so:'
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这只是一个简单的示例。服务器可能会返回有关发送的请求的数据，包括结果是成功还是失败的信息。但是，可以通过使用`uploadTask`的重载方法，并像这样传递完成处理程序来保持此示例的简单性：
+- en: '[PRE5]'
+  id: totrans-74
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'Most modern APIs take structured data, like JSON, as input and return JSON
+    as output. Our simplistic string of data example actually scales somewhat easily
+    without changing much except creating a structure to provide the structure for
+    our data. Here’s a complete example of how to post JSON up to an endpoint and
+    handle the response:'
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大多数现代API将结构化数据（如JSON）作为输入并返回JSON作为输出。我们简单的数据字符串示例实际上可以轻松扩展，几乎不需要更改，只需创建一个结构以提供我们数据的结构即可。这里是如何向端点发送JSON并处理响应的完整示例：
+- en: '[PRE6]'
+  id: totrans-76
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: That’s a big example, but if you look closely, there are really only a few lines
+    that have changed much. First, at the top of the example, we’re defining a structure
+    to hold our data. Soon after, we use `JSONEncoder` to transform this object into
+    a raw `Data` object. `JSONEncoder` is part of the Swift Standard Library and provides
+    an easy-to-use method to serialize and deserialize JSON objects.
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个大的示例，但是如果您仔细观察，实际上只有几行发生了较大变化。首先，在示例顶部，我们正在定义一个用于保存数据的结构。之后不久，我们使用`JSONEncoder`将此对象转换为原始的`Data`对象。`JSONEncoder`是Swift标准库的一部分，提供了一种易于使用的方法来序列化和反序列化JSON对象。
+- en: Tip
+  id: totrans-78
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: There is a whole chapter dedicated to “transport data” like JSON. You can check
+    it out for more information about functionality and available methods.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一整章专门讲解像JSON这样的“传输数据”。您可以查看了解有关功能和可用方法的更多信息。
+- en: 'The next important change to note is the following line:'
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下一个需要注意的重要变化是以下一行：
+- en: '[PRE7]'
+  id: totrans-81
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: This command sets the HTTP header `Content-Type` on the request to equal `application/json`.
+    You can set other HTTP headers this way, but for most APIs, you’ll need to specify
+    explicitly if you’re using JSON as the transport structure for the data you’re
+    sending.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此命令将HTTP头部`Content-Type`设置为`application/json`。您可以以这种方式设置其他HTTP头部，但对于大多数API，如果您要使用JSON作为发送数据的传输结构，则需要明确指定。
+- en: The rest of the preceding example probably looks familiar when compared with
+    the other examples until you dive into the completion handler used. We perform
+    some validation checks for client errors, server errors, or missing data. Then,
+    we use a new object type, `JSONDecoder`, to take the raw `data` object returned
+    (which is really just JSON) and deserialize it directly into an instance of `Book`.
+    From there, we do things like `print`ing the book’s `title` and `isbn` properties
+    out to the command line.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与其他示例相比，前面示例的其余部分可能看起来很熟悉，直到进入使用的完成处理程序。我们对客户端错误、服务器错误或缺少数据执行一些验证检查。然后，我们使用一个新的对象类型`JSONDecoder`，将返回的原始`data`对象（实际上只是JSON）直接反序列化为`Book`实例。从那里，我们做一些像`print`书的`title`和`isbn`属性到命令行之类的事情。
+- en: There are similarities and patterns in most network operations within the `URLSession`
+    library of objects. Downloading files from a server requires additional logic
+    to handle a slightly different set of requirements, however. Let’s see how this
+    plays out in the next section on downloading binary files.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`URLSession`对象库中的大多数网络操作中存在相似性和模式。但是，从服务器下载文件需要额外的逻辑来处理稍微不同的一组要求。让我们看看在下一节关于下载二进制文件中的表现如何。
+- en: Download a Binary File
+  id: totrans-85
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 下载二进制文件
+- en: 'Downloading files is similar, in code, to requesting data from a server. Here’s
+    an example of how to execute a download request from a server to retrieve a file:'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下载文件在代码中类似于从服务器请求数据。以下是执行从服务器下载请求以检索文件的示例：
+- en: '[PRE8]'
+  id: totrans-87
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: In the preceding example, we are requesting a file at a specific URL. One main
+    difference is that instead of using `dataTask(with:)` to create our request, we’re
+    using `downloadTask(with:)`. The completion handler has a slightly different signature—instead
+    of a `Data` instance being passed in, we have a `Url` instance passed in that
+    we’ve named `fileUrl` in the example.
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前面的示例中，我们请求了一个特定URL的文件。一个主要的区别是，我们没有使用`dataTask(with:)`来创建我们的请求，而是使用了`downloadTask(with:)`。完成处理程序具有稍微不同的签名——不再传递`Data`实例，而是传递我们在示例中命名为`fileUrl`的`Url`实例。
+- en: Download tasks differ from data tasks in that while data tasks store the content
+    of the request in memory, download tasks store a buffer of the response into a
+    temporary file as the download completes. For short downloads, this could be instantaneous,
+    but for larger downloads, the task writes a little bit of the file at a time.
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下载任务与数据任务的不同之处在于，数据任务将请求内容存储在内存中，而下载任务将响应的缓冲区存储到临时文件中，随着下载的完成而完成。对于短时间的下载，这可能是瞬间完成的，但对于较大的下载，任务会逐步写入文件。
+- en: Our completion handler is executed whenever the file is finished downloading
+    and contains the temporary location where that file was written. These files are
+    ephemeral in nature and will be removed.
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的完成处理程序在文件下载完成时执行，并包含该文件被写入的临时位置。这些文件是短暂的，将会被删除。
+- en: Warning
+  id: totrans-91
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: It’s important to remember to move the file somewhere else, such as the *Documents*
+    directory. Our previous example just `print`s the path of the file. See [Chapter 6](ch06.html#topics_files)
+    on file basics for information on how to copy a file.
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 记住将文件移动到其他地方，例如*文档*目录非常重要。我们之前的示例只是打印文件的路径。查看[第六章](ch06.html#topics_files)有关如何复制文件的文件基础知识。
+- en: 'For larger downloads, it’s generally preferable to present some type of user
+    interface to your users indicating how much of the file has been downloaded and
+    how much is left. Our simplistic completion handler example doesn’t provide a
+    mechanism to do that. Within the `URLSession` subsystem, however, there is a way
+    to handle this: the `URLSessionDownloadDelegate` protocol.'
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于较大的下载，通常最好向用户呈现某种类型的用户界面，指示已下载文件的百分比和剩余量。我们简单的完成处理程序示例没有提供这样的机制。然而，在`URLSession`子系统中，有一种处理方式：`URLSessionDownloadDelegate`协议。
+- en: URLSessionDownloadDelegate
+  id: totrans-94
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: '`URLSessionDownloadDelegate`'
+- en: '`URLSessionDownloadDelegate` contains a few optional methods for objects to
+    implement in order to handle download events for a request as they come in. Here’s
+    an example of how to implement a delegate, assign it to a `URLSession`, and create
+    a download task, complete with progress updates:'
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`URLSessionDownloadDelegate`包含一些可选方法，供对象在请求下载事件时实现。以下是如何实现委托、分配给`URLSession`并创建带有进度更新的下载任务的示例：'
+- en: '[PRE9]'
+  id: totrans-96
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: Let’s walk through this code.
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们走过这段代码。
+- en: First, we are creating a new class called `NetworkClient` that inherits from
+    `NSObject`, the base class for Objective-C objects. This class has an extension
+    where it implements the `URLSessionDownloadDelegate` protocol. The first method,
+    `urlSession(_:downloadTask:didFinishDownloadingTo:)`, is required. This is because
+    download tasks store the files they download as temporary files in the filesystem;
+    whenever a file finishes downloading, this method is called on the delegate to
+    tell you where to access the downloaded file. We can also handle server errors
+    in the body of this method by checking the `downloadTask`’s `response` object’s
+    status code.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们创建了一个名为`NetworkClient`的新类，它继承自`NSObject`，这是Objective-C对象的基类。该类有一个扩展，实现了`URLSessionDownloadDelegate`协议。第一个方法，`urlSession(_:downloadTask:didFinishDownloadingTo:)`，是必需的。这是因为下载任务将它们下载的文件作为临时文件存储在文件系统中；每当文件下载完成，委托对象上的此方法被调用以告知您访问下载文件的位置。我们还可以通过检查`downloadTask`的`response`对象的状态码来在此方法体中处理服务器错误。
+- en: The next method, `urlSession(_:task:didCompleteWithError:)`, is optional, but
+    probably something that should be implemented in production apps. You can handle
+    client errors here and check if there are issues that came up that prevented the
+    file from being downloaded successfully. In our example, we’re printing out a
+    description of the error to the console.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来的方法，`urlSession(_:task:didCompleteWithError:)`，是可选的，但在生产应用中应该实现。您可以在这里处理客户端错误，并检查是否出现了导致文件无法成功下载的问题。在我们的示例中，我们将错误的描述打印到控制台。
+- en: 'Wondering how the progress of the download is communicated to the app? The
+    final method in the extension is the place to look: `urlSession(_:downloadTask:didWriteData:totalBytesWritten:totalBytesExpectedToWrite:)`.
+    This method is called periodically at an interval determined by the networking
+    subsystems within iOS. We can use the values of `totalBytesWritten` and `totalBytesExpectedToWrite`
+    to calculate a `percent` value. This value could be used to update everything
+    from text labels to custom drawing routines to `UIProgressView`s. In our example,
+    we’re `print`ing out the value to the console, but use your imagination to see
+    what’s possible!'
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想知道下载进度如何通知应用程序？扩展中的最后一个方法就是查看的地方：`urlSession(_:downloadTask:didWriteData:totalBytesWritten:totalBytesExpectedToWrite:)`。此方法会定期调用，间隔由iOS中的网络子系统决定。我们可以使用`totalBytesWritten`和`totalBytesExpectedToWrite`的值来计算一个`percent`值。该值可用于更新从文本标签到自定义绘图例程到`UIProgressView`等一切。在我们的示例中，我们将该值打印到控制台，但请发挥想象力，看看可能的用途！
+- en: 'This class we’ve created is instantiated further down and passed to a custom
+    `URLSession` initializer as the `delegate` argument. It’s important to note the
+    following two lines where this happens:'
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们创建的这个类在稍后被实例化，并作为`delegate`参数传递给自定义的`URLSession`初始化程序。重要的是注意以下两行代码的发生位置：
+- en: '[PRE10]'
+  id: totrans-102
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: First, we create the `URLSession` instance. In the next line, we use that object
+    to create the `downloadTask` for the given URL. We are *not* using the `URLSession.shared`
+    instance that previous examples have been using. This is because we need to have
+    some place to set the delegate, and in `URLSession`, that’s in the initializer.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们创建`URLSession`实例。在下一行，我们使用该对象为给定的URL创建`downloadTask`。我们*不*使用以前示例中使用的`URLSession.shared`实例。这是因为我们需要在初始化程序中设置委托的地方，在`URLSession`中，那就是在初始化器中。
+- en: Pause and resume
+  id: totrans-104
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 暂停和恢复
+- en: With long-running downloads, progress updates are not the only desirable thing
+    your users might need. It’s possible partially completed downloads can fail. Or,
+    maybe your user wants to pause the download and resume it mid-process in order
+    to switch to a WiFi network. Whatever the case, pausing and resuming using `URLSession`
+    is possible, but a bit odd to implement.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于长时间运行的下载，进度更新并非您的用户可能需要的唯一内容。部分完成的下载可能会失败。或者，也许您的用户想要在中途暂停下载，并在切换到WiFi网络后恢复下载。无论情况如何，使用`URLSession`暂停和恢复是可能的，但实现起来有些奇怪。
+- en: 'Let’s check out an example and then discuss what’s going on after:'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看一个示例，然后讨论发生了什么：
+- en: '[PRE11]'
+  id: totrans-107
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: 'In this example, we have a class, `PauseableClient`, that has three methods:
+    `startDownload()`, `pauseDownload()`, and `resumeDownload()`. Inside the first
+    of these, `startDownload()`, we kick off a download task with a URL. Presumably,
+    this is a long-running download. We also return the `task` object created for
+    use later. Further down the screen, we call `startDownload()`, and the client’s
+    `pauseDownload(for:)` method is called and the `task` is passed in.'
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个示例中，我们有一个名为`PauseableClient`的类，其中有三个方法：`startDownload()`、`pauseDownload()`和`resumeDownload()`。在这些方法的第一个`startDownload()`中，我们使用一个URL启动下载任务。可以假设这是一个长时间运行的下载。我们还返回了稍后使用的`task`对象。在屏幕的稍后位置，我们调用`startDownload()`，并调用客户端的`pauseDownload(for:)`方法，将`task`传递进去。
+- en: Inside the `pauseDownload()` method, we take the `task` object passed in and
+    call `cancel(byProducingResumeData:)`. This method takes a closure as its only
+    argument. Once the task is canceled, the closure is called and a token, given
+    as a `Data` instance, used for resuming the download is passed in. Storing this
+    token for future use allows the code to potentially resume the download again
+    in the future.
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`pauseDownload()`方法内部，我们获取传入的`task`对象，并调用`cancel(byProducingResumeData:)`。这个方法接受一个闭包作为它唯一的参数。一旦任务被取消，闭包就会被调用，并且会传入一个作为`Data`实例给定的令牌，用于恢复下载。将此令牌存储以备将来使用，允许代码在未来可能再次恢复下载。
+- en: Note
+  id: totrans-110
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: You can potentially store resume data if there are client errors reported in
+    the `urlSession(_:task:didCompleteWithError:)` delegate method. Check `userInfo[NSURLSessionDownloadTaskResumeData]`
+    on the `error` object passed in as a parameter. Now, there are limitations about
+    where resume data can be generated. For more information on these, it’s best to
+    the consult [Apple’s developer docs](https://oreil.ly/GITHH) on `URLSessionTask`.
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果在`urlSession(_:task:didCompleteWithError:)`委托方法中报告了客户端错误，你可以潜在地存储恢复数据。检查传递的`error`对象中的`userInfo[NSURLSessionDownloadTaskResumeData]`。现在，有关恢复数据生成的限制有所限制。有关更多信息，请参考[Apple的开发文档](https://oreil.ly/GITHH)中关于`URLSessionTask`的部分。
+- en: For all intents and purposes, the task we created to download the file is gone
+    at this point. Calling `cancel` doesn’t actually pause the download—it *cancels*
+    it. That said, we’ve got a way to bring this request back to life without having
+    to redownload the data we’ve already received.
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就所有意图和目的而言，我们创建的下载文件任务在这一点上已经消失了。调用`cancel`并不会实际暂停下载——它*取消*了下载。话虽如此，我们有一种方法可以在不必重新下载已收到的数据的情况下重新启动此请求。
+- en: This is done in our example within the `resumeDownload()` method. This method
+    checks for resume data and then calls `URLSession` to create a new `URLSessionDownloadTask`
+    via the method `downloadTask(withResumeData:)`. The resume data passed in is the
+    same `resumeData` that was saved in `pauseDownload(for:)` by our previous task.
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的示例中，这是在`resumeDownload()`方法中完成的。此方法检查恢复数据，然后调用`URLSession`通过方法`downloadTask(withResumeData:)`创建一个新的`URLSessionDownloadTask`。传入的恢复数据与之前任务中由`pauseDownload(for:)`保存的`resumeData`相同。
+- en: Finally, once this task is created from the `URLSession`, `resume()` is called
+    to kick off the download again, hopefully at the previous completion state it
+    was in whenever we paused it (or canceled it) before.
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最终，一旦这个任务是从`URLSession`创建的，调用`resume()`来重新开始下载，希望能在我们暂停（或取消）之前的完成状态下再次开始下载。
+- en: Delegates
+  id: totrans-115
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 委托
+- en: There are even more delegates and delegate methods in the `URLSession` subsystem
+    than demonstrated in the code in this chapter. Objects should also implement some
+    or all of the methods in the `URLSessionTaskDelegate`, `URLSessionDataDelegate`,
+    or `URLSessionDownloadDelegate` protocols to handle task-level events. These include
+    events like the beginning and end of individual requests, and periodic progress
+    updates from data or download tasks similar to what was shown earlier.
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`URLSession`子系统中有比本章节中代码中展示的更多委托和委托方法。对象还应实现`URLSessionTaskDelegate`、`URLSessionDataDelegate`或`URLSessionDownloadDelegate`协议中的一些或所有方法来处理任务级事件。这些事件包括像开始和结束单个请求以及从数据或下载任务中周期性地更新进度，类似于前面展示的内容。'
+- en: Background threads and updating the UI
+  id: totrans-117
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 后台线程和更新UI
+- en: '`URLSessionTask` operates on its own background threads asynchronously without
+    blocking the current thread without having to specify anything special. However,
+    closures being called will not return on the main thread, so it’s important to
+    dispatch any UI updates or model synchronization code on the main thread (or using
+    whatever synchronization methods are used in other parts of your app).'
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`URLSessionTask` 在自己的后台线程上异步操作，无需阻塞当前线程或特别指定任何内容。然而，闭包被调用时不会返回到主线程，因此重要的是在主线程上调度任何UI更新或模型同步代码（或者在应用程序的其他部分使用的同步方法）。'
+- en: App transport security
+  id: totrans-119
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 应用程序传输安全性
+- en: To call nonsecure URLs such as ones that start with *http://*, it’s necessary
+    to specify a special configuration in an app’s *Info.plist* file for the `NSAppTransportSecurity`
+    key. The recommendation is to specify that certain domains are insecure but trusted
+    by excluding them using the key `NSExceptionDomains`. It’s possible to turn off
+    App Transport Security altogether by setting its `NSAllowsArbitraryLoads` key
+    to `true`, but that is not a recommended approach unless absolutely necessary.
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要调用非安全的URL，如以*http://*开头的URL，需要在应用程序的*Info.plist*文件中为`NSAppTransportSecurity`键指定特殊配置。建议通过使用`NSExceptionDomains`键来指定某些域是不安全但可信任的方式来排除它们。可以通过将其`NSAllowsArbitraryLoads`键设置为`true`来完全关闭App
+    Transport Security，但这不是推荐的方法，除非绝对必要。
+- en: What We’ve Learned
+  id: totrans-121
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: 'We’ve learned a lot about how networking functions in both Android and iOS:'
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们学到了关于如何在Android和iOS中的网络功能的许多知识：
+- en: We learned how to make a simple request in both platforms. The processes for
+    both were similar, but differed in the use of streams for Android.
+  id: totrans-123
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们学会了如何在两个平台上发出简单的请求。两者的过程相似，但在Android上使用流略有不同。
+- en: We learned how to send data up to a server in a way that allowed the developer
+    full control of the request and response.
+  id: totrans-124
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们学会了如何以开发人员完全控制请求和响应的方式将数据发送到服务器。
+- en: We talked about the nature of downloading binary files and what kind of processing
+    was necessary to store them to the filesystem.
+  id: totrans-125
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们讨论了下载二进制文件的性质以及存储它们到文件系统所需的处理方式。
+- en: Security controls embedded into iOS requires the use of HTTPS by default. This
+    is in contrast to Android, which is a little more freewheeling, open, and less
+    restrictive with regard to the defaults for networking security.
+  id: totrans-126
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 嵌入到iOS中的安全控制要求默认使用HTTPS。这与Android相反，后者在网络安全默认值方面要稍微灵活、开放，并且不那么限制性。
+- en: Oftentimes networks are unavailable or requests fail. In the next chapter, we’ll
+    look at providing users feedback when issues crop up or you just want to keep
+    them informed of some other operation happening. Let’s head over!
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常网络不可用或请求失败。在下一章中，我们将讨论当问题出现或者您只想告知用户某些其他操作正在进行时，如何为用户提供反馈。让我们继续前进吧！

@@ -1,0 +1,98 @@
+- en: Part I. Tasks and Operations
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第一部分：任务与操作
+- en: In this part, we provide foundational code to perform a variety of tasks common
+    to mobile apps, like displaying UI, passing data, sending and receiving events,
+    making network requests and handling network responses, accessing and manipulating
+    the filesystem, and reading or writing to persistent stores like preferences or
+    databases.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本部分中，我们提供了执行移动应用程序常见任务的基础代码，如显示 UI、传递数据、发送和接收事件、进行网络请求和处理网络响应、访问和操作文件系统，以及读取或写入到偏好或数据库等持久存储。
+- en: A Note About the State of Mobile Development
+  id: totrans-2
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 关于移动开发现状的一点说明
+- en: At the time of this writing, the state of Android and iOS development is highly
+    volatile, highly fragmented, and highly contentious. New libraries intended as
+    replacements for existing APIs have been added, but some of these releases weren’t
+    necessarily the product of community consensus. Further, nearly every replacement
+    API was substantially more complex than what it replaced. When deciding what information
+    to include in this book—including foundations like libraries and APIs—we decided
+    that we should try to provide the most help we could to the greatest number of
+    people and projects. The great majority of development is feature development
+    and maintenance, versus greenfield (new, blank slate). With that in mind, in almost
+    all cases we default to an existing, vetted library, instead of a new library
+    or practice that’s been available for only a relatively short amount of time (about
+    a year is the arbitrary threshold we decided on).
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在撰写本文时，Android 和 iOS 开发的状态非常动态、高度分散和高度有争议。已添加了用作现有 API 替代品的新库，但其中一些发布并非必然是社区共识的产物。此外，几乎每个替代
+    API 都比其替代品复杂得多。在决定在本书中包含哪些信息时，包括像库和 API 这样的基础设施，我们决定应尽可能为尽可能多的人和项目提供最大的帮助。大多数开发工作是功能开发和维护，而不是全新的开发项目。考虑到这一点，在几乎所有情况下，我们默认选择一个现有的、经过验证的库，而不是仅有相对较短时间（大约一年是我们决定的任意门槛）可用的新库或做法。
+- en: 'In addition, we found that many of the replacement APIs took the framework
+    further away from patterns seen in existing technologies. For example, the new
+    `Navigation` set of components on Android can be used to manage UI in the same
+    basic fashion presented in this book (`Fragment` instances), but in a very different
+    fashion. Considering the amount of infrastructure required, we found that including
+    additional copy and code to introduce those patterns, compared to the vetted patterns
+    we believe represent the reality of Android development at this point in history,
+    would do more harm than good. Another good example of this is database technology:
+    very recently, Google recommended Android development use its Room library, but
+    SQLite APIs are included in AOSP’s standard libraries. No one would argue that
+    SQLite doesn’t have limitations and that Room is probably a more modern approach—but
+    one of our primary goals with this book is to provide source material that would
+    allow someone conversant in general programming to quickly get up to a productive
+    level of fluency, and SQL generally is perhaps one of the most common, mature,
+    and widely scoped technologies in the world. Room is not; thus, our data persistence
+    references use SQLite APIs. If you choose to use Room, that’s great! And we encourage
+    you to check out these newer recommendations and tools, and we try to mention
+    them whenever appropriate, but don’t be surprised that we use `FragmentManager`
+    over the list of components needed to use the `Navigation` API—this is by all
+    means a deliberate decision and one that we believe is the right choice *at this
+    point*.'
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另外，我们发现许多替代 API 使得框架与现有技术中的模式更为远离。例如，Android 上的新的`Navigation`组件集可以用来管理 UI，以与本书中展示的基本方式（`Fragment`
+    实例）相同，但实现方式却大相径庭。考虑到所需的基础设施数量，与我们认为代表 Android 开发现状的经过验证的模式相比，包含额外的复制和代码来介绍这些模式，可能会弊大于利。另一个很好的例子是数据库技术：最近，Google
+    推荐 Android 开发使用其 Room 库，但 SQLite API 已包含在 AOSP 的标准库中。没有人会认为 SQLite 没有限制，并且 Room
+    可能是更现代的方法，但本书的主要目标之一是提供源材料，使通常掌握一般编程的人能够迅速达到高效的流利水平，而 SQL 通常是世界上最常见、最成熟和最广泛应用的技术之一。Room
+    则不是；因此，我们的数据持久化参考使用 SQLite API。如果您选择使用 Room，那很好！我们鼓励您查看这些更新的推荐和工具，并在适当的时候提及它们，但我们使用`FragmentManager`而不是使用`Navigation`
+    API 所需的组件列表，这显然是一个故意的决定，我们相信这是*目前*的正确选择。
+- en: Similarly, and again in the interest of leveraging any existing domain knowledge
+    possessed by you, the reader, we may use a less efficient but more readable or
+    common pattern or method. For example, when reading from a stream on Android,
+    we often just use `InputStream.read` and not use a buffer; while obviously buffers
+    are often appropriate, we can achieve not only very small and digestible sample
+    code blocks, but also free us up from having to explain how a buffer works (on
+    both sides, input and output), what size of buffer is most appropriate in various
+    circumstances, and why having a single buffer preallocated can be more efficient
+    than creating a new one for each read or write operation. A stream buffer might
+    seem like a pretty straightforward concept, but explaining it *correctly and in
+    full* is nontrivial. For a similar reason, modern versions of Java provide try-with-resources
+    for `Closable` operations, but in this case specifically, someone familiar with
+    try-catch in another language (e.g., JavaScript) will immediately recognize the
+    standard syntax and be able to focus their attention on the task we’re describing
+    and not need to stop, process the alternate syntax of try-with-resources, and
+    wade through one or two more paragraphs that aren’t serving the goal of *getting
+    it done*. Certainly, try-with-resources is something that can be very appropriate
+    in a lot of circumstances, and we encourage everyone to learn as much about each
+    language and framework as possible in their own time, but this book is about getting
+    programmers *programming*, not mastering every technology we touch on this book.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 同样地，为了充分利用您作为读者可能具有的现有领域知识，我们可能会使用一种效率较低但更易读或更常见的模式或方法。例如，在Android上从流中读取时，我们经常只使用`InputStream.read`而不使用缓冲区；尽管缓冲区显然是适当的，但我们不仅可以实现非常小且易于消化的示例代码块，还可以免去解释缓冲区工作方式（输入和输出两端）、在各种情况下选择何种大小的缓冲区以及预分配单个缓冲区可能比每次读取或写入操作都创建一个新的缓冲区更有效等问题。流缓冲区可能看起来是一个非常简单的概念，但要*正确且完整地*解释它并不是件容易的事情。出于类似的原因，Java的现代版本提供了针对`Closable`操作的try-with-resources，但在这种情况下，熟悉其他语言（例如JavaScript）中try-catch的人会立即识别标准语法，并能够集中精力在我们描述的任务上，而不需要停下来处理try-with-resources的替代语法，也不需要阅读一两段与*完成任务*目标无关的内容。当然，try-with-resources在很多情况下都非常适用，我们鼓励每个人在自己的时间里尽可能多地了解每种语言和框架，但本书的目的是让程序员*编程*，而不是掌握我们在本书中涉及的每一项技术。
+- en: Thanks for listening, and for everyone who expressed opinions that led to this
+    note, we truly appreciate your thoughtfulness.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 感谢您的倾听，并感谢所有表达意见的人，这些意见促成了这篇笔记，我们真诚地感激您的体贴。

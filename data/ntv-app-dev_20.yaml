@@ -1,0 +1,716 @@
+- en: Chapter 18\. Modeling Our Library
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第18章：建模我们的图书馆
+- en: At this point, we’ve made a fair amount of headway on our library application;
+    we’ve got some basic structural elements in place for the app, we’re transitioning
+    between some screens, and we’re listing out some data. Unfortunately that data
+    is static, hard-coded data—this won’t get us far for very long. In order to move
+    forward with the rest of the app, we need to look at our data model. Paying attention
+    to it now will allow us to make something a bit more maintainable and robust.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们在图书馆应用程序上已经取得了相当大的进展；我们已经为应用程序放置了一些基本的结构元素，我们正在一些屏幕之间过渡，并列出一些数据。不幸的是，这些数据是静态的、硬编码的数据——这不会让我们在很长时间内走得很远。为了继续进行应用程序的其余部分，我们需要查看我们的数据模型。现在注意它将使我们能够制作出更易于维护和更健壮的东西。
+- en: Now, static data in and of itself is not a terrible thing. In fact, we’ll continue
+    to use “static” data throughout this tutorial until we talk about networking in
+    [Chapter 9](ch09.html#topics_networking). A large part of the problem with the
+    way we’re serving up a list of books right now is that it’s not very portable
+    to other places inside the app.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，静态数据本身并不是一件可怕的事情。事实上，在我们谈论到网络在[第9章](ch09.html#topics_networking)之前，我们将继续在本教程中使用“静态”数据。目前我们提供图书列表的方式存在的一个很大问题是它不太适用于应用程序内部的其他地方。
+- en: Right now, we’re only displaying books in a catalog view within the app. Later,
+    however, we’ll be searching for books, saving books, and more. Let’s figure out
+    a way to move forward that is a bit more adaptable for the future.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 目前，我们仅在应用程序的目录视图中显示图书。然而，稍后我们将搜索图书、保存图书等。让我们找出一种更为适应未来的前进方式。
+- en: Dynamic Data in List Views
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 列表视图中的动态数据
+- en: Our list view of books is a great place to start looking at ways to make our
+    display of data a bit more dynamic. If you’ll recall, the list of books is currently
+    stored as a temporary property on our main object type, `Book`, as `sampleData`
+    to make it a bit easier to find and use.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的图书列表视图是开始寻找使数据显示更动态化的好地方。如果您还记得，图书列表当前作为主对象类型`Book`的临时属性`sampleData`存储，以便更容易找到和使用。
+- en: As we add more views that display data to our application, however, we’ll find
+    that this is a bit repetitive and cumbersome to maintain. Let’s make this a bit
+    more robust by adding a layer between our UI controller and our list view.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，随着我们向应用程序添加显示数据的更多视图，我们会发现这有些重复和繁琐。让我们通过在 UI 控制器和列表视图之间添加一层来使其更加健壮。
+- en: Android
+  id: totrans-7
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: The concept of a “data source” is present in Android and exists as just that
+    in some components like the next-generation media player, `ExoPlayer`. Further,
+    Android has a notion of “content provider” that can supply information about the
+    contacts on your phone for management in your app. However, components that use
+    the `Adapter` pattern tend to leave the data source arbitrary. You might have
+    a compiled list of objects, XML files on the device, JSON strings in memory, or
+    REST web services you communicate with across a network.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: “数据源”的概念在 Android 中存在，并且在某些组件中（如下一代媒体播放器`ExoPlayer`）只是存在。此外，Android 还有一个“内容提供者”的概念，可以为您的应用程序管理手机上的联系人提供信息。但是，使用“适配器”模式的组件往往会将数据源保留为任意的。您可以拥有对象的编译列表，设备上的
+    XML 文件，在内存中的 JSON 字符串或通过网络与 REST Web 服务通信。
+- en: For our first draft, we just added all our objects to a static `array` of `Book`
+    objects. While this is fine, it’s certainly not easily maintainable—every time
+    a book is added to our library, we’d have to update that data structure and publish
+    a new version of the app and hope that all our users will diligent about updating.
+    Probably in the long run, we’ll want to use a REST web service that can be updated
+    by library administrators and update our book list with occasional calls to the
+    appropriate service endpoints (URLs). We’ll certainly want to persist the data
+    locally to the device, and if we want to be able to sort or filter using well-known
+    and highly vetted SQL, we would probably want to convert the JSON responses of
+    those web services to database rows.
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于我们的第一个草稿，我们只是将所有对象添加到静态的`array`对象中。虽然这样做是可以的，但显然不容易维护——每次将书籍添加到我们的图书馆时，我们都必须更新该数据结构并发布一个新版本的应用程序，并希望所有用户都能勤奋地更新。长远来看，我们可能希望使用能够由图书管理员更新并偶尔调用适当服务端点（URL）更新我们的书籍列表的
+    REST Web 服务。我们肯定希望将数据持久化到设备上，并且如果我们希望能够使用广为人知和高度审查的 SQL 进行排序或过滤，我们可能希望将这些 Web
+    服务的 JSON 响应转换为数据库行。
+- en: For now, let’s just create a simple interface the provides our `Adapter` the
+    information it needs and update the `Adapter` to accommodate this contract, and
+    then we can make changes as our requirements and capabilities evolve.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，让我们简单地创建一个接口，提供给我们的`Adapter`所需的信息，并更新`Adapter`以适应这个契约，然后随着我们的需求和能力的发展进行更改。
+- en: 'Let’s take another look at our `Adapter` and see how we can fulfill its needs
+    in an extensible, dynamic fashion:'
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们再次查看我们的`Adapter`，看看如何以可扩展、动态的方式满足它的需求：
+- en: 'Hmm. Looks like we reference our static source of book data a couple times—once
+    when a view is recycled and we want to update the visual properties of the row
+    (for now, specifically the title of the book), and also to determine the total
+    number of books in our source, so the `RecyclerView` can know when to stop scrolling.
+    Sounds like a simple enough composition:'
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗯。看起来我们引用了几次我们静态的书籍数据源 —— 一次是在视图被回收时，我们想要更新行的视觉属性（目前是书籍的标题），另一次是确定我们数据源中书籍的总数，以便`RecyclerView`知道何时停止滚动。听起来很简单的组合：
+- en: 'Now let’s update the `Adapter` to accept any class that implements that interface:'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在让我们更新`Adapter`，使其接受任何实现该接口的类：
+- en: 'Simple! If we wanted to keep using our static array, we could create a simple
+    class that implemented `BookDataSource` but used the hardcoded corpus very easily:'
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 简单！如果我们想继续使用静态数组，我们可以创建一个简单的类来实现`BookDataSource`，但是非常容易使用硬编码的语料库：
+- en: 'You may not have noticed, but this `BookDataSource` interface contract is implicitly
+    satisfied by all `List<Book>` implementations—you could provide a data source
+    as simple as the following:'
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能没有注意到，但是这个`BookDataSource`接口契约被所有`List<Book>`的实现隐式满足了 —— 你可以提供一个如下简单的数据源：
+- en: With this type of data source, you’d implicitly have at hand all the wondrous
+    `List` APIs like `add` and `addAll`, `set`, `remove`, `subList`, etc.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有了这种类型的数据源，你可以隐式地使用所有奇妙的`List` API，比如`add`和`addAll`、`set`、`remove`、`subList`等。
+- en: So while we’re still using the hardcoded book list for now, we won’t have to
+    make any changes to our `RecyclerView` or `Adapter`, other than updating the `Adapter`
+    with the new source—maybe one that reads from a web server or from a local database.
+    Great! Our list view is now a bit more dynamic even if it’s using the same data
+    as before. We’ll get a bit further with removing our static array of `Book`s later
+    in the chapter. For now, let’s see how we can do the same thing on iOS.
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，虽然我们现在仍然使用硬编码的书籍列表，但除了用新的数据源更新`Adapter`之外，我们不必对我们的`RecyclerView`或`Adapter`进行任何更改
+    —— 也许是从Web服务器或本地数据库读取的数据源。太好了！即使使用与以前相同的数据，我们的列表视图现在也更加动态化。稍后在本章中，我们将进一步删除我们的静态`Book`数组。现在，让我们看看如何在iOS上实现同样的功能。
+- en: iOS
+  id: totrans-18
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: Like we did in Android using the `Adapter` pattern, we need to create some separation
+    between our controller layer and our raw data. We can do this by adding a new
+    object to interface directly with the controller. If you’ll recall in `CatalogViewController`,
+    we’re making the view controller adhere to the `UITableViewDataSource` protocol
+    to serve up data for the table view.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像我们在Android中使用`Adapter`模式一样，我们需要在控制器层和原始数据之间创建一些分离。我们可以通过添加一个新对象来直接与控制器进行接口交互来实现这一点。如果你还记得在`CatalogViewController`中，我们正在让视图控制器遵循`UITableViewDataSource`协议来为表视图提供数据。
+- en: This worked fine to start, but why not create a separate object to serve up
+    that data to the table view directly? The controller can manage that data source
+    object, and it can manage the table view object. This creates separation between
+    the controller, the view—in this instance the table view—and the data layer.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个方法一开始运行得很好，但是为什么不创建一个单独的对象直接为表视图提供数据呢？控制器可以管理该数据源对象，也可以管理表视图对象。这样就在控制器、视图（在这种情况下是表视图）和数据层之间建立了分离。
+- en: 'Let’s start by adding a new file to our project called `ListDataSource` by
+    clicking File > New > File in the app menu. This new object will function as the
+    data source for our table view. For now, this file be pretty basic. Here’s an
+    example implementation:'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们通过点击应用程序菜单中的 文件 > 新建 > 文件 来向项目中添加一个名为 `ListDataSource` 的新文件。这个新对象将作为我们表视图的数据源。现在，这个文件会很基础。以下是一个示例实现：
+- en: '[PRE0]'
+  id: totrans-22
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'You might recognize some of this code—or, if you’ve been paying attention,
+    all of it! This is the same code we used in `CatalogViewController` to display
+    a list of books in our book catalog. In fact, by placing this code in a separate
+    file, we can remove all the `UITableViewDataSource` code that currently resides
+    in `CatalogViewController`. The `CatalogViewController` file now looks like so:'
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能会认出一些这段代码——或者，如果你一直在注意，会认出全部！这段代码与我们在`CatalogViewController`中用来显示书籍目录列表的代码是一样的。事实上，通过将这段代码放在一个单独的文件中，我们可以移除当前存放在`CatalogViewController`中的所有`UITableViewDataSource`代码。现在，`CatalogViewController`文件看起来是这样的：
+- en: '[PRE1]'
+  id: totrans-24
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: If you were to build and run our application, you might see that we’ve gone
+    a bit too far. `CatalogViewController` doesn’t have the required methods necessary
+    to fill in as the data source for the table view, and yet it’s still linked in
+    *Main.Storyboard*. This causes a `SIGABORT`, which crashes the application.
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你构建并运行我们的应用程序，你可能会发现我们已经走得太远了。`CatalogViewController`没有必要的方法来填充表视图作为数据源，但它仍然链接在*Main.Storyboard*中。这会导致`SIGABORT`，从而使应用程序崩溃。
+- en: Oops. Let’s see if we can go back and fix this. In fact, while we’re fixing
+    things, let’s see if we can make things even better by having the table view in
+    `CatalogViewController` use our new `ListDataSource` as its data source directly.
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 糟糕。让我们看看能否回去修复这个问题。事实上，在我们修复问题的同时，让我们看看是否可以通过让`CatalogViewController`中的表视图直接使用我们的新`ListDataSource`作为其数据源来使事情变得更好。
+- en: First things first, we have to remove the linkage in *Main.storyboard*. Open
+    up the storyboard and click on the table view. In the right pane of Xcode, click
+    on the Connections inspector. Inside you’ll see a connection that has been made
+    for `dataSource`. Click the “x” to remove that connection from the storyboard.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们必须移除*Main.storyboard*中的关联。打开 storyboard 并点击表视图。在 Xcode 右侧窗格中，点击 Connections
+    inspector。在里面，你会看到已经为`dataSource`建立的连接。点击“x”按钮从 storyboard 中移除该连接。
+- en: Now, let’s switch the table view to use a new, discrete data source object that
+    we create. In order to do that, we need to expose the table view to the view controller.
+    To do that, we’re going to add a new connection using the Assistant editor in
+    Xcode. Click the Assistant editor button in the top right of the project window.
+    This will automatically open up the corresponding `CatalogViewController` for
+    the scene—some might say “magically.”
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，让我们将表视图切换到使用一个新的、独立的数据源对象。为了做到这一点，我们需要将表视图暴露给视图控制器。为此，我们将使用 Xcode 中的 Assistant
+    editor 添加一个新的连接。点击项目窗口右上角的 Assistant editor 按钮。这将自动打开相应的`CatalogViewController`用于该场景——有些人可能会说“神奇”。
+- en: 'Once the view controller is active in both displays, Control-click on the table
+    view and drag a connection over to the code window similar to how you wired up
+    our browsing button in a previous chapter. You’ll drag the connection directly
+    underneath the `CatalogViewController` class definition here:'
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦视图控制器在两个显示器中都激活了，就在表视图上按住控制键并拖动连接到代码窗口，类似于我们在前面章节中连接浏览按钮的方式。你将把连接直接拖到这里`CatalogViewController`类定义的下方：
+- en: '[PRE2]'
+  id: totrans-30
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: A modal will come up asking you if you’re creating an `Outlet`, which is a connection
+    from a view controller to a particular view, or if you’re creating an `Action`,
+    which is a control event (like whenever a button is pressed, for example). Leave
+    everything as is and name our new outlet `tableView`.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 会弹出一个模态框询问你是否正在创建一个`Outlet`，这是从视图控制器到特定视图的连接，或者你是否正在创建一个`Action`，这是一个控制事件（比如每当按下按钮时）。保持所有设置不变，将我们的新
+    outlet 命名为`tableView`。
+- en: 'At this point, `CatalogViewController` should look like this:'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此时，`CatalogViewController`应该看起来像这样：
+- en: '[PRE3]'
+  id: totrans-33
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: 'We’ve wired a connection from the storyboard to the view controller to expose
+    our table view directly to the view controller. The reason for this connection
+    was to enable us to set up the table view’s data source inside the view controller
+    class. Take a look at how this is done:'
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经从 storyboard 到视图控制器中建立了一个连接，直接将我们的表视图暴露给视图控制器。建立这个连接的原因是使我们能够在视图控制器类中设置表视图的数据源。看看这是如何完成的：
+- en: '[PRE4]'
+  id: totrans-35
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: Let’s walk through the code.
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看代码的步骤。
+- en: The first thing to note is that we’ve added a new `lazy` property called `dataSource`
+    inside `CatalogViewController`. The `lazy` operator makes it so this object isn’t
+    instantiated until the property is accessed. This is generally considered a good
+    practice for data sources due to the time required for spinning up the object
+    occasionally. In our case, our data source is pretty lightweight, but it’s a good
+    habit to get into. It also allows us to keep our initialization code contained.
+    In this case, we’re simply creating a new instance of `ListDataSource`.
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先要注意的是，我们在`CatalogViewController`内部添加了一个名为`dataSource`的新的`lazy`属性。`lazy`运算符使得此对象在访问属性时才被实例化。这通常被认为是数据源的良好实践，因为偶尔需要启动对象所需的时间。在我们的情况下，我们的数据源相当轻量级，但养成这样的良好习惯也是好的。它还允许我们保持初始化代码的封装性。在这种情况下，我们只是简单地创建了一个`ListDataSource`的新实例。
+- en: Next, inside `viewDidLoad`, we’ve added some new code. This method is called
+    as part of the life cycle of a view; when it’s called, we can safely assume that
+    our outlets and actions are wired up and the view controller’s `view` is loaded.
+    This method is only called once in the life cycle of a view, but that’s all right
+    because we only need it once.
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，在`viewDidLoad`内部，我们添加了一些新代码。这个方法是视图生命周期的一部分；当它被调用时，我们可以安全地假设我们的输出和操作已经连接，视图控制器的`view`已加载。这个方法在视图生命周期中只被调用一次，但没问题，因为我们只需要一次。
+- en: Inside `viewDidLoad`, we’re setting the `dataSource` property of the table view
+    to the data source we’ve created inside the view controller. If you build and
+    run the application, you’ll notice the catalog loads the same as before.
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`viewDidLoad`内部，我们将表视图的`dataSource`属性设置为我们在视图控制器内创建的数据源。如果您构建并运行应用程序，您会注意到目录加载与之前相同。
+- en: 'At this point, you might be asking yourself: why does this matter? It seems
+    more complicated to create a full-blown data layer than to have the view controllers
+    supply their data directly.'
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这一点上，您可能会问自己：为什么这很重要呢？创建一个完整的数据层似乎比让视图控制器直接提供它们的数据更复杂。
+- en: Fair point.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 公平的观点。
+- en: However, if you’ll recall, we’re still using static, hardcoded data in our app.
+    Let’s see what happens when we transition to something more portable. You’ll see
+    the full power of abstracting our data out of the view layer. Let’s go!
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，如果您还记得，我们的应用程序仍在使用静态的、硬编码的数据。让我们看看当我们过渡到更便携的东西时会发生什么。您将看到将数据抽象出视图层的全部威力。让我们开始吧！
+- en: It’s Time for Our Model Objects to Get Real
+  id: totrans-43
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 是时候让我们的模型对象真实起来了
+- en: All right. Our `Book` object has a few properties. But, let’s be honest. Most
+    books have *much* more metadata other than what we’ve been showing so far. Additionally,
+    if we want to change our data, we have to release a new version of our applications.
+    And, those applications have to be in sync with each other. This gets harder as
+    you add the ability to save books for later and as the application grows in complexity.
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧。我们的`Book`对象有一些属性。但是，说实话，大多数书籍的元数据远不止我们到目前为止展示的这些。此外，如果我们想要改变我们的数据，我们必须发布一个新版本的应用程序。并且，这些应用程序必须保持同步。随着将书籍保存到以后和应用程序复杂度增加，这变得越来越困难。
+- en: As Dr. Phil (yes, that Dr. Phil) would say, “It’s time for our model objects
+    to *get real*.”
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如 Dr. Phil（是的，那个 Dr. Phil）会说的，“现在是我们的模型对象*真实起来*的时候了。”
+- en: 'Fortunately, we can solve this in two ways:'
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幸运的是，我们可以用两种方法解决这个问题：
+- en: By switching from static, hardcoded data to something portable like JSON.
+  id: totrans-47
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 通过从静态、硬编码的数据切换到像 JSON 这样的可移植格式。
+- en: By switching from a static, hardcoded data source to something served up via
+    a server, or another source of truth beyond the application.
+  id: totrans-48
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 通过从静态的、硬编码的数据源切换到通过服务器提供的东西，或者是应用程序之外的另一个真实数据源。
+- en: 'As mentioned earlier in this chapter, we’ll address number 2 in [Chapter 6](ch06.html#topics_files)
+    of this book. However, let’s take a look at number 1: switching to JSON.'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如本章前面提到的那样，我们将在本书的[第六章](ch06.html#topics_files)中解决第2点。然而，让我们先看看第1点：转向 JSON。
+- en: JSON for One, JSON for All
+  id: totrans-50
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 为一而设 JSON，为所有设 JSON
+- en: 'We’ve decided we’re going to use JSON. Here’s an example of what our `Book`
+    objects could look like in JSON:'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们决定使用 JSON。以下是我们的`Book`对象在 JSON 中的一个示例：
+- en: '[PRE5]'
+  id: totrans-52
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'In fact, if we take the data in the `sampleData` property we added to our `Book`
+    object earlier, transform it to JSON, and save it as a new file named *catalog.json*,
+    we end up with a file that looks like so:'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 事实上，如果我们把我们之前添加到`Book`对象的`sampleData`属性中的数据转换为 JSON，并将其保存为一个名为*catalog.json*的新文件，我们最终得到一个如下所示的文件：
+- en: '[PRE6]'
+  id: totrans-54
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: Feel free to add additional books; this is the time for personal favorites and
+    guilty pleasures.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随意添加额外的书籍；现在是个人喜好和私人爱好的时候。
+- en: Switch the Model Layer to JSON
+  id: totrans-56
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 将模型层切换为 JSON
+- en: If you’ll recall, in our data layer code so far, we’re still using the `sampleData`
+    provided by the `Book` object. Let’s remove that in both projects and switch to
+    using our JSON directly.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您回想一下，到目前为止，我们在数据层代码中仍在使用`Book`对象提供的`sampleData`。让我们在两个项目中都移除它，并切换到直接使用我们的
+    JSON。
+- en: Android
+  id: totrans-58
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: So, we’ve now got a file called *catalog.json* with all the JSON `Book` representations,
+    saved on disk. Let’s assume, for the Android app, that it’s saved as an asset,
+    in the project-level */assets/* folder. This folder has special attributes and
+    APIs to make operations just like the one we’re describing easier to use, and
+    may not be available immediately—if you don’t see a folder named “assets” in your
+    project’s source, make sure you’re in the “Android” project view from the drop-down
+    directly above the file list in the lefthand window pane, then right-click the
+    project name in Android Studio and select New, then Folder, then Assets Folder.
+    You can create a new text file in this directory, copy the preceding JSON, and
+    save the file as *catalog.json*.
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们有一个名为 *catalog.json* 的文件，其中包含所有 JSON `Book` 表示，保存在磁盘上。假设在 Android 应用中，它被保存为一个资产，在项目级别的
+    */assets/* 文件夹中。这个文件夹具有特殊属性和 API，使得像我们描述的这样的操作更容易使用，并且可能不会立即可用——如果在项目源中看不到名为“assets”的文件夹，请确保您在左侧窗格中的文件列表上方的下拉菜单中选择了“Android”项目视图，然后在
+    Android Studio 中右键单击项目名称，选择新建，然后文件夹，然后资产文件夹。您可以在此目录中创建一个新的文本文件，复制上述 JSON，并将文件保存为
+    *catalog.json*。
+- en: Let’s convert our `BookDataSource` to use that instead. To start off, we’ll
+    read the file on the UI thread, but that’s just step one—any time you’re touching
+    disk or the wire, make sure you’re working in a background thread.
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们将我们的 `BookDataSource` 转换为使用它。首先，我们将在 UI 线程上读取文件，但这只是第一步——任何时候涉及到磁盘或网络传输时，请确保您在后台线程中工作。
+- en: If we refer back to the sample code in [Chapter 6](ch06.html#topics_files),
+    you may remember how to read a file from disk. If you think back to the exercises
+    in [Chapter 12](ch12.html#topics_transports), you may remember a couple ways to
+    parse JSON into valid Java object instances. We’ll use techniques from both.
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们回顾一下第 [Chapter 6](ch06.html#topics_files) 中的示例代码，您可能还记得如何从磁盘读取文件。如果您回想起
+    [Chapter 12](ch12.html#topics_transports) 中的练习，您可能还记得几种将 JSON 解析为有效的 Java 对象实例的方法。我们将同时使用这两种技术。
+- en: 'Let’s have our data source class provide this functionality, although in time
+    you might find it more appropriate to separate out some of the logic. For now,
+    let’s start out with that basic `List<Book>` data source, but we’ll dress it up
+    so that on instantiation, it reads *catalog.json*, converts each JSON object to
+    a Java `Book` instance, and adds all of those `Books` to itself (an `ArrayList`):'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们的数据源类提供此功能，尽管随着时间的推移，您可能会发现将一些逻辑分离出来更合适。现在，让我们从一个基本的 `List<Book>` 数据源开始，但我们会装扮它，以便在实例化时，它读取
+    *catalog.json*，将每个 JSON 对象转换为一个 Java `Book` 实例，并将所有这些 `Book` 添加到自身（一个 `ArrayList`）中。
+- en: 'If you run that, you will get an array of `Book` instances of a number equal
+    to the JSON objects in *catalog.json*; however, if you used the Java implementation,
+    those instances will be bare. Each property will be default. That’s because of
+    the Hungarian notation we used when defining `Book` properties:'
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您运行它，您将获得与 *catalog.json* 中的 JSON 对象数量相等的 `Book` 实例数组；然而，如果您使用了 Java 实现，这些实例将是裸的。每个属性将是默认的。这是因为我们在定义
+    `Book` 属性时使用了匈牙利命名法：
+- en: '[PRE7]'
+  id: totrans-64
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: 'When Gson looks at the `Book` class and tries to find properties to map from
+    the JSON it’s handed, it’ll find that the `Book` class instance wants an “mTitle”
+    and doesn’t care about “title”—on the other hand, the JSON has no reference to
+    “mTitle” or “mIsbn” or “mAnything”—it’s using human-readable key names. Fortunately
+    for us, this is a common issue in Android and one that’s easily fixed using Gson’s
+    `SerializedName` annotation. Supply a `String` to this annotation, and Gson will
+    check both that `String` and the actual property name. Make the following updates
+    and run it again. In Java:'
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 Gson 查看 `Book` 类并尝试从它手头的 JSON 中找到要映射的属性时，它会发现 `Book` 类实例想要一个“mTitle”，而不关心“title”——另一方面，JSON
+    中没有“mTitle”、“mIsbn”或“mAnything”的参考——它使用人类可读的键名。幸运的是，这是 Android 中的一个常见问题，使用 Gson
+    的 `SerializedName` 注解可以轻松解决。提供一个 `String` 给这个注解，Gson 将检查该 `String` 和实际的属性名。进行以下更新并再次运行。在
+    Java 中：
+- en: '[PRE8]'
+  id: totrans-66
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: 'This time, your `Book` instances should be fully and appropriately populated.
+    That’s it! You’ve got a working serialization protocol. Let’s examine a few of
+    the features that might be under your radar. To start, one thing you might notice
+    in the preceding code is this hard-to-read mouthful:'
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这次，你的`Book`实例应该被完全和适当地填充。就这样！你有一个工作的序列化协议。让我们检查一下可能在你的视线之外的一些功能。首先，你可能会注意到前面的代码中这个难以阅读的繁琐：
+- en: '`Gson` can do a great job of converting a single `Book` instance to, and from,
+    a JSON string, but when we start getting into collections, things become a little
+    less straightforward. One option is to just create a class that has a generic:'
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Gson`可以很好地将单个`Book`实例转换为 JSON 字符串，反之亦然，但是当我们开始处理集合时，情况变得不那么简单。一个选择是创建一个具有泛型的类：'
+- en: 'This could be called using the traditional Gson method `fromJson`:'
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这可以使用传统的 Gson 方法`fromJson`来调用：
+- en: '[PRE9]'
+  id: totrans-70
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'Failing that, however, we can use the `TypeToken` class to dynamically generate
+    the generics. You’re creating an instance of a new `TypeToken` subclass that then
+    invokes its `getType` method, so the syntax is effectively:'
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是，如果失败了，我们可以使用`TypeToken`类来动态生成泛型。你正在创建一个`TypeToken`子类的实例，然后调用它的`getType`方法，因此语法实际上是这样的：
+- en: '[PRE10]'
+  id: totrans-72
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: In that example, “GENERICIZED_DATA_TYPE” is any number of data types including
+    any number of generics; it might be as simple as `new TypeToken<Date>...`, or
+    it could have several nested layers, like `new TypeToken<List<Map<String, List<Date>>>...`
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在那个例子中，“GENERICIZED_DATA_TYPE”可以是包括任意数量泛型的数据类型；它可能像`new TypeToken<Date>...`那样简单，或者像`new
+    TypeToken<List<Map<String, List<Date>>>...`那样有几层嵌套。
+- en: 'Back to the example at hand. Using this new data source will automatically
+    update your `Adapter` and `RecyclerView`, and you don’t even need to change your
+    adapter code at all; just make sure when you supply the data source to the `Adapter`
+    class, the constructor includes a `Context` parameter, so we can get the right
+    files directory:'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回到手头的例子。使用这个新数据源将自动更新你的`Adapter`和`RecyclerView`，而且你甚至不需要改变你的适配器代码；只需确保在向`Adapter`类提供数据源时，构造函数包含一个`Context`参数，以便我们可以获取正确的文件目录：
+- en: 'Another interesting trick here is that `Books` is itself a `List` of `Book`
+    instances, so instead of the updated data source you see in the preceding code,
+    you could read the file out using a utility method and use Gson to convert that
+    string directly into the data source. Let’s assume we revert to the original `Books`
+    class with no method:'
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里的另一个有趣的技巧是，`Books`本身是`Book`实例的`List`，所以不必像前面的代码中看到的更新数据源那样，可以使用实用方法读取文件并直接将该字符串转换为数据源。假设我们恢复到没有方法的原始`Books`类：
+- en: 'Let’s also assume we have access to the methods in [Chapter 6](ch06.html#topics_files).
+    We might do something like this in the `Activity`’s `onCreate` method:'
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设我们还可以访问 [第6章](ch06.html#topics_files) 中的方法。我们可以在`Activity`的`onCreate`方法中做类似这样的事情：
+- en: Since `Books` is also an `ArrayList`, it’ll be populated by each of the books
+    in *catalog.json* and so be able to successfully satisfy the `get` and `size`
+    contract requirements of `BookDataSource` implicitly.
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为`Books`也是一个`ArrayList`，它将由*catalog.json*中的每本书填充，并能够成功地满足`BookDataSource`的`get`和`size`合约要求。
+- en: Now that we’ve got that set up, we no longer need the static data structure
+    `SAMPLE_DATA` on the `Book` class and can safely delete it. One handy feature
+    of Android Studio is the “Refactor” options. Besides having functions to rename
+    methods or variables everywhere they appear in your project, it can also run a
+    “Safe Delete” and only delete a variable if it’s no longer used in the project.
+    Try this out on `Book.SAMPLE_DATA` after making the preceding updates and you
+    should see it delete safely.
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经设置好了，不再需要`Book`类上的静态数据结构`SAMPLE_DATA`，可以安全地将其删除了。Android Studio 的一个方便功能是“重构”选项。除了有重命名项目中所有出现的方法或变量的功能外，它还可以运行“安全删除”，仅在项目中不再使用变量时才删除它。在更新前的更新后，在`Book.SAMPLE_DATA`上尝试这个选项，你应该可以安全地删除它。
+- en: iOS
+  id: totrans-79
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: In iOS, it’s remarkably easy to get started with JSON by using the built-in
+    `Codable` protocol. This a protocol composed of `Encodable` and `Decodable` protocols.
+    They provide some understanding necessary for the Swift compiler to reason about
+    the code.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 iOS 中，通过使用内置的`Codable`协议，开始使用 JSON 是非常容易的。这是一个由`Encodable`和`Decodable`协议组成的协议。它们为
+    Swift 编译器提供了一些必要的理解来推断代码。
+- en: For more information on the details of `Codable`, read [Chapter 12](ch12.html#topics_transports).
+    For now, however, here’s an example of how `Codable` allows us to utilize JSON
+    easily in our applications.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想要了解更多关于`Codable`的详细信息，请阅读[第12章](ch12.html#topics_transports)。不过，现在让我们看一个例子，说明`Codable`如何让我们在应用程序中轻松地利用JSON。
+- en: 'Let’s add support for `Codable` inside the `Book` struct:'
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们在`Book`结构体内部添加对`Codable`的支持：
+- en: '[PRE11]'
+  id: totrans-83
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: That’s it. You might notice that we’ve removed our `sampleData` property from
+    our object as well. This is intentional because we’re now going to switch `ListDataSource`
+    from using `sampleData` to using our newly created *catalog.json*, which contains
+    the entirety of our catalog of books.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就是这样。你可能注意到，我们还从对象中移除了`sampleData`属性。这是有意为之的，因为我们现在要切换`ListDataSource`，从使用`sampleData`改为使用我们新创建的*catalog.json*，其中包含我们图书馆全部图书的目录。
+- en: 'Let’s take a look at `ListDataSource`:'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看`ListDataSource`：
+- en: '[PRE12]'
+  id: totrans-86
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: We’ve added a new `lazy` property called `data`. This property is an array of
+    `Book`s. Whenever the property is accessed the first time, *catalog.json* is read
+    into a object with a `Data` type called `rawCatalogData`. This property is passed
+    to a `JSONDecoder` object that decodes the object for a type of `[Book]`.
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们添加了一个名为`data`的新`lazy`属性。这个属性是一个`Book`数组。每当首次访问该属性时，会读取*catalog.json*文件到一个名为`rawCatalogData`的`Data`类型对象中。然后，这个属性会被传递给一个`JSONDecoder`对象，以解码为`[Book]`类型的对象。
+- en: Notice that this is `[Book]` and not a raw `Book`. The reason for this declaration
+    is because that JSON actually contains an array of JSON objects. The Swift compiler
+    is smart to interpret what we’ve declared at the call site when dynamically converting
+    *catalog.json* to objects inside Swift. If we don’t find our JSON file—or if it’s
+    not decodable into something by the Swift compiler—we return an empty array, `[]`.
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意这里是`[Book]`，而不是原始的`Book`。声明如此的原因是因为JSON实际上包含了一个JSON对象数组。Swift编译器聪明地在调用站点动态将*catalog.json*转换为Swift内部对象时解释了我们的声明。如果找不到我们的JSON文件——或者Swift编译器无法将其解码为任何东西——我们将返回一个空数组`[]`。
+- en: 'Now, we’ve also updated some of the code that’s used to power our table view
+    in the `UITableViewDataSource` protocol adherence. The lines to note are:'
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们还更新了用于驱动我们表视图的代码，在遵循`UITableViewDataSource`协议时。需要注意的代码行是：
+- en: '[PRE13]'
+  id: totrans-90
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: Note also `data[indexPath.row]` inside the method `tableView(_:cellForRowAt:)`.
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还要注意方法`tableView(_:cellForRowAt:)`中的`data[indexPath.row]`。
+- en: Build and run the app and you’ll see it functions the same as it did before—it
+    displays our list of all the books available in our library—however, now the books
+    are dynamically supplied to the table view via a JSON file included in the application
+    bundle.
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 构建并运行应用程序，你会发现它与之前的功能一样——它显示了我们图书馆中所有书籍的列表——但现在书籍是通过应用程序捆绑包中的JSON文件动态提供给表视图的。
+- en: What We’ve Learned
+  id: totrans-93
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: 'In the short span of this chapter we’ve learned:'
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这一章的短时间内，我们学到了：
+- en: How to separate tightly coupled code out of the view layer into a new data layer
+  id: totrans-95
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如何将紧密耦合的代码从视图层分离到一个新的数据层
+- en: How to create a discrete object tailor-made for supplying data to our views
+  id: totrans-96
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如何创建一个专门为向视图提供数据的离散对象
+- en: How to switch to a JSON file as a source for our application’s data
+  id: totrans-97
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如何切换到使用JSON文件作为应用程序数据源
+- en: In the next chapter, we’ll take this a bit further; we’ll use our new data layer
+    to provide some additional functionality to save books we’ve found that we liked.
+    Keep reading!
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在下一章中，我们将进一步探讨；我们将使用我们的新数据层，为我们喜欢的书籍提供一些额外的保存功能。请继续阅读！

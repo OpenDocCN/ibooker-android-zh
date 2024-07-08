@@ -1,0 +1,1559 @@
+- en: Chapter 17\. Listing Data in the App
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第 17 章。在应用程序中列出数据
+- en: In the last chapter, we went through the basics of starting a new project in
+    Android Studio and Xcode. We were also charged by a mysterious librarian to build
+    an app for a library that, presumably, has magic powers. This is just a typical
+    day in the life of a mobile app developer.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在上一章中，我们讲解了在 Android Studio 和 Xcode 中启动新项目的基础知识。我们还接到一个神秘图书管理员的委托，建立一个可能具有魔力的图书馆的应用程序。这只是移动应用程序开发人员生活中的一个典型日子。
+- en: 'Within this chapter, we’re going to add a bit more structure and scaffolding
+    to our app. More specifically, we will learn:'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们将为我们的应用程序添加一些更多的结构和支架。更具体地说，我们将学习：
+- en: How to customize and tweak views
+  id: totrans-3
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如何自定义和调整视图
+- en: How to trigger actions from button
+  id: totrans-4
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如何从按钮触发操作
+- en: How to show lists of data
+  id: totrans-5
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如何显示数据列表
+- en: How to transition between two screens
+  id: totrans-6
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如何在两个屏幕之间进行过渡
+- en: This is a long chapter, so let’s get started. Our future library patrons are
+    waiting.
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个很长的章节，让我们开始吧。我们未来的图书馆用户正在等待。
+- en: Sprucing Up Views
+  id: totrans-8
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 美化视图
+- en: If you take a look at both the Android and iOS apps in their current state,
+    they are fairly skeletal and uninviting. We can do a better job than a basic label
+    that says “Welcome” displayed against a blank background. In fact, both platforms
+    have a pretty robust set of built-in tools for styling that we can use to make
+    our app more presentable and inviting. We’re not going to get in depth into those
+    tools—the tooling is quite deep and the possibilities are near limitless with
+    what you can create—but for now let’s at least spruce up the apps a bit.
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你看看当前状态下的 Android 和 iOS 应用程序，它们都相当基本和不邀人入目。我们可以做得比一个只显示“欢迎”的基本标签在空白背景上更好。事实上，这两个平台都有一套相当强大的内置工具，用于样式化我们的应用程序，使其更具展示性和吸引力。我们不打算深入探讨这些工具——工具非常深入，你可以用它们创造的可能性几乎无限——但现在至少让我们稍微美化一下这些应用程序。
+- en: Android
+  id: totrans-10
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: Referring back to [Chapter 15](ch15.html#app_setup), you’ll see that we started
+    with a simple `Activity` when we chose the project type and were able to update
+    the text. Let use this same `Activity` and XML layout to update our welcome screen.
+    For this simple version, we won’t use any kind of login or authentication, so
+    our welcome screen is probably as simple as a logo, a small amount of copy introducing
+    the library, and maybe an Accept Terms label and checkbox. Let’s also include
+    a button at the bottom of the screen to browse the library’s corpus, which will
+    be disabled until the Accept Terms checkbox is ticked. Once enabled, tapping this
+    button will launch into one of our primary UI controllers, tentatively named `BrowseLibraryActivity`.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回顾[第 15 章](ch15.html#app_setup)，当我们选择项目类型并能够更新文本时，我们从一个简单的`Activity`开始。让我们使用相同的`Activity`和
+    XML 布局来更新我们的欢迎界面。对于这个简单版本，我们不会使用任何形式的登录或认证，因此我们的欢迎界面可能只有一个标志，一小段介绍库的文本，以及可能的接受条款标签和复选框。让我们还在屏幕底部包括一个按钮，用于浏览库的语料库，该按钮在勾选接受条款复选框之前将被禁用。一旦启用，点击此按钮将启动我们的一个主要
+    UI 控制器之一，暂时命名为`BrowseLibraryActivity`。
+- en: Also remember that we have no idea how large the screen will be when some user
+    runs our app on a device left over from 2010, nor on a device from 2024\. Nor
+    can we be sure of the orientation (landscape or portrait), and if we’re observing
+    accessibility recommendations, even our font size can vary wildly depending on
+    user or device settings. The bottom line is that we’ll need all that content to
+    scroll, so we can ensure the user can read all the information we’re presenting,
+    opt in (or not) to the terms we establish, and be able to tap the browse button
+    to start wandering our virtual stacks.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还要记住，我们无法确定某位用户在设备上运行我们的应用程序时屏幕的大小，无论是来自 2010 年的设备还是 2024 年的设备。我们也不能确定屏幕的方向（横向或纵向），如果我们遵循无障碍建议，甚至我们的字体大小也可能因用户或设备设置而大幅变化。总之，我们需要所有内容都可以滚动，以确保用户可以阅读我们呈现的所有信息，并选择（或不选择）我们设定的条款，并能够点击浏览按钮开始浏览我们的虚拟书库。
+- en: Let’s establish some facts. In Android, resources like strings and drawables
+    are generally held in XML structures identified by a system-generated integer,
+    as described earlier when creating and referencing our logo image. Read on for
+    more details.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们确认一些事实。在 Android 中，像字符串和可绘制资源这样的资源通常以系统生成的整数标识的 XML 结构中保存，就像我们在创建和引用我们的标志图像时早些时候描述的那样。继续阅读获取更多细节。
+- en: Adding string and drawable resources
+  id: totrans-14
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 添加字符串和可绘制资源
+- en: 'So we’ll need a few pieces of copy: an introduction to the app and the library,
+    something about copyrighted material that the user digitally agrees to, and button
+    labels. You’ll recall that we created our logo file and registered with the system
+    simply by placing it in the appropriate resource directory. For string values,
+    we’ll want a different resource type: `values`. The traditional format is */res/values/strings.xml*,
+    and each string is a `string` node with a `name` attribute identifying it during
+    compilation; the string value is the text content of the node.'
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们需要几段复制内容：一个关于应用程序和库的介绍，用户数字同意的版权材料，以及按钮标签。您会记得，我们通过将其放置在适当的资源目录中，创建了我们的logo文件并注册到系统。对于字符串值，我们将需要不同的资源类型：`values`。传统格式为*/res/values/strings.xml*，每个字符串都是一个带有`name`属性的`string`节点，在编译期间用于标识它；字符串值是节点的文本内容。
+- en: 'To *strings.xml*, let’s add some nodes to represent our copy:'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于 *strings.xml*，让我们添加一些节点来表示我们的复制：
+- en: '[PRE0]'
+  id: totrans-17
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: There. Now we not only have our logo bitmap as a compiled resource, but all
+    of our welcome screen copy as well.
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好了。现在我们不仅拥有我们的logo位图作为已编译资源，还有我们欢迎屏幕的所有复制内容。
+- en: 'Let’s create a new layout file for this `Activity`:'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们为这个`Activity`创建一个新的布局文件：
+- en: '[PRE1]'
+  id: totrans-20
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: So what’s going on here?
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那这是怎么回事呢？
+- en: 'Let’s take it step by step:'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们一步步来看：
+- en: The root node of our layout is a `ScrollView`, which scrolls content vertically,
+    by default, as needed. On most screens, this small amount of content may not need
+    to scroll at all, but on small or low-density screens, on devices with a significant
+    text magnification setting, or even on a standard device in landscape mode, this
+    may come into play. It’s critically important that all interactive UI elements,
+    even those that simply provide critical information to the user, be reachable
+    somehow, and the traditional user experience to achieve this is by scrolling.
+  id: totrans-23
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 我们布局的根节点是一个`ScrollView`，默认情况下垂直滚动内容，根据需要。在大多数屏幕上，这么少的内容可能根本不需要滚动，但在小屏幕或低密度屏幕上，在具有显著文本放大设置的设备上，甚至在标准设备的横向模式下，这可能起作用。重要的是，所有交互式UI元素，甚至只是为用户提供关键信息的元素，都可以以某种方式达到，传统用户体验通过滚动来实现。
+- en: We know that all the rest of our components will be stacked vertically, each
+    successive element positioned just below the last. This is traditional flow in
+    almost every modern UI engine, from a traditional HTML web page, to a PDF document,
+    to documents created by editors like Pages or MS Word, markdown, AsciiDoc(tor),
+    troff, (La)TeX, etc. The framework-provided `LinearLayout` does just that. Note
+    that the default orientation of `LinearLayout` is horizontal, so that each element
+    is positioned to the right of the preceding elements; we must set the attribute
+    `orientation` to the value of `vertical` to get the stacked interface that we
+    want.
+  id: totrans-24
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 我们知道，所有其余的组件都将垂直堆叠，每个后续元素都位于上一个元素的正下方。这是几乎每个现代UI引擎中的传统流程，从传统的HTML网页，到PDF文档，到像Pages或MS
+    Word，Markdown，AsciiDoc(tor)，troff，(La)TeX等编辑器创建的文档。框架提供的`LinearLayout`正是这样做的。请注意，`LinearLayout`的默认方向是水平的，因此每个元素都放置在前面元素的右侧；我们必须将`orientation`属性设置为`vertical`的值，以获取我们想要的堆叠界面。
+- en: 'Next comes our logo. We want this image to fill the width of the page but maintain
+    aspect ratio vertically; thus, we use the following layout attributes:'
+  id: totrans-25
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 接下来是我们的logo。我们希望这个图像填充页面的宽度，但在垂直方向保持纵横比；因此，我们使用以下布局属性：
+- en: '[PRE2]'
+  id: totrans-26
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: A simple block of text, describing the app and the library.
+  id: totrans-27
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 一个简单的文本块，描述应用程序和库。
+- en: Another text block, this one providing some minimal legalese to protect our
+    authors’ copyrights.
+  id: totrans-28
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 另一个文本块，这次提供一些最小的法律术语来保护我们作者的版权。
+- en: A `CheckBox` instance with a label. While this `CheckBox` is not checked, we’ll
+    provide logic so that the button following it will remain disabled.
+  id: totrans-29
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 带有标签的`CheckBox`实例。当这个`CheckBox`未被选中时，我们将提供逻辑，以使其后的按钮保持禁用状态。
+- en: A simple `Button` instance that, when enabled and tapped, will take the user
+    to a screen that let’s them start to explore the library.
+  id: totrans-30
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 一个简单的`Button`实例，当启用并点击时，将带用户到一个屏幕，让他们开始探索库。
+- en: That’s it! Since our `MainActivity` already calls `setContentView` and passes
+    in the compiled identifier for this layout file, the initial welcome screen will
+    now show the UI elements described, rather than the simple “Hello World!” it did
+    previously.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样！由于我们的`MainActivity`已经调用了`setContentView`并传入了此布局文件的已编译标识符，因此初始欢迎屏幕现在将显示描述的UI元素，而不是之前简单的“Hello
+    World!”。
+- en: 'Since the preceding example layout is explicitly bare bones, to just demonstrate
+    what you absolutely *need* to display the UI, let’s add just a few lines of instructions
+    around whitespace and element gravity to dress it up a bit:'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于前面的示例布局明确是裸骨的，只是为了演示您绝对需要显示UI，让我们添加一些围绕空白和元素重力的简短说明来稍作装饰：
+- en: '[PRE3]'
+  id: totrans-33
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: Other than the addition of margins, font specs, and gravity, you may also notice
+    we added the attribute `adjustViewBounds` to the `ImageView` representing the
+    logo. While you can see we’re not doing extensive `View` manipulation at this
+    point, I do feel like this one is worth a quick detour, since it comes up very
+    often and can throw even seasoned developers for a loop, since the behavior is
+    fairly nonstandard when compared to our layout or drawing frameworks.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了添加边距、字体规格和重力之外，您还可以注意到我们向代表logo的`ImageView`添加了属性`adjustViewBounds`。虽然您可以看到我们目前并没有对`View`进行广泛的操作，但我觉得这个属性值得一个快速的跳转，因为它经常出现，并且即使是经验丰富的开发人员在处理时也会感到困惑，因为其行为与我们的布局或绘图框架相比非常不标准。
+- en: 'From the [developer documentation](https://oreil.ly/qKi6P), we find this definition:'
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从[开发者文档](https://oreil.ly/qKi6P)中，我们找到了这个定义：
+- en: Set this to true if you want the ImageView to adjust its bounds to preserve
+    the aspect ratio of its drawable.
+  id: totrans-36
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 如果您希望ImageView根据其可绘制对象保持其纵横比调整其边界，则将其设置为true。
+- en: In simpler terms, if we do not set this attribute to `true`, the `ImageView`
+    may use and consider whitespace part of its drawing area, which may appear as
+    margins or padding that were not specified. When in doubt, set this attribute
+    to true for any `ImageView` for which you don’t have specifically distinct behavior
+    reserved. It may not seem like much, but if you need your images to line up with
+    your screen or other elements in a pixel-perfect fashion, this is an attribute
+    you’ll want to know about. On we go!
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 简单来说，如果我们不将这个属性设置为`true`，那么`ImageView`可能会将空白区域视为其绘图区的一部分，这可能会显示为未指定的边距或填充。当不确定时，请为任何您不具有专门不同行为保留的`ImageView`设置此属性为true。这可能看起来不起眼，但如果您需要使您的图像与屏幕或其他元素完全匹配，这是您需要了解的一个属性。我们继续前进！
+- en: Run your app, and you should see something like [Figure 17-1](#app_welcome_screen).
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行您的应用程序，您应该看到类似于[图17-1](#app_welcome_screen)的内容。
+- en: With our visible UI already in a spiffy state, we’ll want to wire up some of
+    the behavior for the `CheckBox` and `Button` instances we have.
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于我们的可见UI已经处于良好的状态，我们将希望为我们拥有的`CheckBox`和`Button`实例中的一些行为连接起来。
+- en: We’ll want the submit button at the bottom of the screen to launch a UI that’ll
+    allow the user to browse our books; the button should be disabled unless the user
+    has indicated he or she accepts our terms (basically, just reminding our users
+    that the copyrights on our books are still enforceable when presented digitally).
+    Let’s see how to do that in code.
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望将提交按钮放置在屏幕底部，以启动一个允许用户浏览我们书籍的UI；该按钮应该在用户表明接受我们条款后启用（基本上，只是提醒我们的用户，我们的图书在数字呈现时仍然具有可执行的版权）。让我们看看如何在代码中实现这一点。
+- en: '![A screenshot of our new welcome screen](assets/nmdv_1701.png)'
+  id: totrans-41
+  prefs: []
+  type: TYPE_IMG
+  zh: '![我们新欢迎界面的截图](assets/nmdv_1701.png)'
+- en: Figure 17-1\. Welcome screen
+  id: totrans-42
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图17-1\. 欢迎界面
+- en: 'First, let’s open our *MainActivity.java* file, which is responsible for controlling
+    the welcome screen. You’ll notice the line `setContentView(R.layout.main)`, which
+    will inflate the XML view nodes from the previous chapter and draw them on the
+    screen. At the moment, it looks something like this:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，让我们打开我们的*MainActivity.java*文件，这个文件负责控制欢迎界面。你会注意到这一行`setContentView(R.layout.main)`，它会膨胀前一章的XML视图节点并将它们绘制在屏幕上。目前，它看起来像这样：
+- en: Pretty straightforward, right? Well, we need to do a little more to get the
+    special behavior we just described.
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相当直接，对吧？那么，我们需要做更多工作才能获得刚刚描述的特殊行为。
+- en: 'Next, we know we’ll need to perform operations on both the checkbox and the
+    button, so let’s grab references to those with the `findViewById` method, available
+    to both `Activity` and `View` instances. We’ll also declare member variables to
+    hold those references. Your activity code should now look something like this:'
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们知道我们需要对复选框和按钮执行操作，所以让我们使用`findViewById`方法获取对它们的引用，这个方法对`Activity`和`View`实例都可用。我们还将声明成员变量来保存这些引用。您的活动代码现在应该看起来像这样：
+- en: 'You’ll notice a neat thing in the Kotlin version of the preceding code—it’s
+    all done for you! You’ll have a `TextView` instance available as `terms_checkbox`
+    and a `Button` instance available as `browse_button`, without writing any additional
+    code. `Activity` instances in Kotlin, as well as any class that implements `LayoutContainer`,
+    will automatically read any `View` with an ID in the layout as a member variable
+    with a name equal to the ID. See for yourself:'
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Kotlin 版本的前述代码中，你会注意到一个很棒的事情——这一切都已经为你完成了！你将可以通过`terms_checkbox`获得一个`TextView`实例，并且通过`browse_button`获得一个`Button`实例，而无需编写任何额外的代码。在
+    Kotlin 中，`Activity`实例以及任何实现`LayoutContainer`的类将自动将布局中带有ID的任何`View`读取为一个名称等于ID的成员变量。自己看一看：
+- en: 'Great! We’ve got a visible UI, and we have in-memory references to some UI
+    elements that we’ll want to perform some logic on. Let’s think about the specification
+    we described earlier:'
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 太棒了！我们有一个可见的用户界面，并且我们有一些 UI 元素的内存引用，我们将在其上执行一些逻辑。让我们考虑一下我们之前描述的规范：
+- en: The browse button should start a new `Activity` to allow the user to explore
+    the library’s corpus.
+  id: totrans-48
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 浏览按钮应该启动一个新的`Activity`，以允许用户探索库的语料库。
+- en: The browse button should be disabled as long as the user has not checked the
+    “Accept Terms” `CheckBox` element.
+  id: totrans-49
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 只要用户没有勾选“接受条款”`CheckBox`元素，浏览按钮应该是禁用状态。
+- en: For the first requirement, we need to attach a `View.OnClickListener` instance
+    to the `Button`. While there are several ways to do this, described in [Chapter 4](ch04.html#topics_user_input)
+    on user input, we’ll use method references to keep things short yet readable.
+    Our `View.OnClickListener` implementation just needs to be a method that returns
+    `void` and accepts a single `View` parameter.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于第一个需求，我们需要将一个`View.OnClickListener`实例附加到按钮上。虽然有几种方法可以做到这一点，在[第4章](ch04.html#topics_user_input)关于用户输入中有描述，我们将使用方法引用来保持代码简洁而易读。我们的`View.OnClickListener`实现只需要是一个返回`void`并接受一个`View`参数的方法。
+- en: 'Let’s give it a shot:'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们试试：
+- en: 'There we go—we attach the method `browseContent` to the button as its click
+    listener. You might notice that lint will probably complain that `BrowseContentActivity`
+    doesn’t exist—let’s stub that out for now. Create a minimal `Activity` file, like
+    so:'
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来我们附加了方法`browseContent`作为按钮的点击监听器。你可能会注意到 lint 可能会抱怨`BrowseContentActivity`不存在——现在我们先把它打桩出来。创建一个最小的`Activity`文件，如下所示：
+- en: And don’t forget to register it with your manifest!
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不要忘记在清单中注册它！
+- en: '[PRE4]'
+  id: totrans-54
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'Next, we want to make sure the button is disabled unless the Accept Terms `CheckBox`
+    is checked. Let’s start off with `enabled="false"` in the XML layout, and then
+    we’ll update that as the check state of the `CheckBox` changes. To do that, we’ll
+    need an `OnCheckChangedListener`, which we’ll again use a method reference for.
+    The contract of the `OnCheckChangedListener` requires a method that returns `void`
+    and accepts two parameters: the compound `Button` instance that can be a `CheckBox`,
+    `Switch`, or similar UI widget, as well as the boolean state of the toggle. The
+    `onCheckChanged` method defined in the following meets those criteria; let’s attach
+    that to the `CheckBox` reference we obtained earlier, and we’re in business:'
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们希望确保按钮在未勾选接受条款`CheckBox`时处于禁用状态。让我们从 XML 布局中开始使用`enabled="false"`，然后随着`CheckBox`的检查状态更新它。为此，我们将需要一个`OnCheckChangedListener`，我们将再次使用方法引用。`OnCheckChangedListener`的契约要求一个返回`void`并接受两个参数的方法：一个是可以是`CheckBox`、`Switch`或类似
+    UI 组件的复合`Button`实例，另一个是切换的布尔状态。下面定义的`onCheckChanged`方法满足这些条件；让我们将其附加到之前获取的`CheckBox`引用上，然后我们就可以开始了：
+- en: If you run the app again, you’ll notice the button colors are dimmed, and it
+    won’t accept a tap action. However, if you tap the checkbox (or the attached label)
+    to toggle its state, you’ll find the `Button` also changes state between enabled
+    and disabled. While it’s enabled, a tap on the `Button` launches the new `BrowseContentActivity`—even
+    though it’s currently blank, you can see how user interaction and `Activity` instances
+    make up a large part of app navigation in the Android framework.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你再次运行应用程序，你会注意到按钮的颜色变暗，并且它不接受点击操作。然而，如果你点击复选框（或其附加标签）以切换其状态，你会发现`Button`也会在启用和禁用之间切换状态。在它启用时，点击按钮将启动新的`BrowseContentActivity`——尽管它目前是空白的，但你可以看到用户交互和`Activity`实例在
+    Android 框架中构成了应用程序导航的重要部分。
+- en: Now that we’ve seen how it’s done on Android, let’s do something similar on
+    iOS.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经看到了在 Android 上的实现方式，让我们在 iOS 上做类似的事情。
+- en: iOS
+  id: totrans-58
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: In order to make this application a bit easier to work with, the first thing
+    we need to do is tweak its structure and style. Let’s start with the structure.
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了使这个应用程序更容易使用，我们首先需要调整其结构和样式。让我们从结构开始。
+- en: Structure
+  id: totrans-60
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 结构
+- en: The first thing we want to do on iOS to make this app more usable is to provide
+    some structure. Open up Xcode and navigate to the *Main.storyboard* file. Within
+    the storyboard editor, click on the Library button on the top right group of buttons
+    within the project window (the same button we dragged our label from in [Chapter 16](ch16.html#app_project));
+    this will present the modal where we can select from a list of available UIKit
+    objects to drag onto our storyboard.
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 iOS 上我们首先要做的是为这个应用程序提供一些结构以提高其可用性。打开 Xcode 并导航到*Main.storyboard*文件。在 storyboard
+    编辑器中，点击项目窗口右上角按钮组中的“Library”按钮（我们在[第16章](ch16.html#app_project)中从中拖出标签的同一个按钮）；这将呈现模态窗口，我们可以从可用的
+    UIKit 对象列表中选择并拖放到我们的 storyboard 中。
+- en: In order to provide the structure we desire and to adhere to a system-wide look
+    and feel, we’re going to wrap our welcome view in a navigation controller. Search
+    for “Navigation Controller” in the Library and drag it near our current welcome
+    view controller like in [Figure 17-2](#figures_nav-controller).
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了提供我们所需的结构并遵循系统范围内的外观和感觉，我们将把我们的欢迎视图包装在一个导航控制器中。在 Library 中搜索“Navigation Controller”并将其拖到我们当前的欢迎视图控制器附近，就像在[图17-2](#figures_nav-controller)中一样。
+- en: '![Adding a navigation controller to our storyboard](assets/nmdv_1702.png)'
+  id: totrans-63
+  prefs: []
+  type: TYPE_IMG
+  zh: '![向我们的 storyboard 添加一个导航控制器](assets/nmdv_1702.png)'
+- en: Figure 17-2\. Adding a navigation controller to our storyboard
+  id: totrans-64
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图17-2\. 向我们的 storyboard 添加一个导航控制器
+- en: Navigation controllers are a built-in object within UIKit, the framework that
+    does all the UI heavy lifting in iOS. They are used to make navigating an app
+    easier and handle the state of transitioning between views, which will be important
+    later. More important at the moment, however, they provide a persistent navigation
+    bar at the top of the screen to help the user with spatial reasoning within the
+    app.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导航控制器是 UIKit 中的内置对象，该框架在 iOS 中处理所有 UI 的重活。它们用于使应用程序导航更加简单，并处理在视图之间转换的状态，这对于稍后将会很重要。然而，此刻更重要的是，它们提供了一个持久的导航栏，帮助用户在应用程序中进行空间推理。
+- en: Right now, our navigation controller will never be seen. Let’s fix that.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们的导航控制器将永远不会被看到。让我们来解决这个问题。
+- en: 'Click on the “Root View Controller” added automatically by Xcode. This view
+    controller is the first view controller shown by the navigation controller we’ve
+    added. Delete it by hitting the Delete button. Every navigation controller is,
+    in fact, a `UINavigationController`. This class has a stack of child view controllers
+    that are currently being presented by the application. The root view controller
+    can be any `UIViewController` object—it’s essentially just the bottom of the stack.
+    Fortunately, we’ve got a perfect candidate for a new root view controller: our
+    welcome screen!'
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 点击 Xcode 自动添加的“Root View Controller”。这个视图控制器是我们添加的导航控制器显示的第一个视图控制器。通过按下删除按钮来删除它。每个导航控制器实际上都是一个`UINavigationController`。这个类有一个正在应用程序中显示的子视图控制器堆栈。根视图控制器可以是任何`UIViewController`对象——它本质上只是堆栈的底部。幸运的是，我们有一个完美的候选人作为新的根视图控制器：我们的欢迎屏幕！
+- en: In order to connect the two views together, we need to wire them up similar
+    to how we wired up the header label in [Chapter 2](ch02.html#topics_views). Control-click
+    on the navigation controller and drag the connection over to the welcome view
+    controller. In the modal dialog that pops up, select “root view controller” under
+    “Relationship Segue.”
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了将这两个视图连接起来，我们需要像我们在[第2章](ch02.html#topics_views)中连接页眉标签一样连接它们。在导航控制器上控制点击并将连接拖动到欢迎视图控制器上。在弹出的模态对话框中，选择“Relationship
+    Segue”下的“root view controller”。
+- en: Unfortunately, if you run the application in the Simulator, you’ll notice that
+    not much has changed. The reason for this is because our welcome view controller
+    is still set as the initial view controller of this storyboard. This means iOS
+    will just create an instance of `WelcomeViewController` and tell it to present
+    its view as the root view of the window.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不幸的是，如果您在模拟器中运行应用程序，您会注意到没有太多变化。原因是因为我们的欢迎视图控制器仍然被设置为此 storyboard 的初始视图控制器。这意味着
+    iOS 只会创建一个`WelcomeViewController`的实例，并告诉它将其视图作为窗口的根视图呈现出来。
+- en: We can fix this by clicking on the Navigation Controller scene in the storyboard
+    editor, highlighting the Attributes inspector, and checking the box labeled “Is
+    Initial View Controller” in the inspector pane. You’ll notice the large floating
+    arrow moves from welcome view controller over to the left side of navigation controller
+    indicating the switch. Build and run and the app and you’ll see the Welcome View
+    Controller scene displayed within the Navigation Controller scene we created.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以通过在故事板编辑器中点击导航控制器场景，突出显示属性检查器，并在检查器窗格中选中标记为“是初始视图控制器”的复选框来修复此问题。你会注意到大浮动箭头从欢迎视图控制器移动到导航控制器的左侧，表示切换。构建并运行应用程序，你会看到我们创建的导航控制器场景内显示的欢迎视图控制器场景。
+- en: We’ve got our structure down; let’s see if we can get some more style added.
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经搞清楚了结构；现在看看能否增加一些样式。
+- en: Style
+  id: totrans-72
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 样式
+- en: There are a number of ways we can improve our welcome screen. The easiest, and
+    arguably the best, option is to get rid of the header label we created before
+    and have the navigation controller display the name of the screen we’re viewing
+    for us.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以改进欢迎屏幕的多种方式。最简单且可以说是最好的选择是去掉之前创建的标题标签，并让导航控制器为我们显示我们正在查看的屏幕名称。
+- en: First, click on the header label within the Welcome scene and delete it by hitting
+    the Delete key. You’ll notice it disappears from the screen as well as disappearing
+    from the Document Outline on the left side of the canvas.
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，点击欢迎场景中的标题标签，然后通过按下删除键将其删除。你会注意到它不仅从屏幕上消失了，而且从画布左侧的文档大纲中也消失了。
+- en: Next, let’s set the title of the screen for the navigation controller to view.
+    We can do this programmatically, but since we’re already in the storyboard editor,
+    let’s do it here. Within the Document Outline on the left side, click on the Navigation
+    Item object inside the Welcome View Controller scene. Open the Attributes inspector
+    on the right side of the screen and put “Welcome” in the Title field.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，让我们为导航控制器设置屏幕标题。我们可以在程序中进行此操作，但既然我们已经在故事板编辑器中，那就在这里操作吧。在左侧的文档大纲中，点击“欢迎视图控制器场景”内的“导航项”对象。在屏幕右侧打开属性检查器，并在标题字段中输入“欢迎”。
+- en: Additionally, if you’d like, go ahead and set Large Title from `Automatic` to
+    `Always`. This will make our navigation controller title larger and more readable.
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另外，如果你愿意，可以将“大标题”从`自动`设置为`始终`。这将使我们的导航控制器标题更大更易读。
+- en: Note
+  id: totrans-77
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: We could also set the navigation item properties programmatically. Within the
+    `UIViewController` class, there are `navigationItem.title` and `navigationItem.largeTitleDisplayMode`
+    properties for the respective Title and Large Title attributes we set in the storyboard
+    editor.
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们也可以通过编程方式设置导航项属性。在`UIViewController`类中，有`navigationItem.title`和`navigationItem.largeTitleDisplayMode`属性，分别用于在故事板编辑器中设置的标题和大标题属性。
+- en: Go ahead and run the application on the iOS Simulator.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 继续在iOS模拟器上运行应用程序。
+- en: Uh-oh. We broke it. What happened?
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 哎呀。我们搞砸了。发生了什么？
+- en: Errors, errors, and more errors!
+  id: totrans-81
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 错误，错误，还有更多错误！
+- en: First of all, welcome to the wonderful world of runtime errors! As you’ll notice,
+    our application compiled and ran, but then crashed when it was running. This is
+    due to the dynamic nature of UIKit, which has roots in Objective-C history. If
+    you open up our `WelcomeViewController` class, you’ll see we have a property called
+    `headerLabel` that’s still present in the class.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，欢迎来到运行时错误的美妙世界！正如你所注意到的，我们的应用程序编译并运行，但在运行时崩溃了。这是由于UIKit的动态特性，它有着Objective-C历史的根基。如果你打开我们的`WelcomeViewController`类，你会看到我们有一个叫做`headerLabel`的属性仍然存在于类中。
+- en: You might be saying, “But I thought we deleted the header label just a few paragraphs
+    ago?” You’re right. We did. However, we *didn’t* remove it from the class. Now,
+    there are a few ways to prevent something like this in the future. One option
+    is to change our type from `UILabel!`, which is an implicitly unwrapped Optional
+    (i.e., a non-`nil` type), to an Optional property—a type that could be `nil`.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 也许你会说：“但是我记得我们几段前删除了标题标签？”你说得对。我们确实删除了。但是，我们*没有*从类中删除它。现在，有几种方法可以防止类似情况发生在未来。一种选择是将我们的类型从`UILabel!`更改为可选属性——一种可能为`nil`的类型。
+- en: 'You see, iOS was expecting there to be a value for that object whenever we
+    interacted with it in the `viewDidLoad()` method. Because we deleted the label
+    from the scene in the storyboard editor, the connection we wired up with this
+    class in [Chapter 2](ch02.html#topics_views) never had a chance to complete. The
+    compiler didn’t know this happened and let the project compile because all the
+    wiring up happens at runtime instead of compile time. So consider the following
+    code:'
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你看，iOS期望在我们在`viewDidLoad()`方法中与其交互时该对象有一个值。因为我们在Storyboard编辑器中删除了场景中的标签，所以我们在第2章中与这个类连接的连接从未有机会完成。编译器并不知道发生了这种情况，因为所有的连接都是在运行时而不是编译时进行的。所以考虑以下代码：
+- en: '[PRE5]'
+  id: totrans-85
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: Whenever the app called this, the system didn’t know what to do because there
+    *should* have been a header label set, but there wasn’t.
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当应用程序调用此处的代码时，系统都不知道该怎么做，因为本应设置一个标题标签，但实际上没有设置。
+- en: 'You can actually tell this happened if you read the error generated in the
+    console, the lower-right window that popped up, in Xcode:'
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你读取在Xcode中弹出的控制台右下角窗口生成的错误，就可以知道这种情况发生了。
+- en: '[PRE6]'
+  id: totrans-88
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: The `headerLabel` property is the `nil` value in something that shouldn’t be.
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`headerLabel`属性是一个不应为`nil`值的东西。'
+- en: If we set `headerLabel` to a type of `UILabel?`, the app will compile and run
+    properly. However, I think this is usually the wrong solution because the code
+    will still continue to exist in the class. We will still attempt to set the `headerLabel`
+    to red, but because `headerLabel` is `nil` and an Optional type, this will short-circuit
+    and fail quietly. Later, when we go to the edit the class, we might not quickly
+    remember that we deleted the header label from our view and spend time trying
+    to figure out what this line is doing. In my opinion, it’s best to leave `@IBOutlet`s
+    as implicitly unwrapped Optionals and let the application fail when we run it
+    to remind ourselves to remove this code whenever we remove connected views.
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们将`headerLabel`设置为`UILabel?`类型，应用程序将能够正确编译和运行。然而，我认为这通常不是正确的解决方案，因为代码仍然会存在于类中。我们仍然会尝试将`headerLabel`设置为红色，但因为`headerLabel`是`nil`和一个Optional类型，这会导致短路并静默失败。稍后，当我们去编辑类时，我们可能不会很快记得我们从视图中删除了标题标签，从而花费时间尝试弄清楚这行代码的作用。在我看来，最好将`@IBOutlet`留作隐式解包的可选项，并让应用程序在运行时失败，以提醒我们在删除连接的视图时删除这段代码。
+- en: 'For now, let’s remove this property from the `WelcomeViewController` class.
+    We’ll also add a quick snippet of code to enable the large title we set in the
+    storyboard editor to display in this view controller’s navigation bar (it’s not
+    enabled by default). Our class should now look like this:'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，让我们从`WelcomeViewController`类中移除此属性。我们还将添加一个快速的代码片段，以便在此视图控制器的导航栏中显示我们在Storyboard编辑器中设置的大标题（默认情况下未启用）。我们的类现在应该像这样：
+- en: '[PRE7]'
+  id: totrans-92
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: Hit the stop button beside the “Build and Run” button near the top left of the
+    project window to stop our currently running application. Then, hit the play button
+    to build and run the project. We should now see something like [Figure 17-3](#figures_welcome).
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 点击项目窗口左上角“Build and Run”按钮旁边的停止按钮来停止当前正在运行的应用程序。然后，点击播放按钮来构建和运行项目。我们现在应该看到类似于[图17-3](#figures_welcome)的内容。
+- en: Both apps are looking good! We can go a bit further with background colors and
+    other properties for the welcome screen, but we’ll leave that as an exercise for
+    the reader.
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 两个应用程序看起来不错！我们可以在欢迎界面的背景颜色和其他属性上进一步进行设置，但我们将把这留给读者作为练习。
+- en: 'We’ve spent a lot of time within our app’s welcome screen, and we’ve set the
+    groundwork for some more interactivity. Ultimately, our goal at the end of this
+    chapter is to have an app that lists some data, so let’s get there in the simplest
+    way possible first: by simply pressing a button.'
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在应用程序的欢迎界面花了很多时间，并为更多的互动设置了基础工作。最终，我们在本章末尾的目标是制作一个列出一些数据的应用程序，所以让我们通过简单地按下按钮来尽可能简单地实现这一目标。
+- en: '![Our first styling applied to the app''s Welcome screen](assets/nmdv_1703.png)'
+  id: totrans-96
+  prefs: []
+  type: TYPE_IMG
+  zh: '![我们应用程序欢迎界面应用的第一个样式](assets/nmdv_1703.png)'
+- en: Figure 17-3\. Our first styling applied to the app’s Welcome screen
+  id: totrans-97
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图17-3。我们应用程序欢迎界面应用的第一个样式
+- en: Adding a Button
+  id: totrans-98
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 添加一个按钮
+- en: Unfortunately, we don’t mean that you, the developer of this amazing app, can
+    just press a button and make it all happen magically; what we mean to say is let’s
+    add a button to our app so that *users* can press to list out some books. This
+    particular button will be labeled “Catalog” and display the entire catalog of
+    the library in a list view that transitions into the screen.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不幸的是，我们并不是说你，这个了不起的应用程序的开发者，可以只需按下一个按钮就让一切发生得像魔术一样；我们的意思是让我们为我们的应用程序添加一个按钮，以便*用户*可以按下来列出一些书籍。这个特定的按钮将标记为“目录”，并在屏幕上的列表视图中显示整个图书馆目录。
+- en: We can read back a bit and see how it was handled in Android; let’s take a look
+    at how we’d do the same thing in iOS.
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以回顾一下安卓是如何处理的；现在让我们看看在iOS上怎么做同样的事情。
+- en: iOS
+  id: totrans-101
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: To add a button to our view, open up *Main.storyboard* in the storyboard editor
+    and click on the Library button to bring up our library of UI objects. Next, search
+    for “button” and drag the Button object onto the welcome screen within the editor.
+    You should see a placeholder button labeled “Button” in the canvas.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要在我们的视图中添加一个按钮，请在故事板编辑器中打开*Main.storyboard*并单击库按钮，以显示我们的UI对象库。接下来，搜索“按钮”并将按钮对象拖动到编辑器中的欢迎屏幕上。您应该在画布上看到一个标记为“按钮”的占位符按钮。
+- en: Right now it’s wherever you dropped the button onto the canvas, but ideally
+    we want this button to be displayed in the center of the screen for now. This
+    is easy enough to target one device, but if you’ll recall, there are a number
+    of screen sizes and form factors of devices that run iOS. Fortunately, iOS has
+    a robust framework for laying out views automatically aptly named Auto Layout.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在它可能在你放置按钮的画布上的任何地方，但理想情况下，我们希望这个按钮目前显示在屏幕中央。针对一个设备来说这很容易，但是如果你回想起来，有很多运行iOS的设备具有不同的屏幕大小和形状。幸运的是，iOS拥有一个名为自动布局的强大框架，可以自动布局视图。
+- en: Auto Layout uses predefined constraints to position views within a scene. There
+    is a great description of Auto Layout in [Chapter 2](ch02.html#topics_views).
+    It describes how to set constraints programmatically using the storyboard editor
+    within Xcode. For now, we’re going to use the editor because it’s usually easier.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自动布局使用预定义的约束在场景中定位视图。在[第2章](ch02.html#topics_views)中有一个关于自动布局的很好的描述。它描述了如何使用Xcode中的故事板编辑器来通过编程方式设置约束。目前，我们将使用编辑器，因为这通常更容易。
+- en: With the button selected, click the Align button—third from the right at the
+    bottom of the storyboard editor canvas—and check the boxes for “Horizontally in
+    Container” and “Vertically in Container.” Click “Add 2 Constraints” to add the
+    constraints to the button.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 选择按钮后，在故事板编辑器画布底部的第三个“对齐”按钮，勾选“水平居中于容器”和“垂直居中于容器”复选框。点击“添加2个约束”以将约束添加到按钮上。
+- en: You should see the button move automatically to the center of the view. In this
+    case, we’re telling iOS that this object is centered horizontally and vertically
+    within its container. That part might be obvious, but what is the container? Well,
+    the container is the root view in which the object resides. In this case, it happens
+    to be the root view that the entire scene is embedded in—which also happens to
+    the `view` property of the `WelcomeViewController`. If, for instance, this button
+    was nested within another view, then it would center itself within that view instead
+    of the root view of the view controller.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您应该看到按钮自动移动到视图的中心。在这种情况下，我们告诉iOS这个对象在其容器中水平和垂直居中。这一部分可能是显而易见的，但容器是什么？好吧，容器是对象所在的根视图。在这种情况下，它恰好是整个场景嵌入的根视图，这也恰好是`WelcomeViewController`的`view`属性。例如，如果此按钮嵌套在另一个视图中，则它将在该视图内居中，而不是视图控制器的根视图。
+- en: Now that it’s positioned properly, let’s finish styling our button. Click on
+    the button and change the title of the button to read “Catalog” within the Attributes
+    inspector. Build and run the application and you should see a button in the center
+    of the screen.
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在它已经正确放置了，让我们完成样式化按钮。单击按钮并在属性检查器中更改按钮的标题为“目录”。构建并运行应用程序，您应该在屏幕中央看到一个按钮。
+- en: Eventually, this button will display our library catalog. But, before we show
+    that, we have to build it!
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最终，这个按钮将显示我们的图书馆目录。但是，在显示之前，我们必须先构建它！
+- en: Lists, Lists, and More Lists!
+  id: totrans-109
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 列表，列表，还有更多列表！
+- en: One of the most common tasks in mobile development is displaying lists of data.
+    There are entire categories of apps specifically for listing data. What is a book
+    catalog but a giant list of books? Luckily, both Android and iOS have some great,
+    core libraries for dealing with lists of items. On Android it’s `RecyclerView`,
+    which is a part of the support library but at the time of this writing is moving
+    to the `androidx` package; it’s up to you which to use. The support library version
+    is well-tested at this point, and while we might be able to expect some performance
+    improvements or technical upgrades, I suspect the usability and public API will
+    remain largely unchanged in `androidx`.
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 移动开发中最常见的任务之一是显示数据列表。有些应用程序专门用于列出数据。书目录不就是一大堆书的列表吗？幸运的是，无论是 Android 还是 iOS 都有一些出色的核心库用于处理项目列表。在
+    Android 上，使用的是`RecyclerView`，它是支持库的一部分，但在撰写本文时正逐步迁移到`androidx`包；你可以选择使用哪一个。支持库版本在这一点上已经经过了充分测试，虽然我们可能期望一些性能改进或技术升级，但我认为其可用性和公共API主要仍然保持不变在`androidx`中。
+- en: Note that Android has gone through some public evolution around this type of
+    component. Originally, we had `ListView`, which managed scrolling and item rendering
+    nicely, but users were expected to do manual recycling of views (which benefits
+    memory management). There was a component called `GridView` that, as you probably
+    guessed, allowed `Views` to be expressed as horizontal rows and vertical columns,
+    rather than just the vertical stack enabled by `ListView`. Both should be considered
+    deprecated at this point, and `RecyclerView` instances use a layout manager to
+    provide list or grid layouts (or really, any other layout you can conceive of).
+    On iOS, this feature requirement can be satisfied by either `UITableView` or `UICollectionView`.
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，Android在这种类型的组件周围已经经历了一些公共演变。最初，我们有`ListView`，它很好地管理了滚动和项目呈现，但用户需要手动回收视图（这有助于内存管理）。还有一个叫做`GridView`的组件，正如你可能猜到的那样，它允许将`Views`表达为水平行和垂直列，而不仅仅是`ListView`所支持的垂直堆叠。但是在这一点上，两者都应被视为已弃用，而`RecyclerView`实例使用布局管理器来提供列表或网格布局（或者你能构思到的任何其他布局）。在
+    iOS 上，此功能要求可以通过`UITableView`或`UICollectionView`来满足。
+- en: Add a New Catalog View
+  id: totrans-112
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 添加一个新的目录视图
+- en: We’ll start by adding a new UI controller and adding an empty list to it.
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们首先会添加一个新的UI控制器，并在其上添加一个空列表。
+- en: 'On Android, we’ll create a new layout file for the `BrowseContentActivity`
+    that contains just a `RecyclerView`, to start. Let’s call it *res/layout/activity_browse.xml*.
+    We may end up including a toolbar for navigation and contextual menus, or a coordinator
+    layout to manage `Snackbar` animations or `FloatingActionButton` position, but
+    let’s keep it simple for now:'
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Android 上，我们将为`BrowseContentActivity`创建一个新的布局文件，其中仅包含一个`RecyclerView`。我们称之为*res/layout/activity_browse.xml*。我们可能会添加一个工具栏用于导航和上下文菜单，或者添加一个协调布局来管理`Snackbar`动画或`FloatingActionButton`的位置，但现在让我们保持简单：
+- en: '[PRE8]'
+  id: totrans-115
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: 'You’d want to set this as the content view in your `BrowseContentActivity`
+    class, in the `onCreate` method right after `super` is called:'
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你应该将此设置为`BrowseContentActivity`类中的内容视图，在`super`被调用后的`onCreate`方法中：
+- en: We’ll need to do a few things in code later to provide a data source and specify
+    layout behavior and effects, but this is really all the layout we need for now.
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 之后我们需要在代码中做一些事情，以提供数据源并指定布局行为和效果，但现在这就是我们所需的所有布局。
+- en: For iOS, we can accomplish this mostly in the storyboard editor. For this catalog,
+    we’ll use a `UITableView` as it’s a bit simpler to work with initially. First,
+    open up the *Main.storyboard* file in Xcode and click on the Library button in
+    the project window to bring up our object library. Next, drag a new view controller
+    to the canvas. Then, use the Library again to drag a table view into the new view
+    controller screen that was just created. Finally, with the table view selected,
+    click the Add New Constraints button at the bottom right of the storyboard editor’s
+    canvas. Set all the margins to `0` and then click the Add 4 Constraints button;
+    this will make the table view have a margin of `0` around all its dimensions,
+    effectively expanding it to the width and height of the screen.
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于 iOS，我们可以在故事板编辑器中完成这个工作。对于这个目录，我们将使用`UITableView`，因为它最初的工作起来更简单。首先，打开Xcode中的*Main.storyboard*文件，然后在项目窗口中单击“库”按钮，以打开我们的对象库。接下来，在画布中拖动一个新的视图控制器。然后，再次使用库，将一个表视图拖到刚创建的新视图控制器屏幕上。最后，选择表视图，在故事板编辑器画布的右下角点击“添加新约束”按钮。将所有边距设置为`0`，然后点击“添加4个约束”按钮；这将使表视图在所有维度周围都有`0`的边距，有效地将其扩展到屏幕的宽度和高度。
+- en: As a final touch, click on the View Controller scene we created. In the Attributes
+    inspector, put the text “Catalog” under the Title field to name our view controller.
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后一步，点击我们创建的视图控制器场景。在属性检查器中，在标题字段下输入“目录”以命名我们的视图控制器。
+- en: We’ve got a list view created in both apps, but they’re currently inaccessible.
+    Let’s fix that!
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在两个应用程序中创建了列表视图，但目前无法访问。让我们修复一下！
+- en: Wiring Up the Button
+  id: totrans-121
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 连接按钮
+- en: Is a button without an action really a button at all?
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没有操作的按钮真的算是按钮吗？
+- en: Putting this momentary existential crisis aside for the moment, let’s focus
+    on the catalog button currently devoid of purpose on our welcome screen. The goal
+    of this button is to display the catalog of books in the library. But right now
+    it’s doing nothing.
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 暂且将这个短暂的存在危机放一放，让我们专注于欢迎屏幕上目前没有目的的目录按钮。这个按钮的目标是显示图书馆中的图书目录。但现在它什么也没做。
+- en: For iOS let’s wire up this button with a segue. Segues are explained in detail
+    in [Chapter 1](ch01.html#topics_ui_controllers) of the book. They are, in their
+    simplest form, transitions between two views. Segues are defined in a storyboard
+    and can be triggered via storyboard connections or programmatically. For this
+    example, because of its simplicity, we can wire everything up in the storyboard
+    editor.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于iOS，让我们用一个segue连接这个按钮。Segue在本书的[第1章](ch01.html#topics_ui_controllers)中有详细解释。它们简单地说，是两个视图之间的过渡。Segue在故事板中定义，并可以通过故事板连接或以编程方式触发。对于这个例子，因为它的简单性，我们可以在故事板编辑器中把所有东西都连起来。
+- en: First, Control-click on the catalog button we created in the welcome screen.
+    Drag a connection over to our new catalog scene. Now, in the modal dialog that
+    is presented select Show under the Action Segues section.
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，在欢迎屏幕上的目录按钮上按住Control键并单击。将连接拖动到我们的新目录场景上。现在，在呈现的模态对话框中，在动作Segue部分选择“显示”。
+- en: That’s all it takes. This will create a segue trigger whenever someone clicks
+    the catalog button, which displays the catalog view. Build and run and the app,
+    and you should see a list view like [Figure 17-4](#figures_catalog) whenever the
+    catalog button is tapped.
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样。每当有人点击目录按钮时，这将创建一个Segue触发器，显示目录视图。构建和运行应用程序，你应该在点击目录按钮时看到一个类似于[图17-4](#figures_catalog)的列表视图。
+- en: '![Rows and rows of no data—is this a metaphor for life? No, just an empty table
+    view](assets/nmdv_1704.png)'
+  id: totrans-127
+  prefs: []
+  type: TYPE_IMG
+  zh: '![一排排空空如也的数据，这是人生的隐喻吗？不，只是一个空的表视图](assets/nmdv_1704.png)'
+- en: Figure 17-4\. Rows and rows of no data—is this a metaphor for life? No, just
+    an empty table view
+  id: totrans-128
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图17-4。一排排空空如也的数据，这是人生的隐喻吗？不，只是一个空的表视图。
+- en: All right. We’ve got our buttons wired up. We’ve got our list views. But right
+    now, they’re empty. It’s finally time to talk about our data.
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好了，我们的按钮已经连接好了。我们有我们的列表视图。但现在它们是空的。现在终于是时候谈论我们的数据了。
+- en: Books
+  id: totrans-130
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 图书
+- en: 'If you look around the library for the app we’re creating, you’ll notice something:
+    there are A LOT of books. There are nonfiction books. There are non-fiction books.
+    There are books with pictures. There are books with no pictures. There are small
+    books, big books, old books, books to read on a beach, books to read in the bathtub
+    while sipping a glass of red wine—all kinds of books!'
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你在我们正在创建的应用程序的图书馆周围看看，你会注意到一些事情：这里有很多书。有非虚构书籍。有有插图的书籍。有没有插图的书籍。有小书，大书，旧书，可以在海滩上读的书，可以一边在浴缸里喝着红酒一边读的书——各种各样的书籍！
+- en: So how do we know what to display?
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么我们怎么知道要显示什么？
+- en: 'Well, fortunately, there is a certain amount of information that is shared
+    among all books. A few common properties of books are:'
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幸运的是，有一些信息是所有图书共享的。图书的一些共同属性包括：
+- en: Title
+  id: totrans-134
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 标题
+- en: Author
+  id: totrans-135
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 作者
+- en: ISBN
+  id: totrans-136
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: ISBN
+- en: Number of pages
+  id: totrans-137
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 页数
+- en: Fiction or nonfiction?
+  id: totrans-138
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 小说还是非小说？
+- en: To work with our list views, we’ll need to keep this information organized.
+    We could pass it directly as properties to our list view rows and configure each
+    row, but a more common practice is to define a shared model to keep the data contained
+    and more easily maintainable; it’s much easier to add a new field to a single
+    type than to have to add it to every method within the application that deals
+    with book metadata.
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了使用我们的列表视图，我们需要保持这些信息有序。我们可以直接将它作为属性传递给我们的列表视图行，并配置每一行，但更常见的做法是定义一个共享模型来保持数据的完整性和更易于维护；将一个新字段添加到单一类型要比添加到处理图书元数据的应用程序中的每个方法要容易得多。
+- en: Let’s define a book object so we can start using it populate our list views.
+    So, what does this object look like in Java and Swift? Well, remarkably, this
+    is where the classes look very much alike.
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们定义一个书籍对象，这样我们就可以开始使用它来填充我们的列表视图。那么，在 Java 和 Swift 中，这个对象是什么样子呢？很明显，在这些类中看起来非常相似。
+- en: In Android, we’ll use a standard Java class definition to represent our books.
+    These are sometimes called “models” or “data classes,” and the latter does have
+    special designation in Kotlin (which we’ll touch on, shortly), but in reality
+    there’s no functional difference between a model and any other class. Some developers
+    prefer to use “POJOs” (“Plain Old Java Objects”), which are simply classes that
+    don’t extend another class and don’t implement an interface, but this is simply
+    a matter of taste. It is also fairly common to have model classes exclude logical
+    operations (methods) other than getters and setters, and while this may make sense
+    or even be enforced on your team, it’s technically optional insofar as restrictions
+    of the language and framework.
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Android 中，我们将使用标准的 Java 类定义来表示我们的书籍。有时这些被称为“模型”或“数据类”，而后者在 Kotlin 中有特殊的指定（我们稍后会提到），但实际上，在模型和其他任何类之间没有功能上的区别。一些开发者更喜欢使用“POJOs”（“Plain
+    Old Java Objects”），这只是不扩展另一个类和不实现接口的类，但这只是一种偏好。模型类通常排除除了 getter 和 setter 之外的逻辑操作（方法），尽管这在你的团队上可能有道理甚至被强制执行，但从技术上讲，这在语言和框架的限制下是可选的。
+- en: 'Considering that Android does suggest we do not use public members, we’ll assign
+    some fields and the appropriate getters and setters, so our `Book` class might
+    look like this:'
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 考虑到 Android 建议我们不要使用公共成员，我们将为一些字段分配适当的 getter 和 setter，所以我们的`Book`类可能是这样的：
+- en: '[PRE9]'
+  id: totrans-143
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: While that may seem a bit verbose, you’ll find Android Studio is happy to generate
+    getter and setter methods from your properties and can even be configured to work
+    properly with Hungarian notation (so that `mName` becomes `getName` and `setName`,
+    rather than `getMname`).
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管这可能看起来有点冗长，但你会发现 Android Studio 很乐意从你的属性生成 getter 和 setter 方法，并且甚至可以配置为正确处理匈牙利命名约定（所以`mName`变成`getName`和`setName`，而不是`getMname`）。
+- en: 'That said, you can see that Kotlin really shines in this specific example,
+    and the data class for a `Book` instance has a much smaller definition:'
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 话虽如此，你可以看到 Kotlin 在这个特定的示例中表现得非常出色，`Book`实例的数据类定义要小得多：
+- en: '[PRE10]'
+  id: totrans-146
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: 'We can include a constructor that allows us to pass a no-arg instantiation:'
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以包含一个构造函数，允许我们进行无参实例化：
+- en: '[PRE11]'
+  id: totrans-148
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: This not only includes a default constructor that accepts all fields but combines
+    that constructor with the definition itself. Further, while all the fields are
+    `val` and therefore immutable (in Java, this would be considered `final`), you’ll
+    see that we don’t have to set a default value to be updated on instantiation—by
+    having these values defined within the constructor, we can ensure that instantiation
+    provides the single, immutable value for the member.
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这不仅包括一个接受所有字段的默认构造函数，而且将该构造函数与定义本身结合起来。此外，虽然所有字段都是`val`，因此是不可变的（在 Java 中，这将被视为`final`），但你会看到我们不必为实例化设置默认值以更新——通过在构造函数中定义这些值，我们可以确保实例化为成员提供单一、不可变的值。
+- en: Now, in Xcode, add a new Swift file called *Book.swift* (File > New > File)
+    to the project. We could use a `class` here, but instead we’ll use a `struct`.
+    Classes in Swift are reference objects; in other words, you pass around addresses
+    to the object in memory. Meanwhile, structs are value objects, similar to primitive
+    data types like strings. This makes copying operations much safer and easier in
+    multi-threaded situations. You won’t have to worry about another object changing
+    data in the object because the object itself will be copied instead of just the
+    address to the object.
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，在 Xcode 中，添加一个名为*Book.swift*的新 Swift 文件（File > New > File）到项目中。我们可以在这里使用一个`class`，但是我们将使用一个`struct`。Swift
+    中的类是引用对象；换句话说，你传递的是对象在内存中的地址。而结构体是值对象，类似于像字符串这样的基本数据类型。这使得在多线程情况下复制操作更加安全和简单。你不必担心另一个对象改变对象中的数据，因为对象本身将被复制，而不仅仅是对象的地址。
+- en: 'Here is what our `Book` object type looks like:'
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们的`Book`对象类型的样子：
+- en: '[PRE12]'
+  id: totrans-152
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: We’ve got our data models defined, we’ve got our catalog view created, and we’ve
+    got our catalog button wired up. Almost all the puzzle pieces are lined up to
+    start displaying some data! Let’s head back over to our new list views.
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经定义了我们的数据模型，创建了我们的目录视图，并将我们的目录按钮连接起来。几乎所有的拼图都已经摆好了，可以开始显示一些数据了！让我们回到我们的新列表视图。
+- en: Populating the List View
+  id: totrans-154
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 填充列表视图
+- en: We’re not currently grabbing any data from a network service or reading in data
+    from the filesystem. (Spoiler! We’ll talk about both of those in later chapters!)
+    For now, let’s use static data within the class to demonstrate how to populate
+    list views in Android and iOS. Let’s start with Android.
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们目前没有从网络服务获取任何数据，也没有从文件系统中读取数据。（剧透！我们将在后面的章节中讨论这两者！）暂时，让我们使用类内静态数据来演示如何在 Android
+    和 iOS 中填充列表视图。让我们从 Android 开始。
+- en: Android
+  id: totrans-156
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: So we have our `RecyclerView` instantiated and ready to kick some butt, but
+    without data there’s not much to see. Let’s remedy that. For now, we’ll hardcode
+    some data in our `Book` model as a `static` class variable, but *for the love
+    of all that’s good, please don’t ever do this in production*. And don’t worry,
+    we’ll remedy this later.
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们已经实例化了我们的 `RecyclerView` 并准备好去做一些事情，但是如果没有数据，我们将看不到太多内容。让我们来解决这个问题。暂时，我们将在我们的
+    `Book` 模型中硬编码一些数据作为 `static` 类变量，但是*请不要在生产环境中这样做，为了所有良好的事情，请不要这样做*。并且请放心，我们稍后会解决这个问题。
+- en: 'So, *for now*, here’s some sample books—we’ll use a very similar structure
+    in iOS soon:'
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，*暂时*，这里是一些示例书籍——我们很快将在 iOS 中使用非常类似的结构：
+- en: So that’s our data. Consider that the source of data for a list view might change
+    during the lifetime of an app—we might initially fetch the data from a remote
+    server but subsequently show a cached version from a local database. We might
+    have a search service that has a variety of sort or filter options. For this reason
+    and others, in Android the data source is not directly attached to the `RecyclerView`
+    but is rather managed by a bridge between the UI and the data, known both semantically
+    and canonically as an `Adapter`. The `Adapter` pattern is common within Android
+    and is used for things like `ViewPagers`, `Spinners`, `Galleries`, and many others;
+    the specific `Adapter` class used by `ReyclderView` is simply `RecyclerView.Adapter`.
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以这就是我们的数据。考虑到列表视图的数据源可能在应用的生命周期内发生变化——我们可能最初从远程服务器获取数据，但随后显示来自本地数据库的缓存版本。我们可能有一个搜索服务，该服务具有各种排序或过滤选项。因此，Android
+    中数据源并不直接附加到 `RecyclerView`，而是由 UI 和数据之间的桥梁管理，其语义上和规范上均称为 `Adapter`。`Adapter` 模式在
+    Android 中很常见，用于像 `ViewPagers`、`Spinners`、`Galleries` 等组件；`RecyclerView` 使用的具体
+    `Adapter` 类只是 `RecyclerView.Adapter`。
+- en: 'The `Adapter` has several contracts to fulfill. We’ll provide a working example
+    with the `Book.SAMPLE_DATA` array as the data source and then dig into each of
+    the required methods:'
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Adapter` 有几个合同需要履行。我们将使用 `Book.SAMPLE_DATA` 数组作为数据源提供一个工作示例，然后深入探讨每个所需方法：'
+- en: If this looks confusing or opaque to you, you’re right—it is! In fact, the concept
+    of the `RecyclerView` was originally merely a *convention*. We (Android developers)
+    used the now deprecated `ListView` widget, and over time we as a community came
+    to accept that using certain patterns allowed us to save memory and improve performance.
+    Without the recycling pattern, a simple search that returned a few thousand items
+    could easily use up more resources than the app had available, especially on the
+    devices available at the time.
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果这看起来对你来说混乱或不透明，那么你是对的——它确实如此！事实上，`RecyclerView` 的概念最初仅仅是一个*约定*。我们（Android
+    开发者）曾经使用过现在已经弃用的 `ListView` 小部件，随着时间的推移，我们作为一个社区逐渐接受使用某些模式可以节省内存并提高性能。如果没有回收模式，一个简单的搜索可能返回几千个项，可以轻易地使用掉应用可用的更多资源，特别是在当时的设备上。
+- en: When `RecyclerView` was first released in the original support library (prior
+    to the much fancier-sounding `androidx` package we use now), that convention became
+    codified, but without understanding that history or without being a part of it
+    some of these patterns and contracts seemed arbitrary and unintuitive—mostly because
+    they are!
+  id: totrans-162
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 `RecyclerView` 首次在原始支持库中发布时（在我们现在使用的更加花哨的 `androidx` 包之前），这种约定变得正式化，但是如果没有理解这段历史或没有参与其中，这些模式和合同似乎是任意的和不直观的——主要是因为它们确实如此！
+- en: 'In any case, at this point in Android development, we have a feature-full,
+    well-vetted, and highly performant widget at our disposal, so let’s take the time
+    we need to learn it. Let’s actually start at the bottom: the static `ViewHolder`
+    class. The super class `RecyclerView.ViewHolder` is abstract, so even if we didn’t
+    need any extended behavior, you’d still have to subclass it. In reality, if the
+    super class was not abstract, we could just cast the `itemView` member to a `TextView`
+    instance in the `onBindViewHolder` method, and we wouldn’t even need the custom
+    subclass. What a mouthful! Let’s slow down and take a step back.'
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无论如何，在Android开发的这一点上，我们拥有一个功能丰富、经过深思熟虑和高性能的小部件，所以让我们花时间来学习它。实际上，让我们从最底层开始：静态`ViewHolder`类。超类`RecyclerView.ViewHolder`是抽象的，所以即使我们不需要任何扩展行为，您仍然必须对其进行子类化。实际上，如果超类不是抽象的，我们可以在`onBindViewHolder`方法中将`itemView`成员简单地转换为`TextView`实例，我们甚至不需要自定义子类。真是一口气！让我们放慢脚步，退一步。
+- en: 'In its simplest form, a `ViewHolder` is just a bag of `View` references, representing
+    child `View`s on each row. For example, if each row of your list has an `ImageView`
+    to represent a thumbnail image, a `TextView` to indicate the title, and another
+    to display the concatenated list of authors, your `ViewHolder` would likely have
+    those three `View`s as references, maybe something like this:'
+  id: totrans-164
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在其最简单的形式中，`ViewHolder`只是`View`引用的一个袋子，表示每一行上的子`View`。例如，如果您的列表每一行都有一个`ImageView`来表示缩略图图像，一个`TextView`来指示标题，另一个用于显示连接的作者列表，那么您的`ViewHolder`可能会像这样引用这三个`View`：
+- en: 'You might rightly wonder where those `View` instances come from—we’ll step
+    away from the `ViewHolder` for a moment to touch on the `onCreateViewHolder` method.
+    In our preceding simple example, we simply pass a `TextView`, but in the more
+    complex UI we’re using to explain `ViewHolder`, let’s imagine you want a view
+    tree and probably want to represent that like you do all your layouts—via XML.
+    Each row might look like this:'
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能会想知道这些`View`实例来自哪里 — 我们将暂时离开`ViewHolder`，来谈一谈`onCreateViewHolder`方法。在我们前面的简单示例中，我们只是传递了一个`TextView`，但在我们用来解释`ViewHolder`的更复杂的UI中，让我们想象一下，你想要一个视图树，可能想要像你所有的布局一样来表示
+    — 通过XML。每一行可能像这样：
+- en: '[PRE13]'
+  id: totrans-166
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: Note the linear layout trick using the `weight` attribute mentioned in [Chapter 2](ch02.html#topics_views).
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意使用`weight`属性的线性布局技巧，如[第2章](ch02.html#topics_views)所述。
+- en: Let’s call this file *complex_book_row.xml* and save it in *res/layout*.
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们称这个文件为*complex_book_row.xml*并保存在*res/layout*中。
+- en: 'So, with this more complex row, using our more robust `ViewHolder` class, our
+    `onCreateViewHolder` method might look like this:'
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，对于这更复杂的行，使用我们更健壮的`ViewHolder`类，我们的`onCreateViewHolder`方法可能看起来像这样：
+- en: Now you might start to see how this comes together—if not, try to imagine how
+    the `RecyclerView` does its recycling…
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你可能开始看到这是如何结合在一起的 — 如果没有，请想象一下`RecyclerView`如何进行回收利用...
+- en: 'When first laid out, the `RecyclerView` creates enough rows to fill its visible
+    area, using the `onCreateViewHolder` method as well as some internal opaque functionality.
+    When a user scrolls down far enough for the first row to be outside of the visible
+    viewport, that entire row’s view tree is *recycled*—it’s detached from the window
+    and added to a pool to be used later, when a row that has not yet rendered becomes
+    visible due to the scrolling or resizing of the `RecyclerView`. When that happens,
+    the `onBindViewHolder` method of the `RecyclerView.Adpater` is invoked, passing
+    in the position (which is often used as an indexed position against a list-style
+    data source) and populating the recently retired but now newly employed view tree.
+    In our most sophisticated example, the `onBindViewHolder` method might look like
+    this:'
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当首次布局时，`RecyclerView`创建足够填充其可见区域的行，使用`onCreateViewHolder`方法以及一些内部不透明的功能。当用户向下滚动到足够远，以使第一行在可见视口之外时，整个行的视图树都被*回收*
+    — 它从窗口中分离并添加到池中以供稍后使用，当由于滚动或调整`RecyclerView`的大小而使尚未渲染的行变为可见时，将调用`RecyclerView.Adapter`的`onBindViewHolder`方法，传入位置（通常作为针对列表样式数据源的索引位置）并填充最近退役但现在重新雇用的视图树。在我们最复杂的示例中，`onBindViewHolder`方法可能如下所示：
+- en: Now you can see how our simple example works, by comparing it to a more thorough
+    version of the same thing.
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你可以看到我们的简单示例是如何工作的，通过将其与同一事物的更详尽版本进行比较。
+- en: All that’s left is to wire this all together. Additionally, we need to let the
+    `ReyclerView` know how to position its children. As mentioned previously, there
+    are multiple layout managers provided for you for vertical lists, horizontal lists,
+    and grid views, and you can use the same templates to create your own `LayoutManager`
+    subclass with custom behavior.
+  id: totrans-173
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有剩下的就是把这一切连接起来。此外，我们需要让`RecyclerView`知道如何定位其子项。如前所述，为垂直列表、水平列表和网格视图提供了多个布局管理器，您可以使用相同的模板创建自己的`LayoutManager`子类以实现自定义行为。
+- en: 'After selecting and instantiating a `LayoutManager`, assign it to the `RecyclerView`:'
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在选择并实例化`LayoutManager`后，将其分配给`RecyclerView`：
+- en: 'Finally, attach the `Adapter` to the `RecyclerView` with `setAdapter`:'
+  id: totrans-175
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，使用`setAdapter`将`Adapter`附加到`RecyclerView`上：
+- en: 'The first draft of your working browse `Activity` might look like this:'
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您的工作浏览`Activity`的第一个草稿可能是这样的：
+- en: If you run your app now and tap into the `BrowseBooksActivity`, you should see
+    the title of each of your books listed in a vertical stack. If your font size
+    is large enough or your screen small enough (feel free to play around with the
+    padding or margins on your `TextView` to see this in action), you’ll see that
+    this list scrolls and manages to appears as if the entire dataset is available
+    at all times—the magic of `RecyclerView`.
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您现在运行您的应用程序并点击`BrowseBooksActivity`，您应该能够看到每本书的标题以垂直堆栈的方式列出。如果您的字体大小足够大或屏幕足够小（随意调整`TextView`上的填充或边距以查看其效果），您会发现此列表可以滚动，并且似乎可以随时显示整个数据集——这就是`RecyclerView`的魔力所在。
+- en: We’ve got a working list of books on Android. Let’s get iOS working now!
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android上，我们已经有一个可以工作的书籍列表。现在让我们来做iOS版本吧！
+- en: iOS
+  id: totrans-179
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: If you’ll recall from before, on iOS, we’re using a `UITableView` to show the
+    data in our catalog. The first thing we need to do if we’re going to do any special
+    logic is switch our vanilla `UIViewController` into a custom view controller within
+    the storyboard editor. Create a new Cocoa Touch Class named `CatalogViewController`
+    that inherits from `UIViewController` in Xcode (File > New > File) and add it
+    to the project. Leave this file as is, for now, and click on *Main.storyboard*
+    to open it in the storyboard editor.
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如您之前所述，在iOS上，我们使用`UITableView`来显示目录中的数据。如果我们要进行任何特殊逻辑，首先要做的是将我们的普通`UIViewController`切换为Storyboard编辑器中的自定义视图控制器。在Xcode中创建一个名为`CatalogViewController`的新Cocoa
+    Touch类（File > New > File），并将其添加到项目中。暂时保留此文件，现在点击*Main.storyboard*以在Storyboard编辑器中打开它。
+- en: Inside the storyboard editor, click on the Catalog scene. In the Identity inspector
+    set the Class value to `CatalogViewController`, which is the name of the class
+    we just created.
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Storyboard编辑器中，点击Catalog场景。在Identity检查器中将Class值设置为`CatalogViewController`，这是我们刚刚创建的类的名称。
+- en: If you look at the table view within the scene, you might notice it’s empty
+    right now. If we tried to use the table view, we wouldn’t be able to because there
+    are currently no prototype cells. Prototype cells are templates defined in the
+    storyboard that are created on-demand by the table view in order to display a
+    row of content. Each row could be a different cell type, but more commonly, a
+    handful (or even just one!) of cell prototypes are defined and used for each cell.
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您查看场景内的表视图，您可能会注意到它目前是空的。如果我们尝试使用表视图，我们将无法使用，因为当前没有原型单元格。原型单元格是在Storyboard中定义的模板，由表视图按需创建以显示内容行。每一行可以是不同的单元格类型，但更常见的是定义并使用一些（甚至只有一个！）单元格原型。
+- en: In order to add a prototype cell, select the table view in the scene, open the
+    Attributes inspector and increment the value under Prototype Cells. This will
+    add a new row to the example table view shown in the storyboard editor. To be
+    able to use this cell type, however, we have to be able to target it in the code.
+    This is done by selecting the table view cell in the editor and setting its Identifier
+    (also known as a Reuse Identifier) to a unique value. For now, let’s set the value
+    to `CatalogTableViewCell`.
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了添加一个原型单元格，选择场景中的表视图，在属性检查器中打开并增加Prototype Cells下的值。这将在Storyboard编辑器中显示的示例表视图中添加一个新行。然而，要能够使用此单元格类型，我们必须能够在代码中针对它进行目标化。这通过在编辑器中选择表视图单元格并将其标识符（也称为重用标识符）设置为唯一值来完成。现在，让我们将值设置为`CatalogTableViewCell`。
+- en: 'We mentioned earlier that our data for this chapter would be static data. Let’s
+    use the same titles we used in the Android section for populating a list view.
+    We can modify our `Book` structure to include an extension with a convenience
+    method for our list of books like so:'
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们前面提到过，本章的数据是静态数据。让我们使用与 Android 部分相同的标题来填充列表视图。我们可以修改我们的 `Book` 结构，包括一个便利方法的扩展来列出我们的书籍列表，如下所示：
+- en: '[PRE14]'
+  id: totrans-185
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: Now, it might seem contrary, but we will not pass all this data to our table
+    view at once. One of the amazing things about `UITableView` and `UICollectionView`
+    is their ability to maintain performance with vast amounts of data. They do this
+    by only interacting with a subset of the data at a time, very similar to Android’s
+    `RecyclerView`.
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在可能看起来相反，但我们不会立即将所有这些数据传递给我们的表视图。`UITableView` 和 `UICollectionView` 的一个令人惊奇的地方是它们能够在大量数据的情况下保持性能。它们通过仅与数据的子集交互来实现这一点，这与
+    Android 的 `RecyclerView` 非常类似。
+- en: In order to populate the table view, we need to create a data source for the
+    table view. This is done by assigning an object that conforms to the `UITableViewDataSource`
+    protocol of the table view object itself. In this example, we’ll have `CatalogViewController`
+    itself conform to this protocol for simplicity instead of creating a separate
+    object.
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了填充表视图，我们需要为表视图创建一个数据源。这是通过将一个符合表视图对象本身的 `UITableViewDataSource` 协议的对象分配给它来完成的。在这个例子中，为了简单起见，我们将让
+    `CatalogViewController` 自己符合这个协议，而不是创建一个单独的对象。
+- en: Warning
+  id: totrans-188
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: It’s fairly common practice to have `UIViewController`s themselves conform to
+    the data source (and delegate) protocols for table views. This is OK for simple
+    apps, but it does violate the separation offered by following a stricter MVC architecture.
+    It also leads to view controller bloat, which is a common problem. Developer beware!
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`UIViewController` 自己实现数据源（和代理）协议以供表视图使用是一种相当普遍的做法。对于简单的应用程序来说这没问题，但它确实违反了更严格的
+    MVC 架构所提供的分离性。这也会导致视图控制器的膨胀，这是一个常见的问题。开发者要小心！'
+- en: 'Add an extension to `CatalogViewController` to conform to `UITableViewDataSource`
+    like so:'
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 添加一个扩展到 `CatalogViewController` 以符合 `UITableViewDataSource` 如下所示：
+- en: '[PRE15]'
+  id: totrans-191
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: 'Now, there are a number of optional methods you can conform to with the data
+    source protocol, but there are two required methods you’ll have to implement to
+    populate the table view: `tableView(_:numberOfRowsInSection:)` and `tableView(_:cellForRowAt:)`.
+    Let’s take a look at the first one.'
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，您可以符合数据源协议的许多可选方法，但您必须实现两个必需的方法来填充表视图：`tableView(_:numberOfRowsInSection:)`
+    和 `tableView(_:cellForRowAt:)`。让我们先看看第一个方法。
+- en: 'In `tableView(_:numberOfRowsInSection:)`, we’re telling the table view how
+    many rows are in each section of data. Our table view will have only one section,
+    so we can just return the number of items in our static data that we defined previously
+    like so:'
+  id: totrans-193
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 `tableView(_:numberOfRowsInSection:)` 中，我们告诉表视图每个数据 section 中有多少行。我们的表视图只有一个
+    section，所以我们可以直接返回我们之前定义的静态数据项的数量，如下所示：
+- en: '[PRE16]'
+  id: totrans-194
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: Note
+  id: totrans-195
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: The default amount of sections for a table view if `1`. In order to define multiple
+    sections inside a table view (with section headers), implement the method `numberOfSections(in:)`.
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 表视图的默认 section 数量是 `1`。为了在表视图中定义多个带有 section 头的 section，请实现方法 `numberOfSections(in:)`。
+- en: We’ve told the table view how many rows there will be. Let’s implement our next
+    method, `tableView(_:cellForRowAt:)`, to provide logic for how to populate the
+    cells.
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经告诉表视图将有多少行。现在让我们实现我们的下一个方法 `tableView(_:cellForRowAt:)`，为如何填充单元格提供逻辑。
+- en: 'The main body of this method needs to do two things: it needs to instantiate
+    a table view cell and it needs to populate that table view cell with the correct
+    book. We can do this by using the following code:'
+  id: totrans-198
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此方法的主体需要做两件事情：实例化一个表视图单元格并用正确的书籍填充该表视图单元格。我们可以使用以下代码来完成这个操作：
+- en: '[PRE17]'
+  id: totrans-199
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: First, we’re grabbing a reusable instance of a table view cell by using the
+    identifier (`CatalogTableViewCell`) we assigned when we created our prototype
+    table cell. Next, we’re grabbing the book for the current row based on the `indexPath.row`
+    property. This method is called for every cell that’s displayed, so if we’re grabbing
+    the third row, the value of this property would be `2` so we can grab the third
+    item from the array (i.e., it’s a zero-based row count for convenience). Then,
+    we take that cell and set its text label to the book’s title. Finally, we return
+    the cell so that the table view can display it on the screen.
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们通过使用我们在创建原型表格单元时分配的标识符（`CatalogTableViewCell`）来获取表视图单元的可重用实例。接下来，根据`indexPath.row`属性获取当前行的书籍。这种方法用于显示每个单元格，因此如果我们获取第三行，此属性的值将为`2`，因此我们可以从数组中获取第三个项目（即，它是基于零的行计数以便使用）。然后，我们将该单元格的文本标签设置为书籍的标题。最后，我们返回单元格，以便表视图可以在屏幕上显示它。
+- en: 'We’ve got one more step to get this all hooked up together: we have to tell
+    the table view that it can use this view controller as its data source.'
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还有一步就能将所有内容连接起来：我们必须告诉表视图，它可以将此视图控制器作为其数据源使用。
+- en: Hop back over to *Main.storyboard* in the storyboard editor. Control-click and
+    drag from the table view in the Catalog scene over to the `Catalog` object itself
+    inside the Document Outline on the left side of the canvas. In the dialog that
+    appears select `dataSource` under Outlets to wire up the table view to the view
+    controller as its data source.
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 跳回到*Main.storyboard*在Storyboard编辑器中。在画布左侧的文档大纲中，从目录场景中的表视图上控制点击并拖动到`Catalog`对象本身。在弹出的对话框中，选择`dataSource`作为Outlets以将表视图连接到视图控制器作为其数据源。
+- en: Click build and run and you should be able to click our catalog button to see
+    a list of the sample data we’ve used to populate the list.
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 点击“构建并运行”，然后您应该能够点击我们的目录按钮，查看我们用于填充列表的示例数据列表。
+- en: What We’ve Learned
+  id: totrans-204
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: Let’s review what we’ve learned this chapter.
+  id: totrans-205
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们回顾一下本章我们学到了什么。
+- en: First, we learned how to add some structure and style to our screens. Next,
+    we learned how to wire up transitions between views triggered by buttons. We discussed
+    data models and showed how similar they can be between platforms. We also created
+    a basic model object for a book that we’ll use and improve in later chapters.
+    Finally, we took that data and displayed it in a list view as part of the library’s
+    book catalog.
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们学会了如何为我们的屏幕添加一些结构和样式。接下来，我们学会了如何通过按钮触发的过渡来连接视图。我们讨论了数据模型，并展示了它们在不同平台之间的相似之处。我们还创建了一个用于图书的基本模型对象，我们将在后续章节中使用和改进。最后，我们将这些数据显示在图书馆书目的列表视图中。
+- en: We did it! We’ve gotten our app to display some book titles, albeit with static
+    sample data. All this time in the view and controller layers has been fun, but
+    next chapter, we’ll spend more of our time dealing with our models. Let’s check
+    it out!
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们做到了！我们成功让我们的应用程序显示一些书名，尽管只使用了静态示例数据。在视图和控制器层面度过的所有时间都很有趣，但下一章我们将更多时间处理我们的模型。让我们来看看吧！

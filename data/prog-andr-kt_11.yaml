@@ -1,0 +1,1943 @@
+- en: Chapter 11\. Performance Considerations with Android Profiling Tools
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第11章 Android性能分析工具的性能考虑
+- en: 'Using proficient concurrency in Android leads to better performance in your
+    application. This is why we have made Kotlin concurrency in Android the primary
+    focus of this book. In order to provide a solution for performance bottlenecks,
+    you have to be able to spot them in the first place. Have no worry: this chapter
+    looks at popular Android tooling commonly used to check for potential problems
+    in performance.'
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android中使用熟练的并发技术可以提升应用程序的性能。这也是为什么我们把Kotlin并发技术作为本书的主要关注点。为了解决性能瓶颈问题，首先你必须能够发现它们。不用担心：本章将介绍常用的Android工具，用于检测性能潜在问题。
+- en: 'Out in the wild, Android faces real-life challenges that affect performance
+    and battery life. For example, not everyone has unlimited data in their mobile
+    plans, or reliable connectivity. The reality is that Android apps must compete
+    with one another for limited resources. Performance should be a serious consideration
+    for any Android application. Android development doesn’t stop at creating an app.
+    Effective development also ensures a smooth and seamless user experience. Even
+    if you have a deep understanding of Android development, your application may
+    have issues such as:'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在野外，Android面临现实挑战，这些挑战影响性能和电池寿命。例如，并非所有人都有无限的移动数据计划或可靠的连接。现实情况是，Android应用必须争夺有限的资源。性能应该是任何Android应用的重要考虑因素。Android开发不仅仅是创建一个应用程序。有效的开发还确保平滑和无缝的用户体验。即使你对Android开发有深入的理解，你的应用程序可能会出现一些问题，比如：
+- en: Decrease in performance
+  id: totrans-3
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 性能下降
+- en: Slow startup/slow response to user interactions
+  id: totrans-4
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 启动缓慢/对用户交互的响应缓慢
+- en: Battery drain
+  id: totrans-5
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 电池耗尽
+- en: Wasteful use of resources, and clogged memory
+  id: totrans-6
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 资源浪费，内存拥堵
+- en: UI bugs that don’t force a crash or generate an exception, but nevertheless
+    affect user experience
+  id: totrans-7
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 不会强制崩溃或生成异常的UI错误，但仍然会影响用户体验
+- en: This list of sudden, strange behaviors in an app is by no means exhaustive.
+    As previous chapters showed, managing multithreading can become complex when there
+    are also interacting Android components to keep track of. Even if you have a solid
+    understanding of multithreading, it’s hard to say how an application really works
+    until we analyze performance with profiling tools. To answer these kinds of ambiguities,
+    there are several useful tools for profiling various aspects of Android. Four
+    of them can be retrieved and used right in Android Studio, as diagrammed in [Figure 11-1](#android_profiler).
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序中这些突然、奇怪的行为列表远非详尽无遗。就像前面的章节展示的那样，当有多个交互的Android组件需要跟踪时，管理多线程可能变得复杂。即使你对多线程有很好的理解，直到使用性能分析工具分析应用程序性能时，才能真正了解应用程序的运行情况。为了回答这类模糊的问题，有几种有用的工具可以用来分析Android的各个方面。其中四个可以直接在Android
+    Studio中获取并使用，如图 [11-1](#android_profiler) 所示。
+- en: '![Android Studio profilers](assets/pawk_1101.png)'
+  id: totrans-9
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Android Studio分析器](assets/pawk_1101.png)'
+- en: Figure 11-1\. Android Studio profilers and LeakCanary are useful for identifying
+    performance bottlenecks.
+  id: totrans-10
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图11-1\. Android Studio分析器和LeakCanary对于识别性能瓶颈非常有用。
+- en: 'In this chapter, we look at profiling tools in Android Studio’s *Android Profiler*
+    and a popular open source library called *LeakCanary*. We explore each one by
+    profiling a real-life application for potential performance bottlenecks. Remember
+    the hiking application described in previous chapters? Surprise! It was inspired
+    by *TrekMe.* TrekMe is an Android trail-trekking app, an open source Android project
+    where users download interactive topographical hiking routes to use offline later
+    while on hikes. TrekMe started as a Java project, but its codebase is currently
+    80%+ Kotlin. Here are some important features of TrekMe that users of the application
+    can enjoy:'
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章中，我们将研究Android Studio的性能分析工具 *Android Profiler* 和一个流行的开源库 *LeakCanary*。我们通过对真实应用程序进行性能分析，以找出潜在的性能瓶颈。还记得前几章讨论过的徒步应用程序吗？惊喜！它的灵感来自
+    *TrekMe*。TrekMe 是一个Android山地徒步应用，用户可以下载互动式地形徒步路线以备离线使用。TrekMe 最初是一个Java项目，但其代码现在80%以上是Kotlin。以下是用户可以享受到的TrekMe的一些重要功能：
+- en: Download topographical maps for offline use.
+  id: totrans-12
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 下载地形地图以供离线使用。
+- en: Get the device’s live position even when there’s no network, while the app tries
+    its best to preserve battery life.
+  id: totrans-13
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 即使在没有网络的情况下，也能获取设备的实时位置，同时尽量节省电池寿命。
+- en: Track hikes in great detail without draining the device’s battery when you need
+    it most.
+  id: totrans-14
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 在最需要时，详细跟踪徒步旅行而不耗尽设备的电池。
+- en: Access other useful information without needing an internet connection (save
+    for creating the map).
+  id: totrans-15
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 可以在无需互联网连接的情况下访问其他有用的信息（仅用于创建地图）。
+- en: We encourage you to explore TrekMe so you can follow along with this chapter.
+    You can [retrieve the source code from GitHub](https://oreil.ly/j7KbY). Once you’ve
+    cloned the project, open it with Android Studio. Finally, run an instance of an
+    emulator from the *Android Virtual Device (AVD) Manager* that you intend to run
+    TrekMe on.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们鼓励您探索 TrekMe，这样您就可以跟随本章的内容。您可以从 GitHub [获取源代码](https://oreil.ly/j7KbY)。克隆项目后，使用
+    Android Studio 打开它。最后，在您打算在上运行 TrekMe 的 *Android Virtual Device (AVD) Manager*
+    中运行一个模拟器实例。
+- en: Performance considerations are crucial. It;s not uncommon to find performance
+    lag in any application, but such a “fishing expedition” must be approached with
+    care. It’s up to the developer to decide on the most relevant tooling, and which
+    optimizations outweigh in benefits the cost of their creation. Profiling your
+    app allows you to investigate application performance objectively. To give some
+    examples of the kinds of surprises you might encounter, we’ll look at TrekMe with
+    Android Profiler.
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 性能考虑至关重要。在任何应用程序中发现性能滞后并不罕见，但必须谨慎对待这样的“钓鱼远征”。决定最相关的工具和优化方式，以及这些优化相对于其创建成本的利益的权衡，由开发者决定。对应用程序进行性能分析，使您能够客观地调查应用程序的性能。为了举例说明您可能会遇到的惊喜，我们将使用
+    Android Profiler 来查看 TrekMe。
+- en: Android Profiler
+  id: totrans-18
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android Profiler
+- en: '*Android Profiler* analyzes an application’s session to generate real-time
+    feeds for CPU usage and memory usage, as well as network and energy profiling.
+    [Figure 11-2](#android_profiler_intro) shows Android Studio with the TrekMe application
+    runtime showing in the bottom half of the console.'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*Android Profiler* 分析应用程序的会话，生成 CPU 使用率、内存使用率以及网络和能耗分析的实时反馈。[图 11-2](#android_profiler_intro)
+    显示了 Android Studio 中 TrekMe 应用程序运行时显示在控制台底部的情况。'
+- en: '![Android Profiler](assets/pawk_1102.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Android Profiler](assets/pawk_1102.png)'
+- en: Figure 11-2\. A profiling session records profiling data. The active session
+    attaches to the running app in the emulator (not pictured).
+  id: totrans-21
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-2\. 一个性能分析会话记录了性能分析数据。活动会话连接到模拟器中运行的应用程序（未显示）。
+- en: 'Android profiling can be instantiated in three ways:'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 分析可以通过三种方式实例化：
+- en: If your application is not running, click the Profile app icon in the upper-right
+    corner to instantiate the app and the profiler at once. This action builds and
+    compiles a new running instance of the application. Android Studio will then open
+    a new session giving you a stream of your data in real time.
+  id: totrans-23
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 如果您的应用程序没有运行，请点击右上角的 Profile app 图标一次实例化应用程序和分析器。此操作会构建和编译应用程序的新运行实例。然后，Android
+    Studio 将打开一个新会话，实时显示您的数据流。
+- en: If your application is already running, click the + icon and select the running
+    emulator.
+  id: totrans-24
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 如果您的应用程序已经在运行，请单击 + 图标并选择正在运行的模拟器。
+- en: You can also import a previously saved profiling session with the `+` icon.
+    From there, you can load the previously saved *.hprof* file.
+  id: totrans-25
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 您还可以通过点击 `+` 图标导入先前保存的性能分析会话。从那里，您可以加载先前保存的 *.hprof* 文件。
+- en: You can record and store data in each session. In [Figure 11-3](#extra_data_in_sessions),
+    we show a screenshot of saved profiling sessions with different kinds of data
+    that can be recorded with Android Profiler.
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在每个会话中记录和存储数据。在 [图 11-3](#extra_data_in_sessions) 中，我们展示了使用 Android Profiler
+    可以记录的不同类型数据的保存性能分析会话的屏幕截图。
+- en: '![pawk 1103](assets/pawk_1103.png)'
+  id: totrans-27
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1103](assets/pawk_1103.png)'
+- en: Figure 11-3\. Save heap dumps, or different kinds of CPU traces.
+  id: totrans-28
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-3\. 保存堆转储或不同类型的 CPU 跟踪。
+- en: Both *method traces* and *heap dumps* can be saved as separate entries within
+    a running session. Method traces show a stacktrace of methods and functions that
+    can be recorded in CPU profiling. Meanwhile, a heap dump refers to the data collected
+    from *garbage collection*, allowing us to analyze what objects are taking up unnecessary
+    space in memory.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*方法跟踪* 和 *堆转储* 都可以作为运行会话中的单独条目进行保存。方法跟踪显示可以在 CPU 分析中记录的方法和函数的堆栈跟踪。同时，堆转储指的是从
+    *垃圾收集* 中收集的数据，允许我们分析哪些对象占用了不必要的内存空间。'
+- en: Android Profiler records one application session at a time. However, you can
+    save multiple recordings and switch between them to compare the data. A bright
+    dot indicates the recording of an active session. In [Figure 11-3](#extra_data_in_sessions),
+    there are three recorded sessions. The last recorded session has a saved heap
+    dump, which refers to a log of stored memory in the JVM at the time of the snapshot.
+    We’ll cover this in more detail in [“Memory Profiler”](#_memory_profiler). The
+    first recorded session saved different kinds of CPU recordings. This will be discussed
+    in [“CPU Profiler”](#_cpu_usage_profiler).
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android Profiler 每次记录一个应用程序会话。但是，您可以保存多个录音并在它们之间进行比较数据。明亮的点表示活动会话的录制。在 [图 11-3](#extra_data_in_sessions)
+    中，有三个记录的会话。最后一个记录的会话保存了一个堆转储，这是指在快照时 JVM 中存储内存的日志。我们将在 [“内存分析器”](#_memory_profiler)
+    中详细讨论这一点。第一个记录的会话保存了不同类型的 CPU 记录。这将在 [“CPU 分析器”](#_cpu_usage_profiler) 中讨论。
+- en: Note
+  id: totrans-31
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Android Studio caches sessions only for the lifetime of the Android Studio instance.
+    If Android Studio is restarted, the recorded sessions will not save.
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android Studio 仅在其实例的生命周期内缓存会话。如果重新启动 Android Studio，则不会保存记录的会话。
+- en: 'The following sections show in more detail how Android Profiler evaluates device
+    resources in the virtual machine at runtime. There are four profilers we’ll use:
+    *Network Profiler*, *CPU Profiler*, *Energy Profiler*, and *Memory Profiler*.
+    All of these profilers record streams of data during an application’s runtime,
+    which can be accessed in greater detail in their own special views.'
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面的章节详细展示了 Android Profiler 如何在运行时评估设备资源。我们将使用四个分析器：*网络分析器*、*CPU 分析器*、*能量分析器*
+    和 *内存分析器*。所有这些分析器在应用运行时记录数据流，可以在它们各自的特殊视图中进行更详细的访问。
+- en: By design, TrekMe encourages users to download detailed topographical maps directly
+    to their devices while they’re at home and can do so easily. Creating new topographical
+    maps in TrekMe is the feature that consumes the most resources in this process.
+    The maps can then be rendered when the user is hiking, even if mobile coverage
+    is unreliable. TrekMe’s map creation feature allows you to select an official
+    map generator like the *Instituto Geografico Nacional* (IGN) or *U.S. Geological
+    Survey* (USGS) or some other map provider, as shown in [Figure 11-4](#overview).
+    TrekMe will then load the selected service’s map in square tiles, one by one.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 设计上，TrekMe 鼓励用户在家轻松地下载详细的地形地图到他们的设备上。在 TrekMe 中，创建新的地形地图是这个过程中消耗最多资源的功能。即使在移动覆盖不可靠的情况下，这些地图也可以在用户徒步旅行时进行渲染。TrekMe
+    的地图创建功能允许您选择像 *Instituto Geografico Nacional*（IGN）或 *U.S. Geological Survey*（USGS）等官方地图生成器，如
+    [图 11-4](#overview) 所示。然后，TrekMe 将逐个加载所选服务的地图瓦片。
+- en: '![pawk 1104](assets/pawk_1104.png)'
+  id: totrans-35
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1104](assets/pawk_1104.png)'
+- en: Figure 11-4\. TrekMe allows you to create and download a map from different
+    services.
+  id: totrans-36
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-4\. TrekMe 允许您从不同的服务创建和下载地图。
+- en: 'For the remainder of this chapter, we’ll profile TrekMe while creating a map
+    via IGN to study the time it takes to load a map, and to ensure that it is optimal.
+    With Android profiling, we can explore questions like:'
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章的其余部分中，我们将使用 Android Profiler 分析 TrekMe 在通过 IGN 创建地图时的加载时间，并确保其性能最佳。
+- en: Are we making fast network calls?
+  id: totrans-38
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们的网络调用速度快吗？
+- en: Is the data we get in our response returned in the most efficient format?
+  id: totrans-39
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们获取的数据是否以最高效的格式返回？
+- en: What parts of the application are the most CPU-intensive?
+  id: totrans-40
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 应用程序的哪些部分最耗 CPU？
+- en: Which Android actions drain the most battery?
+  id: totrans-41
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 哪些 Android 操作消耗了最多的电池？
+- en: What objects are eating up the most memory in heap?
+  id: totrans-42
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 在堆中，哪些对象占用了最多的内存？
+- en: What consumes the most memory?
+  id: totrans-43
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 什么消耗最多的内存？
+- en: In the next section, we answer the first two questions with Network Profiler.
+    We explore the remainder of these questions in later sections.
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接下来的部分中，我们将使用网络分析器回答前两个问题。我们将在后续部分探讨其余问题。
+- en: Network Profiler
+  id: totrans-45
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 网络分析器
+- en: When a network call is made, the radio in the Android device powers up to allow
+    for network communication. This radio then stays powered on for a short time to
+    ensure there are no additional requests to listen for. On some phones, using the
+    network every two minutes keeps the device at full power forever. Too many network
+    calls can be expensive for Android resources, so it is important to analyze and
+    optimize network use in an application.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当进行网络调用时，Android 设备中的无线电会打开，以便进行网络通信。然后，这个无线电会保持开启一段时间，以确保没有额外的请求需要监听。在某些手机上，每两分钟使用一次网络会使设备始终保持全电状态。对于
+    Android 资源来说，过多的网络调用可能代价高昂，因此分析和优化应用中的网络使用非常重要。
+- en: '*Network Profiler* generates connection breakdowns used by *HttpURLConnection*
+    or *OkHttp* libraries. It can give you information like network request/response
+    time, headers, cookies, data formats, the call stack, and more. When you record
+    a session, Network Profiler generates interactive visual data while you continue
+    to interact with the application.'
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*网络分析器* 生成由 *HttpURLConnection* 或 *OkHttp* 库使用的连接详细信息。它可以提供诸如网络请求/响应时间、头部、cookie、数据格式、调用堆栈等信息。当您记录会话时，网络分析器会生成交互式视觉数据，同时您可以继续与应用程序进行交互。'
+- en: 'When we create a map using IGN, TrekMe renders the map on the screen in square
+    tiles, one by one. Sometimes, though, the tile rendering seems to take a long
+    time. [Figure 11-5](#network_profiler) shows the profiler capturing incoming/outgoing
+    network requests, and shows the connections that are available while creating
+    a map on TrekMe via IGN:'
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们使用 IGN 创建地图时，TrekMe 会逐个在屏幕上渲染地图的方块瓦片。但有时，瓦片渲染似乎需要很长时间。[图 11-5](#network_profiler)显示了分析器捕获的传入/传出网络请求，并显示了在
+    TrekMe 上通过 IGN 创建地图时可用的连接：
+- en: You can highlight a selected range of the timeline to drill into these connections
+    further, which will expand a new view of the Network Profiler workspace, allowing
+    you to access the *Connection View* and *Thread View* tabs to analyze these network
+    calls further.
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以突出显示时间线上的选定范围，以进一步深入了解这些连接，这将扩展网络分析器工作区的新视图，允许您访问*连接视图*和*线程视图*标签以进一步分析这些网络调用。
+- en: '![pawk 1105](assets/pawk_1105.png)'
+  id: totrans-50
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1105](assets/pawk_1105.png)'
+- en: Figure 11-5\. Network Profiler timeline records IGN Spain map creation on TrekMe.
+    In the upper-left corner of the chat, the long line under the label `MainActivity`
+    represents an active `Activity` session while the short, thick line above the
+    `MainActivity` label with a dot at the left represents user touch events.
+  id: totrans-51
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-5\. 网络分析器时间线记录了 IGN 西班牙地图在 TrekMe 上的创建过程。在聊天窗口的左上角，标签 `MainActivity` 下的长线代表活动的
+    `Activity` 会话，而在标签 `MainActivity` 上方的短而厚的线，左侧带有一个点，代表用户触摸事件。
+- en: Viewing network calls with Connection View and Thread View
+  id: totrans-52
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 使用连接视图和线程视图查看网络调用
+- en: Connection View shows the data that was sent/received. You can see this in [Figure 11-6](#connection_view)
+    in the highlighted portion of the timeline. Perhaps what is most notable is Connection
+    View’s ability to sort resource files by size, status, and time. Clicking the
+    header of each section will organize the ordering of the desired filter. The timeline
+    section represents the timing of the request/response bars split into two colors.
+    The lighter portion represents the duration of the request, while the darker portion
+    represents the duration of the response.
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 连接视图显示了发送/接收的数据。您可以在时间线的高亮部分看到这一点，详见[图 11-6](#connection_view)。也许最显著的是连接视图可以按大小、状态和时间对资源文件进行排序。点击每个部分的标题将会组织所需过滤器的排序。时间线部分将请求/响应条分成两种颜色。较浅的部分表示请求的持续时间，而较暗的部分表示响应的持续时间。
+- en: '![Connection View](assets/pawk_1106.png)'
+  id: totrans-54
+  prefs: []
+  type: TYPE_IMG
+  zh: '![连接视图](assets/pawk_1106.png)'
+- en: Figure 11-6\. Connection View shows a list of individual network calls.
+  id: totrans-55
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-6\. 连接视图显示了单个网络调用的列表。
+- en: Connection View looks similar to the timeline in Thread View, but they’re not
+    quite the same. Thread View shows the network calls being made within the designated
+    initiating threads, which can show multiple network calls running in parallel
+    time. The screenshot shown in [Figure 11-7](#thread_view) is the complement of
+    the previous image, using the same data set.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 连接视图看起来与线程视图中的时间线类似，但它们并不完全相同。线程视图显示了在指定启动线程内进行的网络调用，可以显示并行时间内运行的多个网络调用。在[图
+    11-7](#thread_view)中显示的屏幕截图是前一图像的补充，使用相同的数据集。
+- en: '![pawk 1107](assets/pawk_1107.png)'
+  id: totrans-57
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1107](assets/pawk_1107.png)'
+- en: Figure 11-7\. Thread View shows a list of network calls made within each thread.
+  id: totrans-58
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-7\. 线程视图显示了每个线程内进行的网络调用列表。
+- en: Seeing how worker threads divide labor in real time can help to reveal areas
+    for improvement. TrekMe’s pooled threads are responsible for automatically breaking
+    up, as needed, the work of downloading all these images.
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实时查看工作线程如何分工可以帮助揭示改进的空间。TrekMe的池化线程负责根据需要自动分解下载所有这些图片的工作。
+- en: 'Both images show roughly 23 seconds of network calls, with response times showing
+    a similar trend. Compared to the requests, responses appear to take up a disproportionate
+    amount of the time it takes to complete an entire network call. There could be
+    several reasons for this: for example, the server connection might be weaker if
+    a device attempts to pull this data from a distant country. Perhaps there are
+    inefficiencies with the query call in the backend. Regardless of the reason, we
+    can say that our network calls may not be fastest. However, the presence of fast
+    request times *and* slow response times indicates external factors that are out
+    of the device’s control.'
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 两个图像显示大约23秒的网络调用时间，响应时间显示出相似的趋势。与请求相比，响应似乎占用了完成整个网络调用所需时间的不成比例部分。这可能有几个原因：例如，如果设备试图从一个遥远的国家获取数据，则服务器连接可能较弱。也许后端的查询调用存在效率低下的情况。不管原因是什么，我们可以说我们的网络调用可能不是最快的。然而，快速的请求时间与缓慢的响应时间的存在表明了设备无法控制的外部因素。
+- en: 'We now turn to our second question: are we using the most efficient data format?
+    Let’s look at the connection type in the Connection View tab as pictured in [Figure 11-6](#connection_view).
+    If you don’t need transparency in your images, avoid using PNG files since the
+    file format doesn’t compress as well as JPEG or WebP. In our case, the network
+    calls return a JPEG-formatted payload. We want files that provide consistent and
+    good image quality to enable users to zoom in to the details of those images as
+    much as they need to. Using a JPEG file also takes up less memory than a PNG file
+    would.'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们转向第二个问题：我们是否在使用最有效的数据格式？让我们在连接视图选项卡中查看连接类型，如[图 11-6](#connection_view)中所示。如果您的图像不需要透明度，请避免使用PNG文件，因为该文件格式不如JPEG或WebP文件压缩得好。在我们的情况下，网络调用返回的是JPEG格式的有效负载。我们希望文件能够提供一致且良好的图像质量，以使用户能够根据需要放大这些图像的细节。使用JPEG文件还比使用PNG文件占用更少的内存。
+- en: 'We can get more granular detail on each network call and its payload by selecting
+    any item: this opens a new view within Network Profiler on the right side, showing
+    tabs for Overview, Response, Request, and Callstack. In the next section, we’ll
+    be able to look into the specifics of a single network call and locate where the
+    network call is made in the code.'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过选择任何项，我们可以获得关于每个网络调用及其有效负载的更详细信息：这将在网络分析工具的右侧打开一个新视图，显示概述、响应、请求和调用堆栈选项卡。在下一节中，我们将能够深入了解单个网络调用的具体情况，并找出代码中进行网络调用的位置。
+- en: 'Network call, expanded: Overview | Response | Request | Callstack'
+  id: totrans-63
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 网络调用，扩展：概述 | 响应 | 请求 | 调用堆栈
+- en: Android developers are used to working with other platforms in order to achieve
+    feature parity and more. Suppose a network call starts returning the wrong kind
+    of information for a network request. The API team is in need of specifics for
+    the network request and response you’re getting on the client side. How can you
+    send them over the necessary request parameters and content headers they need
+    to investigate on their side?
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android开发人员习惯于与其他平台合作，以实现功能的平等性及更多功能。假设一个网络调用开始返回错误类型的信息以进行网络请求。API团队需要您在客户端获取的网络请求和响应的具体信息。您如何将他们所需的请求参数和内容头部发送过去以便他们进行调查？
+- en: Network Profiler gives us the ability to inspect network responses and requests
+    on the right-side panel in Connection View or Thread View, as shown in [Figure 11-8](#network_profiler_expanded).
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 网络分析工具使我们能够在连接视图或线程视图的右侧面板上检查网络响应和请求，如[图 11-8](#network_profiler_expanded)所示。
+- en: 'The *Overview* tab details notable highlights captured in the request and response:'
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*概述*标签详细说明了请求和响应中捕获的显著亮点：'
+- en: Request
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请求
+- en: The path and potential query parameters
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 路径和可能的查询参数
+- en: Status
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 状态
+- en: The HTTP status code returned within the resulting response
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 返回的响应中的HTTP状态码
+- en: Method
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 方法
+- en: The type of method used
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用的方法类型
+- en: Content type
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内容类型
+- en: The media type of the resource
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 资源的媒体类型
+- en: Size
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 大小
+- en: The size of the resource returned in the resulting response
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 返回响应中返回的资源大小
+- en: '![pawk 1108](assets/pawk_1108.png)'
+  id: totrans-77
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1108](assets/pawk_1108.png)'
+- en: Figure 11-8\. Network Profiler allows you to inspect response and request information.
+  id: totrans-78
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-8\. 网络分析工具允许您检查响应和请求信息。
+- en: The *Request* and *Response* tabs show a breakdown of headers, parameters, body
+    data, etc. In [Figure 11-9](#response), we show the exact network call as in the
+    previous image, except with the Response tab selected.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*请求* 和 *响应* 选项卡显示了头部、参数、正文数据等的详细信息。在 [图 11-9](#response) 中，我们展示了与前一图像相同的网络调用，但选择了响应选项卡。'
+- en: As you can see in the network response, TrekMe uses a basic HTTP API. Other
+    types of API data formats return HTML, JSON, and other resources. When applicable,
+    the Request and Response tabs offer body data as a formatted or raw representation.
+    In our case, the resource media returns JPEGs.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您在网络响应中看到的，TrekMe 使用基本的 HTTP API。其他类型的 API 数据格式返回 HTML、JSON 和其他资源。在适用的情况下，请求和响应选项卡提供了正文数据的格式化或原始表示。在我们的情况下，资源媒体返回
+    JPEG 图像。
+- en: '![pawk 1109](assets/pawk_1109.png)'
+  id: totrans-81
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1109](assets/pawk_1109.png)'
+- en: Figure 11-9\. Network Profiler captures network calls to render map.
+  id: totrans-82
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-9\. 网络分析器捕捉网络调用以渲染地图。
+- en: Finally, the *Call Stack* tab, shows the stacktrace for the relevant calls made
+    to execute a network connection, as pictured in [Figure 11-10](#call_stack). The
+    calls that are not faded represent the method calls within the call stack coming
+    from your own code. You can right-click the calls indicated to be able to jump
+    to the source code with ease.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，*调用堆栈* 选项卡显示了执行网络连接所做的相关调用的堆栈跟踪，如 [图 11-10](#call_stack) 所示。未淡化的调用代表来自您自己代码的方法调用。您可以右键点击所示的调用以轻松跳转到源代码。
+- en: Network Profiler is useful for more than just analytics. As you can see for
+    yourself, you’re able to process a lot of information quickly. From caching repetitive
+    calls to confirming API contracts, Network Profiler is a tool worth keeping in
+    your toolbox.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 网络分析器不仅对分析有用。正如您所见，您能够快速处理大量信息。从缓存重复调用到确认 API 合同，网络分析器是值得放在工具箱中的工具。
+- en: '![pawk 1110](assets/pawk_1110.png)'
+  id: totrans-85
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1110](assets/pawk_1110.png)'
+- en: Figure 11-10\. Call Stack tab.
+  id: totrans-86
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-10\. 调用堆栈选项卡。
+- en: Poor networking is not the only culprit when it comes to slow rendering times.
+    The task of creating a brand new topographical map is heavy in itself, but as
+    we have determined from a networking stance, no further action is required to
+    improve loading times or data format. However, we would be remiss to chalk up
+    slow loading times to slow response time alone. After TrekMe receives the network
+    data, it must then process the data to render the UI. For this reason, we should
+    check for potential inefficiencies in drawing the map out after the network calls.
+    *CPU Profiler* is able to provide insight for this. In the next section, we will
+    examine, using CPU Profiler, the processing consumption of the rendering of the
+    IGN Spain map.
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当涉及到渲染时间缓慢时，网络性能不是唯一的罪魁祸首。创建全新的地形图任务本身就非常繁重，但从网络角度来看，无需进一步采取措施来改善加载时间或数据格式。然而，仅凭慢响应时间本身是不足以解释慢加载时间的。在
+    TrekMe 接收网络数据后，必须处理数据以渲染用户界面。因此，我们应该检查在网络调用后绘制地图时潜在的效率低下。*CPU 分析器* 能够提供这方面的洞察力。在接下来的章节中，我们将使用
+    CPU 分析器来检查渲染 IGN 西班牙地图时的处理消耗情况。
+- en: CPU Profiler
+  id: totrans-88
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: CPU 分析器
+- en: While Network Profiler is able to give information about network calls, it is
+    not able to paint a full picture about where the time goes. We have a call stack
+    for our network calls, but we don’t know how long certain methods actually run.
+    This is where CPU Profiler comes in. CPU Profiler helps identify greedy consumption
+    of resources by analyzing how much time has passed on function execution and tracks
+    which thread a call executes on. Why does this matter? If TrekMe consumes too
+    much processing, the application slow downs, impacting the user experience. The
+    more CPU power that is used, the more quickly the battery drains.
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然网络分析器能够提供有关网络调用的信息，但无法全面了解时间消耗的情况。对于网络调用，我们有一个调用堆栈，但不知道某些方法实际运行了多长时间。这就是 CPU
+    分析器发挥作用的地方。CPU 分析器通过分析函数执行消耗的时间和跟踪调用所在的线程，帮助识别资源消耗过度的问题。这为什么重要？如果 TrekMe 消耗过多处理资源，应用程序将变慢，影响用户体验。使用的
+    CPU 越多，电池消耗就越快。
+- en: CPU Profiler allows you to examine CPU recordings and livestream data by examining
+    the call stack by the thread, as shown in [Figure 11-11](#intro_to_cpu_profiler).
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: CPU 分析器允许您通过线程检查 CPU 记录和实时数据，如 [图 11-11](#intro_to_cpu_profiler) 所示。
+- en: In the following sections, we break down the CPU timeline, Thread activity timeline,
+    and Analysis panels. Because TrekMe seems to spend a lot of time offloading work
+    to background threads, we will select one to look into more closely.
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接下来的章节中，我们将详细介绍 CPU 时间线、线程活动时间线和分析面板。因为 TrekMe 似乎花了很多时间将工作转移到后台线程，我们将选择一个线程来进行更详细的分析。
+- en: '![Introduction to the CPU Profiler](assets/pawk_1111.png)'
+  id: totrans-92
+  prefs: []
+  type: TYPE_IMG
+  zh: '![CPU Profiler 简介](assets/pawk_1111.png)'
+- en: Figure 11-11\. CPU Profiler shows the call stack and recorded times for methods
+    executed.
+  id: totrans-93
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-11\. CPU Profiler 显示了执行方法的调用堆栈和记录的时间。
+- en: CPU timeline
+  id: totrans-94
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: CPU 时间线
+- en: The CPU timeline organizes regional call stacks into recorded threads in the
+    Threads pane. The graph in [Figure 11-12](#cpu_timeline) shows spikes of CPU usage,
+    where the number is a percentage of available CPU. If you have made a trace recording,
+    you should be able to highlight the CPU timeline to see more information.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: CPU 时间线将区域性的调用堆栈组织到线程面板中的记录线程中。图中的 [图 11-12](#cpu_timeline) 显示了 CPU 使用率的波峰，其中的数字是可用
+    CPU 的百分比。如果您已经进行了跟踪记录，您应该能够突出显示 CPU 时间线以查看更多信息。
+- en: '![CPU timeline](assets/pawk_1112.png)'
+  id: totrans-96
+  prefs: []
+  type: TYPE_IMG
+  zh: '![CPU 时间线](assets/pawk_1112.png)'
+- en: Figure 11-12\. CPU timeline.
+  id: totrans-97
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-12\. CPU 时间线。
+- en: Android Studio allows you to drag-and-click over a recorded sample from the
+    CPU timeline to show the Call Chart. Clicking on Record brings you to a separate
+    trace CPU recording screen (covered in greater detail in *Record Traces*). To
+    create the more granular call charts we explore in the next section, it helps
+    to highlight smaller portions of the recorded CPU trace.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android Studio 允许您在 CPU 时间线的记录样本上拖动和点击，以显示调用图。点击记录将带您到一个单独的跟踪 CPU 记录屏幕（详细内容请参阅
+    *记录跟踪*）。为了创建我们在下一节中探索的更细粒度的调用图，突出显示记录的 CPU 跟踪的较小部分非常有帮助。
+- en: Thread activity timeline
+  id: totrans-99
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 线程活动时间线
+- en: The Thread activity timeline accompanies the CPU timeline showing every running
+    thread in the app. If a section was trace-recorded, you should be able to select
+    a thread to view the call stack captured within the selected time range. In [Figure 11-13](#thread_activity_timeline),
+    31 threads have been created and used within the application. These threads have
+    been created either by your code, the Android OS, or a third-party library.
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程活动时间线伴随 CPU 时间线显示应用程序中的每个运行线程。如果某个部分已被跟踪记录，您应该能够选择一个线程以查看在所选时间范围内捕获的调用堆栈。在
+    [图 11-13](#thread_activity_timeline) 中，已创建并在应用程序中使用了 31 个线程。这些线程是由您的代码、Android
+    操作系统或第三方库创建的。
+- en: '![Thread activity timeline](assets/pawk_1113.png)'
+  id: totrans-101
+  prefs: []
+  type: TYPE_IMG
+  zh: '![线程活动时间线](assets/pawk_1113.png)'
+- en: Figure 11-13\. Thread activity timeline.
+  id: totrans-102
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-13\. 线程活动时间线。
+- en: The lightest-colored blocks represent a running or active thread. There’s not
+    a lot to see on the Main thread, but remember, this image captures a CPU trace
+    of the network request downloading the map images. In this case, we expect background
+    threads to do the necessary work to download the network data. It seems we have
+    the main thread waiting on one of the DefaultDispatcher threads for half the time.
+    Double-clicking on an individual thread expands the call stack.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最浅色的块表示正在运行或活动的线程。在主线程上没有太多可见的内容，但请记住，这张图捕捉了下载地图图像的网络请求的 CPU 跟踪。在这种情况下，我们期望后台线程执行必要的工作来下载网络数据。似乎我们的主线程等待其中一个
+    DefaultDispatcher 线程的时间达到了一半。双击一个单独的线程会展开调用堆栈。
+- en: Below the Thread activity timeline is the Call Chart (see [Figure 11-14](#call_chart)).
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在线程活动时间线下方是调用图（参见 [图 11-14](#call_chart)）。
+- en: '![Call Chart](assets/pawk_1114.png)'
+  id: totrans-105
+  prefs: []
+  type: TYPE_IMG
+  zh: '![调用图](assets/pawk_1114.png)'
+- en: Figure 11-14\. The Call Chart shows a top-down representation of captured methods.
+  id: totrans-106
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-14\. 调用图显示了捕获方法的自顶向下表示。
+- en: The Call Chart shows a call stack of the segmented range of time for CPU usage.
+    The top boxes represent the encapsulating parent method, while the methods below
+    are child methods that were called. The parent method waits on the child methods
+    to finish executing, so this is a good place to see which of TrekMe’s methods
+    could be executing for a long time, like the method `TileStreamProviderHttp`.
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调用图显示了 CPU 使用时间段的调用堆栈。顶部方框表示封装的父方法，而下面的方法是被调用的子方法。父方法等待子方法执行完成，因此这是查看 TrekMe
+    方法中可能长时间执行的地方，比如 `TileStreamProviderHttp` 方法的良好位置。
+- en: If you’re reading the printed book, be aware that the bars are color coded.
+    Android OS methods are orange, methods you’ve written are green, and third-party
+    libraries are blue. Within this coroutine, the longest amount of execution time
+    is with `TileStreamProviderHttp.getTileStream(...)`. This is expected, given that
+    this call makes individual network requests per tile.
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您正在阅读印刷书籍，请注意条形图是按颜色编码的。Android OS方法为橙色，您编写的方法为绿色，第三方库为蓝色。在这个协程中，执行时间最长的是`TileStreamProviderHttp.getTileStream(...)`。这是预期的，因为每个瓦片都会进行单独的网络请求。
+- en: Analysis panel
+  id: totrans-109
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 分析面板
+- en: 'The *Analysis panel* presents a layered tab view. The top of the pane highlights
+    the active set of thread(s). Beneath the tabbed menu sits a search bar above the
+    stacktrace. You can use the search bar to filter trace data related to a particular
+    call. Below that is a set of tabs intended to render visual data from method tracing
+    in three views: *Top Down*, *Bottom Up*, and *Flame Chart*.'
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*分析面板*呈现了一个分层选项卡视图。面板顶部突出显示了活动线程的集合。在选项卡菜单下方是一个搜索栏，位于堆栈跟踪信息的上方。您可以使用搜索栏来过滤与特定调用相关的跟踪数据。在其下方是一组选项卡，用于在三个视图中渲染来自方法跟踪的视觉数据：*自顶向下*，*自底向上*和*火焰图*。'
+- en: Top Down renders a graphical representation of method traces from the top to
+    the bottom of the chart. Any call made within a method renders as a child underneath
+    the original method. Shown in [Figure 11-15](#top_down), the method `getTileStream`
+    used in TrekMe waits for a series of calls for internet connection and reading
+    from a data stream.
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自顶向下呈现了从图表顶部到底部的方法跟踪图形表示。任何在方法内部进行的调用都会呈现为原始方法下面的子方法。在 [图11-15](#top_down) 中显示的方法`getTileStream`在TrekMe中等待一系列的网络连接调用和从数据流中读取。
+- en: 'The Top Down view shows how CPU time breaks down in three ways:'
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自顶向下视图显示了CPU时间如何分解成三种方式：
+- en: Self
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自身
+- en: The method execution time itself
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 方法执行时间本身
+- en: Children
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 子方法
+- en: The time it takes to execute callee methods
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 执行被调用方法所需的时间
+- en: Total
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 总计
+- en: Combined time of self and children
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自身和子项的组合时间
+- en: '![pawk 1115](assets/pawk_1115.png)'
+  id: totrans-119
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1115](assets/pawk_1115.png)'
+- en: Figure 11-15\. Top Down view.
+  id: totrans-120
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图11-15\. 自顶向下视图。
+- en: 'In the case of `getTileStream`, the majority of the time is spent on the network
+    calls themselves: in particular, the connection request and `getInputStream` to
+    receive incoming data from the network. For the IGN Spain server, these times
+    can vary when accessed in another country and at different times of the day. Because
+    it is the client consuming server data, TrekMe has no control over how the server
+    performs.'
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`getTileStream`的情况下，大部分时间都花在网络调用上：特别是连接请求和从网络接收数据的`getInputStream`。对于IGN西班牙服务器，在其他国家和一天中不同时间访问时，这些时间可能会有所不同。由于客户端正在消耗服务器数据，TrekMe无法控制服务器的性能。
+- en: Contrary to Top Down, Bottom Up (shown in [Figure 11-16](#bottom_up)) shows
+    an inverse representation of *leaf elements* of the call stack. In comparison,
+    such a view renders a substantial number of methods, which can be useful in identifying
+    methods that are consuming the most CPU time.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与自顶向下相反，自底向上（在 [图11-16](#bottom_up) 中显示）显示了调用堆栈的*叶子元素*的反向表示。这种视图显示了大量方法，有助于识别消耗最多CPU时间的方法。
+- en: The final tab provides a Flame Chart view. A Flame Chart provides an aggregated
+    visual of operations from the bottom up. It provides an inverted call chart to
+    better see which functions/methods are consuming more CPU time.
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后一个选项卡提供了火焰图视图。火焰图提供了一个从底部向上聚合的操作视觉图。它提供了一个反转的调用图，以更好地查看哪些函数/方法消耗了更多的CPU时间。
+- en: '![Bottom up](assets/pawk_1116.png)'
+  id: totrans-124
+  prefs: []
+  type: TYPE_IMG
+  zh: '![自底向上](assets/pawk_1116.png)'
+- en: Figure 11-16\. Bottom Up view.
+  id: totrans-125
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图11-16\. 自底向上视图。
+- en: 'To summarize, CPU profiling can render three different kinds of views, depending
+    on the kind of deep dive you wish to pursue:'
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 总结一下，CPU分析可以呈现三种不同的视图，取决于您希望进行的深度分析类型：
+- en: Top Down graphical representation shows each method call’s CPU time along with
+    the time of its callees.
+  id: totrans-127
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 自顶向下图形表示显示了每个方法调用的CPU时间以及其被调用方法的时间。
+- en: Bottom Up inverts the Top Down representation and is most useful to sort methods
+    consuming the most or the least amount of time.
+  id: totrans-128
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 自底向上反转了自顶向下的表示，并且最有用于对消耗最多或最少时间的方法进行排序。
+- en: The Flame Chart inverts and aggregates the call stack horizontally with other
+    callees of the same level to show which ones consume the most CPU time first.
+  id: totrans-129
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 火焰图水平反转并聚合调用堆栈，以显示首先消耗最多CPU时间的同级其他被调方法。
+- en: Not only are there three different ways to render data, but there are different
+    kinds of call stacks you can record. In the upcoming sections, we cover different
+    kinds of method tracing in CPU Profiler. As you’re starting to get the picture
+    of what kind of information CPU Profiler tries to capture, we’ll turn to *method
+    tracing* with CPU Profiler and record a segment of TrekMe creating a new map.
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不仅有三种不同的数据呈现方式，还有不同种类的调用堆栈可以记录。在接下来的章节中，我们将介绍CPU Profiler中不同种类的方法追踪。当您开始理解CPU
+    Profiler试图捕获的信息类型时，我们将转向CPU Profiler中的*方法追踪*并记录TrekMe创建新地图的片段。
+- en: Method tracing
+  id: totrans-131
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 方法追踪
+- en: 'CPU Profiler allows you to *record a trace* to analyze and render its status,
+    duration, type, and more. Tracing relates to recording device activity over a
+    short period of time. Method tracing doesn’t occur until the recording button
+    is clicked twice: once to start the recording, and another time to end the recording.
+    There are four configurations for samples and traces, as shown in [Figure 11-17](#trace_configurations).'
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: CPU Profiler允许您*记录跟踪*以分析并呈现其状态、持续时间、类型等。跟踪涉及在短时间内记录设备活动。方法跟踪直到两次单击录制按钮才会发生：第一次开始录制，第二次结束录制。如[图 11-17](#trace_configurations)所示，有四种样本和跟踪配置。
+- en: '![pawk 1117](assets/pawk_1117.png)'
+  id: totrans-133
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1117](assets/pawk_1117.png)'
+- en: Figure 11-17\. Configurations are available for Android developers for samples
+    and traces.
+  id: totrans-134
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图11-17\. Android开发者可以为样本和跟踪配置配置。
+- en: '*Sample Java Methods* captures the application call stack, or a Call Chart
+    (also seen in previous sections). The Call Chart renders under the Thread activity
+    timeline, which shows which threads are active at a particular time. These traces
+    store individual sessions to the right pane for comparison with others’ saved
+    sessions.'
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*样本Java方法*捕获应用程序调用堆栈，或称为调用图表（也见前几节）。调用图表在线程活动时间线下呈现，显示特定时间哪些线程处于活动状态。这些跟踪将个人会话存储到右侧窗格中，以便与其他保存的会话进行比较。'
+- en: By choosing the Sample Java Methods configuration, you can examine TrekMe’s
+    call stack by hovering the mouse pointer over particular methods, as shown in
+    [Figure 11-18](#sample_java_methods).
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过选择样本Java方法配置，你可以通过将鼠标悬停在特定方法上来检查TrekMe的调用堆栈，如[图 11-18](#sample_java_methods)所示。
+- en: '![Sample Java Methods](assets/pawk_1118.png)'
+  id: totrans-137
+  prefs: []
+  type: TYPE_IMG
+  zh: '![样本Java方法](assets/pawk_1118.png)'
+- en: Figure 11-18\. Sample Java Methods.
+  id: totrans-138
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图11-18\. 样本Java方法。
+- en: Warning
+  id: totrans-139
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: Don’t let your recording run too long. Once a recording reaches its size limit,
+    the trace stops collecting data even if the current session continues to record.
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不要让你的录音时间过长。一旦录音达到其大小限制，即使当前会话继续录制，跟踪也会停止收集数据。
+- en: Unlike Sample Java Methods, *Trace Java Methods* strings together a series of
+    timestamps recorded for the start and end of a method call. Should you wish, you
+    can monitor *Sample C/C+ Functions* to gain insight into how the app is interacting
+    with the Android OS. Recording sample traces for native threads is available for
+    Android API 26 and up.
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与样本Java方法不同，*跟踪Java方法*串联了一系列记录的方法调用的时间戳。如果您愿意，可以监视*样本C/C+函数*以获得应用程序与Android操作系统交互的洞察。为Android
+    API 26及更高版本提供了本机线程的样本跟踪录制。
+- en: The terms “method” and “function” tend to be used in everyday conversation interchangeably
+    when talking about method-tracing analysis. At this point, you might be wondering
+    why Java methods and C/C++ functions differentiate enough to matter in CPU profiling.
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在日常谈话中，“方法”和“函数”通常在谈论方法追踪分析时可以互换使用。此时，您可能想知道为什么Java方法和C/C++函数在CPU分析中区别足以重要。
+- en: In the CPU-recording configurations, Android Profiler uses “method” to refer
+    to Java-based code, while “function” references threads. The difference between
+    the two is the order of method execution preserved via a call stack while threads
+    are created and scheduled by the Android OS itself.
+  id: totrans-143
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在CPU录制配置中，Android Profiler使用“方法”来指代基于Java的代码，而“函数”则引用线程。两者之间的区别在于方法执行顺序通过调用堆栈保留，而线程则由Android操作系统自身创建和调度。
+- en: Finally, there is Trace System Calls in the configurations shown in [Figure 11-17](#trace_configurations).
+    System Trace is a powerful CPU-recording configuration made available for Android
+    developers. It gives back graphical information on frame-rendering data.
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，在[图 11-17](#trace_configurations)中显示的配置中有系统调用跟踪。系统跟踪是一种为Android开发者提供的强大CPU录制配置。它返回有关帧渲染数据的图形信息。
+- en: Trace System Calls records analytics on *CPU Cores* to see how scheduling occurs
+    across the board. This configuration becomes more meaningful for detecting CPU
+    bottlenecks across the CPU Cores. These kinds of bottlenecks can jump out in places
+    where the RenderThread chokes, especially for red-colored frames. Unlike other
+    configurations, Trace System Calls shows thread states and the CPU core it currently
+    runs on, as shown in [Figure 11-19](#system_trace).
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 跟踪系统调用记录了关于*CPU核心*的分析，以查看如何在整个系统中进行调度。对于检测跨 CPU 核心的 CPU 瓶颈，此配置变得更加有意义。这些瓶颈可能在
+    RenderThread 噎住的地方显得特别突出，尤其是在红色帧的情况下。与其他配置不同，跟踪系统调用显示了线程状态及其当前运行的 CPU 核心，如 [图
+    11-19](#system_trace) 所示。
+- en: One of the key features in a system trace is having access to the *RenderThread*.
+    RenderThread can show where performance bottlenecks might be occurring when rendering
+    the UI. In the case of [Figure 11-19](#system_trace), we can see that much of
+    the idle time occurs around the actual drawing of the tiles themselves.
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 系统跟踪的一个关键功能是访问*RenderThread*。在渲染 UI 时，RenderThread 可显示性能瓶颈可能发生的位置。在 [图 11-19](#system_trace)
+    的情况下，我们可以看到大部分空闲时间发生在实际绘制图块本身周围。
+- en: The Android system tries to redraw the screen depending on the refresh rate
+    on the screen (between 8 ms and 16 ms). Work packets taking longer than the frame
+    rate can cause *dropped frames*, indicated by red slots in Frames. Frames drop
+    when some task does not return before the screen redraws itself. In the case of
+    this system trace recording, it appears that we indeed have some dropped frames
+    indicated by the numbers labeling boxes inside the Frame subsection under the
+    Display section.
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 系统尝试根据屏幕的刷新率（在 8 ms 和 16 ms 之间）重新绘制屏幕。工作包耗时超过帧率可能会导致*丢帧*，在 Frames 下的红色插槽中指示。当某些任务在屏幕自我重新绘制之前未返回时，帧会丢失。在此系统跟踪记录中，看起来确实有一些丢帧，这些丢帧由
+    Frame 部分内标记方框中的数字指示。
+- en: TrekMe saves each frame into a JPEG file and loads the image into a bitmap for
+    decoding. However, in [Figure 11-19](#system_trace), we see that in the RenderThread,
+    the length of DrawFrame doesn’t quite match up with the draw rate intervals. A
+    bit farther below that, some of that idle time is tied to various long-running
+    `decodeBitmap` methods in the pooled threads.
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: TrekMe 将每帧保存为 JPEG 文件，并将图像加载到位图中进行解码。然而，在 [图 11-19](#system_trace) 中，我们看到在 RenderThread
+    中，DrawFrame 的长度与绘制速率间隔不完全匹配。在稍后的一些空闲时间内，某些长时间运行的 `decodeBitmap` 方法与池化线程有关。
+- en: '![System Trace](assets/pawk_1120.png)'
+  id: totrans-149
+  prefs: []
+  type: TYPE_IMG
+  zh: '![系统跟踪](assets/pawk_1120.png)'
+- en: Figure 11-19\. System Trace reveals dropped frames where times are labeled within
+    Frames.
+  id: totrans-150
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-19\. 系统跟踪显示了标记为 Frames 内的时间标签，显示了丢帧。
+- en: From here, there are some options that could potentially be considered for faster
+    drawing; that is, caching network responses for images, or even *prefetching*.
+    For users in need of a few megabytes of data, prefetching is a nice-to-have in
+    the case a device has access to at least a 3G network. The problem with that is
+    that it may not be the best option to render those bitmaps before we *know* what
+    must be rendered. Another option is potentially encoding the data into a more
+    compressed format for easier decoding. Whatever the decision, it’s up to the developer
+    to evaluate the trade-offs and the effort of implementing certain optimizations.
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从这里开始，有一些可能被考虑用于更快绘制的选项；即，缓存图像的网络响应，甚至*预取*。对于需要几兆字节数据的用户来说，预取是一个很好的选择，尤其是在设备至少有3G网络访问的情况下。这样做的问题在于，在*知道*必须渲染之前，可能不是渲染这些位图的最佳选择。另一个选择可能是将数据编码成更压缩的格式，以便更容易解码。无论做出什么决定，都是开发者来评估实施某些优化的权衡和努力。
+- en: Note
+  id: totrans-152
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: The concept of prefetching refers to predicting what kind of data would come
+    in a future request, and grabbing that data preemptively while there’s an active
+    radio connection. Each radio request has overhead in terms of the time it takes
+    to wake up the radio and the battery drainage that occurs to keep the radio awake,
+    so Android developers can take advantage of making additional calls while the
+    radio is already awake.
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 预取的概念是指预测未来请求可能带来的数据类型，并在有活动无线电连接时预先抓取该数据。每个无线电请求在唤醒无线电并保持无线电唤醒状态期间都有额外开销，因此
+    Android 开发人员可以利用这一点，在无线电已经唤醒时进行额外的调用。
+- en: Recording a sample method trace
+  id: totrans-154
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 记录样本方法跟踪
+- en: Now that you are more familiar with what the recording configurations offer,
+    we turn to *Sample Method Trace* on TrekMe. CPU recordings are separated from
+    the CPU Profiler timeline. To begin, click the Record button at the top of the
+    screen to analyze CPU activity while interacting with TrekMe.
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您对录制配置的提供更加熟悉，我们转向 TrekMe 上的*样本方法跟踪*。CPU 记录与 CPU 分析器时间轴分离。首先，在屏幕顶部单击“录制”按钮，以分析与
+    TrekMe 交互时的 CPU 活动。
+- en: Ending the recording renders a tabbed right pane of execution times for sample
+    or trace calls. You can also highlight multiple threads at once for analysis.
+    The average Android developer may not use all these tabs all the time; still,
+    it’s good to be cognizant of what tools are at your disposal.
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 结束录制后，会生成一个带有样本或跟踪调用执行时间的选项卡式右侧窗格。您还可以一次性高亮显示多个线程进行分析。普通的 Android 开发者可能不会一直使用所有这些选项卡，但了解您可以使用哪些工具是非常重要的。
+- en: In TrekMe, there’s a predefined set of iterable tiles to download. A number
+    of coroutines concurrently read the iterable and perform a network request per
+    tile. Each coroutine decodes a bitmap right after the network request succeeded.
+    These coroutines are sent to some dispatcher such as `Dispatchers.IO`, and the
+    rendering happens when the result is sent back to the UI thread. The UI thread
+    is never blocked waiting for bitmap decoding, or waiting for a network request.
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 TrekMe 中，有一组预定义的可迭代瓷砖需要下载。多个协程同时读取可迭代对象，并在每个瓷砖的网络请求成功后解码位图。这些协程被发送到诸如 `Dispatchers.IO`
+    这样的调度器，并且在结果发送回 UI 线程后进行渲染。UI 线程永远不会被阻塞，等待位图解码或网络请求。
+- en: The shrunken CPU timeline in [Figure 11-20](#analysis_panel), at first glance,
+    appears to be nothing more than a reference to the previous screen view. However,
+    you can interact with this data to drill down further by highlighting a chunk
+    of time via the range selector, as shown in [Figure 11-21](#range_selector).
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 [图 11-20](#analysis_panel) 中，缩小的 CPU 时间轴乍一看似乎只是对前一屏幕视图的引用。然而，您可以通过范围选择器与这些数据进行交互，通过高亮显示时间段进一步深入分析，如
+    [图 11-21](#range_selector) 所示。
+- en: '![Analysis Panel](assets/pawk_1121.png)'
+  id: totrans-159
+  prefs: []
+  type: TYPE_IMG
+  zh: '![分析面板](assets/pawk_1121.png)'
+- en: Figure 11-20\. CPU Profiler separates the recorded trace.
+  id: totrans-160
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-20\. CPU 分析器可将记录的跟踪结果分离。
+- en: '![Range Selector](assets/pawk_1122.png)'
+  id: totrans-161
+  prefs: []
+  type: TYPE_IMG
+  zh: '![范围选择器](assets/pawk_1122.png)'
+- en: Figure 11-21\. The range selector helps to manage sections of highlighted ranges.
+  id: totrans-162
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-21\. 范围选择器有助于管理高亮显示范围的部分。
+- en: In [Figure 11-22](#cpu_profiler_callstack_analysis), we look at one of the longer-running
+    methods, `getTileStream`. Below the timeline, the left panel allows you to organize
+    *threads* and *interactions* via drag-and-drop functionality. Being able to group
+    threads together also means you can highlight groups of stacktraces. You can expand
+    a thread in a recorded trace by double-clicking the thread twice to show a drop-down
+    visual of a call stack.
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 [图 11-22](#cpu_profiler_callstack_analysis) 中，我们看到一个运行时间较长的方法 `getTileStream`。在时间轴下方，左侧面板允许您通过拖放功能组织*线程*和*交互*。能够将线程分组也意味着您可以高亮显示一组堆栈跟踪。通过双击两次线程，您可以展开记录跟踪的线程，显示一个下拉式可视化的调用堆栈。
+- en: Selecting an item also opens an additional pane to the right. This is the *Analysis
+    Panel*, which allows you to examine stacktrace and execution time in more granular
+    detail. Tracking CPU usage is important, but perhaps you’d like to be able to
+    analyze how an application interacts with Android hardware components. In the
+    next section, we look into Android Studio’s *Energy Profiler*.
+  id: totrans-164
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 选择某个项目还会打开右侧的附加面板。这就是*分析面板*，它允许您更详细地检查堆栈跟踪和执行时间。跟踪 CPU 使用情况非常重要，但也许您希望能够分析应用程序与
+    Android 硬件组件的交互方式。在接下来的部分中，我们将探讨 Android Studio 的*能量分析器*。
+- en: '![Call Stack](assets/pawk_1123.png)'
+  id: totrans-165
+  prefs: []
+  type: TYPE_IMG
+  zh: '![调用堆栈](assets/pawk_1123.png)'
+- en: Figure 11-22\. You can search for a specific method via the search function.
+  id: totrans-166
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-22\. 您可以通过搜索功能查找特定方法。
+- en: Excessive networking calls on Android devices are also *power-hungry*. The longer
+    the device radio stays awake for network communication, the more CPU consumption
+    and battery drainage there is. By this logic, it would be fair to assume that
+    networking accounts for most energy consumption. We can confirm this by using
+    Energy Profiler.
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Android 设备上过多的网络调用也会*耗电*。设备无线电通信保持唤醒状态的时间越长，CPU 消耗和电池消耗就越多。根据这一逻辑，可以合理推测网络占用了大部分能量消耗。通过使用能量分析器，我们可以确认这一点。
+- en: Energy Profiler
+  id: totrans-168
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 能量分析器
+- en: Energy Profiler is best used for determining heavy energy consumption. When
+    an application makes a network request, the application turns on the mobile radio
+    hardware component. CPU consumption accelerates as the Android device communicates
+    with the network, draining battery at a faster rate.
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 能量分析器最适用于确定高能耗情况。当应用程序发起网络请求时，应用程序会启动移动无线电硬件组件。随着安卓设备与网络通信，CPU 消耗加快，导致电池更快地耗尽。
+- en: TrekMe prescales bitmaps to ensure consistent memory and energy usage when the
+    user is zooming in and out. When the user is creating and downloading a map, the
+    details of the map are, by default, downloaded with the highest-resolution detail.
+    The event pane shows higher levels of consumption when downloading large chunks
+    of data.
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: TrekMe 对位图进行预缩放，以确保用户缩放时内存和能量使用保持一致。当用户创建和下载地图时，默认情况下以最高分辨率的细节下载地图的详细信息。事件面板在下载大块数据时显示更高水平的消耗。
+- en: A drag-and-click can select a range of the timeline to show details for events
+    for the Android OS. In [Figure 11-23](#energy_profiler_system_event_pane), we
+    can see a pop-up rendering of a breakdown of the energy graph. The first half
+    of the pop-up legend contains the categories CPU, Network, and Location, which
+    relay to each category provided in the stacked graph. It is a good sign to see
+    that CPU and networking usage is light despite the relatively heavy job of making
+    a network call to request large pieces of data and draw them on the screen.
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 拖动和点击可以选择时间轴的一段范围，以显示 Android OS 事件的详细信息。在 [图 11-23](#energy_profiler_system_event_pane)
+    中，我们可以看到能源图的弹出渲染，显示了能源图的分解。弹出图例的前半部分包含 CPU、网络和位置等类别，这些类别与堆叠图中提供的每个类别相关联。尽管在执行网络调用请求大数据块并将其绘制到屏幕上这一相对重要的任务中，CPU
+    和网络使用量轻微增加仍然是一个良好的迹象。
+- en: '![Energy Profiler system event pane](assets/pawk_1124.png)'
+  id: totrans-172
+  prefs: []
+  type: TYPE_IMG
+  zh: '![能量分析器系统事件面板](assets/pawk_1124.png)'
+- en: Figure 11-23\. System event pane.
+  id: totrans-173
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-23\. 系统事件面板。
+- en: 'The second half of the pop-up legend describes the kinds of system events captured
+    from the device. Energy Profiler works to capture certain kinds of system events
+    and their energy consumption on a device:'
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 弹出图例的后半部分描述了从设备捕获的系统事件类型。能量分析器用于捕获设备上某些类型的系统事件及其能耗：
+- en: '*Alarms* and *Jobs* are system events designed to wake up a device at a specified
+    time. As a best practice, Android now recommends using *WorkManager* or *JobScheduler*
+    whenever possible, especially for background tasks.'
+  id: totrans-175
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*闹钟* 和 *任务* 是设计用于在指定时间唤醒设备的系统事件。作为最佳实践，Android 现在建议尽可能使用 *WorkManager* 或 *JobScheduler*，特别是用于后台任务。'
+- en: '*Location* requests use Android GPS Sensor, which can consume a large amount
+    of battery. It’s a good practice to make sure accuracy and frequency are gauged
+    correctly.'
+  id: totrans-176
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '*位置* 请求使用 Android GPS 传感器，可能会消耗大量电池。确保正确评估准确性和频率是一个良好的实践。'
+- en: Although [Figure 11-23](#energy_profiler_system_event_pane) shows only one location
+    request, there are other types of system events that contain their own unique
+    set of states. A request event may possess the state of *Active*, as pictured
+    in [Figure 11-23](#energy_profiler_system_event_pane), *Requested*, or *Request
+    Removed*. Likewise, if Energy Profiler captures a *Wake Lock* type of system event,
+    the timeline would be able to show state(s) for the duration of the wake lock
+    event such as *Acquired*, *Held*, *Released*, and so on.
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然 [图 11-23](#energy_profiler_system_event_pane) 仅显示一个位置请求，但还有其他类型的系统事件，它们具有各自独特的状态。例如，请求事件可能具有
+    *Active* 状态，如 [图 11-23](#energy_profiler_system_event_pane) 所示，*Requested* 或 *Request
+    Removed*。同样，如果能量分析器捕获到 *Wake Lock* 类型的系统事件，则时间轴将显示唤醒锁事件期间的状态，例如 *Acquired*、*Held*、*Released*
+    等。
+- en: 'Selecting a particular system event opens a right pane in Energy Profiler to
+    see more details. From here, you can jump directly to the source code for that
+    particular location request. In TrekMe, `GoogleLocationProvider` is a class that
+    polls for user location every second. This isn’t necessarily an issue—the polling
+    is intended to enable the device to constantly update your location. This proves
+    the power of this profiling tool: you can get precise information without looking
+    at the source code. Requests are made one at a time, removing existing requests
+    in order to make a new one when a new image block has been downloaded.'
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 选择特定的系统事件将在能源分析器的右窗格中打开，以查看更多详细信息。从这里，您可以直接跳转到该位置请求的源代码。在TrekMe中，`GoogleLocationProvider`是一个每秒轮询用户位置的类。这并不一定是一个问题
+    - 轮询旨在使设备能够持续更新您的位置。这证明了这种性能分析工具的效力：您可以获得精确的信息，而无需查看源代码。请求是逐个进行的，当新的图像块已下载时，会删除现有请求以进行新的请求。
+- en: In comparison to location polling, we can expect decreased energy consumption
+    when a user is zooming in on a rendered map. There are no requests made for downloading
+    large chunks of data. We do expect some energy consumption for keeping track of
+    the user’s location, which also uses `GoogleLocationProvider`.
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与位置轮询相比，我们可以预期当用户放大渲染地图时，能源消耗会减少。不会发出请求来下载大块数据。我们确实期望在跟踪用户位置时会消耗一些能量，这也使用了`GoogleLocationProvider`。
+- en: In [Figure 11-24](#energy_breakdown), we can see the excessive and rapid touch
+    events indicated by the circular dots above the stacked overlay graph. Because
+    TrekMe has downloaded all the information it needed, no network calls are made
+    at this time. However, we do notice how CPU usage spikes back up to high levels.
+    To avoid overwhelming the system, it is a good practice to limit touch events
+    to avoid spinning off duplicate zoom-drawing functions.
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 [Figure 11-24](#energy_breakdown) 中，我们可以看到在堆叠覆盖图上方的圆点所示的过多和快速触摸事件。由于TrekMe已经下载了所需的所有信息，此时不会进行网络调用。然而，我们确实注意到CPU使用率再次急剧上升。为了避免过载系统，限制触摸事件以避免产生重复的缩放绘图函数是一个良好的实践。
+- en: '![TrekMe energy profiler](assets/pawk_1125.png)'
+  id: totrans-181
+  prefs: []
+  type: TYPE_IMG
+  zh: '![TrekMe能源分析器](assets/pawk_1125.png)'
+- en: Figure 11-24\. TrekMe opens and zooms in on an existing map.
+  id: totrans-182
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图11-24\. TrekMe打开并放大现有地图。
+- en: So far, we’ve covered evaluating performance by looking at processing power.
+    But examining battery/CPU usage does not always diagnose performance problems.
+    Sometimes, slow behavior can be attributed to clogged memory. In the next section,
+    we explore the relationship between CPU and memory and use Memory Profiler on
+    TrekMe’s GPX recording feature.
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们通过查看处理能力来评估性能。但是检查电池/CPU使用情况并不总是能够诊断出性能问题。有时，慢速行为可能归因于内存阻塞。在接下来的部分中，我们探讨CPU和内存之间的关系，并在TrekMe的GPX录制功能上使用内存分析器。
+- en: Memory Profiler
+  id: totrans-184
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 内存分析器
+- en: In TrekMe, you can navigate to *GPX Record* in the pullout drawer. GPX stands
+    for *GPS Exchange Format* and is a set of data used with XML schema for GPS formatting
+    in software applications. Hikers can click the play icon under Control. The app
+    then tracks and records the movements of the hikers and their devices, which can
+    be saved as a GPX file to be rendered as a line drawing later on to indicate the
+    path traveled. [Figure 11-25](#trekme_gpx_recording) shows TrekMe’s GPX recording
+    feature.
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在TrekMe中，您可以在拉出抽屉中导航到*GPX Record*。GPX代表*GPS交换格式*，是一组用于GPS格式化的数据，用于软件应用中的XML模式。徒步者可以在控制下点击播放图标。然后应用程序会跟踪并记录徒步者及其设备的移动，这些可以保存为GPX文件，稍后可以作为线绘制显示以指示所走路径。[Figure 11-25](#trekme_gpx_recording)
+    展示了TrekMe的GPX录制功能。
+- en: '![pawk 1126](assets/pawk_1126.png)'
+  id: totrans-186
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1126](assets/pawk_1126.png)'
+- en: Figure 11-25\. TrekMe’s GPX recording feature uses `GpxRecordingService` to
+    track the GPS coordinates of a user on a hike.
+  id: totrans-187
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图11-25\. TrekMe的GPX录制功能使用`GpxRecordingService`来跟踪用户在徒步旅行中的GPS坐标。
+- en: 'We know that using location in the system *can* be heavy for CPU processing.
+    But sometimes, slowdowns can be attributed to memory problems. CPU processing
+    uses RAM as its capacity for workspace, so when RAM fills up, the Android system
+    must execute a heap dump. When memory usage is severely restricted, the ability
+    to execute many tasks at once becomes limited. The more time it takes to execute
+    fewer application operations, the slower Android gets. RAM is shared across all
+    applications: if too many applications are consuming too much memory, it can slow
+    the performance of the device or, worse, cause `OutOfMemoryException` crashes.'
+  id: totrans-188
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们知道，在系统中使用位置可能会对 CPU 处理造成负担。但有时，减速可能归因于内存问题。 CPU 处理使用 RAM 作为工作空间的容量，因此当 RAM
+    装满时，Android 系统必须执行堆转储。当内存使用受到严重限制时，同时执行许多任务的能力变得有限。执行较少的应用程序操作所需的时间越长，Android
+    的速度就越慢。 RAM 在所有应用程序之间共享：如果太多应用程序消耗太多内存，可能会减慢设备的性能，甚至导致`OutOfMemoryException`崩溃。
+- en: Memory Profiler allows you to see how much memory is consumed out of the memory
+    allocated for your application to run. With Memory Profiler, you can manually
+    trigger a heap dump in a running session to generate analysis to determine which
+    objects are held in the heap and how many there are.
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内存分析器允许您查看应用程序运行所分配的内存中消耗了多少内存。使用内存分析器，您可以在运行会话中手动触发堆转储，以生成分析结果，以确定堆中保存了哪些对象以及有多少个对象。
+- en: 'As shown in [Figure 11-26](#memory_profiler_heapdump), Memory Profiler offers
+    powerful features:'
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如[图 11-26](#memory_profiler_heapdump)所示，内存分析器提供了强大的功能：
+- en: Triggering garbage collection
+  id: totrans-191
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 触发垃圾回收
+- en: Capturing a Java heap dump
+  id: totrans-192
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 捕获 Java 堆转储
+- en: Allocation tracking
+  id: totrans-193
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 分配跟踪
+- en: An interactive timeline of the fragments and activities available in the Android
+    application
+  id: totrans-194
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Android 应用程序中可用的片段和活动的交互式时间轴
+- en: User-input events
+  id: totrans-195
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 用户输入事件
+- en: Memory count to divide memory into categories
+  id: totrans-196
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 将内存计数划分为不同类别
+- en: '![Memory Profiler](assets/pawk_1127.png)'
+  id: totrans-197
+  prefs: []
+  type: TYPE_IMG
+  zh: '![内存分析器](assets/pawk_1127.png)'
+- en: Figure 11-26\. Allocation Tracking offers a *Full* Italicized Text configuration,
+    which captures all object allocations in memory, while a *Sampled* configuration
+    records objects at regular intervals.
+  id: totrans-198
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-26\. 分配跟踪提供了一个*完整*的斜体文本配置，可以捕获内存中的所有对象分配，而*采样*配置则定期记录对象。
+- en: Note
+  id: totrans-199
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Like recording samples and traces in CPU Profiler, capturing Java heap dumps
+    saves the results within the session panel in Android Profiler for comparison
+    for the life of your Android Studio instance.
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像在 CPU 分析器中记录样本和跟踪一样，捕获 Java 堆转储结果会保存在 Android Profiler 的会话面板中，以便在 Android Studio
+    实例的生命周期内进行比较。
+- en: 'Initiating too much garbage collection (GC) can affect performance: for example,
+    executing a ton of GC can slow the device down, depending on how frequent and
+    how large generational object allocation is in memory. At a minimum, Android developers
+    should try to run memory profiling of every application to ensure that nothing
+    is being held in the heap past its use, otherwise known as “memory leaks.” Detecting
+    memory leaks can be life-saving, especially for Android users depending on longer
+    battery life. What you are about to see is a variation of a common memory management
+    mistake developers often make while working with services: leaving a service accidentally
+    running.'
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 过多地触发垃圾回收（GC）可能会影响性能：例如，执行大量的 GC 可能会减慢设备的速度，这取决于内存中分代对象分配的频率和大小。至少，Android 开发人员应该尝试对每个应用程序运行内存分析，以确保没有任何东西被保留在堆中超出其用途，也就是所谓的“内存泄漏”。检测内存泄漏可能是救命的，尤其是对于依赖更长电池寿命的
+    Android 用户。您即将看到的是开发人员在处理服务时经常犯的一种常见内存管理错误的变体：意外保持服务运行。
+- en: TrekMe uses a foreground service to gain stats of the user’s hike, which is
+    a natural choice for tracking the user’s location. Services, like other Android
+    components, run in the UI thread of the application. However, persisting services
+    tend to drain battery and system resources. Hence, it is important to limit the
+    use of foreground services so as not to impair overall device performance and
+    to kill them off as soon as possible if the app must use one.
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: TrekMe 使用前台服务来获取用户徒步旅行的统计数据，这是跟踪用户位置的自然选择。服务与其他 Android 组件一样，在应用程序的 UI 线程中运行。然而，持久服务往往会耗尽电池和系统资源。因此，限制前台服务的使用以不影响整体设备性能，并在必要时尽快终止它们是很重要的。
+- en: We can run a couple of GPX recordings against Memory Profiler and trigger the
+    heap dump to see which objects held in heap consume the most memory, as shown
+    in [Figure 11-27](#memory_allocations).
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以对Memory Profiler运行几次GPX录制并触发堆转储，以查看在堆中保留的对象消耗最多的内存，如[图11-27](#memory_allocations)所示。
+- en: '![pawk 1128](assets/pawk_1128.png)'
+  id: totrans-204
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1128](assets/pawk_1128.png)'
+- en: Figure 11-27\. You can use the CTRL + F function to search for “GpxRecordingService”
+    to narrow your results.
+  id: totrans-205
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图11-27。您可以使用CTRL + F功能搜索“GpxRecordingService”以缩小结果范围。
+- en: A heap dump shows you a list of classes, which can be organized by heap *allocations*,
+    *native size*, *shallow size*, or *retained size*. Shallow size is a reference
+    to the total Java memory used. Native size is a reference to the total memory
+    used in native memory. Retained size is made of both shallow size and retained
+    size (in bytes).
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 堆转储显示了一个类列表，可以按堆*分配*、*本机大小*、*浅大小*或*保留大小*组织。浅大小是指使用的总Java内存。本机大小是指在本机内存中使用的总内存。保留大小由浅大小和保留大小（以字节为单位）组成。
+- en: Within a recorded heap dump, you can organize your allocation record by *app
+    heap*, *image heap*, or *zygote heap*. The zygote heap refers to the memory that
+    is allocated for a zygote process, which might include common framework code and
+    resources. The image heap stores memory allocation from the OS itself and contains
+    references to classes used in an image containing our application for a system
+    boot. For our use case, we’re more concerned with the app heap, which is the primary
+    heap the app allocates memory to.
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在记录的堆转储中，您可以按*app heap*、*image heap*或*zygote heap*组织您的分配记录。Zygote heap指的是为zygote进程分配的内存，其中可能包括常用的框架代码和资源。Image
+    heap存储来自操作系统本身的内存分配，并包含对包含我们应用程序的映像中使用的类的引用，用于系统引导。对于我们的用例，我们更关注app heap，这是应用程序分配内存的主要堆。
+- en: 'In Memory Profiler, triggering a heap dump will render a list of objects still
+    held in memory after GC. This list can give you:'
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在内存分析器中，触发堆转储将显示在GC后仍保留在内存中的对象列表。这个列表可以为您提供：
+- en: Every object instance of a selected object displayed in the *Instance View*
+    pane, with the option to “Jump to Source” in the code
+  id: totrans-209
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 在*Instance View*窗格中显示的所选对象的每个对象实例，可以选择在代码中“跳转到源代码”
+- en: The ability to examine instance data by right-clicking an object in *References*
+    and selecting *Go to Instance*
+  id: totrans-210
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 通过右键单击*References*中的对象并选择*Go to Instance*，可以检查实例数据的能力
+- en: Remember, a memory leak occurs when caching holds references to objects that
+    are no longer needed. In [Figure 11-28](#memory_profiling_locationservice), we
+    search for “Location” with the same heap dump to locate our service and be able
+    to view total memory allocation. `LocationService` appears to have separate allocations
+    when it should only have one running at a time.
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请记住，当缓存保留对不再需要的对象的引用时，会发生内存泄漏。在[图11-28](#memory_profiling_locationservice)中，我们搜索“Location”以在相同的堆转储中定位我们的服务并查看总内存分配。`LocationService`似乎有多个分配，而实际上应该一次只有一个运行。
+- en: '![pawk 1129](assets/pawk_1129.png)'
+  id: totrans-212
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1129](assets/pawk_1129.png)'
+- en: Figure 11-28\. A suspicious number of `LocationService` instances appears to
+    be held in memory.
+  id: totrans-213
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图11-28。似乎有可疑数量的`LocationService`实例仍保留在内存中。
+- en: It appears that every time we press Record, a new `LocationService` in TrekMe
+    is instantiated and then held in memory even after the service dies. You can start-and-stop
+    a service, but if you are holding a reference to that service in a background
+    thread, even if it is dead, the instance continues to be held in the heap even
+    after GC occurs.
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 看起来每次我们按下Record按钮时，在TrekMe中都会实例化一个新的`LocationService`，然后即使服务已经结束，该实例仍保留在内存中。您可以启动和停止服务，但如果您在后台线程中保留对该服务的引用，即使它已经结束，实例在GC后仍会保留在堆中。
+- en: 'Let’s just run a couple more recordings in TrekMe to confirm the behavior we
+    suspect. We can right-click one of these instances to “Jump to Source” and see.
+    In *RecordingViewModel.kt*, we see the following code:'
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们在TrekMe中运行几次录制以确认我们怀疑的行为。我们可以右键单击其中一个实例以“跳转到源代码”查看。在*RecordingViewModel.kt*中，我们看到以下代码：
+- en: '[PRE0]'
+  id: totrans-216
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'We want to check whether these services are indeed stopping before starting
+    a new one. A started service stays alive as long as possible: until a `stopService`
+    call is made outside the service or `stopSelf` is called within the service. This
+    makes the use of persistent services expensive, as Android considers running services
+    always in use, meaning that the memory a service uses up in RAM will never be
+    made available.'
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望检查这些服务是否确实在启动新服务之前停止。已启动的服务会尽可能长时间保持活动状态：直到服务外部进行 `stopService` 调用或服务内部进行
+    `stopSelf` 调用。这使得持久服务的使用变得昂贵，因为 Android 认为运行中的服务始终处于使用中状态，这意味着服务在 RAM 中使用的内存将永远不会释放。
+- en: 'When a GPX recording stops, `LocationService` propagates a series of events,
+    pinging the GPS location, which is then recorded and saved as a set of data. When
+    a GPX file has just been written, the service subscribes to the main thread to
+    send a status. Because `LocationService` extends Android `Service`, we can call
+    `Service::stopSelf` to stop the service:'
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 GPX 记录停止时，`LocationService` 会传播一系列事件，ping GPS 位置，然后将其记录并保存为一组数据。当刚写入 GPX 文件时，该服务订阅主线程以发送状态。由于
+    `LocationService` 扩展了 Android 的 `Service`，我们可以调用 `Service::stopSelf` 来停止该服务：
+- en: '[PRE1]'
+  id: totrans-219
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: 'We can use Memory Profiler and check the heap dump to ensure we hold reference
+    to only one service in memory. Actually, since GPX recordings are done through
+    `LocationService`, it makes sense to stop the service when the user stops recording.
+    This way, the service can be deallocated from memory on GC: otherwise, the heap
+    continues to hold an instance of `LocationService` past its life.'
+  id: totrans-220
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以使用内存分析器并检查堆转储，以确保我们只保留对一个服务的引用在内存中。事实上，由于 GPX 记录是通过 `LocationService` 进行的，因此在用户停止录制时停止服务是有意义的。这样，服务可以在
+    GC 时从内存中释放：否则，堆将继续保持 `LocationService` 实例直到其生命周期结束。
+- en: Memory Profiler can help you detect possible memory leaks through the process
+    of sifting through the heap dump. You can also filter a heap dump by checking
+    the *Activities/Fragments Leaks* box in the heap dump configurations in Memory
+    Profiler. Hunting for memory leaks can be…a manual process, and even then, hunting
+    for memory leaks yourself is only one way of catching them. Luckily, we have LeakCanary,
+    a popular memory leak detection library that can attach to your app in debug mode
+    and idly watch for memory leaks to occur.
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内存分析器可以帮助您通过筛查堆转储来检测可能的内存泄漏。您还可以通过在内存分析器中的堆转储配置中勾选 *Activities/Fragments Leaks*
+    复选框来过滤堆转储。寻找内存泄漏可能是一个手动的过程，即便如此，自己寻找内存泄漏仍然是捕捉它们的一种方式。幸运的是，我们有 LeakCanary，这是一个流行的内存泄漏检测库，可以在调试模式下附加到您的应用程序中，并悄悄地监视内存泄漏的发生。
+- en: Detecting Memory Leaks with LeakCanary
+  id: totrans-222
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用 LeakCanary 检测内存泄漏
+- en: LeakCanary automatically detects at runtime explicit and implicit memory leaks
+    that might be hard to detect manually. This is a great benefit, since Memory Profiler
+    requires manually triggering a heap dump and checking for retained memory. When
+    crash analytics are unable to detect crashes coming from an `OutOfMemoryException`,
+    LeakCanary serves as a viable alternative to keep an eye on issues detected at
+    runtime, and offers better coverage in discovering memory leaks.
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: LeakCanary 可以在运行时自动检测可能难以手动检测到的显式和隐式内存泄漏。这是一个巨大的好处，因为内存分析器需要手动触发堆转储并检查保留的内存。当崩溃分析无法检测到来自
+    `OutOfMemoryException` 的崩溃时，LeakCanary 作为一种可行的替代方案，在运行时检测到的问题，并在发现内存泄漏方面提供更好的覆盖率。
+- en: 'Memory leaks commonly come from bugs related to the lifecycle of objects being
+    held past their use. LeakCanary is able to detect various mistakes such as:'
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内存泄漏通常来自于与对象生命周期相关的错误。LeakCanary 能够检测到各种错误，例如：
+- en: Creating a new `Fragment` instance without destroying the existing version first
+  id: totrans-225
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 在不销毁现有版本的情况下创建新的 `Fragment` 实例
+- en: Injecting an Android `Activity` or `Context` reference *implicitly* or *explicitly*
+    into a non-Android component
+  id: totrans-226
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 将 Android 的 `Activity` 或 `Context` 引用 *隐式* 或 *显式* 注入非 Android 组件
+- en: Registering a listener, broadcast receiver, or RxJava subscription and not remembering
+    to dispose of the listener/subscriber at the end of the parent lifecycle
+  id: totrans-227
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 注册监听器、广播接收器或 RxJava 订阅者后忘记在父生命周期结束时释放监听器/订阅者
+- en: 'For this example, we have installed LeakCanary in TrekMe. LeakCanary is used
+    organically in development until a heap dump with potential leaks has been retained.
+    You can install LeakCanary by adding the following dependency to Gradle:'
+  id: totrans-228
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于此示例，我们已在 TrekMe 中安装了 LeakCanary。在开发过程中，LeakCanary 可以自然地使用，直到保留了潜在泄漏的堆转储。您可以通过将以下依赖项添加到
+    Gradle 来安装 LeakCanary：
+- en: '[PRE2]'
+  id: totrans-229
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: Once installed in your application, LeakCanary automatically detects leaks when
+    an `Activity` or `Fragment` has been destroyed, clears the `ViewModel`, and more.
+    It does this by detecting retained objects passed through some `ObjectWatcher`.
+    LeakCanary then dumps the heap, analyzes the heap, and categorizes those leaks
+    for easy consumption. After installing LeakCanary, you can use the application
+    like normal. Should LeakCanary detect retained instances in a heap dump that occurs,
+    it sends a notification to the system tray.
+  id: totrans-230
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦安装到您的应用程序中，LeakCanary会在`Activity`或`Fragment`被销毁时自动检测泄漏，清除`ViewModel`等。它通过检测通过某些`ObjectWatcher`传递的保留对象来执行此操作。然后，LeakCanary转储堆，分析堆，并对这些泄漏进行分类，以便轻松消费。安装LeakCanary后，您可以像平常一样使用应用程序。如果LeakCanary检测到堆转储中保留的实例，则会向系统托盘发送通知。
+- en: In the case of TrekMe, it appears LeakCanary has detected a memory leak within
+    a RecyclerView instance of `MapImportFragment`, as shown in [Figure 11-29](#leak_canary_2).
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于TrekMe而言，在[图 11-29](#leak_canary_2)中，LeakCanary似乎检测到了`MapImportFragment`的RecyclerView实例中的内存泄漏。
+- en: '![pawk 1130](assets/pawk_1130.png)'
+  id: totrans-232
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1130](assets/pawk_1130.png)'
+- en: Figure 11-29\. LeakCanary shows a RecyclerView leaking in its stacktrace.
+  id: totrans-233
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 11-29\. LeakCanary显示了RecyclerView在其堆栈跟踪中的泄漏。
+- en: The error message is telling us that a `RecyclerView` instance is “leaking.”
+    LeakCanary indicates that this view instance holds a reference on a `Context`
+    instance which wraps the activity. Something prevents the `RecyclerView` instance
+    from being garbage-collected—either an implicit or explicit reference to the `RecyclerView`
+    instance passed to the component outliving the activity.
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 错误消息告诉我们，一个RecyclerView实例“泄漏”了。LeakCanary指出此视图实例保持对包装活动的`Context`实例的引用。某些东西阻止了`RecyclerView`实例被垃圾回收——可能是一个对`RecyclerView`实例的隐式或显式引用超出了活动的组件。
+- en: 'We’re not sure what we’re dealing with quite yet, so we start by looking at
+    the *MapImportFragment.kt* class holding the RecyclerView mentioned in [Figure 11-29](#leak_canary_2).
+    Tracing back to the UI element `recyclerViewMapImport` referenced from the layout
+    file, we bring your attention to something curious:'
+  id: totrans-235
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还不确定我们在处理什么，因此我们首先查看*MapImportFragment.kt*类，其中提到了[图 11-29](#leak_canary_2)中的RecyclerView。追溯到从布局文件引用的UI元素`recyclerViewMapImport`，我们注意到了一些奇怪的地方：
+- en: '[PRE3]'
+  id: totrans-236
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: '[![1](assets/1.png)](#co_performance_considerations_with___span_class__keep_together__android_profiling_tools__span__CO1-1)'
+  id: totrans-237
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_performance_considerations_with___span_class__keep_together__android_profiling_tools__span__CO1-1)'
+- en: In the `MapImportFragment`, we attach a custom click listener to every `ViewHolder`
+    in the `RecyclerView`.
+  id: totrans-238
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`MapImportFragment`中，我们为`RecyclerView`中的每个`ViewHolder`附加了自定义的点击监听器。
+- en: '[![2](assets/2.png)](#co_performance_considerations_with___span_class__keep_together__android_profiling_tools__span__CO1-2)'
+  id: totrans-239
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_performance_considerations_with___span_class__keep_together__android_profiling_tools__span__CO1-2)'
+- en: The `Context` then is used to get a `ContentResolver` and create an `InputStream`
+    to feed as an argument for `MapImportViewModel::unarchiveAsync`.
+  id: totrans-240
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后使用`Context`获取`ContentResolver`并创建`InputStream`以作为`MapImportViewModel::unarchiveAsync`的参数。
+- en: When a user clicks on a particular item in the RecyclerView, the Kotlin extension
+    function `FloatingActionButton::activate` is called. Remember, a common cause
+    for a memory leak is when we accidentally inject an `Activity` or a `Context`
+    into a non-Android component.
+  id: totrans-241
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当用户点击RecyclerView中的特定项时，将调用Kotlin扩展函数`FloatingActionButton::activate`。请记住，内存泄漏的常见原因是我们意外地将`Activity`或`Context`注入非Android组件中。
+- en: If you look closely at the `FloatingActionButton::activate` implementation,
+    you can see that we create an implicit reference to the enclosing class, which
+    is the `MapImportFragment` instance.
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果仔细观察`FloatingActionButton::activate`的实现，可以看到我们创建了对封闭类的隐式引用，即`MapImportFragment`实例。
+- en: How is an implicit reference created? We add a click listener to a button. The
+    listener holds a reference to the parent `Context` (returned by the `getContext()`
+    method of the fragment). To be able to access the `Context` from inside the listener,
+    the Kotlin compiler creates an implicit reference to the enclosing class.
+  id: totrans-243
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 隐式引用是如何创建的？我们向按钮添加了点击监听器。监听器持有对父`Context`的引用（通过片段的`getContext()`方法返回）。为了能够从监听器内部访问`Context`，Kotlin编译器创建了对封闭类的隐式引用。
+- en: 'Following the code to the `MapImportViewModel` method, we see the `InputStream`
+    passed down to be able to call another private method in the `ViewModel`:'
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在跟随到`MapImportViewModel`方法的代码时，我们看到`InputStream`被传递下来以调用`ViewModel`中的另一个私有方法：
+- en: '[PRE4]'
+  id: totrans-245
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'A `ViewModel` object has a lifecycle of its own and is intended to outlive
+    the lifecycle of the view it is tied to until the `Fragment` is detached. Rather
+    than using an `InputStream` as an argument, it is better to use an application
+    `context`, which is available throughout the life of the application and which
+    can be injected via constructor parameter injection in `MapImportViewModel`.^([1](ch11.html#idm46669736623312))
+    We can then create the `InputStream` right in `MapImportViewModel::unarchiveAsync`:'
+  id: totrans-246
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个`ViewModel`对象有自己的生命周期，并且旨在超过其所绑定的视图的生命周期，直到`Fragment`被分离。与使用`InputStream`作为参数不同，最好使用应用程序`context`，它在整个应用程序的生命周期内都可用，并且可以通过`MapImportViewModel`的构造函数参数注入来注入。然后我们可以在`MapImportViewModel::unarchiveAsync`中创建`InputStream`：
+- en: '[PRE5]'
+  id: totrans-247
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: Of course, turning on LeakCanary can be disrupting for development if an existing
+    application has many memory leaks. In this case, the temptation might be to turn
+    off LeakCanary to prevent disruption to current work. Should you choose to put
+    LeakCanary on your application, it is best to do it only when you and your team
+    have the capacity to “face the music.”
+  id: totrans-248
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当然，如果现有应用程序存在许多内存泄漏，打开LeakCanary可能会对开发造成干扰。在这种情况下，诱惑可能是关闭LeakCanary以防止当前工作的干扰。如果选择在应用程序上使用LeakCanary，最好只在您和您的团队有能力“面对现实”时才这样做。
+- en: Summary
+  id: totrans-249
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 摘要
+- en: There is no doubt that Android benchmarking and profiling tools are powerful.
+    To ensure that your application is getting the most out of analytics, it’s best
+    to choose one or two tools as appropriate. It can be easy to get lost in the world
+    of optimizations, but it’s important to remember that the largest wins come from
+    making optimizations with the least effort and the largest impact. Likewise, it’s
+    important to take current priorities and team workload into consideration.
+  id: totrans-250
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 毫无疑问，Android基准测试和性能分析工具非常强大。为了确保您的应用程序充分利用分析功能，最好选择一两个适当的工具。很容易迷失在优化的世界中，但重要的是要记住，最大的收益来自于付出最少努力和产生最大影响的优化。同样，重要的是要考虑当前的优先事项和团队工作量。
+- en: Approach Android optimizations like a nutritionist, encouraging incremental,
+    habitual changes instead of “crash dieting.” Android profiling is intended to
+    show you what’s really happening under the hood, but it’s important to remember
+    that the average Android developer must prioritize which issues must be addressed
+    in a world where their time and manpower may be limited.
+  id: totrans-251
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将Android优化视为营养师，鼓励逐步、习惯性的变化，而不是“暴饮暴食”。Android性能分析旨在向您展示幕后发生的情况，但重要的是要记住，在一个时间和人力资源可能有限的世界中，普通的Android开发人员必须优先考虑哪些问题必须解决。
+- en: 'The hope is that you feel more equipped to handle any potential bugs that may
+    come your way, and that this chapter gives you confidence to start exploring some
+    of these tools on your own applications to see how things are working under the
+    hood:'
+  id: totrans-252
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 希望您感到更有能力处理可能出现的任何潜在错误，并且本章节给您信心开始探索一些这些工具在您自己的应用程序中的运行情况，看看事情在幕后是如何运作的：
+- en: Android Profiler is a powerful way to analyze application performance, from
+    networking and CPU to memory and energy analytics. Android Studio caches recorded
+    sessions along with heap dumps and method traces for the lifespan of an Android
+    Studio instance so that you can compare them with other saved sessions.
+  id: totrans-253
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Android性能分析器是分析应用程序性能的强大方式，从网络和CPU到内存和能量分析。Android Studio会缓存记录的会话以及堆转储和方法跟踪，以便您可以将它们与其他保存的会话进行比较。
+- en: Network Profiler can help solve Android problems specific to API debugging.
+    It can provide information useful to both the client device and the server where
+    the data comes from, and can help us ensure optimal data formatting within a network
+    call.
+  id: totrans-254
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 网络分析器可以帮助解决特定于API调试的Android问题。它可以提供对客户端设备和数据来源服务器都有用的信息，并且可以帮助我们确保网络调用中的数据格式化最佳。
+- en: CPU Profiler can give insight as to where most of the time is being spent executing
+    methods, and is particularly useful for finding bottlenecks in performance. You
+    can record different kinds of CPU traces to be able to drill down into specific
+    threads and call stacks.
+  id: totrans-255
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: CPU分析器可以揭示大部分时间用于执行方法的地方，并且特别适用于找出性能瓶颈。您可以记录不同类型的CPU跟踪，以便能够深入研究特定线程和调用堆栈。
+- en: Energy Profiler looks at whether CPU processes, networking calls, or GPS locations
+    in an application could be draining a device’s battery.
+  id: totrans-256
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 能量分析器查看应用程序中的CPU进程、网络调用或GPS位置是否可能耗尽设备的电池。
+- en: Memory Profiler looks at how much memory is allocated in the heap. This can
+    help give insight about areas of code that could use improvements in memory.
+  id: totrans-257
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Memory Profiler 查看分配在堆上的内存量。这可以帮助深入了解代码中可能需要在内存方面改进的地方。
+- en: LeakCanary is a popular open source library created by Square. It can be helpful
+    to use LeakCanary to detect memory leaks that are harder to detect at runtime.
+  id: totrans-258
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: LeakCanary 是由 Square 创建的流行开源库。使用 LeakCanary 可以帮助检测在运行时难以发现的内存泄漏问题。
+- en: ^([1](ch11.html#idm46669736623312-marker)) The `@ViewModelInject` annotation
+    is special to Hilt, which is a dependency injection framework. However, constructor
+    parameter injection can also be achieved with manual DI or with DI frameworks
+    like Dagger and Koin.
+  id: totrans-259
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch11.html#idm46669736623312-marker)) `@ViewModelInject` 注解是 Hilt 框架特有的，这是一个依赖注入框架。然而，构造函数参数注入也可以通过手动
+    DI 或者像 Dagger 和 Koin 这样的 DI 框架实现。

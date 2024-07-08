@@ -1,0 +1,504 @@
+- en: Preface
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 前言
+- en: 'JetBrains created Kotlin for two reasons: there was no language that filled
+    all the gaps in Android development using (legacy) Java libraries, and a new language
+    would allow Android development to set trends, rather than just follow them.'
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: JetBrains 创建 Kotlin 的原因有两个：一是没有语言可以填补使用（传统）Java 库进行 Android 开发中的所有空白，二是新语言可以让
+    Android 开发引领潮流，而不仅仅是跟随。
+- en: 'In February 2015, Kotlin 1.0 was officially announced. Kotlin is concise, safe,
+    pragmatic, and focused on interoperability with Java code. It can be used everywhere
+    Java is used today: for server-side development, Android apps, desktop or portable
+    clients, IoT device programming, and much, much more. Kotlin gained popularity
+    among Android developers quite rapidly, and Google’s decision to adopt Kotlin
+    as the official language of Android development resulted in skyrocketing interest
+    in the language. According to the [Android Developers website](https://developer.android.com/kotlin),
+    more than 60% of professional Android developers currently use Kotlin.'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 1.0 在 2015 年 2 月正式宣布。Kotlin 简洁、安全、务实，并专注于与 Java 代码的互操作性。它可以在目前使用 Java
+    的任何地方使用：用于服务器端开发、Android 应用程序、桌面或便携客户端、IoT 设备编程等等。Kotlin 在 Android 开发者中迅速流行起来，Google
+    决定将 Kotlin 作为官方 Android 开发语言，导致了人们对该语言的兴趣急剧增长。根据 [Android Developers 网站](https://developer.android.com/kotlin)，超过
+    60% 的专业 Android 开发者目前使用 Kotlin。
+- en: 'The learning curve in Android is rather steep: admittedly, it’s hard to learn
+    and harder to master. Part of the Android developer “upbringing,” for many, is
+    to be exposed over time to unintended interactions between the Android operating
+    system and the application. This book intends to bring those kinds of exposures
+    to readers in depth and up close by examining such problems in Android. We’ll
+    talk not only about Kotlin and Java, but also about the concurrency problems that
+    arise when using Android and how Kotlin is able to solve them.'
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 的学习曲线相当陡峭：诚然，学习难度大，掌握更难。对于许多人来说，成为 Android 开发者的一部分是随着时间暴露于 Android 操作系统与应用程序之间的意外交互。本书旨在通过深入分析
+    Android 中的这些问题，向读者展示这种类型的暴露情况。我们不仅将讨论 Kotlin 和 Java，还将讨论在使用 Android 时可能出现的并发问题，以及
+    Kotlin 如何解决这些问题。
+- en: We will sometimes compare Kotlin to Java when we believe doing so provides better
+    insight (especially since most readers are expected to have a Java background).
+    We can demonstrate, with working examples, how to bridge that gap, and how the
+    underlying concepts of most Kotlin operations are more similar to the Java equivalent
+    than not. The tasks will be organized by topic to provide software engineers with
+    a structured decomposition of that mass of information, and they will show how
+    to make an application robust and maintainable.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有时会将 Kotlin 与 Java 进行比较，因为我们认为这样做可以提供更好的见解（特别是因为大多数读者预计具有 Java 背景）。我们可以通过可工作的示例演示如何弥合差距，以及大多数
+    Kotlin 操作的基本概念与 Java 等效操作更相似的方式。这些任务将按主题组织，以提供软件工程师对该大量信息的结构化分解，并展示如何使应用程序更加强壮和可维护。
+- en: Additionally, users familiar with Java—including Android developers—will find
+    their learning curve dramatically flatten when we present each of the common tasks
+    in both Java and Kotlin. Where appropriate, we’ll discuss the difference and the
+    pitfalls of one or both, but we hope to provide bite-size and easily digestible
+    examples of a task that will “just work,” and enable the reader to consume and
+    adapt to the modern paradigm, as well as become aware of the significance of the
+    updated code immediately and instinctively.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此外，熟悉 Java 的用户，包括 Android 开发者，在我们以 Java 和 Kotlin 分别展示每个常见任务时，将发现他们的学习曲线大大平缓。在适当的时候，我们将讨论一个或两者的差异和
+    pitfalls，但我们希望提供一些易于消化的示例，让任务“一切顺利”，并使读者能够消化和适应现代范式，并立即本能地意识到更新代码的重要性。
+- en: While Kotlin is fully interoperable with Java, other Java application development
+    (server-side programming, desktop clients, middleware, etc.) has not caught on
+    to the extent that Android has. This is largely due to the maintainer of Android
+    (Google) strongly “encouraging” its users to make the change. Users are regularly
+    migrating to Kotlin, but even more still fall back to Java for mission-critical
+    work. Our hope is that this book will serve as the lifeline an Android developer
+    needs to feel safe in committing to the advantages and simplicity that Kotlin
+    represents.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然 Kotlin 与 Java 完全互操作，但其他 Java 应用程序开发（服务器端编程、桌面客户端、中间件等）尚未像安卓那样普及。这在很大程度上是因为安卓的维护者（谷歌）强烈“鼓励”用户进行转变。用户定期迁移到
+    Kotlin，但更多的仍然因为任务关键性工作而回到 Java。我们希望这本书能成为安卓开发者在承诺 Kotlin 所代表的优势和简单性时所需的生命线。
+- en: Who Should Read This Book
+  id: totrans-7
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 谁应该读这本书
+- en: '*Any of the over six million Android engineers*. We believe that virtually
+    every Android engineer could benefit from this book. While a small percentage
+    will be fluent in Kotlin, even they will likely learn something from the information
+    we’ll present. But realistically, we’re targeting the very large majority who
+    haven’t made the transition to Kotlin. This book is also for those who have dipped
+    a toe in but not gained the same level of familiarity with Kotlin that they may
+    have accrued in Java-centric Android development:'
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*超过六百万名安卓工程师*。我们相信几乎每一位安卓工程师都能从这本书中受益。虽然只有少数人精通 Kotlin，但他们可能也会从我们提供的信息中学到一些东西。但实际上，我们的目标是那些尚未过渡到
+    Kotlin 的绝大多数人。这本书也适合那些尝试过一点 Kotlin，但在 Kotlin 的熟悉程度上还没有达到在以 Java 为中心的安卓开发中所积累的水平：'
+- en: Scenario 1
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 场景 1
+- en: A reader is proficient in Java, heard of this new Kotlin language, and wants
+    to try it out. So they read some online tutorial and start using it and it works
+    great. Soon they realize that this isn’t just a new syntax. The idioms aren’t
+    the same (e.g., functional programming, coroutines) and a whole new way of developing
+    is now possible. But they lack guidelines, structure. For them, this book is a
+    perfect fit.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 读者精通 Java，听说过这种新的 Kotlin 语言，并想尝试一下。因此，他们阅读了一些在线教程，开始使用它，效果很好。不久他们意识到这不仅仅是一种新的语法。习语不同（例如函数式编程、协程），现在也可能有一整套新的开发方式。但是他们缺乏指导、结构。对他们来说，这本书是一个完美的选择。
+- en: Scenario 2
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 场景 2
+- en: A reader is part of a small team of Java developers. They have discussions about
+    whether they should start including Kotlin in their project. Even if Kotlin is
+    said to be 100% interoperable with Java, some colleagues argue that introducing
+    another language will add complexity to the project. Others suggest it might limit
+    the number of colleagues who will be able to work on the project because of the
+    need to master two languages. The reader could use this book to convince their
+    colleagues, if they can show that the benefits will outweigh the costs.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 读者是一个由几位 Java 开发者组成的小团队的一部分。他们讨论是否应该在项目中开始包含 Kotlin。即使 Kotlin 被说成与 Java 百分之百互操作，一些同事认为引入另一种语言会增加项目的复杂性。其他人则认为这可能会限制能够参与项目的同事数量，因为需要掌握两种语言。如果读者能证明收益大于成本，他们可以利用这本书说服他们的同事。
+- en: Scenario 3
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 场景 3
+- en: An experienced Android developer may have played around with Kotlin or written
+    a feature in it, but still falls back to the home base of Java when things need
+    to get done. This was the scenario we found ourselves in when realizing the book
+    we’re pitching now would have made our lives much easier. This is also the state
+    we see most commonly around us—many Android devs have touched Kotlin, and many
+    feel like they understand enough to write it when necessary, but they are either
+    unaware, or simply unconvinced, of the significance of data classes, immutable
+    properties, and structured concurrency. We think this book will turn a curious
+    person into a committed evangelist.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一位经验丰富的安卓开发者可能已经试过 Kotlin 或者写过其中的一个功能，但在需要完成任务时仍然依赖于 Java。当我们意识到现在我们正在推广的这本书会让我们的生活变得更加轻松时，我们处于这种情况。这也是我们周围最常见的状态——许多安卓开发者接触过
+    Kotlin，许多人觉得自己在必要时能写出来，但他们可能不知道，或者简单地不认同，数据类、不可变属性和结构化并发的重要性。我们认为这本书会把一个好奇者变成一名坚定的倡导者。
+- en: Why We Wrote This Book
+  id: totrans-15
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 为什么写这本书
+- en: 'There are plenty of books that show how Android works, how Kotlin works, or
+    how concurrency works. Kotlin is becoming wildly popular with Android development
+    for its easy adoption and cleaner syntax, but Kotlin offers Android much more
+    than that: it offers new ways to solve concurrency problems in Android. We wrote
+    this book to provide a unique and specific intersectionality of these topics in
+    great depth. Both Android and Kotlin are rapidly changing, separately and together.
+    Trying to keep up with all the changes can be difficult.'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有很多书籍展示了Android的工作原理，Kotlin的运行方式，或者并发的工作方式。Kotlin因其易于采用和更清晰的语法在Android开发中变得异常流行，但Kotlin为Android提供的远不止此：它为解决Android中的并发问题提供了新的解决方法。我们编写本书的目的是深入探讨这些主题的独特和特定交集。Android和Kotlin都在快速变化，无论是单独还是共同。试图跟上所有变化可能会很困难。
+- en: 'We view this book as a valuable checkpoint in history: showing where Android
+    came from, where it is now, and how it will continue to evolve with Kotlin as
+    the language matures.'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们视这本书为历史上的一个有价值的检查点：展示了Android的起源，现在的位置以及随着Kotlin语言成熟它将如何继续发展。
+- en: Navigating This Book
+  id: totrans-18
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 阅读本书
+- en: Sometimes we include code snippets as screenshots instead of regular atlas code
+    formatting. This is particularly useful with coroutines and flows, as suspension
+    points are clearly identifiable. We also get type hints from the IDE.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时我们会将代码片段作为屏幕截图包含，而不是常规的atlas代码格式。这在使用协程和流时特别有用，因为悬停点可以清晰地识别。我们还从IDE中获取类型提示。
+- en: '[Chapter 1, “Kotlin Essentials”](ch01.html#kotlin_essentials) and [Chapter 2,
+    “The Kotlin Collections Framework”](ch02.html#the_kotlin_collections_framework)
+    cover major notable transitions made with Android in Kotlin. While the information
+    in these chapters is enough to give you a good grounding in Kotlin, further chapters
+    will take a deeper dive into more complex/advanced features. Users familiar with
+    Java or similar syntactic structures will find the translation surprisingly natural.'
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[第一章，“Kotlin基础”](ch01.html#kotlin_essentials) 和 [第二章，“Kotlin集合框架”](ch02.html#the_kotlin_collections_framework)
+    讨论了在Kotlin中实现的Android中的主要显著转变。虽然这些章节中的信息足以为您提供对Kotlin的良好基础，但更多的章节将深入探讨更复杂/高级的功能。熟悉Java或类似语法结构的用户会发现翻译令人惊讶地自然。'
+- en: '[Chapter 3, “Android Fundamentals”](ch03.html#android_fundamentals) and [Chapter 4,
+    “Concurrency in Android”](ch04.html#memory_and_threading_fundamentals_id) will
+    provide you with a foundation in the Android system in relation to memory and
+    threading. As in any other operating system, concurrency is hard to achieve.'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[第三章，“Android基础”](ch03.html#android_fundamentals) 和 [第四章，“Android中的并发”](ch04.html#memory_and_threading_fundamentals_id)
+    将为您提供关于Android系统在内存和线程方面的基础知识。与任何其他操作系统一样，并发是难以实现的。'
+- en: '[Chapter 5, “Thread Safety”](ch05.html#thread_safety_id) through [Chapter 11,
+    “Performance Considerations with Android Profiling Tools”](ch11.html#android_profiling_tools)
+    examine common issues surrounding memory and threading, while indicating how the
+    Android framework has evolved over time to grant developers more control around
+    them. In tandem, these chapters show how Kotlin’s extensions and language features
+    can help developers write better applications faster.'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[第五章，“线程安全”](ch05.html#thread_safety_id) 到 [第十一章，“使用Android性能分析工具考虑性能问题”](ch11.html#android_profiling_tools)
+    探讨围绕内存和线程的常见问题，同时指出Android框架随时间如何演变以赋予开发者更多控制权。同时，这些章节展示了Kotlin的扩展和语言特性如何帮助开发者更快地编写更好的应用程序。'
+- en: '[Chapter 12, “Trimming Down Resource Consumption with Performance Optimizations”](ch12.html#ch12)
+    explores the use of powerful Android developer tools to examine performance and
+    memory-related analytics under the hood—to be able to see things you never really
+    knew about. This book will provide engineers with professionally developed and
+    curated implementations of the most common tasks seen in native Android development.
+    Many tasks will consist of a real-world problem, followed by the corresponding
+    solution in both Java and Kotlin. When further explanation is required, the solutions
+    will follow a snappy compare-and-contrast model with a focus on brevity and natural
+    language.'
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[第十二章，“通过性能优化减少资源消耗”](ch12.html#ch12) 探索使用强大的Android开发者工具来检查性能和与内存相关的分析，以便能够看到你以前从未真正了解过的东西。本书将为工程师提供专业开发和策划的本地Android开发中看到的最常见任务的实现。许多任务将包括一个真实世界的问题，接着是Java和Kotlin的相应解决方案。当需要进一步解释时，解决方案将遵循简洁和自然语言为重点的快速比较和对比模型。'
+- en: Conventions Used in This Book
+  id: totrans-24
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 本书使用的约定
+- en: 'The following typographical conventions are used in this book:'
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书使用以下排版约定：
+- en: '*Italic*'
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*斜体*'
+- en: Indicates new terms, URLs, email addresses, filenames, and file extensions.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 表示新术语、网址、电子邮件地址、文件名和文件扩展名。
+- en: '`Constant width`'
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`等宽字体`'
+- en: Used for program listings, as well as within paragraphs to refer to program
+    elements such as variable or function names, databases, data types, environment
+    variables, statements, and keywords.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用于程序列表，也可在段落内引用程序元素，如变量或函数名称、数据库、数据类型、环境变量、语句和关键字。
+- en: '**`Constant width bold`**'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**`等宽粗体`**'
+- en: Shows commands or other text that should be typed literally by the user.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显示用户应按字面输入的命令或其他文本。
+- en: '*`Constant width italic`*'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*`等宽斜体`*'
+- en: Shows text that should be replaced with user-supplied values or by values determined
+    by context.
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显示应由用户提供值或由上下文确定值的文本。
+- en: Tip
+  id: totrans-34
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: This element signifies a tip or suggestion.
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此元素表示提示或建议。
+- en: Note
+  id: totrans-36
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: This element signifies a general note.
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此元素表示一般注释。
+- en: Warning
+  id: totrans-38
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: This element indicates a warning or caution.
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此元素表示警告或注意。
+- en: Using Code Examples
+  id: totrans-40
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用代码示例
+- en: Supplemental material (code examples, exercises, etc.) is available for download
+    at [*https://github.com/ProgrammingAndroidWithKotlin*](https://github.com/ProgrammingAndroidWithKotlin).
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 补充材料（代码示例、练习等）可在[*https://github.com/ProgrammingAndroidWithKotlin*](https://github.com/ProgrammingAndroidWithKotlin)下载。
+- en: If you have a technical question or a problem using the code examples, please
+    send email to [*bookquestions@oreilly.com*](mailto:bookquestions@oreilly.com).
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您有技术问题或使用代码示例时遇到问题，请发送电子邮件至[*bookquestions@oreilly.com*](mailto:bookquestions@oreilly.com)。
+- en: This book is here to help you get your job done. In general, if example code
+    is offered with this book, you may use it in your programs and documentation.
+    You do not need to contact us for permission unless you’re reproducing a significant
+    portion of the code. For example, writing a program that uses several chunks of
+    code from this book does not require permission. Selling or distributing examples
+    from O’Reilly books does require permission. Answering a question by citing this
+    book and quoting example code does not require permission. Incorporating a significant
+    amount of example code from this book into your product’s documentation does require
+    permission.
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书旨在帮助您完成工作。一般而言，如果本书提供示例代码，则您可以在自己的程序和文档中使用它。除非您重现了代码的大部分内容，否则无需联系我们以获得许可。例如，编写使用本书多个代码片段的程序不需要许可。销售或分发O’Reilly书籍中的示例代码需要许可。引用本书并引用示例代码回答问题不需要许可。将本书大量示例代码整合到产品文档中需要许可。
+- en: 'We appreciate, but generally do not require, attribution. An attribution usually
+    includes the title, author, publisher, and ISBN. For example: “*Programming Android
+    with Kotlin* by Pierre-Olivier Laurence, Amanda Hinchman-Dominguez, G. Blake Meike,
+    and Mike Dunn (O’Reilly). Copyright 2022 Pierre-Olivier Laurence and Amanda Hinchman-Dominguez,
+    978-1-492-06300-1.”'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们欢迎，但通常不要求署名。署名通常包括标题、作者、出版商和ISBN。例如：“*使用Kotlin编程Android*，作者Pierre-Olivier
+    Laurence、Amanda Hinchman-Dominguez、G. Blake Meike和Mike Dunn（O’Reilly）。版权所有2022年Pierre-Olivier
+    Laurence和Amanda Hinchman-Dominguez，978-1-492-06300-1。”
+- en: If you feel your use of code examples falls outside fair use or the permission
+    given above, feel free to contact us at [*permissions@oreilly.com*](mailto:permissions@oreilly.com).
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您认为您对代码示例的使用超出了公平使用范围或上述许可，请随时通过[*permissions@oreilly.com*](mailto:permissions@oreilly.com)联系我们。
+- en: O’Reilly Online Learning
+  id: totrans-46
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: O’Reilly在线学习
+- en: Note
+  id: totrans-47
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: For more than 40 years, [*O’Reilly Media*](http://oreilly.com) has provided
+    technology and business training, knowledge, and insight to help companies succeed.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 40多年来，[*O’Reilly Media*](http://oreilly.com)提供技术和业务培训、知识和见解，帮助公司取得成功。
+- en: Our unique network of experts and innovators share their knowledge and expertise
+    through books, articles, and our online learning platform. O’Reilly’s online learning
+    platform gives you on-demand access to live training courses, in-depth learning
+    paths, interactive coding environments, and a vast collection of text and video
+    from O’Reilly and 200+ other publishers. For more information, visit [*http://oreilly.com*](http://oreilly.com).
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们独特的专家和创新者网络通过书籍、文章和我们的在线学习平台分享他们的知识和专业知识。O’Reilly的在线学习平台为您提供按需访问的实时培训课程、深度学习路径、交互式编码环境以及来自O’Reilly和其他200多家出版商的大量文本和视频。有关更多信息，请访问[*http://oreilly.com*](http://oreilly.com)。
+- en: How to Contact Us
+  id: totrans-50
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 如何联系我们
+- en: 'Please address comments and questions concerning this book to the publisher:'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请将有关本书的评论和问题发送至出版社：
+- en: O’Reilly Media, Inc.
+  id: totrans-52
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: O’Reilly Media, Inc.
+- en: 1005 Gravenstein Highway North
+  id: totrans-53
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 1005 Gravenstein Highway North
+- en: Sebastopol, CA 95472
+  id: totrans-54
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Sebastopol, CA 95472
+- en: 800-998-9938 (in the United States or Canada)
+  id: totrans-55
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 800-998-9938（美国或加拿大）
+- en: 707-829-0515 (international or local)
+  id: totrans-56
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 707-829-0515（国际或本地）
+- en: 707-829-0104 (fax)
+  id: totrans-57
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 707-829-0104（传真）
+- en: We have a web page for this book, where we list errata, examples, and any additional
+    information. You can access this page at [*https://oreil.ly/pak*](https://oreil.ly/pak).
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们为本书制作了一个网页，列出勘误、示例和任何额外信息。您可以访问[*https://oreil.ly/pak*](https://oreil.ly/pak)查看。
+- en: Email [*bookquestions@oreilly.com*](mailto:bookquestions@oreilly.com) to comment
+    or ask technical questions about this book.
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 发送电子邮件至[*bookquestions@oreilly.com*](mailto:bookquestions@oreilly.com)提出对本书的评论或技术问题。
+- en: For news and information about our books and courses, visit [*http://oreilly.com*](http://oreilly.com).
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于我们的书籍和课程的新闻和信息，请访问[*http://oreilly.com*](http://oreilly.com)。
+- en: 'Find us on Facebook: [*http://facebook.com/oreilly*](http://facebook.com/oreilly)'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Facebook上找到我们：[*http://facebook.com/oreilly*](http://facebook.com/oreilly)
+- en: 'Follow us on Twitter: [*http://twitter.com/oreillymedia*](http://twitter.com/oreillymedia)'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Twitter上关注我们：[*http://twitter.com/oreillymedia*](http://twitter.com/oreillymedia)
+- en: 'Watch us on YouTube: [*http://youtube.com/oreillymedia*](http://youtube.com/oreillymedia)'
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在YouTube上观看我们：[*http://youtube.com/oreillymedia*](http://youtube.com/oreillymedia)
+- en: Acknowledgments
+  id: totrans-64
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 致谢
+- en: This book has been greatly strengthened and improved thanks to our technical
+    reviewers, Adnan Sozuan and Andrew Gibel. We give thanks to the folks at O’Reilly
+    for helping to bring us together and giving us all the support we needed to bring
+    this book to life, especially Jeff Bleiel and Zan McQuade.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书得到了我们的技术审阅者Adnan Sozuan和Andrew Gibel的大力支持和改进。我们感谢O’Reilly的人们帮助我们聚集在一起，并给予我们完成这本书所需的所有支持，特别是Jeff
+    Bleiel和Zan McQuade。
+- en: We thank Roman Elizarov and Jake Wharton for taking the time to speak with us
+    about direction on evolution in concurrency in Kotlin and low-level optics in
+    Android.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们感谢Roman Elizarov和Jake Wharton抽出时间与我们讨论Kotlin中并发演变的方向和Android低级光学的问题。
+- en: We thank our friends, family, and colleagues for support. We thank the Kotlin
+    community, and the individuals who have taken the time to read early drafts and
+    give feedback.
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们感谢我们的朋友、家人和同事的支持。我们感谢Kotlin社区以及那些抽出时间阅读早期草稿并提供反馈的个人。
+- en: 'Lastly, we dedicate this book to Mike Dunn: coauthor, colleague, friend, and
+    father. We miss him dearly and hope this book is something he’d be proud of.'
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们将这本书献给Mike Dunn：合著者、同事、朋友和父亲。我们深切怀念他，希望这本书是他为之自豪的东西。

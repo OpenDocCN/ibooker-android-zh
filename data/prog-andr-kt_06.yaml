@@ -1,0 +1,830 @@
+- en: Chapter 6\. Handling Concurrency Using Callbacks
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第6章。使用回调处理并发
+- en: The idiomatic way of handling concurrency in Kotlin is by using *coroutines*.
+    However, for some time this has been done in Java using threads and callbacks.
+    So why do we need coroutines?
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Kotlin中处理并发的惯用方式是使用*协程*。然而，Java中一直以来都是使用线程和回调。那么，我们为什么需要协程呢？
+- en: To answer this question, we will revisit a typical Kotlin implementation on
+    Android and discuss the pitfalls of using threads. Knowing the weak points of
+    the traditional approach is the key to understanding the motivation behind the
+    design of coroutines.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了回答这个问题，我们将重新审视Android上典型的Kotlin实现，并讨论使用线程的缺点。了解传统方法的弱点是理解协程设计动机的关键。
+- en: In Android applications, long-running tasks shouldn’t be done on the UI thread,
+    as you’ve seen in the previous chapter. If you block the main thread—the UI thread—your
+    app might not have the resources it needs to draw the screen or update it appropriately.
+    In fact, lint will complain if you attempt to do an obvious IO call (e.g., make
+    an HTTP connection) while on the UI thread.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android应用中，不应该在UI线程上执行长时间运行的任务，正如你在前一章中所见。如果阻塞主线程——UI线程——你的应用可能无法获得绘制屏幕或适当更新的资源。实际上，如果尝试在UI线程上执行明显的IO调用（例如建立HTTP连接），lint会抱怨。
+- en: An Android application runs smoothly when the main thread completes all its
+    tasks in less than frame time, which is 16 ms on most devices. This is a rather
+    short amount of time, and all blocking calls, like network requests (blocking
+    IO), should be performed on a background thread.^([1](ch06.html#idm46669752343152))
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当主线程在大多数设备上的16ms帧时间内完成所有任务时，Android应用程序可以平稳运行。这是相当短的时间，所有阻塞调用，如网络请求（阻塞IO），都应该在后台线程上执行。^([1](ch06.html#idm46669752343152))
+- en: When you delegate a task to another thread, you typically call a function which
+    starts the asynchronous job. In some cases this is “fire-and-forget,” but you’re
+    usually waiting for a result—and you need to act on it. This is done by providing
+    a function which will be called once the job finishes. This function is called
+    a *callback*. A callback often accepts arguments, so the background thread commonly
+    calls the callback with the result of the job. Doing computation that calls an
+    arbitrary or injected function when complete is known as the *callback pattern*.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你将任务委托给另一个线程时，通常会调用一个启动异步任务的函数。在某些情况下，这是“发射并忘记”，但通常你正在等待结果——并且需要对其进行操作。这是通过提供一个在作业完成时将被调用的函数来完成的。这个函数称为*回调*。回调通常接受参数，因此后台线程通常使用作业结果调用回调。在完成时调用任意或注入函数进行计算被称为*回调模式*。
+- en: Using callbacks is quite efficient, though it has some limitations and drawbacks.
+    To illustrate this, we’ll implement a simple yet realistic example in Kotlin.
+    Coroutines address all issues with callbacks, but before jumping right into coroutines,
+    it’s important to understand which problem they aim to solve.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用回调是相当高效的，尽管它也有一些限制和缺点。为了说明这一点，我们将在Kotlin中实现一个简单而现实的例子。协程解决了所有与回调相关的问题，但在直接使用协程之前，理解它们旨在解决的问题非常重要。
+- en: Example-of-Purchase Feature
+  id: totrans-7
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 付费功能示例
+- en: 'Suppose you’re working on a paid feature of an Android application. After a
+    user registers, you check the list of purchases this user has already made, then
+    act on it. To get the list of purchases, let’s use an object called `BillingClient`.
+    Note that we’re not talking about the actual `BillingClient` provided by the Android
+    framework, `com.android.billingclient.api.BillingClient`. We’re using our own,
+    much simpler version of the basic concept, as shown in the following code:'
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设你正在开发一个Android应用的付费功能。用户注册后，你会检查该用户已经购买的商品列表，并据此进行操作。为了获取购买列表，让我们使用一个名为`BillingClient`的对象。请注意，我们讨论的不是Android框架提供的实际`BillingClient`，即`com.android.billingclient.api.BillingClient`。我们使用的是我们自己简化版本的基本概念，如下面的代码所示：
+- en: '[PRE0]'
+  id: totrans-9
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'A typical task flow would be:'
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 典型的任务流程如下：
+- en: Initialize a connection to the `BillingClient`. Wait for it to be ready—your
+    callback provides a `PurchasesProvider`, or null in case of error. For now, we
+    won’t handle errors.
+  id: totrans-11
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 初始化连接到`BillingClient`。等待它准备就绪——你的回调会提供一个`PurchasesProvider`，或者在出错时提供null。目前，我们不处理错误。
+- en: Use the returned `PurchasesProvider` to asynchronously fetch the user’s list
+    of purchases.  Your  program  will  wait  for  the  response,  which  will  contain 
+    the  list  of purchases and perhaps some additional metadata.
+  id: totrans-12
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 使用返回的`PurchasesProvider`来异步获取用户的购买列表。您的程序将等待响应，其中包含购买列表和可能的其他元数据。
+- en: React to this new information; you might show a list of purchases with UI to
+    provide even more details, or request status, cancel an item in an order, etc.
+  id: totrans-13
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 对这些新信息做出反应；您可以显示一个购买列表的 UI，以提供更多细节，或请求状态、取消订单中的项目等等。
+- en: For further references, we’ll call the preceding flow our *logic*.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以后的参考，我们将称之为前面的流程为我们的*逻辑*。
+- en: 'As you can see, this is just an interface with a single method, taking a `BillingCallback`
+    as input. The `BillingCallback` is declared inside the `BillingClient` interface
+    because this callback is only used inside `BillingClient`. When an interface is
+    declared inside a class or interface, it tells you about the relationship between
+    the class and the interface: the author intended that the class shouldn’t depend
+    on another entity to provide the interface. This avoids the risk of breaking the
+    compatibility between the class and the interface. The two are coupled, and if
+    you ship a `BillingClient`, you also ship a `BillingCallback`. Notice that we’re
+    using Kotlin 1.4’s new `fun interface` instead of a classic `interface`. This
+    will allow for a concise syntax when we’ll provide implementations. Also, the
+    documentation of the `init` method says that implementations should be nonblocking.
+    If you haven’t read the previous chapter, it means that whatever thread calls
+    this method, it isn’t blocked waiting for the method to return.'
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如您所见，这只是一个接口，有一个方法，接受`BillingCallback`作为输入。`BillingCallback`在`BillingClient`接口内声明，因为此回调仅在`BillingClient`内部使用。当接口声明在类或接口内部时，它告诉您类和接口之间的关系：作者打算类不依赖于其他实体来提供接口。这避免了类和接口之间兼容性破坏的风险。这两者是耦合的，如果您发布一个`BillingClient`，您也会发布一个`BillingCallback`。请注意，我们正在使用
+    Kotlin 1.4 的新`fun interface`，而不是传统的`interface`。这将允许在提供实现时使用简洁的语法。还有，`init`方法的文档说明实现应该是非阻塞的。如果您没有阅读前一章节，这意味着无论哪个线程调用此方法，它都不会被阻塞等待方法返回。
+- en: 'Similarly, our `PurchasesProvider` is shown in the following code:'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 同样，我们的`PurchasesProvider`如下代码所示：
+- en: '[PRE1]'
+  id: totrans-17
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: For now, let’s assume that we provide those abstractions and their implementations.
+    Even though a real application would use framework-provided classes, the important
+    part of this example is the business logic, not the implementations of `BillingClient`
+    and `PurchasesProvider`.
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，让我们假设我们提供了这些抽象及其实现。尽管真实的应用程序会使用框架提供的类，但这个示例的重点是业务逻辑，而不是`BillingClient`和`PurchasesProvider`的实现。
+- en: As an Android developer, we hope that you’re familiar with the core concepts
+    of Android Jetpack’s `ViewModel`, but don’t worry if this isn’t the case, because
+    the details of `ViewModel` operation aren’t the focus of this discussion. Even
+    without `ViewModel`, you’ve probably got some version of MVC or MVP or MVVM, all
+    of which largely follow the same pattern. The view does presentation work, the
+    model does logical work, and the controller or view-model is the glue that connects
+    them and serves as the network that allows the two to communicate. The important
+    part is the implementation of the *logic* inside the view-model. Everything else
+    is context or framework code—but still important nevertheless. [Figure 6-1](#architecture_diagram_id)
+    shows the target architecture.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为 Android 开发者，希望您熟悉 Android Jetpack 的`ViewModel`的核心概念，但如果不是这样，也不用担心，因为`ViewModel`的操作细节不是本讨论的重点。即使没有`ViewModel`，您可能已经有了某个版本的
+    MVC、MVP 或 MVVM，它们基本上都遵循相同的模式。视图负责展示工作，模型负责逻辑工作，控制器或视图模型是连接它们的粘合剂，充当允许两者通信的网络。重要的是视图模型内部的逻辑实现。其他都是上下文或框架代码，但仍然非常重要。[图
+    6-1](#architecture_diagram_id) 显示了目标架构。
+- en: '![pawk 0601](assets/pawk_0601.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0601](assets/pawk_0601.png)'
+- en: Figure 6-1\. MVVM architecture.
+  id: totrans-21
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 6-1\. MVVM 架构。
+- en: Suppose now that you’ve structured your application following the *single-activity*
+    architecture.^([2](ch06.html#idm46669752205232)) The view should be a fragment
+    that displays the purchases of the current user. The lifecycle of the fragment
+    should be taken into account in the design. At any moment, the device could be
+    rotated, and the fragment re-created. The user could go back, and the fragment
+    could be put into the back stack, if not destroyed.
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在假设您已经按照*单活动*架构组织了应用程序。视图应该是一个显示当前用户购买的片段。在设计中应考虑片段的生命周期。任何时候，设备都可能旋转，并重新创建片段。用户可以返回，并且如果未被销毁，片段可以被放入后退堆栈中。
+- en: This is where `LiveData`, a lifecycle-aware component, comes into play. Every
+    time the fragment is created, it requests an instance of `PurchaseViewModel`.
+    We will explain in more detail how it works later.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是`LiveData`，一个感知生命周期的组件，发挥作用的地方。每次创建片段时，它请求一个`PurchaseViewModel`的实例。稍后我们将详细解释它的工作原理。
+- en: Creating the App
+  id: totrans-24
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建应用程序
+- en: In this section, we’ll show you a typical implementation inside an Android application.
+    If you’re already familiar with this, you might jump directly to the next section,
+    where we discuss the implementation of the *logic*.
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本节中，我们将向您展示在Android应用程序内的典型实现。如果您已经熟悉此内容，可以直接跳转到下一节，其中我们讨论*逻辑*的实现。
+- en: View-Model
+  id: totrans-26
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 视图模型
+- en: So the business logic is implemented inside a `ViewModel` (see [Example 6-1](#handling_concurrency_listing_2_3)).
+    The view-model requires a `BillingClient` instance to be constructor-injected^([3](ch06.html#idm46669752192640))
+    by some other component, as you’ll see shortly. `BillingClient` is a dependency
+    of the `ViewModel`, and `PurchaseProvider` is a dependency of `BillingClient`.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以业务逻辑是在`ViewModel`内部实现的（参见[示例 6-1](#handling_concurrency_listing_2_3)）。视图模型需要通过某个其他组件进行构造注入，稍后您将看到。`BillingClient`是`ViewModel`的一个依赖项，而`PurchaseProvider`是`BillingClient`的一个依赖项。
+- en: The view that interacts with this `ViewModel` triggers the `getUserPurchases`
+    method (which we haven’t implemented yet) in the getter of the `purchasesLiveData`
+    property. You may have noticed that the type of the `purchasesLiveData` property
+    is `LiveData` while the private backing property, `_purchases`, is a `MutableLiveData`.
+    This is because the `ViewModel` should be the sole component to change the value
+    of the `LiveData`. So the exposed type to clients of this `ViewModel` is only
+    `LiveData`, as shown in [Example 6-1](#handling_concurrency_listing_2_3).
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与此`ViewModel`交互的视图触发`getUserPurchases`方法（我们尚未实现）以获取`purchasesLiveData`属性的getter。您可能已经注意到，`purchasesLiveData`属性的类型是`LiveData`，而私有后备属性`_purchases`是`MutableLiveData`。这是因为`ViewModel`应该是唯一更改`LiveData`值的组件。因此，向此`ViewModel`的客户端公开的类型仅为`LiveData`，如[示例 6-1](#handling_concurrency_listing_2_3)所示。
+- en: Example 6-1\. `PurchasesViewModel`
+  id: totrans-29
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 6-1\. `PurchasesViewModel`
+- en: '[PRE2]'
+  id: totrans-30
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: We’re almost done—now all we’re missing is the view.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们差不多完成了，现在我们缺少的只是视图。
+- en: View
+  id: totrans-32
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 视图
+- en: 'In our architecture, the view is a `Fragment`. As you can see in the following
+    code, the view depends on the view-model. This shows how we can use the view-model
+    from inside the view:'
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的架构中，视图是一个`Fragment`。如下面的代码所示，视图依赖于视图模型。这展示了我们如何从视图内部使用视图模型：
+- en: '[PRE3]'
+  id: totrans-34
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: 'Every time the fragment is created, it subscribes to updates of `UserPurchases`
+    by following three steps:'
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次创建片段时，它都订阅`UserPurchases`的更新，遵循以下三个步骤：
+- en: '[![1](assets/1.png)](#co_handling_concurrency_using_callbacks_CO1-1)'
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_handling_concurrency_using_callbacks_CO1-1)'
+- en: Create a factory for the `ViewModel` (remember, the `ViewModel` has dependencies,
+    and it’s certainly not the responsibility of the `Fragment` to supply them). Strictly
+    speaking, this factory shouldn’t be created inside the fragment, as the factory
+    is now tightly coupled with your fragment—a `PurchasesFragment` always uses a
+    `PurchaseViewModelFactory`. In a test environment, where you should test the view
+    independently, this would be a problem. So this factory should be injected inside
+    the `Fragment` through either a dependency injection framework or manual injection.
+    For the sake of simplicity, we’ve decided to create it here inside the fragment.
+    For the record, `ViewModel` factory is shown in [Example 6-2](#handling_concurrency_listing_2_5).
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为 `ViewModel` 创建一个工厂（请记住，`ViewModel` 有依赖项，`Fragment` 并不负责提供它们）。严格来说，这个工厂不应该在片段内创建，因为工厂现在与你的片段紧密耦合——`PurchasesFragment`
+    总是使用 `PurchaseViewModelFactory`。在测试环境中，你应该独立测试视图，这可能会成为一个问题。因此，应该通过依赖注入框架或手动注入将该工厂注入到
+    `Fragment` 内。为了简单起见，我们决定在此片段内创建它。可以参考 [示例 6-2](#handling_concurrency_listing_2_5)
+    中的 `ViewModel` 工厂。
+- en: '[![2](assets/2.png)](#co_handling_concurrency_using_callbacks_CO1-2)'
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_handling_concurrency_using_callbacks_CO1-2)'
+- en: An instance of `PurchasesViewModel` is obtained from the `viewModels` function.
+    This is the recommended way to get a `ViewModel` instance.
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从 `viewModels` 函数获取 `PurchasesViewModel` 实例。这是获取 `ViewModel` 实例的推荐方式。
+- en: '[![3](assets/3.png)](#co_handling_concurrency_using_callbacks_CO1-3)'
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_handling_concurrency_using_callbacks_CO1-3)'
+- en: Finally, a `LiveData` instance is retrieved from the `ViewModel`, and is *observed*
+    by an `Observable` instance using the method of the same name (“observe”). In
+    this example, the observer is only a lambda function which prints the list of
+    purchases into the console. In a production application you would typically trigger
+    an update of all the related views inside the fragment.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，从 `ViewModel` 中获取一个 `LiveData` 实例，并通过同名方法（“observe”）由一个 `Observable` 实例进行*观察*。在这个例子中，观察者只是一个打印购买列表到控制台的
+    lambda 函数。在生产应用程序中，通常会触发更新与片段中的所有相关视图。
+- en: A `ViewModel` also has its own lifecycle, which depends on whether the `ViewModel`
+    is bound to  a  fragment  or  an  activity.  In  this  example,  it  is  bound 
+    to  a  fragment.  You can tell that by the use of `by` `viewModels<..>`. If instead
+    we had used `by` `activityViewModels<..>`, the view-model would have been bound
+    to the activity.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`ViewModel` 还有自己的生命周期，这取决于 `ViewModel` 是绑定到片段还是活动。在这个例子中，它绑定到了一个片段。你可以通过使用
+    `by` `viewModels<..>` 来确认。如果我们使用了 `by` `activityViewModels<..>`，则该视图模型将绑定到活动上。'
+- en: When bound to the fragment, the `ViewModel` survives device rotations but is
+    destroyed when it isn’t used anymore (e.g., when all fragments that were bound
+    to it are destroyed, except for device rotation). If the `ViewModel` had been
+    bound to the activity, it would outlive the activity on device rotation but would
+    be destroyed in every other scenario where the activity is destroyed.
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当绑定到片段时，`ViewModel` 在设备旋转时会保留，但在不再使用时会被销毁（例如，与其绑定的所有片段都被销毁时，除了设备旋转）。如果 `ViewModel`
+    绑定到活动上，它将在设备旋转时保留，但在销毁活动的其他情况下会被销毁。
+- en: Warning
+  id: totrans-44
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: As a `ViewModel` is retained through configuration change, which destroys and
+    re-creates the containing activity, it should never reference a view, `Lifecycle`
+    instance, or any class instance that may hold a reference to the activity context.
+    It can, however, reference the `Application` context.
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于 `ViewModel` 通过配置更改而保留，并在销毁并重新创建包含的活动时，它不应引用视图、`Lifecycle` 实例或任何可能持有活动上下文引用的类实例。但是，它可以引用
+    `Application` 上下文。
+- en: If you look at the actual code of the `BillingClient`, you can see that creating
+    a `BillingClient.Builder` requires that you supply a context. It can be an activity
+    context, because internally the builder calls `context.getApplicationContext()`
+    and this is the only context reference kept by the `BillingClient`. An `ApplicationContext`
+    remains the same during the whole `Application` lifetime. Therefore, you won’t
+    create a memory leak by referencing the `ApplicationContext` somewhere in your
+    app. This is the reason why it is safe to reference `BillingClient` inside a `ViewModel`.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你查看`BillingClient`的实际代码，你会发现创建`BillingClient.Builder`需要提供一个上下文。它可以是活动上下文，因为在内部构建器调用`context.getApplicationContext()`时，这是`BillingClient`保留的唯一上下文引用。`ApplicationContext`在整个应用生命周期内保持不变。因此，在应用程序的某个地方引用`ApplicationContext`不会导致内存泄漏。这就是在`ViewModel`内部引用`BillingClient`是安全的原因。
+- en: As shown in [Example 6-2](#handling_concurrency_listing_2_5), the dependencies
+    of the `ViewModel` are created inside `PurchaseViewModelFactory`.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如 [示例 6-2](#handling_concurrency_listing_2_5) 所示，`ViewModel`的依赖关系是在`PurchaseViewModelFactory`内创建的。
+- en: Example 6-2\. `PurchaseViewModelFactory`
+  id: totrans-48
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 6-2\. `PurchaseViewModelFactory`
+- en: '[PRE4]'
+  id: totrans-49
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: '`BillingClientImpl` is the real implementation of the previously shown `BillingClient`
+    interface (see [Example 6-3](#handling_concurrency_listing_2_6) and [Example 6-4](#handling_concurrency_listing_2_7)).'
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`BillingClientImpl`是之前展示的`BillingClient`接口的实际实现（参见 [示例 6-3](#handling_concurrency_listing_2_6)
+    和 [示例 6-4](#handling_concurrency_listing_2_7)）。'
+- en: Example 6-3\. `BillingClientImpl`
+  id: totrans-51
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 6-3\. `BillingClientImpl`
+- en: '[PRE5]'
+  id: totrans-52
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: Example 6-4\. `PurchasesProviderImpl`
+  id: totrans-53
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 6-4\. `PurchasesProviderImpl`
+- en: '[PRE6]'
+  id: totrans-54
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: To conform to the application design we established, the `init` and `fetchPurchases`
+    methods should be nonblocking. This can be achieved with a background thread.
+    For efficiency reasons (see the upcoming section), you may not want to create
+    a new thread every time you connect to the `BillingClient`. Instead you can use
+    a thread pool, which can be created using `ThreadPoolExecutor` instances directly,
+    or many common configurations are available via the factory methods of `java.util.concurrent.Executors`.
+    Using `Executors.newSingleThreadExecutor()`, you have a single dedicated thread
+    at your disposal which can be reused for each asynchronous call. You might think
+    that `PurchasesProviderImpl` and `BillingClientImpl` should share the same thread
+    pool. It’s up to you—though for brevity we didn’t do it here. For a production
+    app, you may have multiple `ThreadPoolExecutor`s that service different parts
+    of your app.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了符合我们所建立的应用设计，`init`和`fetchPurchases`方法应该是非阻塞的。这可以通过后台线程实现。出于效率考虑（参见即将到来的部分），你可能不想每次连接到`BillingClient`时都创建一个新线程。而是可以使用线程池，可以通过`java.util.concurrent.Executors`的工厂方法直接创建，或者通过`ThreadPoolExecutor`实例创建许多常见的配置。使用`Executors.newSingleThreadExecutor()`，你可以拥有一个单独的专用线程，可以在每次异步调用时重复使用。你可能认为`PurchasesProviderImpl`和`BillingClientImpl`应该共享同一个线程池。这取决于你——尽管出于简洁起见，我们在这里没有这样做。对于生产应用程序，可能会有多个`ThreadPoolExecutor`来服务应用程序的不同部分。
+- en: If you look at how callbacks are used in those implementations, you can see
+    that they’re called right after `Thread.sleep()` (which simulates a blocking IO
+    call). Unless explicitly posted to the main thread (generally through an instance
+    of the `Handler` class, or through a `LiveData` instance’s `postValue` method),
+    callbacks are invoked within the context of the background thread. This is critical,
+    and it’s very important to be aware of how to communicate between thread contexts,
+    as you’ll see in the next section.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你查看这些实现中如何使用回调函数，你会发现它们会在`Thread.sleep()`之后立即调用（这模拟了阻塞 IO 调用）。除非显式地发布到主线程（通常通过`Handler`类的实例或通过`LiveData`实例的`postValue`方法），否则回调函数将在后台线程的上下文中被调用。这一点至关重要，了解如何在线程上下文之间进行通信非常重要，这将在下一节中介绍。
+- en: Warning
+  id: totrans-57
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: Be aware of which thread runs the provided callback, as it depends on the implementation.
+    Sometimes the callback is asynchronously run on the calling thread, whereas it
+    can be synchronously executed on the background thread.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意提供的回调函数在哪个线程上运行，这取决于实现方式。有时回调函数在调用线程上异步执行，而有时会同步在后台线程执行。
+- en: Implement the Logic
+  id: totrans-59
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 实现逻辑
+- en: Now that all the necessary components are set in place, the *logic* can be implemented.
+    The steps are shown in [Example 6-5](#handling_concurrency_listing_3_1).
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在所有必要的组件都已经就位，可以实现*逻辑*。步骤如 [示例 6-5](#handling_concurrency_listing_3_1) 所示。
+- en: Example 6-5\. Logic
+  id: totrans-61
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 6-5\. 逻辑
+- en: '[PRE7]'
+  id: totrans-62
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: '[![1](assets/1.png)](#co_handling_concurrency_using_callbacks_CO2-1)'
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_handling_concurrency_using_callbacks_CO2-1)'
+- en: Call `billingClient.init` and supply a callback which will be called whenever
+    the client’s initialization process finishes. If the client supplies a non-null
+    `PurchasesProvider` instance, proceed with the next step.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调用`billingClient.init`并提供一个回调，该回调将在客户端初始化过程完成时调用。如果客户端提供了非空的`PurchasesProvider`实例，则继续下一步。
+- en: '[![2](assets/2.png)](#co_handling_concurrency_using_callbacks_CO2-2)'
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_handling_concurrency_using_callbacks_CO2-2)'
+- en: 'At this point you have the `PurchasesProvider` instance ready for use. Call
+    `fetchPurchases`, providing the current user as the first parameter, and the callback
+    that should be executed once the provider has done its job. Look carefully at
+    the content of the callback:'
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此时，您已经准备好使用`PurchasesProvider`实例。调用`fetchPurchases`，将当前用户作为第一个参数提供，并提供应该在提供程序完成其工作后执行的回调。仔细查看回调内容：
+- en: '[PRE8]'
+  id: totrans-67
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: On a `MutableLiveData` instance, you use either the `setValue` or the `postValue`
+    method. The difference between the two is that you’re only allowed to use `setValue`
+    if you’re calling it from the main thread. When this isn’t the case, using `postValue`
+    adds the new value into a queue that the `MutableLiveData` will process on the
+    next frame of the main thread. This is an implementation of the work queue pattern
+    (see [“Work Queues”](ch05.html#wqueue)), and a thread-safe way to assign a new
+    value to a `MutableLiveData`.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`MutableLiveData`实例上，您可以使用`setValue`或`postValue`方法。两者之间的区别在于，只有在从主线程调用时才允许使用`setValue`。当情况不是这样时，使用`postValue`将新值添加到`MutableLiveData`将在主线程的下一帧处理的队列中。这是工作队列模式的一种实现（见[“工作队列”](ch05.html#wqueue)），也是将新值安全地分配给`MutableLiveData`的线程安全方式。
+- en: Discussion
+  id: totrans-69
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 讨论
+- en: So this is it. It works—or at least it fulfills the specifications. We invite
+    you to step back a little and look at the big picture. What’s the structure of
+    `getUserPurchases`? It’s made of a function call, which is provided another function,
+    which itself calls a function, which is provided another function…. It’s like
+    Russian nesting dolls. It’s already a little hard to follow, and adding exception
+    handling can quickly turn it into “nesting hell” (see [Figure 6-2](#callbackusage)).
+    In order to keep our example logic simple and easy to follow, we’ve omitted corner
+    cases where some API calls fail; for example, networking issues or authorization
+    errors make some IO background work brittle and prone to failure, and production
+    code should be able to handle this.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就是这样。它有效果——或者至少满足了规格要求。我们邀请您稍微退后一步，看看整体情况。`getUserPurchases` 的结构是什么？它由一个函数调用构成，该调用提供另一个函数，该函数本身又调用一个函数，而该函数提供另一个函数……
+    就像俄罗斯套娃一样。这已经有点难以跟踪了，添加异常处理可能很快就会变成“嵌套地狱”（见[图 6-2](#callbackusage)）。为了保持我们示例逻辑的简单和易于跟踪，我们省略了一些API调用失败的边界情况；例如，网络问题或授权错误使得某些后台IO工作变得脆弱且容易失败，生产代码应该能够处理这些情况。
+- en: '![pawk 0602](assets/pawk_0602.png)'
+  id: totrans-71
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0602](assets/pawk_0602.png)'
+- en: Figure 6-2\. Callback usage.
+  id: totrans-72
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 6-2\. 回调使用。
+- en: The code that specifies what happens upon a response of the `BillingClient`
+    (callback 2) is *included* in the code of the first callback. If you decide to
+    inline all this code, like we did in [Example 6-5](#handling_concurrency_listing_3_1),
+    you have several levels of indentations, which rapidly grow as the problem to
+    solve becomes more complex. On the other hand, if you decide to encapsulate the
+    first callback into its own function, you will indeed reduce the indentation level
+    of `getUserPurchases` and its apparent complexity. At the same time, you would
+    increase the number of directions to follow to fully understand the business logic.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在第一个回调函数的代码中包含了对`BillingClient`的响应处理（回调2）。如果您决定内联所有这些代码，就像我们在[示例 6-5](#handling_concurrency_listing_3_1)中所做的那样，您会有几个级别的缩进，随着要解决的问题变得更加复杂，缩进水平会迅速增加。另一方面，如果您决定将第一个回调函数封装到自己的函数中，您确实会减少`getUserPurchases`的缩进级别及其表面复杂性。与此同时，您会增加完全理解业务逻辑所需的方向数量。
+- en: This is the first drawback of code using callbacks. It rapidly becomes complex,
+    and may become hard to maintain if not administered with caution and thoughtful
+    design. Some would consider that even with careful precautions this path is dangerous.
+    As developers, we strive to create a system that we and our coworkers can handle.
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用回调函数的第一个缺点是它迅速变得复杂，如果不小心和思维设计不周，可能难以维护。有些人认为即使采取了谨慎的预防措施，这条路也很危险。作为开发者，我们努力创建一个我们和同事能够处理的系统。
+- en: Note
+  id: totrans-75
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'Using `CompletableFuture` or another similar library like RxJava, you can rewrite
+    `getUserPurchases` like this:'
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 `CompletableFuture` 或类似的库（如 RxJava），可以这样重写 `getUserPurchases`：
+- en: '[PRE9]'
+  id: totrans-77
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: It’s a bit cleaner, with no nested indentations, and even handles exceptions
+    properly. However, you can see that it relies on the combinators `thenCompose`
+    and `thenAccept`, which operate on `CompletableFuture<T>`. While our simple example
+    uses only two combinators, a lot of them exist, each one for a specific purpose.
+    Some would consider the learning curve of another, unfamiliar pattern and API
+    to be a weakness of this pattern.
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样做更清晰，没有嵌套缩进，甚至可以正确处理异常。然而，可以看到它依赖于`thenCompose`和`thenAccept`这两个组合器，它们操作`CompletableFuture<T>`。虽然我们的简单示例只使用了两个组合器，但存在许多组合器，每个组合器都有特定的目的。有些人可能认为另一种不熟悉的模式和
+    API 的学习曲线是这种模式的一个弱点。
+- en: Structured concurrency
+  id: totrans-79
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 结构化并发
+- en: 'Imagine now that some API calls are quite expensive computationally. For example,
+    a user of your app navigates to a view which triggers some of those API calls,
+    but as the content isn’t loading instantly they lose patience and tap back, and
+    start a new series of operations in another part of the app. In this situation,
+    you don’t want your expensive API calls to continue running, as they may put unnecessary
+    load on your backend servers, or even on the application itself. Further, what
+    happens if a UI that should be updated when a callback fires no longer exists?
+    A `NullPointerException` is probably your best case, and a memory leak your worst.
+    Instead, let’s cancel the procedure initialized inside the view-model. How would
+    you do that? You would have to listen to a particular lifecycle event of the fragment
+    lifecycle termination events: `onStop`, `onPause`, or `onDestroy`. In this specific
+    case, you’d probably want to do that inside `onStop`, which would be fired just
+    before resources are reclaimed. `onPause` would fire each time the application
+    in the background in favor of an incoming call or when switching between apps,
+    and `onDestroy` happens a little later than we need. When the `onStop` event fires,
+    you should notify the view-model that it should stop any background processing.
+    This requires a thread-safe way of interrupting threads. A volatile `isCancelled`
+    Boolean would be checked inside the callbacks to decide whether they should proceed
+    or not. So it’s definitely possible, but cumbersome and fragile.'
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在想象一下，某些 API 调用在计算上是相当昂贵的。例如，您的应用程序用户导航到触发其中一些 API 调用的视图，但由于内容并非即时加载，他们失去耐心并点击返回，并在应用程序的另一部分开始新的操作系列。在这种情况下，您不希望昂贵的
+    API 调用继续运行，因为它们可能对后端服务器或应用程序本身造成不必要的负载。此外，当回调触发时应该更新的 UI 不存在会发生什么？`NullPointerException`
+    可能是最好的情况，内存泄漏则是最坏的情况。相反，让我们取消在视图模型内初始化的过程。您该如何做到这一点？您必须监听片段生命周期终止事件的特定生命周期事件：`onStop`、`onPause`
+    或 `onDestroy`。在这种特定情况下，您可能希望在 `onStop` 中执行此操作，这会在资源被回收之前触发。`onPause` 在应用程序转到后台以便接听电话或在应用程序之间切换时触发，而
+    `onDestroy` 比我们需要的稍晚一些。当 `onStop` 事件触发时，您应该通知视图模型应停止任何后台处理。这需要一种线程安全的方法来中断线程。在回调中检查一个易失性的
+    `isCancelled` 布尔值，以决定它们是否应该继续进行。所以这是可行的，但又繁琐又脆弱。
+- en: 'What if this cancellation was done automatically? Imagine that the background
+    processing was tied to the lifecycle of the view-model. The moment that the view-model
+    is destroyed, all background processing gets cancelled. It’s not a fairy tale—it
+    even has a name: *structured concurrency*.'
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果自动取消会怎样？想象一下，后台处理与视图模型的生命周期绑定。视图模型被销毁的瞬间，所有后台处理都会被取消。这并不是童话——它甚至有一个名字：*结构化并发*。
+- en: Memory leaks
+  id: totrans-82
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 内存泄漏
+- en: 'Automatically cancelling dangling background threads has another benefit: the
+    less risk of a memory leak. A callback might hold a reference on a component which
+    either has a lifecycle or is a child of a component that has one. If this component
+    is eligible for garbage collection, while a reference of that component exists
+    in some running thread, the memory can’t be reclaimed, and you have a memory leak.
+    Using `LiveData` like in the previous example is safe even if you don’t cancel
+    background tasks. Nevertheless, more generally speaking, it’s never good to leave
+    tasks running for nothing.'
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自动取消悬空的后台线程还有另一个好处：减少内存泄漏的风险。回调可能会持有一个对具有生命周期或是另一个组件子组件的引用。如果这个组件有资格进行垃圾回收，而在某个运行中的线程中仍然存在对该组件的引用，则内存无法被回收，就会造成内存泄漏。像前面示例中使用
+    `LiveData` 一样即使不取消后台任务也是安全的。然而，总体而言，让任务无端运行永远都不是好事。
+- en: Cancellation isn’t the only possible thing that can go wrong. There are other
+    pitfalls to using threads as primitives for asynchronous computations (which we’ll
+    refer to as the *threading model*), and we’ll cover them in the next section.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 取消并不是唯一可能出错的事情。使用线程作为异步计算的基元（我们将其称为*线程模型*）还有其他一些陷阱，我们将在下一节中讨论它们。
+- en: Limitations of the Threading Model
+  id: totrans-85
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 线程模型的限制
+- en: In an Android application, processes and tasks are always competing for memory.
+    With only one main thread, or UI thread, the clever Android developer must find
+    ways to manipulate and handle threading efficiently.
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android应用程序中，进程和任务总是在竞争内存。对于只有一个主线程或UI线程的情况，聪明的Android开发者必须找到有效操作和处理线程的方法。
+- en: When using a single thread, asynchronous tasks offloaded to that thread execute
+    serially—one task after another. If one of the tasks takes forever to execute,
+    the remaining work cannot be processed until that task completes, as shown in
+    [Figure 6-3](#figure6_4).
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当使用单个线程时，异步任务被转移到该线程时会串行执行——一个接着一个。如果其中一个任务执行时间过长，剩余的工作无法处理，如[图 6-3](#figure6_4)所示。
+- en: '![Blocking Work](assets/pawk_0603.png)'
+  id: totrans-88
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Blocking Work](assets/pawk_0603.png)'
+- en: Figure 6-3\. Tasks execute serially inside a thread.
+  id: totrans-89
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 6-3\. 任务在线程内串行执行。
+- en: In situations where a background task might take a long time to execute, you
+    need more than one background thread. The `ThreadPoolExecutor` primitive lets
+    you spin up a number of threads and toss onto it blocks of work to execute, as
+    shown in [Figure 6-4](#figure6_5).
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在可能需要长时间执行的后台任务中，您需要超过一个后台线程。`ThreadPoolExecutor`原语允许您启动多个线程，并将工作块投入其中以执行，如[图
+    6-4](#figure6_5)所示。
+- en: '![ThreadPoolExecutor](assets/pawk_0604.png)'
+  id: totrans-91
+  prefs: []
+  type: TYPE_IMG
+  zh: '![ThreadPoolExecutor](assets/pawk_0604.png)'
+- en: Figure 6-4\. A `ThreadPoolExecutor` handles all the heavy lifting of spinning
+    up the threads, load-balancing work across those threads, and even killing those
+    threads.
+  id: totrans-92
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 6-4\. 一个`ThreadPoolExecutor`负责处理所有繁重的工作，包括启动线程、在这些线程之间负载均衡工作，甚至结束这些线程。
+- en: 'However, having more threads isn’t always a good thing. Here are some caveats:'
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，并不是一直拥有更多的线程就是好事。以下是一些注意事项：
+- en: CPUs can only execute a certain number of threads in parallel.
+  id: totrans-94
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: CPU只能同时执行一定数量的线程。
+- en: Threads themselves are expensive in terms of memory—each thread costs you at
+    least 64 Kb of RAM.
+  id: totrans-95
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 就内存而言，线程本身是昂贵的——每个线程至少消耗 64 Kb 的 RAM。
+- en: When a CPU core switches execution from one thread to another, a *thread context
+    switch* happens.^([4](ch06.html#idm46669751299776)) Those switches aren’t free.
+    While it’s not a problem when you have a few threads, the impact of thread context
+    switches can be noticeable if you keep adding more threads. You could reach a
+    point were your code is actually slower than if you were using fewer threads.
+  id: totrans-96
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 当CPU核心从一个线程切换到另一个线程时，会发生*线程上下文切换*。^([4](ch06.html#idm46669751299776)) 这些切换不是免费的。当您有几个线程时不是问题，但是如果您不断添加更多线程，线程上下文切换的影响可能会显著。您可能会发现，实际上比使用较少线程时更慢。
+- en: Summary
+  id: totrans-97
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 总结
+- en: You can implement asynchronous logic using callbacks. You might also want to
+    check out some other related framework APIs like `Handler` and `HandlerThread`.
+    Using callbacks can lead to complex nested function calls, or to situations where
+    the flow of the logic is split in several classes and may become hard to follow.
+    If this becomes problematic, one solution is to rely on `CompletableFuture`s,
+    or a similar API; the third-party framework RxJava has this kind of functionality,
+    but requires learning yet another set of APIs that can quickly become coupled
+    to your business logic and change the way you write your application code.
+  id: totrans-98
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 您可以使用回调函数实现异步逻辑。您还可能希望查看一些其他相关的框架API，如`Handler`和`HandlerThread`。使用回调可能会导致复杂的嵌套函数调用，或者逻辑流在多个类中分割并且难以跟踪。如果这变得成问题，一种解决方法是依赖`CompletableFuture`或类似的API；第三方框架RxJava具有这种功能，但需要学习另一组可能快速耦合到业务逻辑中并改变您编写应用程序代码方式的API。
+- en: Most often, asynchronous logic is about retrieving and manipulating data which
+    is then rendered as view instances on-screen. To this purpose, Android Jetpack’s
+    `ViewModel` offers lifecycle-aware components which help you produce more organized
+    and maintainable code.
+  id: totrans-99
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 大多数情况下，异步逻辑涉及检索和操作数据，然后将其渲染为屏幕上的视图实例。出于这个目的，Android Jetpack的`ViewModel`提供了生命周期感知组件，帮助您编写更有组织性和可维护性的代码。
+- en: When a component reaches the end of its lifecycle, chances are that some related
+    background tasks should now be cancelled; otherwise, they just consume memory
+    and increase the risk of memory leaks, or even an application crash. *Structured
+    concurrency* is the ideal solution to this, which we’ll cover in the next chapter.
+  id: totrans-100
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 当组件达到其生命周期的末端时，很可能应该取消一些相关的后台任务；否则，它们将消耗内存并增加内存泄漏或甚至应用崩溃的风险。*结构化并发*是解决这个问题的理想方案，我们将在下一章讨论它。
+- en: Using threads as concurrency primitives has its limitations. You need to make
+    sure you are not creating too many of them because of their memory cost, and performance
+    could suffer due to too many thread-context switches.
+  id: totrans-101
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 使用线程作为并发原语有其局限性。您需要确保不要创建过多的线程，因为它们会消耗大量内存，并且由于过多的线程上下文切换可能会影响性能。
+- en: Coroutines are meant to address the limitations of the *threading model*. The
+    next four chapters—which focus on coroutines, structured concurrency, channels,
+    and flows—are the “peak” of the book and highlight how Kotlin gives Android developers
+    a true advantage in gaining control over asynchronous computations.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 协程的目的是解决*线程模型*的限制。接下来的四章——重点介绍协程、结构化并发、通道和流——是本书的“高峰”，突显了Kotlin为Android开发者在控制异步计算方面提供的真正优势。
+- en: ^([1](ch06.html#idm46669752343152-marker)) Nonblocking IO using `java.nio.channels.SocketChannel`
+    can be done on the UI thread without blocking it. However, most of the time when
+    dealing with IO, you will be using blocking APIs like `java.io.InputStream`.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch06.html#idm46669752343152-marker)) 使用`java.nio.channels.SocketChannel`进行非阻塞IO可以在UI线程上执行而不会阻塞它。然而，大多数情况下在处理IO时，您将使用像`java.io.InputStream`这样的阻塞API。
+- en: ^([2](ch06.html#idm46669752205232-marker)) A single activity and multiple fragments.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([2](ch06.html#idm46669752205232-marker)) 单个活动和多个片段。
+- en: ^([3](ch06.html#idm46669752192640-marker)) Developing to interfaces, and not
+    to actual implementations, improves the testability and portability of your code.
+    Inside a test environment, you’re able to swap the actual implementations of the
+    dependencies with custom-mocked ones. By portability, let’s assume you have an
+    interface called `AnalyticsManager` that provides some methods that you’ll implement
+    to notify your analytics service. Considering that a robust analytics SaaS with
+    dashboards and heavy data visualization and authorization is a heavy lift by itself,
+    most app developers are going to leverage a third-party library to handle that
+    part of their flow. If, for example, you change from one provider to another,
+    as long as you’ve *composed* your interactions to match the `AnalyticsManager`
+    interface, your client code never gets touched, or changes, or potentially introduces
+    a new bug; all that’s updated is the business logic of the `AnalyticsManager`
+    implementation.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([3](ch06.html#idm46669752192640-marker)) 开发到接口而不是实际实现，可以提高代码的可测试性和可移植性。在测试环境中，您可以用自定义模拟的依赖项替换实际的实现。所谓可移植性，假设您有一个名为`AnalyticsManager`的接口，提供一些方法，您将实现这些方法以通知您的分析服务。考虑到一个功能强大的具有仪表板和大量数据可视化与授权的分析SaaS本身就已经是一个重大挑战，大多数应用开发者会借助第三方库来处理他们的流程中的这一部分。例如，如果您从一个提供者切换到另一个提供者，只要您*组织*您的交互以匹配`AnalyticsManager`接口，您的客户端代码就不会受到影响、变更或潜在地引入新的错误；更新的只是`AnalyticsManager`实现的业务逻辑。
+- en: ^([4](ch06.html#idm46669751299776-marker)) Thread switching involves saving
+    and loading CPU registers and memory maps.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([4](ch06.html#idm46669751299776-marker)) 线程切换涉及保存和加载CPU寄存器和内存映射。

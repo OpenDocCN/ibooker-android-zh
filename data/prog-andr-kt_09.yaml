@@ -1,0 +1,1948 @@
+- en: Chapter 9\. Channels
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第 9 章\. 通道
+- en: In the previous chapter, you learned how to create coroutines, cancel them,
+    and deal with exceptions. So you know that if task B requires the result of task
+    A, you can implement them as two suspending functions called sequentially. What
+    if task A produces a stream of values? `async` and suspending functions don’t
+    fit this use case. This is what `Channel`s^([1](ch09.html#idm46669744579616))
+    are meant for—making coroutines communicate. In this chapter you’ll learn in detail
+    what channels are and how to use them.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前一章中，您学习了如何创建协程、取消它们并处理异常。因此，您知道如果任务B需要任务A的结果，可以将它们实现为两个依次调用的挂起函数。但如果任务A产生一系列的值怎么办？`async`和挂起函数并不适用于这种情况。这就是`Channel`s^([1](ch09.html#idm46669744579616))的用途——让协程进行通信。在本章中，您将详细了解什么是通道以及如何使用它们。
+- en: Using nothing but channels and coroutines, we can design complex asynchronous
+    logic using *communicating sequential processes* (CSP). What is CSP? Kotlin was
+    inspired by several existing programming languages, such as Java, C#, JavaScript,
+    Scala, and Groovy. Notably, Go (the language) inspired coroutines with its “goroutines.”
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仅使用通道和协程，我们可以使用*通信顺序进程*（CSP）设计复杂的异步逻辑。什么是CSP？Kotlin受到几种现有编程语言的启发，如Java、C#、JavaScript、Scala和Groovy。值得注意的是，Go（语言）通过其“goroutines”与协程共同启发了它们。
+- en: In computer science, CSP is a concurrent programming language which was first
+    described by Tony Hoare in 1978\. It has evolved ever since, and the term CSP
+    is now essentially used to describe a programming style. If you’re familiar with
+    the Actor model, CSP is quite similar—although there are some differences. If
+    you’ve never heard of CSP, don’t worry—we’ll briefly explain the *idea* behind
+    it with practical examples. For now, you can think of CSP as a programming style.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在计算机科学中，CSP是一种并发编程语言，由Tony Hoare于1978年首次描述。自那以后，它已经不断发展，现在CSP这个术语主要用来描述一种编程风格。如果您熟悉Actor模型，CSP与之非常相似——尽管存在一些差异。如果您从未听说过CSP，不要担心——我们将通过实际例子简要解释它的*理念*。目前，您可以将CSP视为一种编程风格。
+- en: As usual, we’ll start with a bit of theory, then implement a real-life problem.
+    In the end, we’ll discuss the benefits and trade-offs of CSP, using coroutines.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与往常一样，我们将从一点理论开始，然后实施一个真实的问题。最后，我们将讨论使用协程的CSP的好处和权衡。
+- en: Channels Overview
+  id: totrans-5
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 通道概述
+- en: 'Going back to our introductory example, imagine that one task asynchronously
+    produces a list of three `Item` instances (the producer), and another task acts
+    on each of those items (the consumer). Since the producer doesn’t return immediately,
+    you could implement it like the following `getItems` suspending function:'
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回到我们的介绍性示例，想象一下一个任务异步地生成了三个`Item`实例的列表（生产者），而另一个任务则对每个项目进行操作（消费者）。由于生产者不会立即返回，您可以像以下这样实现`getItems`挂起函数：
+- en: '[PRE0]'
+  id: totrans-7
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'As for the consumer, which consumes each of those items, you could simply implement
+    it like so:'
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 至于消费者，它消费每一个项目，您可以简单地像这样实现：
+- en: '[PRE1]'
+  id: totrans-9
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: 'Putting it all together:'
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 综合起来：
+- en: '[PRE2]'
+  id: totrans-11
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: As you would expect, “Do something with ..” is printed three times. However,
+    in this case, we’re most interested in the order of execution. Let’s take a closer
+    look at what’s really happening, as shown in [Figure 9-1](#process_all_at_once_fig).
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如您所预期，“对..做一些事情”会打印三次。然而，在这种情况下，我们最感兴趣的是执行顺序。让我们更仔细地看一看实际发生了什么，如[图 9-1](#process_all_at_once_fig)所示。
+- en: In [Figure 9-1](#process_all_at_once_fig), item consumption only begins after
+    all items have been produced. Producing items might take quite some time, and
+    waiting for all of them to be produced isn’t acceptable in some situations. Instead,
+    we could act on each asynchronously produced item, as shown in [Figure 9-2](#process_once_after_another_fig).
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[图 9-1](#process_all_at_once_fig)中，只有在所有项目都被生产后，才会开始消费项目。生产项目可能需要一些时间，并且在某些情况下等待它们全部生产完毕是不可接受的。相反，我们可以异步地对每个生成的项目进行操作，如[图 9-2](#process_once_after_another_fig)所示。
+- en: '![Execution schema](assets/pawk_0901.png)'
+  id: totrans-14
+  prefs: []
+  type: TYPE_IMG
+  zh: '![执行架构](assets/pawk_0901.png)'
+- en: Figure 9-1\. Process all at once.
+  id: totrans-15
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 9-1\. 全部一起处理。
+- en: '![Process one after another](assets/pawk_0902.png)'
+  id: totrans-16
+  prefs: []
+  type: TYPE_IMG
+  zh: '![依次处理](assets/pawk_0902.png)'
+- en: Figure 9-2\. Process one after another.
+  id: totrans-17
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 9-2\. 依次处理。
+- en: To achieve this, we can’t implement `getItems` as a suspending function like
+    before. A coroutine should act as a producer of `Item` instances, and send them
+    to the main coroutine. It’s a typical producer-consumer problem.
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了实现这一点，我们不能像之前那样将`getItems`实现为挂起函数。协程应该充当`Item`实例的生产者，并将它们发送到主协程。这是一个典型的生产者-消费者问题。
+- en: 'In [Chapter 5](ch05.html#thread_safety_id), we explained how `BlockingQueue`s
+    can be used to implement *work queues*—or, in this case, a data queue. As a reminder,
+    a `BlockingQueue` has blocking methods `put` and `take` to respectively insert
+    and take an object from the queue. When the queue is used as the only means of
+    communication between two threads (a producer and a consumer), it offers the great
+    benefit of avoiding a shared mutable state. Moreover, if the queue is bounded
+    (has a size limit), a too-fast producer will eventually get blocked in a `put`
+    call if consumers are too slow. This is known as back pressure: a blocked producer
+    gives the consumers the opportunity to catch up, thus releasing the producer.'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 [第 5 章](ch05.html#thread_safety_id) 中，我们解释了如何使用 `BlockingQueue` 来实现 *工作队列*
+    —— 或者，在这种情况下，是一个数据队列。提醒一下，`BlockingQueue` 有阻塞方法 `put` 和 `take`，分别用于向队列中插入和从队列中取出对象。当队列被用作两个线程之间唯一的通信方式（一个生产者和一个消费者）时，它提供了一个巨大的好处，即避免了共享的可变状态。此外，如果队列是有界的（有大小限制），如果消费者太慢，一个过快的生产者最终将在
+    `put` 调用中被阻塞。这被称为背压：被阻塞的生产者给了消费者追赶的机会，从而释放了生产者。
+- en: 'Using a `BlockingQueue` as a communication primitive between coroutines wouldn’t
+    be a great idea, since a coroutine shouldn’t involve blocking calls. Instead,
+    coroutines can suspend. A `Channel` can be seen just like that: a queue with suspending
+    functions `send` and `receive`, as shown in [Figure 9-3](#channel_illustration_id).
+    A `Channel` also has nonsuspending counterparts: `trySend` and `tryReceive`. These
+    two methods are also nonblocking. `trySend` tries to immediately add an element
+    to the channel, and returns a wrapper class around the result. That wrapper class,
+    `ChannelResult<T>`, also indicates the success or the failure of the operation.
+    `tryReceive` tries to immediately retrieve an element from the channel, and returns
+    a `ChannelResult<T>` instance.'
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果使用 `BlockingQueue` 作为协程之间的通信原语并不是一个好主意，因为协程不应该涉及阻塞调用。相反，协程可以暂停。`Channel` 可以被看作是这样的：一个带有暂停函数
+    `send` 和 `receive` 的队列，就像 [图 9-3](#channel_illustration_id) 所示。`Channel` 还有非暂停的对应方法：`trySend`
+    和 `tryReceive`。这两种方法也是非阻塞的。`trySend` 尝试立即将元素添加到通道，并返回结果的包装类 `ChannelResult<T>`。该包装类也指示操作的成功或失败。`tryReceive`
+    尝试立即从通道中检索元素，并返回一个 `ChannelResult<T>` 实例。
+- en: '![A channel can send and receive](assets/pawk_0903.png)'
+  id: totrans-21
+  prefs: []
+  type: TYPE_IMG
+  zh: '![一个通道可以发送和接收](assets/pawk_0903.png)'
+- en: Figure 9-3\. Channel.
+  id: totrans-22
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 9-3\. 通道。
+- en: Like queues, `Channel`s come in several flavors. We’ll cover each of those `Channel`
+    variants with basic examples.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像队列一样，`Channel` 有多种不同的类型。我们将用基本示例来介绍每种 `Channel` 变体。
+- en: Rendezvous Channel
+  id: totrans-24
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 会合通道
+- en: “Rendezvous” is a French word that means “appointment” or “a date”—it depends
+    on the context (we don’t mean `CoroutineContext` here). A rendezvous channel does
+    not have any buffer at all. An element is transferred from sender to receiver
+    only when `send` and `receive` invocations meet in time (rendezvous), so `send`
+    suspends until another coroutine invokes `receive`, and `receive` suspends until
+    another coroutine invokes `send`.
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: “Rendezvous” 是法语词汇，意思是“约会”或“一次约会” —— 这取决于上下文（我们这里不是指 `CoroutineContext`）。会合通道完全没有缓冲区。只有当
+    `send` 和 `receive` 调用在时间上会合（rendezvous）时，元素才从发送方传输到接收方，因此 `send` 会暂停，直到另一个协程调用
+    `receive`，而 `receive` 会暂停，直到另一个协程调用 `send`。
+- en: As another way to put it, a rendezvous channel involves a back-and-forth communication
+    between producers (coroutines calling `send`) and consumers (coroutines calling
+    `receive`). There can’t be two consecutive `send`s without a `receive` in the
+    middle.
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一种说法是，会合通道涉及生产者（调用 `send` 的协程）和消费者（调用 `receive` 的协程）之间的来回通信。在没有中间的 `receive`
+    的情况下，不能连续进行两次 `send`。
+- en: By default, when you create a channel using `Channel<T>()`, you get a rendezvous
+    channel.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 默认情况下，当使用 `Channel<T>()` 创建通道时，会得到一个会合通道。
+- en: 'We can use a rendezvous channel to correctly implement our previous example:'
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以使用会合通道来正确实现我们之前的示例：
+- en: '[PRE3]'
+  id: totrans-29
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: 'The output of this program is:'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该程序的输出是：
+- en: '[PRE4]'
+  id: totrans-31
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: In this example, the main coroutine starts a child coroutine with `launch`,
+    at [![1](assets/1.png)](#callout_1), then reaches [![2](assets/2.png)](#callout_2)
+    and suspends until some coroutine sends an `Item` instance in the channel. Shortly
+    after, the child coroutine sends the first item at [![3](assets/3.png)](#callout_3),
+    then reaches and suspends at the second `send` call at [![4](assets/4.png)](#callout_4)
+    until some coroutine is ready to receive an item. Subsequently, the main coroutine
+    (which is suspended at [![2](assets/2.png)](#callout_2)) is resumed and receives
+    the first item from the channel and prints it. Then the main coroutine reaches
+    [![5](assets/5.png)](#callout_5) and immediately receives the second item since
+    the child coroutine was already suspended in a `send` call. Immediately after,
+    the child coroutine continues its execution (prints “Done sending”).
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个例子中，主协程使用`launch`启动了一个子协程，在[![1](assets/1.png)](#callout_1)处到达，然后到达[![2](assets/2.png)](#callout_2)并暂停，直到某个协程在通道中发送了一个`Item`实例。稍后，子协程在[![3](assets/3.png)](#callout_3)处发送第一个项目，然后在[![4](assets/4.png)](#callout_4)处到达并暂停，直到某个协程准备好接收项目。随后，主协程（在[![2](assets/2.png)](#callout_2)处暂停）被恢复，并从通道接收第一个项目并打印出来。然后主协程到达[![5](assets/5.png)](#callout_5)，并立即接收第二个项目，因为子协程已经在`send`调用中暂停。紧接着，子协程继续执行（打印“Done
+    sending”）。
+- en: Iterating over a Channel
+  id: totrans-33
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 遍历通道
+- en: 'A `Channel` can be iterated over, using a regular `for` loop. Note that since
+    channels aren’t regular collections,^([2](ch09.html#idm46669744209856)) you can’t
+    use `forEach` or other similar functions from the Kotlin Standard Library. Here,
+    channel iteration is a specific language-level feature that can only be done using
+    the `for`-loop syntax:'
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以使用常规的`for`循环迭代`Channel`。请注意，由于通道不是常规集合^([2](ch09.html#idm46669744209856))，因此无法使用Kotlin标准库中的`forEach`或类似的其他函数。在这里，通道迭代是一种特定的语言级特性，只能使用`for`循环语法完成：
+- en: '[PRE5]'
+  id: totrans-35
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'Implicitly, `x` is equal to `channel.receive()` at each iteration. Consequently,
+    a coroutine iterating over a channel could do so indefinitely, unless it contains
+    conditional logic to break the loop. Fortunately, there’s a standard mechanism
+    to break the loop: closing the channel. Here is an example:'
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 隐式地，每次迭代中`x`等于`channel.receive()`。因此，协程在通道上迭代可能会无限进行，除非它包含条件逻辑以中断循环。幸运的是，有一个标准机制来中断循环：关闭通道。这里是一个例子：
+- en: '[PRE6]'
+  id: totrans-37
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: 'This program has similar output, with a small difference:'
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个程序有类似的输出，但有一个小的区别：
+- en: '[PRE7]'
+  id: totrans-39
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: This time, “Done sending” appears before “Done!” This is because the main coroutine
+    only leaves the `channel` iteration when `channel` is closed. And that happens
+    when the child coroutine is done sending all elements.
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这一次，“Done sending”出现在“Done!”之前，这是因为主协程只在`channel`关闭时离开通道迭代。而这发生在子协程完成发送所有元素时。
+- en: Internally, closing a channel sends a special token into the channel to indicate
+    that no other elements will be sent. As items in the channel are consumed *serially*
+    (one after another), all items sent to the rendezvous channel before the close
+    special token are guaranteed to be sent to the receiver.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 内部地，关闭一个通道会向通道发送一个特殊的令牌，表示不会再发送任何其他元素。由于通道中的项目是*串行*消耗的（一个接一个地），在关闭特殊令牌之前发送到会合通道的所有项目都保证会被发送到接收方。
+- en: Warning
+  id: totrans-42
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: 'Beware—trying to call `receive` from an already-closed channel will throw a
+    `ClosedReceiveChannelException`. However, trying to iterate on such a channel
+    doesn’t throw any exception:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意—尝试从已关闭的通道调用`receive`会抛出`ClosedReceiveChannelException`异常。然而，尝试在这样的通道上进行迭代不会抛出任何异常：
+- en: '[PRE8]'
+  id: totrans-44
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: 'The output is: `Done!`'
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 输出是：`Done!`
+- en: Other flavors of Channel
+  id: totrans-46
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 其他类型的通道
+- en: 'In the previous example, the `Channel` appears to be created using a class
+    constructor. If you look at the source code, you can see that it’s actually a
+    public function named with a capital C, to give the illusion that you’re using
+    a class constructor:'
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前面的例子中，`Channel`似乎是使用类构造函数创建的。如果查看源代码，可以看到实际上是使用以大写字母开头的公共函数命名，以给出使用类构造函数的假象：
+- en: '[PRE9]'
+  id: totrans-48
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'You can see that this `Channel` function has a `capacity` parameter that defaults
+    to `RENDEZVOUS`. For the record, if you step into the `RENDEZVOUS` declaration,
+    you can see that it’s equal to 0\. For each `capacity` value there is a corresponding
+    channel implementation. There are four different flavors of channels: rendezvous,
+    *unlimited*, *conflated*, and *buffered*. Don’t pay too much attention to the
+    concrete implementations (like `RendezvousChannel()`), because those classes are
+    internal and may change in the future. On the other hand, the values `RENDEZVOUS`,
+    `UNLIMITED`, `CONFLATED`, and `BUFFERED` are part of the public API.'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以看到此`Channel`函数具有一个`capacity`参数，默认为`RENDEZVOUS`。记录中，如果您进入`RENDEZVOUS`声明，您会看到它等于0。每个`capacity`值都对应一个相应的通道实现。有四种不同的通道类型：会合、*无限*、*合并*和*缓冲*。不要过多关注具体实现（如`RendezvousChannel()`），因为这些类是内部的，未来可能会更改。另一方面，值`RENDEZVOUS`、`UNLIMITED`、`CONFLATED`和`BUFFERED`是公共API的一部分。
+- en: We’ll cover each of those channel types in the next sections.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在接下来的章节中介绍每一种通道类型。
+- en: Unlimited Channel
+  id: totrans-51
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 无限通道
+- en: An *unlimited* channel has a buffer that is only limited by the amount of available
+    memory. Senders to this channel never suspend, while receivers only suspend when
+    the channel is empty. Coroutines exchanging data via an *unlimited* channel don’t
+    need to meet in time.
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*无限*通道有一个仅受可用内存限制的缓冲区。向此通道发送数据的发送者永不挂起，而接收者仅在通道为空时挂起。通过*无限*通道交换数据的协程无需在时间上满足。'
+- en: 'At this point, you might be thinking that such a channel should have concurrent
+    modification issues when senders and receivers are executed from different threads.
+    After all, coroutines are dispatched on threads, so a channel might very well
+    be used from different threads. Let’s check the `Channel`’s robustness ourselves!
+    In the following example, we send `Int`s from a coroutine dispatched on `Dispatchers.Default`
+    while another coroutine reads the same channel from the main thread, and if the
+    `Channel`s aren’t thread-safe, we will notice:'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此时，您可能会认为当发送者和接收者在不同线程上执行时，这样的通道应该存在并发修改问题。毕竟，协程是在线程上分发的，因此通道很可能会被不同线程使用。让我们自己检查`Channel`的健壮性！在以下示例中，我们从在`Dispatchers.Default`上分派的协程中发送`Int`到同一个通道，同时另一个协程从主线程读取同一通道，如果`Channel`不是线程安全的，我们会注意到：
+- en: '[PRE10]'
+  id: totrans-54
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: 'The output of this program is:'
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此程序的输出是：
+- en: '[PRE11]'
+  id: totrans-56
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: You can run this sample as much as you want, and it always completes without
+    concurrent issues. That’s because a `Channel` internally uses a lock-free algorithm.^([3](ch09.html#idm46669743772336))
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以随意运行此示例，并始终无并发问题。这是因为`Channel`内部使用无锁算法。^([3](ch09.html#idm46669743772336))
+- en: Note
+  id: totrans-58
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: '`Channel`s are thread-safe. Several threads can concurrently invoke `send`
+    and `receive` methods in a thread-safe way.'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Channel`是线程安全的。多个线程可以以线程安全的方式同时调用`send`和`receive`方法。'
+- en: Conflated Channel
+  id: totrans-60
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 合并通道
+- en: 'This channel has a buffer of size 1, and only keeps the last sent element.
+    To create a *conflated* channel, you invoke `Channel<T>(Channel.CONFLATED)`. For
+    example:'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此通道具有大小为1的缓冲区，并且仅保留最后发送的元素。要创建*合并*通道，您可以调用`Channel<T>(Channel.CONFLATED)`。例如：
+- en: '[PRE12]'
+  id: totrans-62
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: 'The output of this program is:'
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此程序的输出是：
+- en: '[PRE13]'
+  id: totrans-64
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: The first sent element is “one.” When “two” is sent, it replaces “one” in the
+    channel. We wait until the coroutine-sending elements complete, using `job.join()`.
+    Then we read the value `two` from the channel.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个发送的元素是“one”。当发送“two”时，它替换了通道中的“one”。我们使用`job.join()`等待协程发送元素完成，然后从通道中读取值`two`。
+- en: Buffered Channel
+  id: totrans-66
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 缓冲通道
+- en: 'A *buffered* channel is a `Channel` with a fixed capacity—an integer greater
+    than 0\. Senders to this channel don’t suspend unless the buffer is full, and
+    receivers from this channel don’t suspend unless the buffer is empty. To create
+    a buffered channel of `Int` with a buffer of size 2, you would invoke `Channel<Int>(2)`.
+    Here is an example of usage:'
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*缓冲*通道是具有固定容量的`Channel`，容量为大于0的整数。向此通道发送数据的发送者仅在缓冲区满时挂起，而从此通道接收数据的接收者仅在缓冲区空时挂起。要创建一个具有大小为2的`Int`缓冲区的缓冲通道，您可以调用`Channel<Int>(2)`。以下是一个使用示例：'
+- en: '[PRE14]'
+  id: totrans-68
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: 'The output of this program is:'
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此程序的输出是：
+- en: '[PRE15]'
+  id: totrans-70
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: 'In this example, we’ve defined a `Channel` with a fixed capacity of 2\. A coroutine
+    attempts to send five integers, while another coroutine consumes elements from
+    the channel. The sender coroutine manages to send 0 and 1 in one go, then attempts
+    to send 3\. The `println("Send $i")` is executed for the value 3 but the sender
+    coroutine gets suspended in the `send` call. The same reasoning applies for the
+    consumer coroutine: two elements are received consecutively with an additional
+    print before suspending.'
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个例子中，我们定义了一个容量为2的`Channel`。一个协程尝试发送五个整数，而另一个协程从通道中消费元素。发送者协程成功一次性发送0和1，然后尝试发送3。对于值3，`println("Send
+    $i")`被执行，但发送者协程在`send`调用中被挂起。消费者协程也是同样的道理：连续接收两个元素，并在挂起之前额外打印。
+- en: Channel Producers
+  id: totrans-72
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 通道生产者
+- en: 'Until now, you’ve seen that a `Channel` can be used for both sending *and*
+    receiving elements. Sometimes you might want to be more explicit about how a channel
+    should be used for either sending or receiving. When you’re implementing a `Channel`
+    that is meant to be read only by other coroutines, you can use the `produce` builder:'
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，你已经看到`Channel`既可以用于发送*也可以*用于接收元素。有时候，你可能希望更明确地指定通道应该用于发送还是接收。当你正在实现一个只能被其他协程读取的`Channel`时，你可以使用`produce`构建器：
+- en: '[PRE16]'
+  id: totrans-74
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: As you can see, `produce` returns a `ReceiveChannel`—which only has methods
+    relevant to receiving operations (`receive` is among them). An instance of `ReceiveChannel`
+    cannot be used to send elements.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所看到的，`produce`返回一个`ReceiveChannel`—它只有与接收操作相关的方法（`receive`是其中之一）。`ReceiveChannel`的实例不能用于发送元素。
+- en: Tip
+  id: totrans-76
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: 'Also, we’ve defined `produceValues()` as an extension function of `CoroutineScope`.
+    Calling `produceValues` will start a new coroutine that sends elements into a
+    channel. There’s a convention in Kotlin: every function that starts coroutines
+    should be defined as an extension function of `CoroutineScope`. If you follow
+    this convention, you can easily distinguish in your code which functions are starting
+    new coroutines from suspending functions.'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另外，我们已将`produceValues()`定义为`CoroutineScope`的扩展函数。调用`produceValues`将启动一个将元素发送到通道的新协程。在Kotlin中有一个约定：每个启动协程的函数都应该被定义为`CoroutineScope`的扩展函数。如果遵循这个约定，你可以很容易地区分出哪些函数在你的代码中启动了新的协程而不是挂起函数。
+- en: 'The main code that makes use of `produceValues` could be:'
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`produceValues`的主要代码可能是：
+- en: '[PRE17]'
+  id: totrans-79
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: 'Conversely, a `SendChannel` only has methods relevant to sending operations.
+    Actually, looking at the source code, a `Channel` is an interface deriving from
+    both `ReceiveChannel` and `SendChannel`:'
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相反，`SendChannel`只有与发送操作相关的方法。实际上，从源代码来看，`Channel`是一个接口，继承自`ReceiveChannel`和`SendChannel`：
+- en: '[PRE18]'
+  id: totrans-81
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE18]'
+- en: 'Here is how you can use a `SendChannel`:'
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是如何使用`SendChannel`的：
+- en: '[PRE19]'
+  id: totrans-83
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE19]'
+- en: Communicating Sequential Processes
+  id: totrans-84
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 通信顺序进程
+- en: 'Enough of the theory, let’s get started and see how channels can be used to
+    implement a real-life problem. Imagine that your Android application has to display
+    “shapes” in a canvas. Depending on the inputs of the user, your application has
+    to display an arbitrary number of shapes. We’re purposely using generic terms—a
+    shape could be a point of interest on a map, an item in a game, anything that
+    may require some background work like API calls, file reads, database queries,
+    etc. In our example, the main thread, which already handles user input, will simulate
+    requests for new shapes to be rendered. You can already foresee that it’s a producer-consumer
+    problem: the main thread makes requests, while some background task handles them
+    and returns the results to the main thread.'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 理论够了，让我们开始看看通道如何用于实现一个真实问题。想象一下，你的Android应用程序必须在画布上显示“形状”。根据用户的输入，你的应用程序必须显示任意数量的形状。我们故意使用通用术语—一个形状可以是地图上的兴趣点，游戏中的物品，任何可能需要一些后台工作的东西，比如API调用、文件读取、数据库查询等。在我们的例子中，主线程，已经处理用户输入，将模拟请求渲染新形状。你已经可以预见到这是一个生产者-消费者问题：主线程发出请求，而一些后台任务处理这些请求并将结果返回给主线程。
+- en: 'Our implementation should:'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的实现应该：
+- en: Be thread-safe
+  id: totrans-87
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 线程安全
+- en: Reduce the risk of overwhelming the device memory
+  id: totrans-88
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 降低设备内存超负荷风险
+- en: Have no thread contention (we won’t use locks)
+  id: totrans-89
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 没有线程争用（我们不会使用锁）
+- en: Model and Architecture
+  id: totrans-90
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 模型和架构
+- en: 'A `Shape` is made of a `Location` and some useful `ShapeData`:'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个`Shape`由一个`Location`和一些有用的`ShapeData`组成：
+- en: '[PRE20]'
+  id: totrans-92
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE20]'
+- en: Given a `Location`, we need to fetch the corresponding `ShapeData` to build
+    a `Shape`. So in this example, `Location`s are the input, and `Shape`s the output.
+    For brevity, we’ll use the words “location” for `Location` and “shape” for `Shape`.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 给定一个 `Location`，我们需要获取相应的 `ShapeData` 来构建一个 `Shape`。因此，在这个例子中，`Location` 是输入，而
+    `Shape` 是输出。为简洁起见，我们将使用 “位置” 表示 `Location`， “形状” 表示 `Shape`。
+- en: 'In our implementation, we’ll distinguish two main components:'
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的实现中，我们将区分两个主要组件：
+- en: view-model
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 视图模型
+- en: This holds most of the application logic related to shapes. As the user interacts
+    with the UI, the view gives the view-model a list of locations.
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这段代码包含大部分与形状相关的应用逻辑。当用户与 UI 交互时，视图会将位置列表传递给视图模型。
+- en: '`shapeCollector`'
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`shapeCollector`'
+- en: This is responsible for fetching shapes given a list of locations.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这负责根据位置列表获取形状。
+- en: '[Figure 9-4](#csp_highlevel_arch) illustrates the bidirectional relationship
+    between the view-model and the shape collector.'
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[图 9-4](#csp_highlevel_arch) 描述了视图模型和形状收集器之间的双向关系。'
+- en: '![High-level architecture](assets/pawk_0904.png)'
+  id: totrans-100
+  prefs: []
+  type: TYPE_IMG
+  zh: '![高级架构](assets/pawk_0904.png)'
+- en: Figure 9-4\. High-level architecture.
+  id: totrans-101
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 9-4\. 高级架构。
+- en: 'The `ShapeCollector` follows a simple process:'
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`ShapeCollector` 遵循一个简单的流程：'
+- en: '[PRE21]'
+  id: totrans-103
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE21]'
+- en: As an additional prerequisite, our `ShapeCollector` should maintain an internal
+    “registry” of locations being processed. Upon receiving a location to process,
+    the `ShapeCollector` shouldn’t attempt to download it if it’s already being processed.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为额外的先决条件，我们的 `ShapeCollector` 应该维护一个内部的“注册表”，用于正在处理的位置。在接收到要处理的位置时，`ShapeCollector`
+    不应尝试下载已经正在处理的位置。
+- en: A First Implementation
+  id: totrans-105
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 第一个实现
+- en: 'We can start with this first naïve implementation of the `ShapeCollector`,
+    which is far from being complete, but you’ll get the idea:'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以从这个第一个天真的 `ShapeCollector` 实现开始，虽然它远非完整，但你会有个概念：
+- en: '[PRE22]'
+  id: totrans-107
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE22]'
+- en: If we were programming with threads, we would have several threads sharing an
+    instance of `ShapeCollector`, executing `processLocation` concurrently. Using
+    this approach, however, leads to sharing mutable states. In the previous snippet,
+    `locationsBeingProcessed` is one example.
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们使用线程编程，会有多个线程共享一个 `ShapeCollector` 实例，并并发执行 `processLocation`。然而，这种方法会导致共享可变状态。在前面的代码片段中，`locationsBeingProcessed`
+    就是一个例子。
+- en: As you learned in [Chapter 5](ch05.html#thread_safety_id), making mistakes using
+    locks is surprisingly easy. Using coroutines, we don’t have to share mutable state.
+    How? Using coroutines and channels, we can *share by communicating* instead of
+    *communicate by sharing*.
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你在 [第 5 章](ch05.html#thread_safety_id) 中学到的，使用锁容易出错。使用协程，我们无需共享可变状态。如何做到的呢？通过协程和通道，我们可以通过*通信来共享*而不是*共享来通信*。
+- en: 'The key idea is to encapsulate mutable states inside coroutines. In the case
+    of the list of `Location`s being processed, it can be done with:'
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关键思想是将可变状态封装在协程内部。对于正在处理的 `Location` 列表，可以通过以下方式实现：
+- en: '[PRE23]'
+  id: totrans-111
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE23]'
+- en: '[![1](assets/1.png)](#co_channels_CO1-1)'
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_channels_CO1-1)'
+- en: In the preceding example, only the coroutine that started with `launch` can
+    touch the mutable state, which is `locationsBeingProcessed`.
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前面的例子中，只有使用 `launch` 启动的协程可以访问可变状态，即 `locationsBeingProcessed`。
+- en: '[![2](assets/2.png)](#co_channels_CO1-2)'
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_channels_CO1-2)'
+- en: 'However, we now have a problem. How do we provide the `location`s? We have
+    to somehow provide this iterable to the coroutine. So we’ll use a `Channel`, and
+    use it as input of a function we’ll declare. Since we’re launching a coroutine
+    inside a function, we declare this function as an extension function of `CoroutineScope`:'
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不过，我们现在遇到了一个问题。我们如何提供 `location` 呢？我们必须以某种方式将这个可迭代对象传递给协程。所以我们会使用一个 `Channel`，并将其作为我们即将声明的函数的输入。由于我们在函数内启动一个协程，我们将此函数声明为
+    `CoroutineScope` 的扩展函数：
+- en: '[PRE24]'
+  id: totrans-116
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE24]'
+- en: 'As this coroutine will be receiving `Location`s from the view-model, we declare
+    the `Channel` as a `ReceiveChannel`. By the way, you’ve seen in the previous section
+    that a `Channel` can be iterated over, just like a list. So now, we can fetch
+    the corresponding `ShapeData` for each `Location` instance received from the channel.
+    As you’ll want to do this in parallel, you might be tempted to write something
+    like so:'
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于这个协程将从视图模型接收 `Location`，我们将 `Channel` 声明为 `ReceiveChannel`。顺便说一句，在前面的部分中，你已经看到
+    `Channel` 可以像列表一样迭代。所以现在，我们可以为从通道接收到的每个 `Location` 实例获取相应的 `ShapeData`。由于你希望并行进行此操作，你可能会写出类似于以下的代码：
+- en: '[PRE25]'
+  id: totrans-118
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE25]'
+- en: Beware, as there’s a catch in this code. You see, for each received location,
+    we start a new coroutine. Potentially, this code might start a lot of coroutines
+    if the `locations` channel debits a lot of items. For this reason, this situation
+    is also called *unlimited* *concurrency*. When we introduced coroutines, we said
+    that they are lightweight. It’s true, but the work they do might very well consume
+    significant resources. In this case, `launch(Dispatchers.IO)` in itself has an
+    insignificant overhead, while fetching the `ShapeData` could require a REST API
+    call on a server with limited bandwidth.
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，在这段代码中有一个陷阱。你看，对于每个接收到的位置，我们都会启动一个新的协程。如果 `locations` 通道提供了大量的项目，这段代码可能会启动大量的协程。因此，这种情况也称为
+    *无限并发*。当我们介绍协程时，我们说它们很轻量级。这是真的，但它们所做的工作可能会消耗大量资源。在这种情况下，`launch(Dispatchers.IO)`
+    本身的开销微不足道，而获取 `ShapeData` 可能需要对带有有限带宽的服务器进行 REST API 调用。
+- en: So we’ll have to find a way to limit concurrency—we don’t want to start an unlimited
+    number of coroutines. When facing this situation with threads, a common practice
+    is to use a thread pool coupled with a work queue (see [Chapter 5](ch05.html#thread_safety_id)).
+    Instead of a thread pool, we’ll create a *coroutine pool*, which we’ll name *worker
+    pool*. Each coroutine from this worker pool will perform the actual fetch of `ShapeData`
+    for a given location. To communicate with this worker pool, `collectShapes` should
+    use an additional channel to which it can send locations to the worker pool, as
+    shown in [Figure 9-5](#limit_concurrency_id).
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们必须找到一种方法来限制并发 —— 我们不希望启动无限数量的协程。面对这种线程的情况，一个常见的做法是使用与工作队列耦合的线程池（见[第 5 章](ch05.html#thread_safety_id)）。我们将创建一个
+    *协程池*，命名为 *工作者池*，而不是线程池。来自这个工作者池的每个协程将为给定位置执行实际的 `ShapeData` 获取。为了与这个工作者池通信，`collectShapes`
+    应该使用一个额外的通道，通过它可以将位置发送到工作者池，如[图 9-5](#limit_concurrency_id)所示。
+- en: '![Limit Concurrency](assets/pawk_0905.png)'
+  id: totrans-121
+  prefs: []
+  type: TYPE_IMG
+  zh: '![并发限制](assets/pawk_0905.png)'
+- en: Figure 9-5\. Limit concurrency.
+  id: totrans-122
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 9-5\. 并发限制。
+- en: Warning
+  id: totrans-123
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: When you use `Channel`s, *be careful not to have unlimited concurrency*. Imagine
+    that you have to instantiate a lot of `Bitmap` instances. The underlying memory
+    buffer which stores pixel data takes a nonnegligible amount of space in memory.
+    When working with a lot of images, allocating a fresh instance of `Bitmap` every
+    time you need to create an image causes significant pressure on the system (which
+    has to allocate memory in RAM while the garbage collector cleans up all the previously
+    created instances that aren’t referenced anymore). A canonical solution to this
+    problem is `Bitmap` pooling, which is only a particular case of the more general
+    pattern of *object pooling*. Instead of creating a fresh instance of `Bitmap`,
+    you can pick one from the pool (and reuse the underlying buffer when possible).
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你使用 `Channel` 时，*要小心不要有无限并发*。想象一下，你必须实例化很多 `Bitmap` 实例。存储像素数据的底层内存缓冲区在内存中占用了非常可观的空间。在处理大量图像时，每次需要创建图像时分配一个新的
+    `Bitmap` 实例会给系统带来显著的压力（需要在 RAM 中分配内存，同时垃圾收集器清理所有不再引用的先前创建的实例）。这个问题的一个经典解决方案是 `Bitmap`
+    池化，这只是 *对象池* 更一般模式的一个特例。你可以从池中选择一个 `Bitmap` 实例（并在可能时重用底层缓冲区）而不是创建一个新的 `Bitmap`
+    实例。
+- en: 'This is how you would modify `collectShapes` to take an additional channel
+    parameter:'
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是修改 `collectShapes` 以接受额外通道参数的方法：
+- en: '[PRE26]'
+  id: totrans-126
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE26]'
+- en: Notice how `collectShapes` now sends a location to the `locationsToProcess`
+    channel, only if the location isn’t in the list of locations currently being processed.
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意现在 `collectShapes` 如何将位置发送到 `locationsToProcess` 通道，只有当该位置不在当前正在处理的位置列表中时。
+- en: 'As for the worker implementation, it simply reads from the channel we just
+    created—except that from the worker perspective, it’s a `ReceiveChannel`. Using
+    the same pattern:'
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 至于工作实现，它只是从我们刚刚创建的通道中读取 —— 除了从工作者的角度来看，它是一个`ReceiveChannel`。使用相同的模式：
+- en: '[PRE27]'
+  id: totrans-129
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE27]'
+- en: For now, we are not focusing on how to fetch a `ShapeData`. The most important
+    notion to understand here is the `for` loop. Thanks to the iteration on the `locationsToProcess`
+    channel, each individual `worker` coroutine will receive its own location without
+    interfering with the others. No matter how many workers we’ll start, a location
+    sent from `collectShapes` to the `locationsToProcess` channel will only be received
+    by one worker. You’ll see that each worker will be created with the same channel
+    instance when we wire all those things up. In message-oriented software, this
+    pattern, which implies delivery of a message to multiple destinations, is called
+    *fan-out*.
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们不关注如何获取`ShapeData`。这里最重要的概念是`for`循环。由于在`locationsToProcess`通道上进行迭代，每个单独的`worker`协程将收到自己的位置，而不会干扰其他协程。无论我们启动多少个worker，从`collectShapes`发送到`locationsToProcess`通道的位置只会被一个worker接收。当我们连接所有这些东西时，每个worker将使用相同的通道实例创建。在面向消息的软件中，这种模式，即将消息传递到多个目的地，称为*fan-out*。
+- en: 'Looking back at the missing implementation inside the `for` loop, this is what
+    we’ll do:'
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回顾一下`for`循环内缺失的实现，我们将要做的事情是：
+- en: Fetch the `ShapeData` (which from now on we’ll simply refer to as “data”).
+  id: totrans-132
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 获取`ShapeData`（从现在开始我们简称为“数据”）。
+- en: Create a `Shape` from the location and the data.
+  id: totrans-133
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 从位置和数据创建一个`Shape`。
+- en: Send the shape to some channel, which other components in our application will
+    use to get the shapes from `ShapeCollector`. Obviously, we haven’t created such
+    a channel yet.
+  id: totrans-134
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 将形状发送到某个通道，我们应用程序中的其他组件将使用这个通道从`ShapeCollector`获取形状。显然，我们还没有创建这样的通道。
+- en: Notify the `collectShapes` coroutine that the given location has been processed,
+    by sending it back to its sender. Again, such a channel has to be created.
+  id: totrans-135
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 通知`collectShapes`协程，给定位置已经处理完毕，通过将其发送回发送者。同样，这样的通道必须先创建。
+- en: 'Do note that this isn’t the only possible implementation. You could imagine
+    other ways and adapt to your needs. After all, this is what this chapter is all
+    about: to give you examples and inspiration for your next developments.'
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，这并不是唯一可能的实现方式。你可以想象其他方法，并根据自己的需求进行调整。毕竟，本章的目的就是为你提供示例和灵感，以便你进行下一步的开发。
+- en: Back on our horse, [Example 9-1](#csp_worker_impl_id) shows the final implementation
+    of the `worker` coroutine.
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回到我们的主题，[示例 9-1](#csp_worker_impl_id)展示了`worker`协程的最终实现。
+- en: Example 9-1\. Worker coroutine
+  id: totrans-138
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 9-1\. 工作协程
+- en: '[PRE28]'
+  id: totrans-139
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE28]'
+- en: 'Just like the `collectShapes` was adapted earlier to take one channel as an
+    argument, this time we’re adding two more channels: `locationsProcessed` and `shapesOutput`.'
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像之前调整`collectShapes`以接受一个通道作为参数一样，这次我们要添加两个通道：`locationsProcessed`和`shapesOutput`。
+- en: Inside the `for` loop, we first get a `ShapeData` instance for a location. For
+    the sake of this simple example, [Example 9-2](#csp_getshapedata_impl_id) shows
+    our implementation.
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`for`循环内，我们首先获取一个位置的`ShapeData`实例。为了这个简单示例的目的，[示例 9-2](#csp_getshapedata_impl_id)展示了我们的实现。
+- en: Example 9-2\. `Getting shape data`
+  id: totrans-142
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 9-2\. 获取形状数据
+- en: '[PRE29]'
+  id: totrans-143
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE29]'
+- en: Since the `getShapeData` method might not return immediately, we implement it
+    as a `suspend` function. Imagining that the downstream code involves a remote
+    API, we use `Dispatchers.IO`.
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于`getShapeData`方法可能不会立即返回，我们将其实现为`suspend`函数。假设下游代码涉及远程API，我们使用`Dispatchers.IO`。
+- en: The `collectShapes` coroutine has to be adapted again, since it has to accept
+    one more channel—the one from which the workers send back locations they’re done
+    processing. You’re starting to get used to it—it’ll be a `ReceiveChannel` from
+    the `collectShapes` perspective. Now `collectShapes` accepts two `ReceiveChannel`s
+    and one `SendChannel`.
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`collectShapes`协程必须再次适应，因为它必须接受另一个通道——工作者完成处理后返回的位置。你已经开始适应它了——从`collectShapes`的角度来看，这将是一个`ReceiveChannel`。现在，`collectShapes`接受两个`ReceiveChannel`和一个`SendChannel`。'
+- en: 'Let’s try it:'
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们试试看：
+- en: '[PRE30]'
+  id: totrans-147
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE30]'
+- en: Now we have a problem. How can you receive elements from multiple `ReceiveChannel`s
+    at the same time? If we add another `for` loop right below the `locations` channel
+    iteration, it wouldn’t work as intended as the first iteration only ends when
+    the `locations` channel is closed.
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们有了问题。如何同时从多个`ReceiveChannel`接收元素？如果我们在`locations`通道迭代的下方添加另一个`for`循环，它将无法按预期工作，因为第一个迭代仅在`locations`通道关闭时结束。
+- en: For that purpose, you can use the `select` expression.
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为此，可以使用`select`表达式。
+- en: The select Expression
+  id: totrans-150
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Select表达式
+- en: The `select` expression waits for the result of multiple suspending functions
+    simultaneously, which are specified using *clauses* in the body of this select
+    invocation. The caller is suspended until one of the clauses is either *selected*
+    or *fails*.
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`select` 表达式等待多个暂停函数的结果同时返回，这些函数在此 select 调用的主体中使用 *子句* 指定。调用者在一个子句被 *选中* 或
+    *失败* 后才会被暂停。 '
+- en: 'In our case, it works like so:'
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的情况下，它的工作方式如下：
+- en: '[PRE31]'
+  id: totrans-153
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE31]'
+- en: 'If the `select` expression could talk, it would say: “Whenever the `locations`
+    channel receives an element, I’ll do action 1\. Or, if the `locationsProcessed`
+    channel receives something, I’ll do action 2\. I can’t do both actions at the
+    same time. By the way, I’m returning `Unit`.”'
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果 `select` 表达式能说话，它会说：“每当 `locations` 通道接收到一个元素时，我将执行动作 1\. 或者，如果 `locationsProcessed`
+    通道接收到某个东西，我将执行动作 2\. 我无法同时执行这两个操作。顺便说一句，我会返回 `Unit`。”
+- en: The “I can’t do both actions at the same time” is important. You might wonder
+    what would happen if action 1 takes half an hour—or worse, if it never completes.
+    We’ll describe a similar situation in [“Deadlock in CSP”](#deadlock_in_csp_id).
+    However, the implementation that follows is guaranteed *never* to block for a
+    long time in each action.
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: “我无法同时执行这两个操作”是很重要的。你可能会想知道如果操作 1 需要半个小时，或者更糟的是，永远无法完成，会发生什么。我们将在 [“CSP 中的死锁”](#deadlock_in_csp_id)
+    中描述类似的情况。然而，随后的实现保证在每个操作中 *永远* 不会长时间阻塞。
+- en: Since `select` is an expression, it returns a result. The result type is inferred
+    by the return type of the lambdas we provide for each case of the `select`—pretty
+    much like the `when` expression. In this particular example, we don’t want any
+    result, so the return type is `Unit`. As `select` returns after either the `locations`
+    or `locationsProcessed` channel receives an element, it doesn’t iterate over channels
+    like our previous `for` loop. Consequently, we have to wrap it inside a `while(true)`.
+    The complete implementation of `collectShapes` is shown in [Example 9-3](#csp_collectshapes_id).
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为 `select` 是一个表达式，它会返回一个结果。结果类型由我们为 `select` 的每个 case 提供的 lambda 的返回类型推断出来，这与
+    `when` 表达式非常相似。在这个特定的示例中，我们不需要任何结果，所以返回类型是 `Unit`。由于 `select` 在 `locations` 或
+    `locationsProcessed` 通道接收到元素后返回，它不像之前的 `for` 循环那样遍历通道。因此，我们必须将其包装在 `while(true)`
+    内。完整的 `collectShapes` 实现在 [示例 9-3](#csp_collectshapes_id) 中显示。
+- en: Example 9-3\. Collecting shapes
+  id: totrans-157
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 9-3\. 收集形状
+- en: '[PRE32]'
+  id: totrans-158
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE32]'
+- en: '[![1](assets/1.png)](#co_channels_CO2-1)'
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_channels_CO2-1)'
+- en: When the `locationsProcessed` channel receives a location, we know that this
+    location has been processed by a worker. It should now be removed from the list
+    of locations being processed.
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 `locationsProcessed` 通道接收到一个位置时，我们知道这个位置已经被一个 worker 处理过了。现在应该将其从正在处理的位置列表中移除。
+- en: '[![2](assets/2.png)](#co_channels_CO2-2)'
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_channels_CO2-2)'
+- en: When the `locations` channel receives a location, we have to first check whether
+    we’ve already been processing the same location or not. If not, we’ll add the
+    location to the `locationsBeingProcessed` list, and then send it to the `locationsToProcess`
+    channel.
+  id: totrans-162
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 `locations` 通道接收到一个位置时，我们必须首先检查我们是否已经在处理相同的位置。如果没有，我们将该位置添加到 `locationsBeingProcessed`
+    列表中，然后将其发送到 `locationsToProcess` 通道。
+- en: Putting It All Together
+  id: totrans-163
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 将所有内容整合在一起
+- en: The final architecture of the `ShapeCollector` takes shape, as shown in [Figure 9-6](#csp_final_arch_id).
+  id: totrans-164
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`ShapeCollector` 的最终架构已经成形，如 [图 9-6](#csp_final_arch_id) 所示。'
+- en: '![Final Architecture](assets/pawk_0906.png)'
+  id: totrans-165
+  prefs: []
+  type: TYPE_IMG
+  zh: '![最终架构](assets/pawk_0906.png)'
+- en: Figure 9-6\. Final architecture.
+  id: totrans-166
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 9-6\. 最终架构。
+- en: Remember that all the channels we used to implement the `collectShapes` and
+    `worker` methods have to be created somewhere. To respect encapsulation, a good
+    place to do that is in a `start` method, as shown in [Example 9-4](#csp_shapecollector_impl_id).
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请记住，我们用来实现 `collectShapes` 和 `worker` 方法的所有通道都必须在某个地方创建。为了尊重封装性，一个好的地方是在 `start`
+    方法中，如 [示例 9-4](#csp_shapecollector_impl_id) 中所示。
+- en: Example 9-4\. Shape collector
+  id: totrans-168
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 9-4\. 形状收集器
+- en: '[PRE33]'
+  id: totrans-169
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE33]'
+- en: 'This `start` method is responsible for starting the whole shape collection
+    machinery. The two channels that are exclusively used inside the `ShapeCollector`
+    are created: `locationsToProcess` and `locationsProcessed`. We are not explicitly
+    creating `ReceiveChannel` or `SendChannel` instances here. We’re creating them
+    as `Channel` instances because they’ll further be used either as `ReceiveChannel`
+    or `SendChannel`. Then the worker pool is created and started, by calling the
+    `worker` method as many times as `workerCount` was set. It’s achieved using the
+    `repeat` function from the standard library.'
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个`start`方法负责启动整个形状收集机制。在`ShapeCollector`内部专门使用的两个通道被创建：`locationsToProcess`和`locationsProcessed`。我们在这里没有显式地创建`ReceiveChannel`或`SendChannel`实例。我们创建它们作为`Channel`实例，因为它们将进一步被用作`ReceiveChannel`或`SendChannel`。然后通过调用`worker`方法`workerCount`次来创建并启动工作者池。这是通过使用标准库中的`repeat`函数实现的。
+- en: Finally, we call `collectShapes` once. Overall, we started `workerCount + 1`
+    coroutines in this `start` method.
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们调用`collectShapes`一次。总的来说，在这个`start`方法中我们启动了`workerCount + 1`个协程。
+- en: You might have noticed that `locationsProcessed` is created with a capacity
+    of 1\. This is intended, and is an important detail. We’ll explain why in the
+    next section.
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能已经注意到`locationsProcessed`被创建时容量为1。这是有意为之，并且是一个重要的细节。我们将在下一节解释原因。
+- en: Fan-Out and Fan-In
+  id: totrans-173
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Fan-Out 和 Fan-In
+- en: You just saw an example of multiple coroutines receiving from the same channel.
+    Indeed, all `worker` coroutines receive from the same `locationsToProcess` channel.
+    A `Location` instance sent to the `locationsToProcess` channel will be processed
+    by only one worker, without any risk of concurrent issues. This particular interaction
+    between coroutines is known as *fan-out*, as shown in [Figure 9-7](#fan_in_out_id).
+    From the standpoint of the coroutine started with the `collectShapes` function,
+    locations are fanned-out to the worker pool.
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你刚刚看到了多个协程从同一个通道接收数据的例子。事实上，所有`worker`协程都从同一个`locationsToProcess`通道接收数据。发送到`locationsToProcess`通道的`Location`实例将被一个工作者处理，没有任何并发问题的风险。这种协程之间的特定交互被称为*fan-out*，如[图9-7](#fan_in_out_id)所示。从`collectShapes`函数启动的协程的角度来看，位置被分发到工作者池中。
+- en: '![Fan-Out and Fan-In](assets/pawk_0907.png)'
+  id: totrans-175
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Fan-Out and Fan-In](assets/pawk_0907.png)'
+- en: Figure 9-7\. Fan-out and fan-in.
+  id: totrans-176
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图9-7。Fan-out 和 fan-in。
+- en: Fan-out is achieved by launching several coroutines which all iterate over the
+    same instance of `ReceiveChannel` (see the `worker` implementation in [Example 9-1](#csp_worker_impl_id)).
+    If one of the workers fails, the other ones will continue to receive from the
+    channel—making the system resilient to some extent.
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过启动几个协程来实现Fan-out，它们都迭代同一个`ReceiveChannel`实例（参见[示例9-1](#csp_worker_impl_id)中的`worker`实现）。如果其中一个工作者失败，其他工作者将继续从通道接收数据，使系统在一定程度上具有弹性。
+- en: Inversely, when several coroutines send elements to the same `SendChannel` instance,
+    we’re talking about *fan-in*. Again, you’ve got a good example since all workers
+    send `Shape` instances to `shapesOutput`.
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相反地，当几个协程向同一个`SendChannel`实例发送元素时，我们称之为*fan-in*。再次，你有一个很好的例子，因为所有工作者都向`shapesOutput`发送`Shape`实例。
+- en: Performance Test
+  id: totrans-179
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 性能测试
+- en: Alright! Time to test the performance of our `ShapeCollector`. The following
+    snippet has a `main` function, which calls the functions `consumeShapes` and `sendLocations`.
+    Those functions start a coroutine that, respectively, consumes `Shape` instances
+    from the `ShapeCollector` and sends `Location` instances. Overall, this code is
+    close to what you’d write in a real view-model, as shown in [Example 9-5](#csp_perf_test_id).
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好了！是时候测试我们的`ShapeCollector`的性能了。以下代码片段有一个`main`函数，调用了`consumeShapes`和`sendLocations`函数。这些函数分别启动一个协程，从`ShapeCollector`中消费`Shape`实例并发送`Location`实例。总的来说，这段代码接近于你在真实的视图模型中编写的代码，如[示例9-5](#csp_perf_test_id)所示。
+- en: Example 9-5\. Shape collector
+  id: totrans-181
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例9-5。形状收集器
+- en: '[PRE34]'
+  id: totrans-182
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE34]'
+- en: '[![1](assets/1.png)](#co_channels_CO3-1)'
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_channels_CO3-1)'
+- en: We set up the channels according to the needs of the `ShapeCollector`—see [Figure 9-4](#csp_highlevel_arch).
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们根据`ShapeCollector`的需求设置了通道——参见[图9-4](#csp_highlevel_arch)。
+- en: '[![2](assets/2.png)](#co_channels_CO3-2)'
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_channels_CO3-2)'
+- en: We create a `ShapeCollector` with four workers.
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们使用四个工作者创建了一个`ShapeCollector`。
+- en: '[![3](assets/3.png)](#co_channels_CO3-3)'
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_channels_CO3-3)'
+- en: The `consumeShapes` function only increments a counter. That counter is declared
+    globally—which is fine because the coroutine started with `consumeShapes` is the
+    only one to modify `count`.
+  id: totrans-188
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`consumeShapes`函数只是增加一个计数器。这个计数器是全局声明的，这是可以的，因为由`consumeShapes`启动的协程是唯一修改`count`的。'
+- en: '[![4](assets/4.png)](#co_channels_CO3-4)'
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![4](assets/4.png)](#co_channels_CO3-4)'
+- en: In the `sendLocations` functions, we set up a timeout of three seconds. `withTimeoutOrNull`
+    is a suspending function that suspends until the provided time is out. Consequently,
+    the coroutine started with `sendLocations` only prints the received count after
+    three seconds.
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 `sendLocations` 函数中，我们设置了三秒的超时时间。`withTimeoutOrNull` 是一个挂起函数，它会挂起直到提供的时间结束。因此，以
+    `sendLocations` 开始的协程仅在三秒后打印接收到的计数。
+- en: If you recall the implementation of `getShapeData` in [Example 9-2](#csp_getshapedata_impl_id),
+    we added `delay(10)` to simulate a suspending call of 10 ms long. Running four
+    workers for three seconds, we would ideally receive 3,000 / 10 × 4 = 1,200 shapes,
+    if our implementation had zero overhead. On our test machine, we got 1,170 shapes—that’s
+    an efficiency of 98%.
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你回想一下在 [Example 9-2](#csp_getshapedata_impl_id) 中的 `getShapeData` 实现，我们增加了
+    `delay(10)` 来模拟一个 10 毫秒长的挂起调用。在三秒内运行四个工作者，理论上我们应该接收到 3,000 / 10 × 4 = 1,200 个形状，如果我们的实现没有额外开销的话。在我们的测试机器上，我们得到了
+    1,170 个形状—这是 98% 的效率。
+- en: Playing a little bit with more workers (64), with `delay(5)` in each worker,
+    we got 122,518 shapes in 10 seconds (the ideal number being 128,000)—that’s an
+    efficiency of 96%.
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在更多工作者（64）和每个工作者中使用 `delay(5)` 的情况下，我们在 10 秒内得到了 122,518 个形状（理想数目为 128,000）—这是
+    96% 的效率。
+- en: Overall, the throughput of `ShapeCollector` is quite decent, event with a `sendLocations`
+    function that continuously sends `Location` instances without any pause between
+    two sends.
+  id: totrans-193
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 总体而言，`ShapeCollector` 的吞吐量相当不错，即使有一个 `sendLocations` 函数不间断地发送 `Location` 实例而没有任何暂停。
+- en: Back Pressure
+  id: totrans-194
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 回压
+- en: 'What happens if our workers are too slow? This could very well happen if a
+    remote HTTP call takes time to respond, or a backend server is overwhelmed—we
+    don’t know. To simulate this, we can dramatically increase the delay inside `getShapeData`
+    (see [Example 9-2](#csp_getshapedata_impl_id)). Using `delay(500)`, we got only
+    20 shapes in three seconds, with four workers. The throughput decreased, but this
+    isn’t the interesting part. As always with producer-consumer problems, issues
+    can arise when consumers slow down—as producers might accumulate data and the
+    system may ultimately run out of memory. You can add `println()` logs inside the
+    producer coroutine and run the program again:'
+  id: totrans-195
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们的工作者速度太慢会发生什么？如果远程 HTTP 调用花费了时间来响应，或者后端服务器不堪重负——我们无法确定。为了模拟这种情况，我们可以大幅增加
+    `getShapeData` 内部的延迟（见 [Example 9-2](#csp_getshapedata_impl_id)）。使用 `delay(500)`，我们在三秒内只获得了
+    20 个形状，使用了四个工作者。吞吐量减少了，但这并不是最有趣的部分。和生产者-消费者问题一样，当消费者变慢时问题可能会出现——因为生产者可能会积累数据，系统最终可能会耗尽内存。你可以在生产者协程内添加
+    `println()` 日志并重新运行程序。
+- en: '[PRE35]'
+  id: totrans-196
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE35]'
+- en: Now, “Sending a new location” is printed only about 25 times in the console.
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，“发送一个新位置”仅在控制台中打印了大约 25 次。
+- en: So the producer is being slowed down. How?
+  id: totrans-198
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，生产者正在被减速。如何减速？
+- en: Because `locationsOutput.send(location)` is a suspending call. When workers
+    are slow, the `collectShapes` function (see [Example 9-3](#csp_collectshapes_id))
+    of the `ShapeCollector` class quickly becomes suspended at the line `locationsToProcess.send(it)`.
+    Indeed, `locationsToProcess` is a rendezvous channel. Consequently, when the coroutine
+    started with `collectShapes` reaches that line, it’s suspended until a worker
+    is ready to receive the location from `locationsToProcess`. When the previously
+    mentioned coroutine is suspended, it can no longer receive from the `locations`
+    channel—which corresponds to `locationsOutput` in the previous example. This is
+    the reason why the coroutine that started with `sendLocation` is in turn suspended.
+    When workers finally do their job, `collectShapes` can resume, and so does the
+    producer coroutine.
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为 `locationsOutput.send(location)` 是一个挂起调用。当工作器速度较慢时，`ShapeCollector` 类的 `collectShapes`
+    函数（见 [Example 9-3](#csp_collectshapes_id)）在 `locationsToProcess.send(it)` 这一行很快就会挂起。确实，`locationsToProcess`
+    是一个会合通道。因此，当以 `collectShapes` 开始的协程达到该行时，它会被挂起，直到工作者准备好从 `locationsToProcess`
+    接收位置信息。当前述的协程被挂起时，它无法再从 `locations` 通道接收信息—这对应于前面例子中的 `locationsOutput`。这就是以 `sendLocation`
+    开始的协程被挂起的原因。当工作者最终完成他们的工作时，`collectShapes` 可以恢复执行，生产者协程也会随之恢复。
+- en: Similarities with the Actor Model
+  id: totrans-200
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 与 Actor 模型的相似之处
+- en: In CSP, you create coroutines that encapsulate mutable state. Instead of communicating
+    by sharing their state, they share by communicating (using `Channel`s). The coroutine
+    started with the `collectShapes` function (see [Example 9-3](#csp_collectshapes_id))
+    uses three channels to communicate with other coroutines—one `SendChannel` and
+    two `ReceiveChannel`s, as shown in [Figure 9-8](#process_csp_id).
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在CSP中，您创建协程来封装可变状态。它们不通过共享状态来通信，而是通过通信（使用`Channel`）来共享。使用`collectShapes`函数启动的协程（参见[示例 9-3](#csp_collectshapes_id)）使用三个通道与其他协程进行通信——一个`SendChannel`和两个`ReceiveChannel`，如[图 9-8](#process_csp_id)所示。
+- en: In CSP parlance, `collectShapes` and its three channels is a *process*. A process
+    is a computational entity that communicates with other actors using asynchronous
+    message passing (channels). It can do only one thing at a time—reading, writing
+    to channels, or processing.
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在CSP术语中，`collectShapes`及其三个通道被称为*进程*。进程是一个计算实体，通过异步消息传递（通道）与其他角色进行通信。它一次只能做一件事情——读取、写入通道或处理。
+- en: In the Actor model, an *actor* is quite similar. One noticeable difference is
+    that an actor only has one channel—called a mailbox. If an actor needs to be responsive
+    and nonblocking, it must delegate its long-running processing to child actors.
+    This similarity is the reason why CSP is sometimes referred to as an Actor model
+    implementation.
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Actor模型中，*actor*非常相似。一个显著的区别是，一个actor只有一个通道——称为邮箱。如果一个actor需要响应迅速且不阻塞，它必须将长时间运行的处理委托给子actor。这种相似性是CSP有时被称为Actor模型实现的原因。
+- en: '![Process](assets/pawk_0908.png)'
+  id: totrans-204
+  prefs: []
+  type: TYPE_IMG
+  zh: '![进程](assets/pawk_0908.png)'
+- en: Figure 9-8\. Process in CSP.
+  id: totrans-205
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 9-8\. CSP中的进程。
+- en: Execution Is Sequential Inside a Process
+  id: totrans-206
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 进程内执行是顺序的。
+- en: We’ve just seen that a *process* is made of a single coroutine and channels.
+    The very nature of a coroutine is for it to be executed on some thread. So unless
+    this coroutine starts other child coroutines (which run concurrently, and in some
+    cases in parallel), all lines of that coroutine are executed sequentially. That
+    includes receiving from channels, sending objects to other channels, and mutating
+    some private state. Consequently, the actors implemented in this chapter could
+    either receive from a channel or send to another channel, but not do both at the
+    same time. Under load, this kind of actor can be efficient because it doesn’t
+    involve blocking calls, only suspending functions. When a coroutine is suspended,
+    the overall efficiency isn’t necessarily affected, because the thread executing
+    the suspended coroutine can then execute another coroutine which has something
+    to do. This way, threads can be used to their full potential, never contending
+    to some lock.
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们刚刚看到*进程*由单个协程和通道组成。协程的本质是在某个线程上执行。因此，除非此协程启动其他子协程（并发或并行运行），否则该协程的所有行都会顺序执行。这包括从通道接收、发送对象到其他通道和突变某些私有状态。因此，本章实现的actor可以从一个通道接收或向另一个通道发送，但不能同时进行。在负载下，这种类型的actor可以高效，因为它不涉及阻塞调用，只涉及挂起函数。当一个协程被挂起时，整体效率不一定受影响，因为执行挂起协程的线程可以执行其他有事情要做的协程。这样，线程可以充分利用，永远不会争夺某个锁。
+- en: Final Thoughts
+  id: totrans-208
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 总结
+- en: This mechanism using CSP style has very little internal overhead. Thanks to
+    `Channel`s and coroutines, our implementation is lock-free. Therefore, there’s
+    *no thread contention*—the `ShapeCollector` is less likely to impact other threads
+    of your application. Similarly, there’s a chance that the `Dispatchers` we use
+    in the `ShapeCollector` might also be used in other features in our application.
+    By leveraging lock-free implementations, a coroutine suspended while receiving
+    from a channel won’t prevent the underlying thread from executing other coroutines.
+    In other words, we can do more with the same resources.
+  id: totrans-209
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用CSP风格的这种机制几乎没有内部开销。由于使用了`Channel`和协程，我们的实现是无锁的。因此，不存在线程竞争——`ShapeCollector`不太可能影响应用程序的其他线程。类似地，我们在`ShapeCollector`中使用的`Dispatchers`也有可能在应用程序的其他功能中使用。通过利用无锁实现，协程在从通道接收时被挂起不会阻止底层线程执行其他协程。换句话说，我们可以在相同的资源上做更多事情。
+- en: Moreover, this architecture provides built-in back pressure. If some `ShapeData`
+    instances suddenly take more time to fetch, producers of `ShapeLocation` instances
+    will be slowed down so that locations don’t accumulate—which reduces the risk
+    of running out of memory. This back pressure comes for free—you didn’t explicitly
+    write code for such a feature.
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此外，这种架构提供了内置的反压功能。如果某些`ShapeData`实例突然获取需要更多时间，那么`ShapeLocation`实例的生产者将放慢速度，以防止位置积累，从而降低内存耗尽的风险。这种反压功能是免费提供的——您并没有显式编写此功能的代码。
+- en: The example given in this chapter is generic enough to be taken as is and adapted
+    to fit your needs. In the event that you need to significantly deviate from our
+    example, then we owe you a deeper explanation. For example, why did we set a capacity
+    of 1 for the `locationsProcessed` channel in [Example 9-4](#csp_shapecollector_impl_id)?
+    The answer is admittedly nontrivial. If we had created a regular rendezvous channel,
+    our `ShapeCollector` would have suffered from a *deadlock*—which brings us to
+    the next section.
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章节中提供的示例足够通用，可以直接采用并根据您的需求进行调整。如果您需要显著偏离我们的示例，那么我们有责任给您更深入的解释。例如，为什么在[示例 9-4](#csp_shapecollector_impl_id)中我们将`locationsProcessed`通道的容量设置为1？答案确实并不简单。如果我们创建了一个常规的会合通道，我们的`ShapeCollector`将会遭受*死锁*，这将引导我们到下一节。
+- en: Deadlock in CSP
+  id: totrans-212
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: CSP中的死锁
+- en: Deadlocks are most commonly encountered when working with threads. When thread
+    A holds lock 1 and attempts to seize lock 2, while thread B holds lock 2 and attempts
+    to seize lock 1, you have a deadlock. The two threads indefinitely wait for each
+    other and neither progresses. Deadlocks can have disastrous consequences when
+    they happen in critical components of an application. An efficient way to avoid
+    such a situation is to ensure that a deadlock cannot happen under any imaginable
+    circumstances. Even when conditions are highly unlikely to be met, you can trust
+    Murphy’s Law to strike some day.
+  id: totrans-213
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当涉及线程时，死锁最常见。当线程A持有锁1并试图获取锁2时，而线程B持有锁2并试图获取锁1时，就会发生死锁。这两个线程互相无限等待，都无法继续执行。当死锁发生在应用程序的关键组件中时，可能会产生灾难性后果。避免这种情况的有效方法是确保在任何情况下都不会发生死锁。即使条件极不可能被满足，你也要相信墨菲定律总会发生作用。
+- en: 'However, deadlocks can also happen in CSP architecture. We can do a little
+    experiment to illustrate this. Instead of setting a capacity of 1 to the channel
+    `locationsProcessed` in [Example 9-4](#csp_shapecollector_impl_id), let’s use
+    a channel with no buffer (a rendezvous channel) and run the performance test sample
+    in [Example 9-5](#csp_perf_test_id). The result printed in the console is:'
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，在CSP架构中也可能发生死锁。我们可以做一个小实验来说明这一点。在[示例 9-4](#csp_shapecollector_impl_id)中，不要将`locationsProcessed`通道的容量设置为1，而是使用一个没有缓冲区的通道（即会合通道），并在[示例 9-5](#csp_perf_test_id)中运行性能测试样本。控制台打印的结果是：
+- en: '[PRE36]'
+  id: totrans-215
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE36]'
+- en: For the record, we should have received 20 shapes. So, what’s going on?
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 记录中，我们本应该收到20个形状。那么，究竟发生了什么？
+- en: Note
+  id: totrans-217
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'Fair warning: the following explanation goes into every necessary detail, and
+    is quite long. We encourage you to take the time to read it carefully until the
+    end. It’s the ultimate challenge to test your understanding of channels.'
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 警告：以下解释详细说明每一个必要的细节，篇幅相当长。我们鼓励您仔细阅读直至最后。这是测试您对通道理解的终极挑战。
+- en: You might also skip it entirely and jump to [“TL;DR”](#tldr).
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您也可以完全跳过它，直接转到[“TL;DR”](#tldr)。
+- en: 'Let’s have a closer look at the internals of our `ShapeCollector` class and
+    follow each step as though we were a live debugger. Imagine that you’ve just started
+    the performance test sample in [Example 9-5](#csp_perf_test_id), and the first
+    `Location` instance is sent to the `locations` channel. That location goes through
+    the `collectShapes` method with its `select` expression. At that moment, `locationsProcessed`
+    has nothing to provide, so the `select` expression goes through the second case:
+    `locations.onReceive{..}`. If you look at what’s done inside this second case,
+    you can see that a location is sent to the `locationsToProcess` channel—which
+    is a receive channel for each worker. Consequently, the coroutine started by the
+    `collectShapes` method (which we’ll refer to as the `collectShapes` coroutine)
+    is suspended at the `locationsToProcess.send(it)` invocation until a worker handshakes
+    the `locationsToProcess` rendezvous channel. This happens fairly quickly, since
+    at that time all workers are idle.'
+  id: totrans-220
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们更仔细地查看我们的`ShapeCollector`类的内部，并像一个实时调试器一样跟随每一步。想象一下，你刚刚启动了[示例 9-5](#csp_perf_test_id)中的性能测试样本，并且第一个`Location`实例被发送到`locations`通道。该位置通过其`select`表达式经过`collectShapes`方法。在那一刻，`locationsProcessed`没有提供任何内容，因此`select`表达式通过第二种情况：`locations.onReceive{..}`。如果你看一下这第二种情况内部的操作，你会发现一个位置被发送到`locationsToProcess`通道——这是每个工作者的接收通道。因此，由`collectShapes`方法启动的协程（我们称之为`collectShapes`协程）在`locationsToProcess.send(it)`调用时被暂停，直到一个工作者与`locationsToProcess`交汇通道握手。这发生得相当快，因为此时所有工作者都处于空闲状态。
+- en: When a worker receives the first `Location` instance, the `collectShapes` coroutine
+    is resumed and is able to receive other locations. As in our worker implementation,
+    we’ve added some delay to simulate a background processing, you can consider workers
+    slow compared to other coroutines—which are the `collectShapes` coroutine and
+    the producer coroutine started with the `sendLocations` method in the test sample
+    (which we’ll refer to as the `sendLocations` coroutine). Therefore, another location
+    is received by the `collectShapes` coroutine while the worker that which took
+    the first location is still busy processing it. Similarly, a second worker quickly
+    handles the second location, and a third location is received by the `collectShapes`
+    coroutine, etc.
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当一个工作者收到第一个`Location`实例时，`collectShapes`协程被恢复，并且能够接收其他位置。在我们的工作者实现中，我们添加了一些延迟来模拟后台处理，你可以考虑工作者相对于其他协程来说速度较慢——这些协程包括`collectShapes`协程和在测试样本中通过`sendLocations`方法启动的生产者协程（我们将其称为`sendLocations`协程）。因此，在处理第一个位置的工作者仍在忙于处理时，`collectShapes`协程接收到另一个位置。类似地，第二个工作者快速处理第二个位置，而第三个位置被`collectShapes`协程接收，依此类推。
+- en: The execution continues until all four workers are busy, while a fifth location
+    is received by the `collectShapes` coroutine. Following the same logic as before,
+    the `collectShapes` coroutine is suspended until a worker is ready to take the
+    `Location` instance. Unfortunately, all workers are busy. So the `collectShapes`
+    coroutine isn’t able to take incoming locations anymore. Since the `collectShapes`
+    and `sendLocations` coroutines communicate through a rendezvous channel, the `sendLocations`
+    coroutine is in turn suspended until `collectShapes` is ready to take more locations.
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 执行继续直到所有四个工作者都忙碌，与此同时第五个位置被`collectShapes`协程接收。按照之前的逻辑，`collectShapes`协程被暂停，直到一个工作者准备接收`Location`实例。不幸的是，所有工作者都在忙碌中。因此，`collectShapes`协程无法再接收新的位置。由于`collectShapes`和`sendLocations`协程通过一个交汇通道进行通信，`sendLocations`协程也被暂停，直到`collectShapes`准备接收更多位置。
+- en: 'Time goes by until a worker makes itself available to receive the fifth location.
+    Eventually, a worker (probably the first worker) is done processing its `Location`
+    instance. Then it sends the result to the `shapesOutput` channel and it tries
+    to send back the processed location to the `collectShapes` coroutine, using the
+    `locationsProcessed` channel. Remember that this is our mechanism to notify the
+    `collectShapes` coroutine when a location has been processed. However, the `collectShapes`
+    coroutine is suspended at the `locationsToProcess.send(it)` invocation. So `collectShapes`
+    can’t receive from the `locationsProcessed` channel. There’s no issue to this
+    situation: this is a *deadlock*,^([4](ch09.html#idm46669741723728)) as shown in
+    [Figure 9-9](#deadlock_in_csp_diagram_id).'
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 直到一个工作线程可以接收第五个位置时，时间已经过去了。最终，一个工作线程（可能是第一个工作线程）完成了它的`Location`实例的处理。然后它将结果发送到`shapesOutput`通道，并尝试将处理后的位置发送回`collectShapes`协程，使用`locationsProcessed`通道。请记住，这是我们通知`collectShapes`协程位置已处理的机制。然而，`collectShapes`协程在`locationsToProcess.send(it)`调用处被挂起。所以`collectShapes`无法从`locationsProcessed`通道接收。这种情况没有问题：这是一个*死锁*，^([4](ch09.html#idm46669741723728))
+    如图[9-9](#deadlock_in_csp_diagram_id)所示。
+- en: 'Eventually, the first four locations processed by the workers are processed
+    and four `Shape` instances are sent to the `shapesOutput` channel. The delay in
+    each worker is only of 10 ms, so all workers have time to complete before the
+    three-second timeout. Hence the result:'
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最终，工作线程处理的前四个位置都被处理了，并且四个`Shape`实例被发送到`shapesOutput`通道。每个工作线程的延迟仅为10毫秒，因此在三秒的超时之前，所有工作线程都有时间完成。因此结果是：
+- en: '[PRE37]'
+  id: totrans-225
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE37]'
+- en: '![Deadlock in CSP](assets/pawk_0909.png)'
+  id: totrans-226
+  prefs: []
+  type: TYPE_IMG
+  zh: '![CSP中的死锁](assets/pawk_0909.png)'
+- en: Figure 9-9\. Deadlock in CSP.
+  id: totrans-227
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图9-9\. CSP中的死锁。
+- en: 'If the `locationsProcessed` channel had a capacity of at least 1, the first
+    available worker would have been able to send back its `Location` instance and
+    then receive from the `locationsToProcess` channel—releasing the `collectShapes`
+    coroutine. Subsequently, in the `select` expression of the `collectShapes` coroutine,
+    the `locationsToProcess` channel is *always* checked before the `locations` channel.
+    This ensures that when the `collectShapes` coroutine is eventually suspended at
+    the `locationsToProcess.send(it)` invocation, the buffer of the `locationsProcessed`
+    channel is guaranteed to be empty—so a worker can send a location without being
+    suspended. If you’re curious, try to revert the two cases `locationsProcessed.onReceive
+    {..}` and `locations.onReceive {..}` while having a capacity of 1 for the `locationsProcessed`
+    channel. The result will be: “Received 5 shapes.”'
+  id: totrans-228
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果`locationsProcessed`通道至少有1的容量，第一个可用的工作线程将能够发送其`Location`实例，然后从`locationsToProcess`通道接收，释放`collectShapes`协程。随后，在`collectShapes`协程的`select`表达式中，总是先检查`locationsToProcess`通道，然后再检查`locations`通道。这确保了当`collectShapes`协程最终在`locationsToProcess.send(it)`调用处挂起时，`locationsProcessed`通道的缓冲区保证为空，因此工作线程可以发送位置而不被挂起。如果你感兴趣，尝试反转`locationsProcessed.onReceive
+    {..}`和`locations.onReceive {..}`这两种情况，并且`locationsProcessed`通道的容量为1。结果将是：“收到5个形状。”
+- en: TL;DR
+  id: totrans-229
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TL;DR
+- en: Not only is the capacity of 1 for the `locationsProcessed` channel extremely
+    important, the order in which channels are read in the `select` expression of
+    the `collectShapes` coroutine also matters.^([5](ch09.html#idm46669741706464))
+    What should you remember from this? Deadlocks are possible in CSP. Even more important,
+    understanding what caused the deadlock is an excellent exercise to test your understanding
+    of how channels work.
+  id: totrans-230
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`locationsProcessed`通道的容量为1不仅非常重要，在`collectShapes`协程的`select`表达式中通道的读取顺序也很重要。^([5](ch09.html#idm46669741706464))
+    从中应该记住什么呢？CSP中可能会出现死锁。更重要的是，了解死锁的原因是一个很好的练习，可以测试你对通道工作原理的理解。'
+- en: If we look back at the structure of the `ShapeCollector`, we can represent the
+    structure as a cyclic graph, as shown in [Figure 9-10](#cyclic_graph_id).
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们回顾一下`ShapeCollector`的结构，我们可以将其表示为一个循环图，如图[9-10](#cyclic_graph_id)所示。
+- en: '![Cyclic Graph](assets/pawk_0910.png)'
+  id: totrans-232
+  prefs: []
+  type: TYPE_IMG
+  zh: '![循环图](assets/pawk_0910.png)'
+- en: Figure 9-10\. Cyclic graph.
+  id: totrans-233
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图9-10\. 循环图。
+- en: 'This new representation emphasizes an important property of the structure:
+    it’s *cyclic*. `Location` instances travel back and forth between the `collectShapes`
+    coroutine and workers.'
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种新的表示法强调了结构的一个重要属性：它是*cyclic*的。`Location`实例在`collectShapes`协程和工作线程之间来回传送。
+- en: Cycles in CSP are actually the cause of deadlocks. Without cycles, there’s no
+    possibility of deadlock. Sometimes, however, you’ll have no choice but to have
+    those cycles. In this case, we gave you the key ideas to reason about CSP, so
+    you can find solutions by yourself.
+  id: totrans-235
+  prefs: []
+  type: TYPE_NORMAL
+  zh: CSP 中的循环实际上是死锁的原因。没有循环，就不可能发生死锁。然而，有时候，你别无选择，只能使用这些循环。在这种情况下，我们给出了关键的思路来推理 CSP，所以你可以自行找到解决方案。
+- en: Limitations of Channels
+  id: totrans-236
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 通道的限制
+- en: Up until now, we’ve held off on discussing the limitations of channels, so we’ll
+    describe some of those limitations now. Using notions from this chapter, creating
+    a stream of `Int` values is typically done as shown in [Example 9-6](#flows_channel_produce_id).
+  id: totrans-237
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们一直没有讨论通道的限制，现在我们将描述其中一些限制。使用本章的概念，通常会像在 [Example 9-6](#flows_channel_produce_id)
+    中展示的那样创建一个`Int`值的流。
+- en: Example 9-6\. Producing numbers
+  id: totrans-238
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 9-6\. 生成数字
+- en: '[PRE38]'
+  id: totrans-239
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE38]'
+- en: 'On the receiving side, you can consume those numbers like so:'
+  id: totrans-240
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接收端，你可以像这样消费这些数字：
+- en: '[PRE39]'
+  id: totrans-241
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE39]'
+- en: 'Pretty straightforward. Now, what if you need to apply a transformation for
+    each of those numbers? Imagine that your transformation function was:'
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相当直接。现在，如果你需要为这些数字应用转换怎么办？想象一下，你的转换函数是：
+- en: '[PRE40]'
+  id: totrans-243
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE40]'
+- en: 'You could modify the `numbers` function like so:'
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以像这样修改`numbers`函数：
+- en: '[PRE41]'
+  id: totrans-245
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE41]'
+- en: 'It works, but it’s not elegant. A much nicer solution would look like this:'
+  id: totrans-246
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它可以工作，但不够优雅。一个更好的解决方案应该是这样的：
+- en: '[PRE42]'
+  id: totrans-247
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE42]'
+- en: Actually, as of Kotlin 1.4, this code doesn’t compile. In the early days of
+    channels, we had “channel operators” such as `map`. However, those operators have
+    been deprecated in Kotlin 1.3, and removed in Kotlin 1.4.
+  id: totrans-248
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，截至 Kotlin 1.4 版本，此代码不能编译。在通道的早期，我们有“通道操作符”如 `map`。然而，这些操作符在 Kotlin 1.3 中已被弃用，并在
+    Kotlin 1.4 中移除了。
+- en: Why? Channels are communication primitives between coroutines. They are specifically
+    designed to distribute values so that every value is received by only one receiver.
+    It’s not possible to use channels to broadcast values to multiple receivers. The
+    designers of coroutines have created `Flow`s specifically for asynchronous data
+    streams on which we can use transformation operators; we’ll see how in the next
+    chapter.
+  id: totrans-249
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为什么？通道是协程之间的通信原语。它们专门设计用于分发值，以便每个值只被一个接收器接收。不能使用通道向多个接收器广播值。协程的设计者专门为异步数据流创建了`Flow`，我们可以在其上使用转换操作符；我们将在下一章看到如何使用。
+- en: So, channels are not a convenient solution to implement pipelines of data transformations.
+  id: totrans-250
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，通道并不是实现数据转换流水线的便捷解决方案。
+- en: Channels Are Hot
+  id: totrans-251
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 通道是热的
+- en: 'Let’s have a look at the source code of the `produce` channel builder. Two
+    lines are interesting, as shown in the following:'
+  id: totrans-252
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看`produce`通道构建器的源代码。有两行代码很有趣，如下所示：
+- en: '[PRE43]'
+  id: totrans-253
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE43]'
+- en: '[![1](assets/1.png)](#co_channels_CO4-1)'
+  id: totrans-254
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_channels_CO4-1)'
+- en: '`produce` is an extension function on `CoroutineScope`. Remember the convention?
+    It indicates that this function starts a new coroutine.'
+  id: totrans-255
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`produce` 是 `CoroutineScope` 上的扩展函数。还记得惯例吗？它表示此函数启动了一个新的协程。'
+- en: '[![2](assets/2.png)](#co_channels_CO4-2)'
+  id: totrans-256
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_channels_CO4-2)'
+- en: We can confirm that with the `coroutine.start()` invocation. Don’t pay too much
+    attention to how this coroutine is started—it’s an internal implementation.
+  id: totrans-257
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以通过`coroutine.start()`调用来确认。不要过多关注协程是如何启动的——这是一个内部实现。
+- en: Consequently, when you invoke the `produce` channel builder, a new coroutine
+    is started and immediately starts producing elements and sending them to the returned
+    channel even if no coroutine is consuming those elements.
+  id: totrans-258
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，当你调用`produce`通道构建器时，会启动一个新的协程，立即开始生成元素并将它们发送到返回的通道，即使没有协程在消耗这些元素。
+- en: 'This is the reason why channels are said to be *hot*: a coroutine is actively
+    running to produce or consume data. If you know RxJava, this is the same concept
+    as hot observables: they emit values independently of individual subscriptions.
+    Consider this simple stream:'
+  id: totrans-259
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是为什么通道被称为 *热的*：一个协程正在积极运行以生成或消耗数据。如果你了解 RxJava，这与热可观察对象的概念相同：它们独立于各个订阅而发出值。考虑这个简单的流：
+- en: '[PRE44]'
+  id: totrans-260
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE44]'
+- en: 'Also, imagine that no other coroutines are consuming this stream. As this function
+    returns a rendezvous channel, the started coroutine will suspend on the first
+    `send`. So you might say: “OK, we’re fine—no background processing is done until
+    we provide a consumer to this stream.” It’s true, but if you forget to consume
+    the stream, the database connection will remain open—notice that we used the `use`
+    function from the standard library, which is the equivalent of the `try`-with-`resources`
+    statement in Java. While it might not be harmful as is, this piece of logic could
+    be part of a retry loop, in which case a significant amount of resources would
+    leak.'
+  id: totrans-261
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此外，请想象没有其他协程正在消费此流。由于此函数返回的是一种会合通道，启动的协程将在第一次`send`时挂起。因此，您可能会说：“好吧，我们没问题——在我们向此流提供消费者之前，没有后台处理。”这是正确的，但如果您忘记消费流，则数据库连接将保持打开——请注意，我们使用了标准库中的`use`函数，这相当于Java中的`try`-`resources`语句。尽管它可能现在不会有害，但如果此逻辑是重试循环的一部分，那么将会导致大量资源泄漏。
+- en: To sum up, channels are intercoroutine communication primitives. They work really
+    well in a CSP-like architecture. However, we don’t have handy operators such as
+    `map` or `filter` to transform them. We can’t broadcast values to multiple receivers.
+    Moreover, their hot nature can cause memory leaks in some situations.
+  id: totrans-262
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 总之，通道是协程间通信的原语。它们在类似CSP的架构中非常有效。然而，我们没有像`map`或`filter`这样的便捷操作符来转换它们。我们也不能将值广播到多个接收者。此外，它们的热特性在某些情况下可能会导致内存泄漏。
+- en: Flows have been created to address those channels’ limitations. We’ll cover
+    flows in the next chapter.
+  id: totrans-263
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了解决这些通道的限制，已经创建了流。我们将在下一章中介绍流。
+- en: Summary
+  id: totrans-264
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 总结
+- en: Channels are communication primitives that provide a way to transfer streams
+    of values between coroutines.
+  id: totrans-265
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 通道是提供协程之间传输值流的通信原语。
+- en: While channels are conceptually close to Java’s `BlockingQueue`, the fundamental
+    difference is that `send` and `receive` methods of a channel are suspending functions,
+    not blocking calls.
+  id: totrans-266
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 虽然通道在概念上接近于Java的`BlockingQueue`，但根本区别在于通道的`send`和`receive`方法是挂起函数，而不是阻塞调用。
+- en: Using channels and coroutines, you can *share by communicating* instead of the
+    traditional *communicate by sharing*. The goal is to avoid shared mutable-state
+    and thread-safety issues.
+  id: totrans-267
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 使用通道和协程，您可以通过*通信共享*来共享数据，而不是传统的*共享数据通信*。其目标是避免共享可变状态和线程安全问题。
+- en: You can implement complex logic using CSP style, leveraging back pressure. This
+    results in potentially excellent performance since the nonblocking nature of suspending
+    functions reduces thread contention to its bare minimum.
+  id: totrans-268
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 可以使用CSP风格实现复杂逻辑，利用背压。这样做可能会带来出色的性能，因为挂起函数的非阻塞特性将线程竞争降到最低。
+- en: Beware that deadlock in CSP is possible, if your architecture has cycles (a
+    coroutine sends objects to another coroutine, while also receiving objects from
+    the same coroutine). You can fix those deadlocks by, for example, tweaking the
+    order in which the `select` expression treats each cases, or by adjusting the
+    capacity of some channels.
+  id: totrans-269
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 请注意，CSP中可能会发生死锁，如果您的架构存在循环（一个协程将对象发送到另一个协程，同时也从同一个协程接收对象）。您可以通过调整`select`表达式处理每个情况的顺序，或者调整某些通道的容量来解决这些死锁问题。
+- en: Channels should be considered low-level primitives. Deadlocks in CSP are one
+    example of misuse of channels. The next chapter will introduce *flows*—higher-level
+    primitives that exchange streams of data between coroutines. It doesn’t mean that
+    you shouldn’t use channels—there are still situations where channels are necessary
+    (the `ShapeCollector` in this chapter is an example). However, you’ll see that
+    in many situations, flows are a better choice. In any case, it’s important to
+    know about channels because (as you’ll see) flows sometimes use channels under
+    the hood.
+  id: totrans-270
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 应该将通道视为低级原语。CSP中的死锁就是对通道误用的一个例子。下一章将介绍*流*——在协程之间交换数据流的更高级原语。这并不意味着您不应该使用通道——仍然有一些情况下通道是必需的（本章中的`ShapeCollector`就是一个例子）。然而，您会发现在许多情况下，流是更好的选择。无论如何，了解通道是非常重要的，因为（您将看到）在某些情况下，流在幕后也使用通道。
+- en: ^([1](ch09.html#idm46669744579616-marker)) We’ll sometimes refer to `Channel`s
+    as channels in the rest of this chapter.
+  id: totrans-271
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch09.html#idm46669744579616-marker)) 在本章的其余部分中，我们有时将`Channel`简称为通道。
+- en: ^([2](ch09.html#idm46669744209856-marker)) Specifically, `Channel` doesn’t implement
+    `Iterable`.
+  id: totrans-272
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([2](ch09.html#idm46669744209856-marker)) 具体而言，`Channel`不实现`Iterable`。
+- en: ^([3](ch09.html#idm46669743772336-marker)) If you want to learn how such an
+    algorithm works, we recommend that you read Section 15.4, “NonBlocking Algorithms,”
+    in *Java Concurrency in Practice*, by Brian Goetz et al. There is also this interesting
+    YouTube video, [Lock-Free Algorithms for Kotlin Coroutines (Part 1)](https://oreil.ly/WDE1F)
+    from Roman Elizarov, lead designer of Kotlin coroutines.
+  id: totrans-273
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([3](ch09.html#idm46669743772336-marker)) 如果你想学习这种算法的工作原理，我们建议你阅读《Java并发实战》中的第15.4节，“非阻塞算法”，作者是Brian
+    Goetz等人。还有一个有趣的YouTube视频，[Kotlin协程的无锁算法（第1部分）](https://oreil.ly/WDE1F)，由Kotlin协程的首席设计师Roman
+    Elizarov发布。
+- en: ^([4](ch09.html#idm46669741723728-marker)) While there’s no lock or mutex involved
+    here, the situation is very similar to a deadlock involving threads. This is why
+    we use the same terminology.
+  id: totrans-274
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([4](ch09.html#idm46669741723728-marker)) 虽然这里没有涉及锁或互斥体，但情况与涉及线程的死锁非常相似。这就是为什么我们使用相同的术语的原因。
+- en: ^([5](ch09.html#idm46669741706464-marker)) Actually, our implementation, which
+    uses a capacity of 1 for `locationsProcessed`, isn’t the only possible implementation
+    that works without deadlocks. There’s at least one solution that uses `locationsProcessed`
+    as a rendezvous channel. We leave this as an exercise for the reader.
+  id: totrans-275
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([5](ch09.html#idm46669741706464-marker)) 实际上，我们的实现中，对于`locationsProcessed`的容量为1，并非唯一可以避免死锁的实现。至少有一种解决方案可以使用`locationsProcessed`作为会合通道。我们将其留给读者作为练习。

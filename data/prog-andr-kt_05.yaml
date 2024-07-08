@@ -1,0 +1,861 @@
+- en: Chapter 5\. Thread Safety
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第5章 线程安全性
+- en: With the introduction of the *java.util.concurrent* package in Java 5, threads
+    became commonly used to improve the performance of complex applications. In graphical
+    (or *headed*) applications, they improve responsiveness by reducing the load on
+    the main thread that processes information to render *views*—programmed components
+    the user can see and interact with on-screen. When a thread is created within
+    a program that has a concept of a main or UI thread, it’s referred to as a *background
+    thread*. These background threads often receive and process user interaction events,
+    like gestures and text input; or other forms of data retrieval, like reading from
+    a server; or local stores, like a database or filesystem. On the server side,
+    backend applications using threads have better throughput by leveraging the multiple
+    cores of modern CPUs.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 随着Java 5中*java.util.concurrent*包的引入，线程成为提高复杂应用程序性能的常用工具。在图形（或*头部*）应用程序中，通过减少处理信息以呈现*视图*（用户可以在屏幕上看到和交互的编程组件）的主线程负载，它们提高了响应能力。当在具有主线程或UI线程概念的程序中创建线程时，它被称为*后台线程*。这些后台线程经常接收和处理用户交互事件，如手势和文本输入；或其他形式的数据检索，如从服务器读取；或本地存储，如数据库或文件系统。在服务器端，使用线程的后端应用程序通过利用现代CPU的多个核心获得更好的吞吐量。
+- en: However, using threads has its own risks, as you will see in this chapter. Thread
+    safety can be seen as a set of techniques and good practices to circumvent those
+    risks. Those techniques include *synchronization*, *mutexes*, and *blocking* versus
+    *nonblocking*. Higher-level concepts like thread confinement are also important.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，使用线程也有其自身的风险，正如您将在本章中看到的那样。线程安全性可以被看作是一组技术和良好实践，以规避这些风险。这些技术包括*同步*、*互斥锁*和*阻塞*与*非阻塞*。像线程封闭等更高级的概念也非常重要。
+- en: The goal of this chapter is to introduce you to some important thread-safety
+    concepts that will be used in the following chapters. However, we won’t cover
+    thread safety extensively. For example, we won’t explain *object publication*
+    or provide details about the Java memory model. These are advanced topics that
+    we encourage you to learn after you understand the concepts explained in this
+    chapter.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章的目标是介绍一些重要的线程安全概念，这些概念将在接下来的章节中使用。然而，我们不会广泛涵盖线程安全性。例如，我们不会解释*对象发布*或提供Java内存模型的详细信息。这些都是我们鼓励您在理解本章中解释的概念之后学习的高级主题。
+- en: An Example of a Thread Issue
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 一个线程问题的示例
+- en: 'To understand what thread safety is, we’ll pick a simple example of a thread-safety
+    issue. When a program runs several threads concurrently, each thread has the potential
+    to do things *at the same time* as other running threads. But it doesn’t necessarily
+    mean this will happen. When it does happen, you need to prevent one thread from
+    accessing an object that is being mutated by another thread, because it could
+    read an inconsistent state of the object. The same goes for simultaneous mutations.
+    Ensuring that only one thread at a time can access a block of code is called *mutual
+    exclusion*. Take the following, for example:'
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要理解什么是线程安全性，我们将选择一个简单的线程安全问题的例子。当程序同时运行多个线程时，每个线程都有可能与其他正在运行的线程*同时*执行操作。但这并不一定会发生。当发生时，您需要防止一个线程访问正在被另一个线程修改的对象，因为它可能会读取对象的不一致状态。同样适用于同时的修改。确保只有一个线程可以同时访问一段代码块称为*互斥*。例如，考虑以下内容：
+- en: '[PRE0]'
+  id: totrans-6
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: The `add()` method takes the last element of the list, adds 1, and appends the
+    result into the list. What would be the expected behavior if two threads attempted
+    to simultaneously execute `add()`?
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`add()`方法获取列表的最后一个元素，将其加1，并将结果追加到列表中。如果两个线程同时尝试执行`add()`，预期的行为将会是什么？'
+- en: 'When the first thread references the last element, the other thread might have
+    had time to execute the entire `aList.add(last + 1)` line.^([1](ch05.html#idm46669753196768))
+    In this case, the first thread reads 2 for the last element and will append 3
+    to the list. The resulting list would be `[1, 2, 3]`. Another scenario is possible.
+    If the second thread didn’t have time to append a new value, then the two threads
+    will read the same value for the last element. Assuming that the rest of the execution
+    runs without hiccups, we get the result `[1, 2, 2]`. One more hazard may happen:
+    if the two threads try to append the new element to the list at exactly the same
+    time, an `ArrayIndexOutOfBoundsException` will be thrown.'
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当第一个线程引用最后一个元素时，另一个线程可能已经有时间执行整个`aList.add(last + 1)`行。^([1](ch05.html#idm46669753196768))
+    在这种情况下，第一个线程读取最后一个元素为2，并将3追加到列表中。结果列表将是`[1, 2, 3]`。还有另一种可能的情况。如果第二个线程没有时间追加新值，那么两个线程将读取最后一个元素的相同值。假设其余执行没有问题，我们得到结果`[1,
+    2, 2]`。还可能发生一种更危险的情况：如果两个线程正好同时尝试将新元素追加到列表中，则会抛出`ArrayIndexOutOfBoundsException`。
+- en: Depending on the interleaving of the threads, the result may be different. There’s
+    no guarantee that we’ll get a result at all. Those are symptoms of a class or
+    function that’s not thread-safe, which may not behave correctly when accessed
+    from multiple threads.
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 根据线程的交错情况，结果可能会有所不同。不能保证我们能得到任何结果。这些都是不线程安全的类或函数的症状，当从多个线程访问时可能不会正确运行。
+- en: 'So, what could we do to fix this potential misbehavior? We have three options:'
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，我们该如何修复这个潜在的错误行为呢？我们有三个选择：
+- en: Don’t share state across threads.
+  id: totrans-11
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 不要在线程之间共享状态。
+- en: Share immutable state across threads.
+  id: totrans-12
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 在线程之间共享不可变状态。
+- en: Change our implementation so that multiple threads can use our class and get
+    predictable results.
+  id: totrans-13
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 修改我们的实现，以便多个线程可以使用我们的类并获得可预测的结果。
+- en: There are multiple strategies for approaching some kind of thread safety, each
+    with its own strengths and caveats, so it is important for a developer to be able
+    to evaluate their options and choose one that best fits the needs of a threading
+    issue.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理某种线程安全的多种策略，每种策略都有其优势和注意事项，因此开发人员必须能够评估他们的选择，并选择最适合线程问题需求的选项。
+- en: The first option is relatively obvious. When threads can work on completely
+    independent datasets, there’s no risk of accessing the same memory addresses.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个选项相对明显。当线程可以处理完全独立的数据集时，没有访问相同内存地址的风险。
+- en: The second option is making use of immutable objects and collections. Immutability
+    is a very effective way to design robust systems. If a thread can’t mutate an
+    object, there’s simply no risk of reading inconsistent state from another thread.
+    In our example, we could make the list immutable, but then threads wouldn’t be
+    able to append elements to it. This doesn’t mean that this principle can’t be
+    applied here. In fact, it can—but we’ll come back to it later in this chapter.
+    We have to mention that there’s a potential downside with using immutability.
+    In essence, it requires more memory because of object copying. For example, whenever
+    a thread needs to work with another thread’s state, a copy of the state object
+    is performed. When done repeatedly and at a high pace, immutability can increase
+    the memory footprint—which may be an issue (especially on Android).
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二个选项是使用不可变对象和集合。不可变性是设计健壮系统的一种非常有效的方式。如果一个线程无法改变对象，则根本没有风险从另一个线程读取不一致的状态。在我们的例子中，我们可以使列表不可变，但是线程将无法向其追加元素。这并不意味着这个原则不能在这里应用。事实上，它可以——但我们稍后会回到这一章。我们必须提到使用不可变性可能存在的潜在缺点。从本质上讲，由于对象复制，它需要更多的内存。例如，每当一个线程需要处理另一个线程的状态时，都会执行状态对象的复制。如果重复进行并且速度很快，不可变性可能会增加内存占用——这可能是一个问题（特别是在Android上）。
+- en: 'The third option could be described like so: “Any thread which executes the
+    `add` method happens before any subsequent `add` accesses from other threads.”
+    In other words, `add` accesses happen serially, with no interleaving. If your
+    implementation enforces the aforementioned statement, then there won’t be thread-safety
+    issues—the class is said to be thread-safe. In the world of concurrency, the previous
+    statement is called an *invariant*.'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第三种选项可以描述为：“执行`add`方法的任何线程都会在其他线程的后续`add`访问之前发生。”换句话说，`add`访问是串行进行的，没有交错。如果你的实现强制执行了上述声明，那么就不会有线程安全问题——该类被称为线程安全的。在并发世界中，前述声明被称为*不变量*。
+- en: Invariants
+  id: totrans-18
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 不变量
+- en: 'To properly make a class or a group of classes thread-safe, we have to define
+    invariants. An invariant is an assertion that should always be true. No matter
+    how threads are scheduled, the invariant shall not be violated. In the case of
+    our example, it could be expressed like this (from the standpoint of a thread):'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要正确地使一个类或一组类成为线程安全的，我们必须定义不变量。不变量是一个始终为真的断言。无论线程如何调度，不变量都不应被违反。在我们的例子中，可以这样表达（从线程的角度来看）：
+- en: When I’m executing the `add` method, I’m taking the last element of the list
+    and when I’m appending it to the list, I’m sure that the inserted element is greater
+    than the previous one by a difference of 1.
+  id: totrans-20
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: 当我执行`add`方法时，我获取列表的最后一个元素，并且当我将其追加到列表中时，我确保插入的元素比前一个元素大1。
+- en: 'Mathematically, we could write:'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从数学上讲，我们可以写成：
+- en: <math alttext="l i s t left-bracket n right-bracket equals l i s t left-bracket
+    n minus 1 right-bracket plus 1" display="block"><mrow><mi>l</mi> <mi>i</mi> <mi>s</mi>
+    <mi>t</mi> <mo>[</mo> <mi>n</mi> <mo>]</mo> <mo>=</mo> <mi>l</mi> <mi>i</mi> <mi>s</mi>
+    <mi>t</mi> <mo>[</mo> <mi>n</mi> <mo>-</mo> <mn>1</mn> <mo>]</mo> <mo>+</mo> <mn>1</mn></mrow></math>
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: <math alttext="l i s t left-bracket n right-bracket equals l i s t left-bracket
+    n minus 1 right-bracket plus 1" display="block"><mrow><mi>l</mi> <mi>i</mi> <mi>s</mi>
+    <mi>t</mi> <mo>[</mo> <mi>n</mi> <mo>]</mo> <mo>=</mo> <mi>l</mi> <mi>i</mi> <mi>s</mi>
+    <mi>t</mi> <mo>[</mo> <mi>n</mi> <mo>-</mo> <mn>1</mn> <mo>]</mo> <mo>+</mo> <mn>1</mn></mrow></math>
+- en: We’ve seen from the beginning that our class wasn’t thread-safe. Now we can
+    say so because when executed in a multithreaded environment, the invariant is
+    sometimes violated or our program just crashes.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从一开始我们就看到我们的类不是线程安全的。现在我们可以这样说，因为在多线程环境中执行时，不变量有时会被违反，或者我们的程序会崩溃。
+- en: 'So, what can we do to enforce our invariants? Actually, this is a complex matter,
+    but we’ll cover some of the most common techniques:'
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，我们可以做些什么来强制执行我们的不变量呢？实际上，这是一个复杂的问题，但我们将涵盖一些最常见的技术：
+- en: Mutexes
+  id: totrans-25
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 互斥锁
+- en: Thread-safe collections
+  id: totrans-26
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 线程安全集合
+- en: Mutexes
+  id: totrans-27
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 互斥锁
+- en: Mutexes allow you to prevent concurrent access of a state—which can be a block
+    of code or just an object. This mutual exclusion is also called *synchronization*.
+    An `Object` called a *mutex* or *lock* guarantees that when taken from a thread,
+    no other thread can enter the section guarded by this lock. When a thread attempts
+    to acquire a lock held by another thread, it’s blocked—it cannot proceed with
+    its execution until the lock is released. This mechanism is relatively easy to
+    use, which is why it’s often the go-to response of developers when facing this
+    situation. Unfortunately, this is also like opening a Pandora’s box to problems
+    like deadlocks, race conditions, etc. These problems that can arise from improper
+    synchronization are so numerous that drawing a complete picture is way beyond
+    the scope of this book. However, later in the book we will discuss some of them,
+    like deadlocks in communicating sequential processes.
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 互斥锁允许您防止对状态的并发访问，这个状态可以是一个代码块或者只是一个对象。这种互斥也称为*synchronization*。称为*mutex*或*lock*的`Object`保证了当它被一个线程拿走时，没有其他线程可以进入由此锁守护的区域。当一个线程试图获取另一个线程持有的锁时，它会被阻塞——直到锁被释放为止，它无法继续执行。这种机制相对容易使用，这也是开发人员在面对这种情况时经常采取的应对措施。不幸的是，这也像是打开了潘多拉魔盒，会引发死锁、竞态条件等问题。由于不正确的同步可能引发的问题太多，超出了本书的范围。然而，稍后在本书中我们将讨论其中一些，比如通信顺序进程中的死锁。
+- en: Thread-Safe Collections
+  id: totrans-29
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 线程安全集合
+- en: Thread-safe collections are collections that can be accessed by multiple threads
+    while keeping their state consistent. The `Collections.synchronizedList` is a
+    useful way to make a `List` thread-safe. It returns a `List` that wraps access
+    to the `List` passed as a parameter, and regulates concurrent access with an internal
+    lock.
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程安全集合是可以在多个线程访问时保持其状态一致的集合。`Collections.synchronizedList`是使`List`线程安全的一个有用方法。它返回一个`List`，该`List`包装对作为参数传递的`List`的访问，并使用内部锁调节并发访问。
+- en: 'At first sight, it looks interesting. So you could be tempted to use it:'
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 乍一看，它看起来很有趣。因此，你可能会被诱惑使用它：
+- en: '[PRE1]'
+  id: totrans-32
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: 'For the record, here is the equivalent in Java:'
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为记录，这是Java中的等价物：
+- en: '[PRE2]'
+  id: totrans-34
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: There’s a problem with both implementations. Can you spot it?
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这两种实现都存在问题。你能找出来吗？
+- en: Note
+  id: totrans-36
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'We could also have declared the list as:'
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们也可以将列表声明为：
+- en: '[PRE3]'
+  id: totrans-38
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: 'which, in Java, is the equivalent of:'
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Java中，它的等价物是：
+- en: '[PRE4]'
+  id: totrans-40
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: '`CopyOnWriteArrayList` is a thread-safe implementation of `ArrayList` in which
+    all mutative operations like `add` and `set` are implemented by making a fresh
+    copy of the underlying array. Thread *A* can safely iterate through the list.
+    If in the meantime, thread *B* adds an element to the list, a fresh copy will
+    be created and only visible from thread *B*. This in itself doesn’t make the class
+    thread-safe—it is because `add` and `set` are guarded by a lock. This data structure
+    is useful when we are iterating over it more often than we are modifying it, as
+    copying the entire underlying array can be too costly. Note that there is also
+    a `CopyOnWriteArraySet`, which is simply a `Set` implementation rather than a
+    `List` implementation.'
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`CopyOnWriteArrayList` 是 `ArrayList` 的一个线程安全实现，在这个实现中，所有的改变操作如 `add` 和 `set`
+    都通过创建底层数组的新副本来实现。线程 *A* 可以安全地遍历列表。如果与此同时，线程 *B* 向列表添加一个元素，则会创建一个新的副本，只对线程 *B*
+    可见。这本身并不使得这个类线程安全——因为 `add` 和 `set` 是由锁保护的。这种数据结构在我们更频繁地迭代它而不是修改它时非常有用，因为复制整个底层数组可能代价太高。注意，还有一个
+    `CopyOnWriteArraySet`，它只是 `Set` 的实现而不是 `List` 的实现。'
+- en: 'We’ve indeed fixed the concurrent access issue, although our class still doesn’t
+    conform to our invariant. In a test environment, we created two threads and started
+    them. Each thread executes the `add()` method once, on the same instance of our
+    class. The first time we ran our test, after the two threads finished their job,
+    the resulting list was `[1, 2, 3]`. Curiously, we ran this same test multiple
+    times, and the result was sometimes `[1, 2, 2]`. This is due to the exact same
+    reason shown earlier: when a thread executes the first line inside `add()`, the
+    other thread can execute the whole `add()` method before the first thread proceeds
+    with the rest of its execution. See how pernicious a synchronization issue can
+    be: it looks good, but our program is broken. And we can easily have it wrong,
+    even on a trivial example.'
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然我们确实解决了并发访问问题，但我们的类仍然不符合我们的不变量。在测试环境中，我们创建了两个线程并启动它们。每个线程在我们类的同一个实例上执行一次 `add()`
+    方法。第一次运行测试后，当这两个线程完成它们的工作时，结果的列表是 `[1, 2, 3]`。有趣的是，我们多次运行相同的测试，有时结果是 `[1, 2, 2]`。这是由于前面展示的确切原因导致的：当一个线程执行
+    `add()` 内的第一行时，另一个线程可以在第一个线程继续执行其余部分之前执行整个 `add()` 方法。看到同步问题有多么隐蔽：看起来很好，但我们的程序却是有问题的。即使在一个微不足道的示例上，我们也很容易搞错。
+- en: 'A proper solution is:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个正确的解决方案是：
+- en: '[PRE5]'
+  id: totrans-44
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'It ay help to see the Java equivalent:'
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可能看到 Java 等价的会有所帮助：
+- en: '[PRE6]'
+  id: totrans-46
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: As you can see, we actually didn’t need to synchronize the list. Instead, the
+    `add()` method should have been synchronized. Now when the `add()` method is first
+    executed by a thread, the other one blocks when it tries to execute `add()`, until
+    the first thread leaves the `add()` method. No two threads execute `add()` at
+    the same time. The invariant is then honored.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所看到的，我们实际上并不需要同步列表。相反，`add()` 方法应该被同步。现在当一个线程首次执行 `add()` 方法时，另一个线程尝试执行 `add()`
+    时会被阻塞，直到第一个线程离开 `add()` 方法。没有两个线程同时执行 `add()`。这样不变量就被尊重了。
+- en: This example demonstrates that a class can internally use thread-safe collections
+    while not being thread-safe. A class or code is said to be thread-safe when its
+    invariants are never violated. Those invariants, and how the class should be used
+    according to their creators, define a policy that should be clearly expressed
+    in the javadoc.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个示例展示了一个类在内部使用线程安全的集合，但本身并不是线程安全的情况。当一个类或者代码是线程安全的时候，它的不变量从未被违反。这些不变量以及如何根据创建者的要求使用类，定义了一个明确的策略，应该在
+    javadoc 中清晰地表达出来。
+- en: Note
+  id: totrans-49
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: This is Java’s built-in mechanism to enforce mutual exclusion. A synchronized
+    block is made of a lock and a block of code. In Java, every `Object` can be used
+    as a lock. A synchronized method is a synchronized block whose lock is the instance
+    of the class instance. When a thread enters a synchronized block, it acquires
+    the lock. And when a thread leaves the block, it releases the lock.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 Java 内置的强制互斥机制。一个同步块由一个锁和一段代码块组成。在 Java 中，每个 `Object` 都可以用作锁。一个同步方法是一个其锁是类实例的同步块。当一个线程进入同步块时，它会获取锁。当线程离开块时，它释放锁。
+- en: 'Also note that the `add` method could have been declared as using a `synchronized`
+    statement:'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还要注意，`add` 方法可以声明为使用 `synchronized` 语句的形式：
+- en: '[PRE7]'
+  id: totrans-52
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: A thread cannot enter a synchronized block whose lock is already acquired by
+    another thread. As a consequence, when a thread enters a synchronized method it
+    prevents other threads from executing any synchronized method or any block of
+    code guarded by this (also called *intrinsic* lock).
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个线程无法进入已经被另一个线程获取了的同步块。因此，当一个线程进入同步方法时，它会阻止其他线程执行任何同步方法或由此（也称为*内部*锁）保护的代码块。
+- en: Thread Confinement
+  id: totrans-54
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 线程限制
+- en: Another way to ensure thread safety is to ensure that only one thread owns the
+    state. If the state isn’t visible to other threads, there’s simply no risk of
+    having concurrency issues. For example, a public variable of a class (where usage
+    is intended to be thread-confined to the main thread) is a potential source of
+    bugs since a developer (unaware of this thread policy) could use the variable
+    in another thread.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 确保线程安全的另一种方法是确保只有一个线程拥有状态。如果状态对其他线程不可见，则根本不会出现并发问题的风险。例如，一个类的公共变量（其使用意图为线程限制到主线程）可能是错误的潜在来源，因为开发人员（不知道此线程策略）可能在另一个线程中使用变量。
+- en: The immediate benefit of thread confinement is simplicity. For example, if we
+    follow the convention that every class of type `View` should only be used from
+    the main thread, then we can save ourselves from synchronizing our code all over
+    the place. But this comes at a price. The correctness of the client code is now
+    on the shoulders of the developer who uses our code. In Android, as we’ve seen
+    in the previous chapter, manipulating views should only be done from the UI thread.
+    This is a form of thread confinement—as long as you don’t break the rules, you
+    shouldn’t have issues involving concurrent access to UI-related objects.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程限制的直接好处是简单性。例如，如果我们遵循每个`View`类型类应仅从主线程使用的约定，则可以避免在代码各处同步。但这是有代价的。客户端代码的正确性现在取决于使用我们代码的开发人员。在Android中，正如我们在上一章中看到的，应仅从UI线程操作视图。这是一种线程限制的形式——只要不违反规则，就不应出现涉及UI相关对象的并发访问问题。
+- en: 'Another noteworthy form of thread confinement is `ThreadLocal`. A `ThreadLocal`
+    instance can be seen as a provider to some object. This provider ensures that
+    the given instance of the object is per-thread unique. In other words, each thread
+    owns its own instance of the value. An example of usage is:'
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个值得注意的线程限制形式是`ThreadLocal`。`ThreadLocal`实例可以看作是某个对象的提供者。该提供者确保对象的给定实例在每个线程中是唯一的。换句话说，每个线程都拥有自己的值的实例。使用示例如下：
+- en: '[PRE8]'
+  id: totrans-58
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: Often used in conjunction with JDBC connections, which aren’t thread-safe, `ThreadLocal`
+    ensures that each thread will use its own JDBC connection.
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 常与不线程安全的 JDBC 连接一起使用，`ThreadLocal`确保每个线程将使用自己的 JDBC 连接。
+- en: Thread Contention
+  id: totrans-60
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 线程争用
+- en: 'Synchronization between threads is hard because a lot of problems can happen.
+    We just saw potential thread-safety issues. There is another hazard that can affect
+    performance: *thread contention*, which we encourage all programmers to familiarize
+    themselves with. Consider this example:'
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程之间的同步很困难，因为可能会出现许多问题。我们刚刚看到了潜在的线程安全问题。还有一个可能影响性能的危险是*线程争用*，我们鼓励所有程序员都熟悉这一点。考虑以下例子：
+- en: '[PRE9]'
+  id: totrans-62
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: So, we have a `WorkerPool`, which controls the work done by worker threads in
+    such a way that only one worker at a time can do the real work inside the `work`
+    method. This is the kind of situation you may encounter when the actual work involves
+    the use of non-thread-safe objects and the developer decided to solve this using
+    this locking policy. A dedicated lock was created for the `work` method, instead
+    of synchronizing on `this`, because other methods can now be called by workers
+    without mutual exclusion. This is also the reason why the lock is named after
+    the related method.
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们有一个`WorkerPool`，它以这样的方式控制由工作线程完成的工作，以至于一次只能有一个工作线程在`work`方法内部执行真正的工作。当实际工作涉及使用非线程安全对象并且开发人员决定使用这种锁定策略时，您可能会遇到这种情况。专门为`work`方法创建了一个专用锁，而不是在`this`上同步，因为现在工作线程可以调用其他方法而无需互斥。这也是为什么锁以相关方法命名的原因。
+- en: If several worker threads are started and call this `work` method, they will
+    contend for the same lock. Eventually, depending on the interleaving of the threads,
+    a worker is blocked because another one acquired the lock. This isn’t a problem
+    if the time spent waiting for the lock is significantly less than the rest of
+    the execution time. If this isn’t the case, then we have a thread contention.
+    Threads spend most of their time waiting for each other. Then the operating system
+    may preemptively stall some threads so that other threads in the wait state can
+    resume their execution, which makes the situation even worse because context switches
+    between threads aren’t free. It can result in a performance impact when they occur
+    frequently.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果启动了多个工作线程并调用此`work`方法，则它们将竞争相同的锁。最终，根据线程的交替执行，一个工作线程因为另一个工作线程已经获取了锁而被阻塞。如果等待锁的时间远远小于其余执行时间，这不是问题。如果情况不是这样，则存在线程争用。线程大部分时间都在等待其他线程。然后操作系统可能会主动暂停一些线程，以便处于等待状态的其他线程可以恢复执行，这使得情况变得更糟，因为线程之间的上下文切换并不是免费的。当频繁发生时，可能会导致性能影响。
+- en: As a developer, you should always avoid thread contention as it can rapidly
+    degrade throughput and have consequences beyond the affected threads, since the
+    rate of context switches is likely to increase, which in itself impacts performance
+    overall.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为开发者，您应该始终避免线程争用，因为它可能会迅速降低吞吐量，并且会影响超出受影响线程的后果，因为上下文切换的速率可能会增加，这本身就会影响整体性能。
+- en: One of the most effective ways to avoid such a situation is to avoid blocking
+    calls, which we explain in the next section.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 避免这种情况的最有效方法之一是避免阻塞调用，这将在下一节中解释。
+- en: Blocking Call Versus Nonblocking Call
+  id: totrans-67
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 阻塞调用与非阻塞调用
+- en: So far, we know that a thread can be blocked when attempting to obtain a lock
+    held by another thread. The function that led the thread to be blocked is then
+    a *blocking call*. Even if the lock might be acquired immediately, the fact that
+    the call may potentially block makes it a `blocking call`. But this is just a
+    particular case. There are actually two other ways of blocking a thread. The first
+    one is by running CPU-intensive computations—this is also called a *CPU-bound*
+    task. The second one is by waiting for a hardware response. For example, it happens
+    when a network request causes the calling thread to wait for the response from
+    a remote server—we then talk about an IO-bound task.^([2](ch05.html#idm46669752518320))
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们知道当一个线程试图获取另一个线程持有的锁时，该线程可能会被阻塞。导致线程被阻塞的函数称为*阻塞调用*。即使锁可能会立即被获取，调用可能会潜在地阻塞也使其成为一个`阻塞调用`的案例。但这只是一个特例。实际上有另外两种方式来阻塞线程。第一种是运行CPU密集型计算，这也被称为*CPU绑定*任务。第二种是等待硬件响应。例如，当网络请求导致调用线程等待远程服务器的响应时，我们称之为IO绑定任务。^([2](ch05.html#idm46669752518320))
+- en: Everything else that makes the call return quickly is considered *nonblocking*.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使调用快速返回的所有其他操作都被视为*非阻塞*。
+- en: When you’re about to make a blocking call, you should avoid doing it from the
+    main thread (also called the UI thread, on Android).^([3](ch05.html#idm46669752516000))
+    This is because this thread runs the event loop that processes touch events, and
+    all UI-related tasks like animations. If the main thread gets blocked repeatedly
+    and for durations exceeding a few milliseconds, the responsiveness is impacted
+    and this is the cause of Android’s *application not responding* (ANR) errors.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您准备进行阻塞调用时，应避免从主线程（也称为UI线程，在Android上）进行。^([3](ch05.html#idm46669752516000))
+    这是因为此线程运行处理触摸事件和所有与UI相关的任务如动画的事件循环。如果主线程重复被阻塞并超过几毫秒的持续时间，将会影响响应性，这是导致Android“应用程序无响应”（ANR）错误的原因。
+- en: Nonblocking calls is one building block of a responsive app. You need now to
+    recognize patterns which leverage this technique. Work queues is one of them,
+    and we’ll encounter various forms of them throughout this book.
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 非阻塞调用是响应式应用程序的一个构建模块。现在，您需要识别利用这种技术的模式。工作队列是其中之一，在本书中我们将遇到各种形式的工作队列。
+- en: Note
+  id: totrans-72
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Most often, the terms *synchronous* and *asynchronous* are respectively used
+    as synonyms for *blocking* and *nonblocking*. While they are conceptually close
+    concepts, the usage of, for instance, asynchronous instead of nonblocking depends
+    on the context. Asynchronous calls usually involve the idea of a callback, while
+    this is not necessarily the case for nonblocking.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在大多数情况下，*同步* 和 *异步* 这两个术语分别被用作 *阻塞* 和 *非阻塞* 的同义词。虽然它们在概念上是相近的概念，但例如，异步与非阻塞的使用取决于上下文。异步调用通常涉及回调的概念，而这对于非阻塞调用并非必要。
+- en: Work Queues
+  id: totrans-74
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 工作队列
+- en: Communication between threads and, in particular, work submission from one thread
+    to another is widely used in Android. It’s an implementation of the *producer-consumer*
+    design pattern. Applied to threads, the producer is in this context a thread which
+    generates data that needs to be further processed by a consumer thread. Instead
+    of having the producer directly interacting with the consumer through shared mutable
+    state, a queue is used in between to enqueue the work generated by the producer.
+    It decouples the producer from the consumer—but this isn’t the only benefit, as
+    we’ll see. Often, the `Queue` works in a FIFO (first in, first out) manner.^([4](ch05.html#idm46669752505600))
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 线程间通信，尤其是从一个线程向另一个线程提交工作，在 Android 中被广泛使用。这是 *生产者-消费者* 设计模式的一种实现。在线程中应用这一模式时，生产者是生成需要由消费者线程进一步处理的数据的线程。与直接通过共享可变状态让生产者与消费者直接交互不同，在它们之间使用队列来入队由生产者生成的工作。这种方式将生产者与消费者解耦，但这不是它的唯一好处，我们将会看到更多。通常，`Queue`
+    以 FIFO（先进先出）的方式运作。^([4](ch05.html#idm46669752505600))
+- en: Semantically it can help to think of a `Queue` like a queue of moviegoers. As
+    the first viewer arrives, they are put at the front of the queue. Each additional
+    viewer is added behind the last. When the doors open and viewers are allowed to
+    enter, the first person in line is let in first, then the next, and so on, until
+    the entire `Queue` is empty.
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从语义上讲，将 `Queue` 想象成一个电影院观众的排队。当第一位观众到达时，他们排在队列的最前面。每位额外的观众都排在最后。当开放门户并允许观众进入时，队列中的第一人先入场，然后是下一个，依此类推，直到整个
+    `Queue` 清空。
+- en: The producer puts an object at the head of the queue, and the consumer pops
+    an object at the tail of the queue. The `put` method might be a blocking call,
+    but if it can be proven that most of the time it effectively doesn’t block (and
+    when it does, it’s for a short time), then we have a very efficient way to offload
+    work from the producer to the consumer in a nonblocking way (from the standpoint
+    of the producer), as shown in [Figure 5-1](#producer_consumer_fig_id).
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 生产者将对象放在队列的头部，消费者从队列的尾部弹出对象。`put` 方法可能是一个阻塞调用，但如果可以证明大部分时间它实际上不会阻塞（即使阻塞时也是短暂的），那么我们就有了一种非常有效的方式，可以以非阻塞的方式（从生产者的角度来看）将工作从生产者转移到消费者，如[图 5-1](#producer_consumer_fig_id)所示。
+- en: In practice, enqueued objects are often `Runnable` instances submitted by a
+    background thread and processed by the main thread. Also, this isn’t limited to
+    one producer and one consumer. Multiple producers can submit work to the queue,
+    concurrently with multiple consumers taking work out of the queue. This implies
+    that the queue must be thread-safe.^([5](ch05.html#idm46669752499840))
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在实践中，入队的对象通常是由后台线程提交的 `Runnable` 实例，并由主线程处理。此外，这不限于一个生产者和一个消费者。多个生产者可以并发地向队列提交工作，多个消费者可以从队列中取出工作。这意味着队列必须是线程安全的。^([5](ch05.html#idm46669752499840))
+- en: '![pawk 0501](assets/pawk_0501.png)'
+  id: totrans-79
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 0501](assets/pawk_0501.png)'
+- en: Figure 5-1\. Producer-consumer.
+  id: totrans-80
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 5-1\. 生产者-消费者。
+- en: Note
+  id: totrans-81
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Don’t confuse a `Queue` with a `Stack`, which uses LIFO (last in, first out)
+    instead of FIFO.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不要混淆 `Queue` 和 `Stack`，后者使用 LIFO（后进先出）而不是 FIFO。
+- en: Semantically, let’s imagine a `Stack` as a stack of pancakes. When the kitchen
+    makes more pancakes, they go on the top of the stack. When the diner eats pancakes,
+    they also take them from the top of the stack.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从语义上来说，让我们把 `Stack` 想象成一叠煎饼。当厨房做更多煎饼时，它们会放在栈的顶部。当食客吃煎饼时，他们也是从栈的顶部拿走的。
+- en: Back Pressure
+  id: totrans-84
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 回压
+- en: 'Imagine now that our producer is much faster than our consumer. The work objects
+    then accumulate in the queue. If the queue happens to be unbounded, we risk exhausting
+    memory resources and potentially an unrecoverable exception: the application may
+    crash. While not only is this experience jarring and unpleasant for the user,
+    but in an unhandled error like this, you’re almost assuredly going to lose whatever
+    stateful information was present. Unless you’ve taken great care to be aware of—and
+    react to—this circumstance, you may experience a sudden termination without an
+    opportunity to perform any cleanup you might do normally. In Android, when a Bitmap
+    instance is no longer being used, the recycle method can be used to mark each
+    underlying memory allocation as unreachable and eligible for garbage collection.
+    In an untidy system exit, you might not have an opportunity to do that and may
+    risk leaking that data.'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在想象一下，我们的生产者比消费者快得多。工作对象会在队列中积累起来。如果队列恰好是无界的，我们会冒着耗尽内存资源和潜在不可恢复异常的风险：应用程序可能会崩溃。这种不仅对用户体验不佳，而且在这种未处理的错误中，你几乎可以肯定会丢失存在的任何状态信息。除非你非常注意并且对此情况做出反应，否则可能会出现突然终止，而没有机会执行通常会执行的任何清理。在Android中，当Bitmap实例不再被使用时，可以使用recycle方法将每个底层内存分配标记为不可达并且有资格进行垃圾收集。在一个混乱的系统退出中，你可能没有机会这样做，并且可能会有泄漏数据的风险。
+- en: In this case, a wise choice is to use a bounded queue. But what should happen
+    when the queue is full and a producer attempts to `put` an object?
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，使用有界队列是一个明智的选择。但是当队列已满并且生产者尝试`put`一个对象时应该发生什么？
+- en: 'We’ll circle back to it with coroutines, but since we’re only talking about
+    threads for now, the answer is: it should block the producer thread until the
+    consumer takes at least one object out of the queue. Although this blocking should
+    be part of the design and anticipate whatever circumstance or logic branch might
+    deliver the user to this point in the program. While blocking a thread seems harmful,
+    a blocked producer allows the consumer to catch up and free up enough space into
+    the queue so that the producer is released.'
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在使用协程时再回到这个问题，但现在我们只讨论线程，答案是：它应该阻塞生产者线程，直到消费者从队列中至少取出一个对象。虽然这种阻塞应该作为设计的一部分，并预见到可能导致用户到达程序中这一点的任何情况或逻辑分支。虽然阻塞线程似乎有害，但阻塞的生产者允许消费者赶上并释放足够的空间到队列中，以便释放生产者。
+- en: This mechanism is known as *back pressure*—the ability of a data consumer that
+    can’t keep up with incoming data to slow down the data producer. It’s a very powerful
+    way to design robust systems. [Example 5-1](#back_pressure_example_id) shows a
+    implementation of back pressure.
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种机制被称为*回压*——无法跟上传入数据的数据消费者减慢数据生产者的能力。这是设计强大系统的非常有效的方法。[示例 5-1](https://example.org/back_pressure_example_id)展示了回压的实现方式。
+- en: Example 5-1\. Back pressure example
+  id: totrans-89
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 5-1\. 回压示例
+- en: '[PRE10]'
+  id: totrans-90
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: 'Since Java 7, a family of queues for this purpose is `BlockingQueue`—it’s an
+    interface, and implementations range from a single-ended queue with `LinkedBlockingQueue`
+    to a double-ended queue with `LinkedBlockingDequeue` (other implementations exist).
+    The output of [Example 5-1](#back_pressure_example_id) is:'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 自从Java 7以来，专门用于此目的的队列家族是`BlockingQueue`——它是一个接口，实现从单端队列`LinkedBlockingQueue`到双端队列`LinkedBlockingDequeue`（还存在其他实现）。[示例 5-1](https://example.org/back_pressure_example_id)的输出如下：
+- en: '[PRE11]'
+  id: totrans-92
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: You can see that the producer quickly filled the queue with five elements. Then,
+    on the sixth attempt to add a new element, it’s blocked because the queue is full.
+    One second later, the consumer takes an element out of the queue, releasing the
+    producer which can now add a new element. At this point, the queue is full. The
+    producer tries to add new elements but is blocked again. Again, one second later,
+    the consumer takes one element—and so on.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以看到，生产者很快用五个元素填充了队列。然后，在第六次尝试添加新元素时，由于队列已满，它被阻塞。一秒钟后，消费者从队列中取出一个元素，释放了生产者，现在可以添加一个新元素。此时队列已满。生产者尝试添加新元素，但再次被阻塞。再过一秒，消费者再次取出一个元素——依此类推。
+- en: 'It’s important to note that the insertion of an element into a `BlockingQueue`
+    isn’t necessarily blocking. If you use the `put` method, then it blocks when the
+    queue is full. Since `put` *might* block, we say that this is a blocking call.
+    However, there’s another method available to add a new element: `offer`, which
+    attempts to immediately add the new element and returns a Boolean—whether or not
+    the operation succeeded. Since the `offer` method does not block the underlying
+    thread and only returns false when the queue is full, we say that `offer` is nonblocking.'
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需要注意的是，向`BlockingQueue`插入元素并不一定会阻塞。如果使用`put`方法，则在队列满时会阻塞。由于`put`可能会阻塞，我们说这是一个阻塞调用。然而，还有另一种方法可以添加新元素：`offer`，它尝试立即添加新元素并返回一个布尔值——操作是否成功。由于`offer`方法不会阻塞底层线程，并且仅在队列满时返回false，我们说`offer`是非阻塞的。
+- en: Had we used `offer` instead of `put` in [Example 5-1](#back_pressure_example_id),
+    the producer would never be blocked, and the output would be filled with `Producer
+    added a new element to the queue`. There would be no back pressure at all—don’t
+    do this!
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们在[示例 5-1](#back_pressure_example_id)中使用了`offer`而不是`put`，那么生产者将永远不会被阻塞，并且输出将会被填充`Producer
+    added a new element to the queue`。根本不会有任何背压 - 切记不要这样做！
+- en: The `offer` method can be useful in situations where losing work is affordable,
+    or if blocking the producer thread isn’t suitable. The same reasoning applies
+    when taking an object out of the queue, with `take` and `poll`, which are respectively
+    blocking and nonblocking.
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`offer`方法在可以承受丢失工作或者阻塞生产者线程不合适的情况下非常有用。当从队列中取出对象时，使用`take`和`poll`同样适用，它们分别是阻塞和非阻塞的。'
+- en: Conversely, if the consumer is faster than the producer, then the queue eventually
+    becomes empty. In the case of a `BlockingQueue`, using the `take` method on a
+    consumer site will block until the producer adds new elements in the queue. So
+    in this case, the consumer is slowed down to match the rate of the producer.
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相反地，如果消费者比生产者更快，那么队列最终会变为空。在`BlockingQueue`的情况下，使用消费者端的`take`方法将会阻塞，直到生产者在队列中添加新元素。因此，在这种情况下，消费者会放慢速度以匹配生产者的速率。
+- en: Summary
+  id: totrans-98
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 总结
+- en: A class or code is said to be thread-safe when its invariants are never violated.
+    So, thread safety always refers to a policy that should be clearly defined in
+    the class javadoc.
+  id: totrans-99
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 当类或代码被称为线程安全时，它的不变性从不会被违反。因此，线程安全总是指一个应该在类的 javadoc 中明确定义的策略。
+- en: A class can use internally thread-safe data structures while not being thread-safe.
+  id: totrans-100
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 一个类可以在内部使用线程安全的数据结构，但自身并不是线程安全的。
+- en: Avoid or reduce thread contention as much as possible. Thread contention is
+    often the consequence of a poor locking strategy. An efficient way to reduce this
+    risk is to do nonblocking calls whenever possible.
+  id: totrans-101
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 尽量避免或减少线程争用。线程争用通常是糟糕的锁定策略的后果。降低这种风险的有效方法是尽可能使用非阻塞调用。
+- en: Work queues is a pattern you will often encounter in Android and other platforms
+    like backend services. It simplifies how a producer (like UI thread) offloads
+    tasks to consumers (your background threads). Consumers process the tasks whenever
+    they can. When the task completes, a consumer can use another work queue to send
+    back to the original producer the result of its work.
+  id: totrans-102
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 工作队列是一个模式，你经常会在Android和其他平台（如后端服务）中遇到。它简化了生产者（如UI线程）将任务移交给消费者（后台线程）的方式。消费者在能够时处理任务。任务完成后，消费者可以使用另一个工作队列将其工作结果发送回原始生产者。
+- en: 'A bounded `BlockingQueue` blocks a `put` operation when it’s full. So a too-fast
+    producer eventually gets blocked, which gives consumers the opportunity to catch
+    up. This is an implementation of back pressure, which has one major downside:
+    the thread of the producer might get blocked. Is it possible to have back pressure
+    without blocking the producer thread? Yes—we’ll see that in [Chapter 9](ch09.html#channels_id).'
+  id: totrans-103
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 有界的`BlockingQueue`在其已满时会阻塞`put`操作。因此，生产者速度过快会最终被阻塞，这为消费者赶上提供了机会。这是背压的一种实现，它有一个主要的缺点：生产者线程可能会被阻塞。有没有可能在不阻塞生产者线程的情况下实现背压？是的——我们将在[第
+    9 章](ch09.html#channels_id)中看到这一点。
+- en: ^([1](ch05.html#idm46669753196768-marker)) Actually, interleaving of threads
+    can happen between lines of bytecode, not just between lines of normal Java.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch05.html#idm46669753196768-marker)) 实际上，线程的交错可以发生在字节码的行之间，而不仅仅是在普通Java行之间。
+- en: ^([2](ch05.html#idm46669752518320-marker)) IO operations aren’t necessarily
+    blocking. Nonblocking IO exists, though it’s much more complicated to reason about.
+    Android Link is helpful enough to warn you when you perform an HTTP request on
+    the main thread, but other IO tasks—like reading a file or querying a database—do
+    not do this. This may even be a deliberate and accepted practice if done under
+    extremely thoughtful and careful supervision; while possible, this should be a
+    rare exception to the standard.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([2](ch05.html#idm46669752518320-marker)) IO 操作并不一定是阻塞的。非阻塞 IO 存在，尽管它要复杂得多才能理解。Android
+    链接足够友好，当您在主线程上执行 HTTP 请求时会提醒您，但其他 IO 任务——如读取文件或查询数据库——则不会。如果在极其深思熟虑和小心的监督下进行，这甚至可能是一种故意且被接受的做法；虽然可能，但这应该是标准的罕见例外。
+- en: ^([3](ch05.html#idm46669752516000-marker)) Even for worker threads, executing
+    a long-running task like working with 8-megapixel images, those blocking calls
+    possibly block task packets the UI is waiting on.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([3](ch05.html#idm46669752516000-marker)) 即使对于工作线程，执行像处理 800 万像素图片这样的长时间任务，那些阻塞调用可能会阻塞
+    UI 正在等待的任务包。
+- en: ^([4](ch05.html#idm46669752505600-marker)) Although not all work queues use
+    this data structure arrangement. Some of them are more sophisticated, like Android’s
+    `MessageQueue`.
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([4](ch05.html#idm46669752505600-marker)) 虽然并非所有工作队列都使用这种数据结构排列。一些更复杂的例子，如
+    Android 的 `MessageQueue`。
+- en: ^([5](ch05.html#idm46669752499840-marker)) Even with one producer and one consumer,
+    the queue must be thread-safe.
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([5](ch05.html#idm46669752499840-marker)) 即使只有一个生产者和一个消费者，队列也必须是线程安全的。

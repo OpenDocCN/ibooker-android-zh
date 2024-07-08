@@ -1,0 +1,1379 @@
+- en: 'Chapter 10\. View Binding: *Bound Together*'
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第10章。视图绑定：*紧密联系在一起*
+- en: '![image](Images/f0403-01.png)'
+  id: totrans-1
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0403-01.png)'
+- en: '**It’s time to wave farewell to findViewById().**'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**是时候告别 `findViewById()` 了。**'
+- en: As you’ve probably noticed by now, the more views you have and the more interactive
+    your apps become, **the more calls you need to make to *findViewById()***. And
+    if you’re getting tired of typing the code for this method every time you want
+    to work with a view, *you’re not alone*. In this chapter, you’ll discover **how
+    to make *findViewById()* a thing of the past** by implementing **view binding**.
+    You’ll find out how to apply this technique to both **activity and fragment code**,
+    and you’ll learn why this approach is a **safer, more efficient** way of accessing
+    your layout’s views. Let’s get started…
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你可能已经注意到的，你的应用程序中的视图越多，交互性越强，**调用 *findViewById()* 的次数就越多**。如果你厌倦了每次想要操作视图时都要输入此方法的代码，*你并不孤单*。在本章中，你将了解到如何通过实施
+    **视图绑定**，让 *findViewById()* 成为过去的事情。你将了解到如何将这一技术应用到 **活动和片段代码** 中，以及为什么这种方法是访问布局视图的
+    **更安全、更高效** 的方式。让我们开始吧…
+- en: Behind the scenes of findViewById()
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`findViewById()` 的幕后运行原理'
+- en: 'As you already know, each time you want to interact with a view in your activity
+    or fragment code, you first call `findViewById()` to get a reference to it. The
+    following activity code, for example, gets a reference to a `Button` with the
+    ID `start_button` so that it can respond to clicks:'
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所知，每次在活动或片段代码中与视图交互时，都需要先调用`findViewById()`来获取对它的引用。例如，下面的活动代码获取了一个名为 `start_button`
+    的 `Button` 的引用，以便能够响应点击事件：
+- en: '![image](Images/f0404-01.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0404-01.png)'
+- en: But what actually happens when `findViewById()` gets called?
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但实际调用`findViewById()`时会发生什么？
+- en: findViewById() looks for a view in the view hierarchy
+  id: totrans-8
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: findViewById() 在视图层次结构中查找视图
+- en: 'The following things happen when the above code runs:'
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当上述代码运行时，会发生以下事情：
+- en: '**The MainActivity’s layout file (activity_main.xml) is inflated into a hierarchy
+    of View objects.**'
+  id: totrans-10
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity 的布局文件 (activity_main.xml) 被填充为视图对象的层次结构。**'
+- en: If the file describes a linear layout that contains a text view and a button,
+    the layout gets inflated into `LinearLayout`, `TextView`, and `Button` objects.
+    The `LinearLayout` is the root view of this hierarchy.
+  id: totrans-11
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 如果文件描述了包含文本视图和按钮的线性布局，则布局会被填充为 `LinearLayout`、`TextView` 和 `Button` 对象。`LinearLayout`
+    是此层次结构的根视图。
+- en: '![image](Images/f0404-02.png)'
+  id: totrans-12
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0404-02.png)'
+- en: '**Android searches the View hierarchy for a View with a matching ID.**'
+  id: totrans-13
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**Android 在视图层次结构中搜索具有匹配 ID 的视图。**'
+- en: We’re using `findViewById<Button>(R.id.start_button)`, so Android searches the
+    view hierarchy for a `View` whose ID is `start_button`.
+  id: totrans-14
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们使用`findViewById<Button>(R.id.start_button)`，所以 Android 会搜索视图层次结构，找到一个 ID 为
+    `start_button` 的视图。
+- en: '![image](Images/f0405-01.png)'
+  id: totrans-15
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0405-01.png)'
+- en: '**Android returns the topmost View with this ID in the hierarchy, and casts
+    it to the type specified in the call to findViewById().**'
+  id: totrans-16
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**Android 返回层次结构中具有此 ID 的顶级视图，并将其转换为调用`findViewById()`中指定的类型。**'
+- en: Here, `findViewById<Button>(R.id.start_button)` finds the first `View` in the
+    hierarchy with an ID of `start_button`, and casts it as a `Button`. `MainActivity`
+    can now interact with it.
+  id: totrans-17
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 在这里，`findViewById<Button>(R.id.start_button)`会找到层次结构中第一个 ID 为 `start_button`
+    的视图，并将其转换为 `Button`。`MainActivity` 现在可以与它交互了。
+- en: '![image](Images/f0405-02.png)'
+  id: totrans-18
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0405-02.png)'
+- en: So each time you use `findViewById()`, Android searches the layout’s hiearchy
+    for a `View` with a matching ID, and casts it to the specified type.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，每次使用`findViewById()`时，Android 都会在布局的层次结构中搜索具有匹配 ID 的 `View`，并将其转换为指定的类型。
+- en: There’s a downside to findViewById()
+  id: totrans-20
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`findViewById()` 也有其缺点'
+- en: Even though `findViewById()` is a useful way of getting references to views,
+    it has several disadvantages.
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管 `findViewById()` 是获取视图引用的有用方法，但它也有几个缺点。
+- en: '![Images](Images/star.png) **It makes your code longer.**'
+  id: totrans-22
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![Images](Images/star.png) **它会使你的代码变得更长。**'
+- en: The more views you need to interact with, the more calls you need to make. This
+    can lead to longer code that’s harder to read.
+  id: totrans-23
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 需要与更多视图交互时，就需要进行更多的调用。这可能导致代码变得更长，更难阅读。
+- en: '![Images](Images/star.png) **It’s inefficient.**'
+  id: totrans-24
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![Images](Images/star.png) **这是低效的。**'
+- en: Each time you call `findViewById()`, Android has to search the layout’s hierarchy
+    for a view with a matching ID. This is inefficient, particularly if your layout
+    has many views in a deep hierarchy.
+  id: totrans-25
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 每次调用`findViewById()`时，Android 都需要在布局的层次结构中搜索具有匹配 ID 的视图。这种方法效率低下，特别是如果你的布局有许多视图且层次深度很深时。
+- en: '![image](Images/f0406-01.png)'
+  id: totrans-26
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0406-01.png)'
+- en: '![Images](Images/star.png) **It’s not null-safe.**'
+  id: totrans-27
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![Images](Images/star.png) **这不是空安全的。**'
+- en: '`findViewById()` is used to search for a view at runtime, which means the compiler
+    can’t check for common errors.'
+  id: totrans-28
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`findViewById()`用于在运行时搜索视图，这意味着编译器无法检查常见的错误。'
+- en: 'It’s possible, for instance, to pass `findViewById()` an invalid ID: one that
+    doesn’t exist in the layout. If you try using:'
+  id: totrans-29
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 例如，可能会将无效的ID（即在布局中不存在的ID）传递给`findViewById()`。如果尝试使用：
+- en: '[PRE0]'
+  id: totrans-30
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: and the layout doesn’t include a `View` with an ID of `message`, a null pointer
+    exception will get thrown, and the app will crash.
+  id: totrans-31
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 如果布局中不包含ID为`message`的`View`，将会抛出空指针异常，并导致应用程序崩溃。
+- en: '![Images](Images/star.png) **It’s not type-safe.**'
+  id: totrans-32
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/star.png) **它不是类型安全的。**'
+- en: Another problem is that the compiler can’t check that you’ve specified the `View`’s
+    type correctly, which can lead to a class cast exception.
+  id: totrans-33
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 另一个问题是编译器无法检查您是否正确指定了`View`的类型，这可能导致类转换异常。
+- en: 'Imagine you have a radio group named `pizza_group`, and you try to get a reference
+    to it using this code:'
+  id: totrans-34
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 假设您有一个名为`pizza_group`的单选按钮组，并尝试使用以下代码获取对它的引用：
+- en: '[PRE1]'
+  id: totrans-35
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: Even though the `ChipGroup` type is specified instead of `RadioGroup`, the code
+    still compiles. The compiler doesn’t check whether the type is correct when it
+    builds the code. When the app runs, it throws a class cast exception, and the
+    app crashes.
+  id: totrans-36
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 尽管指定了`ChipGroup`类型而不是`RadioGroup`，但代码仍然可以编译。编译器在构建代码时不会检查类型是否正确。当应用程序运行时，它会抛出类转换异常，并导致应用程序崩溃。
+- en: '![image](Images/f0406-02.png)'
+  id: totrans-37
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0406-02.png)'
+- en: So if `findViewById()` has these disadvantages, what’s the alternative?
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，如果`findViewById()`有这些缺点，那么有什么替代方法呢？
+- en: View binding to the rescue
+  id: totrans-39
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 视图绑定解决方案
+- en: An alternative to calling `findViewById()` each time you need a `View` reference
+    is to use **view binding**. With view binding, you set up a binding object (which
+    you’ll find out more about later) and use this to access each view.
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次需要`View`引用时调用`findViewById()`的替代方法是使用**视图绑定**。通过视图绑定，您设置一个绑定对象（稍后会详细介绍），并使用它来访问每个视图。
+- en: '![image](Images/f0407-01.png)'
+  id: totrans-41
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0407-01.png)'
+- en: 'As an example, suppose you have a layout that includes a button with an ID
+    of `start_button`. If you wanted to make it do something when clicked, you could
+    get a reference to it using `findViewById()` like this:'
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，假设您的布局包含一个ID为`start_button`的按钮。如果您希望在单击时执行某些操作，您可以像这样使用`findViewById()`获取对它的引用：
+- en: '![image](Images/f0407-02.png)'
+  id: totrans-43
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0407-02.png)'
+- en: 'With view binding, you no longer need to call `findViewById()` to get a reference
+    to the button. Instead, you simply use the following:'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用视图绑定，您不再需要调用`findViewById()`来获取对按钮的引用。相反，您只需使用以下代码：
+- en: '![image](Images/f0407-03.png)'
+  id: totrans-45
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0407-03.png)'
+- en: This code does the same thing, but it’s simpler to write, and can make your
+    code shorter and easier to read.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这段代码执行相同的操作，但编写起来更简单，可以使您的代码更短、更易读。
+- en: View binding is safer and more efficient than findViewById()
+  id: totrans-47
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 视图绑定比`findViewById()`更安全、更高效。
+- en: 'When you use view binding, Android no longer needs to search your layout’s
+    view hierarchy for a matching `View`: it simply uses the binding object to access
+    it. This makes it much more efficient than using `findViewById()`.'
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您使用视图绑定时，Android不再需要搜索布局的视图层次结构以寻找匹配的`View`：它只需使用绑定对象来访问它。这比使用`findViewById()`更高效。
+- en: Another advantage is **the compiler prevents null pointer and class cast exceptions
+    at compile time**. As you access views using a binding object, the compiler knows
+    which views are available and their types. It won’t let you reference a view that
+    doesn’t exist, and you no longer have to cast it to a specific type because the
+    compiler already knows what this is. Your code is much safer as a result.
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个优点是**编译器在编译时防止空指针和类转换异常**。当您使用绑定对象访问视图时，编译器知道哪些视图可用以及它们的类型。它不会让您引用不存在的视图，并且您也不再需要将其强制转换为特定类型，因为编译器已经知道这是什么。因此，您的代码变得更安全。
+- en: Now that you know about the benefits of using view binding, let’s find out how
+    to use it.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经了解使用视图绑定的好处，让我们看看如何使用它。
+- en: '**View binding is a type-safe, more efficient alternative to calling findViewById().**'
+  id: totrans-51
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**视图绑定是调用findViewById()的类型安全、更高效的替代方法。**'
+- en: Here’s how we’ll use view binding
+  id: totrans-52
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 下面是我们将使用视图绑定的方式
+- en: 'View binding code is slightly different for activities and fragments, so in
+    this chapter we’re going to show you the code for both. Here are the steps we’ll
+    go through:'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 视图绑定代码在活动和片段中略有不同，因此在本章中，我们将展示两者的代码。以下是我们将要介绍的步骤：
+- en: '**Add view binding to the Stopwatch app’s activity code.**'
+  id: totrans-54
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**向秒表应用程序的活动代码中添加视图绑定。**'
+- en: In [Chapter 5](ch05.xhtml#the_activity_lifecyclecolon_being_an_act), we built
+    a Stopwatch app to teach you about Android’s activity lifecycle methods. We’ll
+    revisit this app, and update its activity code so it uses view binding.
+  id: totrans-55
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 在[第 5 章](ch05.xhtml#the_activity_lifecyclecolon_being_an_act)中，我们构建了一个 Stopwatch
+    应用，以教授您关于 Android 活动生命周期方法的知识。我们将重新访问此应用程序，并更新其活动代码，使其使用视图绑定。
+- en: '![image](Images/f0408-01.png)'
+  id: totrans-56
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0408-01.png)'
+- en: '**Add view binding to the Bits and Pizzas app’s fragment.**'
+  id: totrans-57
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**为 Bits and Pizzas 应用的片段添加视图绑定。**'
+- en: We’ll then go back to the Bits and Pizzas app we created in the previous chapter
+    and show you how to implement view binding in its fragment code.
+  id: totrans-58
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 然后，我们将回到我们在前一章创建的 Bits and Pizzas 应用中，并向您展示如何在其片段代码中实现视图绑定。
+- en: '![image](Images/f0408-02.png)'
+  id: totrans-59
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0408-02.png)'
+- en: Let’s get started.
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们开始吧。
+- en: The Stopwatch app revisited
+  id: totrans-61
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 重新审视 Stopwatch 应用
+- en: '![image](Images/f0409-01.png)'
+  id: totrans-62
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0409-01.png)'
+- en: We’ll begin by changing up the Stopwatch app you created in [Chapter 5](ch05.xhtml#the_activity_lifecyclecolon_being_an_act),
+    so open the project for this app now.
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从修改您在[第 5 章](ch05.xhtml#the_activity_lifecyclecolon_being_an_act)中创建的 Stopwatch
+    应用开始，因此现在打开此应用的项目。
+- en: 'As you may recall, the Stopwatch app displays a simple stopwatch that you can
+    start, pause, and reset with the help of three buttons. It looks like this:'
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您可能记得的那样，Stopwatch 应用显示一个简单的秒表，您可以通过三个按钮启动、暂停和重置。它的外观如下：
+- en: '![image](Images/f0409-02.png)'
+  id: totrans-65
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0409-02.png)'
+- en: The app uses a single activity—`MainActivity`—which has a layout file named
+    *activity_main.xml*.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该应用程序使用单一活动——`MainActivity`，其具有名为 *activity_main.xml* 的布局文件。
+- en: '![image](Images/f0409-03.png)'
+  id: totrans-67
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0409-03.png)'
+- en: 'Each time it needs to interact with one of its views, it calls `findViewById()`
+    to get a reference to it. To make its Start button respond to clicks, for example,
+    it uses code like this:'
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当需要与其视图之一交互时，它都会调用 `findViewById()` 来获取对其的引用。例如，为了使其“开始”按钮响应点击事件，它使用类似于以下的代码：
+- en: '[PRE2]'
+  id: totrans-69
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: Let’s find out how to update the app so that it uses view binding instead.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们找出如何更新应用程序，以便使用视图绑定。
+- en: Enable view binding in the app build.gradle file
+  id: totrans-71
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在应用的 build.gradle 文件中启用视图绑定。
+- en: '![image](Images/f0410-01.png)'
+  id: totrans-72
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0410-01.png)'
+- en: 'To use view binding, you first need to enable it in the `android` section of
+    the app’s *build.gradle* file. The code to enable view binding looks like this:'
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使用视图绑定，您首先需要在应用的 *build.gradle* 文件的 `android` 部分启用它。启用视图绑定的代码如下所示：
+- en: '![image](Images/f0410-02.png)'
+  id: totrans-74
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0410-02.png)'
+- en: We’re going to use view binding in the Stopwatch app, so make sure that you
+    add the above change to the file *Stopwatch/app/build.gradle*. Then choose the
+    Sync Now option to sync this change with the rest of your project.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在 Stopwatch 应用中使用视图绑定，所以确保将上述更改添加到文件 *Stopwatch/app/build.gradle*。然后选择“立即同步”选项，以将此更改与项目的其余部分同步。
+- en: Note
+  id: totrans-76
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Remember to sync this change, or you’ll get errors in your code when you try
+    to update the activity code.
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 记得同步此更改，否则在尝试更新活动代码时将会出现错误。
+- en: Enabling view binding generates code for each layout
+  id: totrans-78
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 启用视图绑定会为每个布局生成代码
+- en: 'When you enable view binding, it automatically creates a binding class for
+    each of the layout files in your app. The Stopwatch app, for example, contains
+    a layout file named *activity_main.xml*, so when you enable view binding, it automatically
+    generates a binding class named `ActivityMainBinding`:'
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 启用视图绑定时，它会自动为应用程序中每个布局文件创建一个绑定类。例如，Stopwatch 应用包含一个名为 *activity_main.xml* 的布局文件，因此启用视图绑定时，它会自动生成一个名为
+    `ActivityMainBinding` 的绑定类：
+- en: '![image](Images/f0410-04.png)'
+  id: totrans-80
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0410-04.png)'
+- en: Each binding class includes a property for each view in the layout that has
+    an ID. The layout *activity_main.xml*, for example, includes a button with an
+    ID of `start_button`, so the binding class `ActivityMainBinding` includes a property
+    named `startButton` whose type is `Button`.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个绑定类都包含布局中具有 ID 的每个视图的属性。例如，布局 *activity_main.xml* 包含一个 ID 为 `start_button`
+    的按钮，因此绑定类 `ActivityMainBinding` 包含一个名为 `startButton` 的属性，其类型为 `Button`。
+- en: The binding classes are important because **the layout’s views are bound to
+    the binding class properties**. Instead of calling `findViewById()` each time
+    you need a view reference, you simply interact with that view’s property in the
+    binding class.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 绑定类非常重要，因为**布局的视图与绑定类的属性绑定**。您无需每次需要视图引用时都调用 `findViewById()`，而是直接与绑定类中的该视图属性交互。
+- en: Now that we’ve enabled view binding in the Stopwatch app, let’s see how to use
+    it in the code for `MainActivity`.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经在 Stopwatch 应用中启用了视图绑定，让我们看看如何在 `MainActivity` 的代码中使用它。
+- en: '![image](Images/f0410-05.png)'
+  id: totrans-84
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0410-05.png)'
+- en: How to add view binding to an activity
+  id: totrans-85
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 如何将视图绑定添加到活动
+- en: 'The code to make an activity use view binding is virtually identical for every
+    activity you create. It looks like this:'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使活动使用视图绑定的代码对于每个创建的活动几乎完全相同。代码如下所示：
+- en: '![image](Images/f0411-02.png)'
+  id: totrans-87
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0411-02.png)'
+- en: 'The above code declares a property named `binding` whose type is `ActivityMainBinding`.
+    This property gets set in the activity’s `onCreate()` method using the following
+    code:'
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述代码声明了一个名为`binding`的属性，其类型为`ActivityMainBinding`。此属性在活动的`onCreate()`方法中设置，使用以下代码：
+- en: '![image](Images/f0411-03.png)'
+  id: totrans-89
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0411-03.png)'
+- en: This calls `ActivityMainBinding`’s `inflate()` method, which creates an `ActivityMainBinding`
+    object that’s linked to the activity’s layout.
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这调用了`ActivityMainBinding`的`inflate()`方法，创建了一个与活动布局关联的`ActivityMainBinding`对象。
+- en: 'The code:'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码：
+- en: '[PRE3]'
+  id: totrans-92
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: '![image](Images/f0411-04.png)'
+  id: totrans-93
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0411-04.png)'
+- en: gets a reference to the `binding` object’s root view, and uses the `setContentView()`
+    method to display it.
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 获取`binding`对象的根视图的引用，并使用`setContentView()`方法将其显示出来。
+- en: Once you’ve added view binding to an activity in this way, you can use the `binding`
+    property to interact with the layout’s views. Let’s do this now.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦以这种方式为活动添加了视图绑定，就可以使用`binding`属性与布局的视图进行交互。现在让我们这样做。
+- en: Use the binding property to interact with views
+  id: totrans-96
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用`binding`属性与视图进行交互
+- en: '![image](Images/f0412-01.png)'
+  id: totrans-97
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0412-01.png)'
+- en: The current code for `MainActivity` interacts with its views in order to control
+    the stopwatch and make its buttons respond to clicks. We can update this code
+    so that instead of making calls to `findViewById()`, it accesses the views using
+    the activity’s `binding` property.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`MainActivity`当前的代码与其视图交互，以控制秒表并使其按钮响应点击事件。我们可以更新此代码，以便不再调用`findViewById()`，而是使用活动的`binding`属性访问视图。'
+- en: To see how this works, let’s use `MainActivity`’s Start button as an example.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了看看这是如何工作的，让我们以`MainActivity`的“开始”按钮为例。
+- en: The layout code
+  id: totrans-100
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 布局代码
+- en: 'The Start button is defined in *activity_main.xml* using this code:'
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: “开始”按钮在*activity_main.xml*中定义，使用以下代码：
+- en: '![image](Images/f0412-02.png)'
+  id: totrans-102
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0412-02.png)'
+- en: As you can see, it has an ID of `start_button`.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如您所见，它的ID是`start_button`。
+- en: The activity code
+  id: totrans-104
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 活动代码
+- en: '`MainActivity` makes the button respond to clicks using `findViewById()` like
+    so:'
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`MainActivity`使用`findViewById()`使按钮响应点击事件，代码如下：'
+- en: '[PRE4]'
+  id: totrans-106
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'With view binding, we can change the code to:'
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过视图绑定，我们可以更改代码为：
+- en: '![image](Images/f0412-03.png)'
+  id: totrans-108
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0412-03.png)'
+- en: The code does the same thing as the original code, but it uses `MainActivity`’s
+    `binding` property to interact with the button.
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该代码与原始代码执行相同的操作，但使用`MainActivity`的`binding`属性与按钮进行交互。
+- en: Let’s update the full code for `MainActivity` so it uses view binding.
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们更新`MainActivity`的完整代码，以便使用视图绑定。
+- en: The full code for MainActivity.kt
+  id: totrans-111
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: MainActivity.kt的完整代码
+- en: 'Here’s the updated code for `MainActivity`; update the code for *MainActivity.kt*
+    so that it includes the changes below (in bold):'
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是更新后的`MainActivity`代码；请更新*MainActivity.kt*的代码，以包括以下更改（加粗部分）：
+- en: '![image](Images/f0413-02.png)![image](Images/f0414-02.png)![image](Images/f0415-02.png)'
+  id: totrans-113
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0413-02.png)![image](Images/f0414-02.png)![image](Images/f0415-02.png)'
+- en: Those are all the changes we need to make to the Stopwatch app to get it to
+    use view binding. Let’s run through what happens when the code runs, and take
+    it for a test drive.
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些是我们需要对秒表应用进行的所有更改，以使其使用视图绑定。让我们详细了解代码运行时发生的情况，并进行测试。
+- en: What the code does
+  id: totrans-115
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码的功能
+- en: 'The following things happen when the app runs:'
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用运行时发生以下事情：
+- en: '**When the app launches, MainActivity gets created.**'
+  id: totrans-117
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**应用启动时，MainActivity被创建。**'
+- en: It includes an `ActivityMainBinding` property named `binding`.
+  id: totrans-118
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它包括一个名为`binding`的`ActivityMainBinding`属性。
+- en: '![image](Images/f0416-02.png)'
+  id: totrans-119
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0416-02.png)'
+- en: '**When MainActivity’s onCreate() method runs, it assigns an ActivityMainBinding
+    object to the binding property.**'
+  id: totrans-120
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当MainActivity的onCreate()方法运行时，它将一个ActivityMainBinding对象赋给binding属性。**'
+- en: The `binding` property gets set in `onCreate()` because this is when `MainActivity`
+    first has access to views.
+  id: totrans-121
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`binding`属性在`onCreate()`中设置，因为这是`MainActivity`首次访问视图时的时机。'
+- en: '![image](Images/f0416-03.png)'
+  id: totrans-122
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0416-03.png)'
+- en: '**The ActivityMainBinding object includes a property for each view in the layout
+    with an ID.**'
+  id: totrans-123
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**ActivityMainBinding对象包括布局中每个具有ID的视图的属性。**'
+- en: The layout file *activity_main.xml* includes a button with an ID of `start_button`,
+    for example, so the `ActivityMainBinding` object includes a `Button` property
+    named `startButton`, which provides access to this view.
+  id: totrans-124
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 布局文件 *activity_main.xml* 包含一个 ID 为 `start_button` 的按钮，例如，`ActivityMainBinding`
+    对象包含一个名为 `startButton` 的 `Button` 属性，用于访问此视图。
+- en: '![image](Images/f0416-04.png)'
+  id: totrans-125
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0416-04.png)'
+- en: '**MainActivity uses the binding property to access its views.**'
+  id: totrans-126
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity 使用绑定属性访问其视图。**'
+- en: It specifies how the Start button should respond to clicks, for example, by
+    calling the `startButton` property’s `setOnClickListener()` method.
+  id: totrans-127
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它指定了点击“开始”按钮应如何响应，例如通过调用 `startButton` 属性的 `setOnClickListener()` 方法。
+- en: '![image](Images/f0416-05.png)'
+  id: totrans-128
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0416-05.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来测试一下这个应用程序。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-130
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驱动'
+- en: When we run the app, it works in the same way as it did before. When we click
+    on the Start button, the stopwatch starts, and it pauses and gets reset when we
+    click on the Pause and Reset buttons.
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，它的工作方式与以前相同。当我们点击“开始”按钮时，秒表开始计时；当我们点击“暂停”和“重置”按钮时，它会暂停并重置。
+- en: '![image](Images/f0417-02.png)'
+  id: totrans-132
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0417-02.png)'
+- en: The difference, however, is that the `MainActivity` now uses view binding to
+    intract with its views instead of making calls to `findViewById()`.
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，不同的是，`MainActivity` 现在使用视图绑定来与其视图交互，而不是调用 `findViewById()`。
+- en: Activity Magnets
+  id: totrans-134
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 活动磁铁
+- en: '![image](Images/common02.png)'
+  id: totrans-135
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: An activity named `MainActivity` uses the file *activity_main.xml* for its layout.
+    The layout includes a `Button` (with an ID of `pow_button`) and a `TextView` {with
+    an ID of `pow_text`). When clicked, the `Button` needs to make the `TextView`
+    display the text “Pow!”
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 名为 `MainActivity` 的活动使用文件 *activity_main.xml* 作为其布局。布局包括一个 ID 为 `pow_button`
+    的 `Button` 和一个 ID 为 `pow_text` 的 `TextView`。点击按钮时，按钮需要使 `TextView` 显示文本“Pow！”
+- en: Somebody used fridge magnets to write the `MainActivity` code, but a freak kitchen
+    sandstorm dislodged some of the magnets. Can you piece the code back together
+    again?
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有人用冰箱磁铁写了 `MainActivity` 的代码，但是一场怪异的厨房沙尘暴使一些磁铁脱落了。你能重新拼凑这段代码吗？
+- en: '![image](Images/f0418-01.png)'
+  id: totrans-138
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0418-01.png)'
+- en: Fragments can use view binding too (but the code’s a little different)
+  id: totrans-139
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 片段也可以使用视图绑定（但代码略有不同）
+- en: '![image](Images/f0419-01.png)'
+  id: totrans-140
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0419-01.png)'
+- en: Now that you’ve learned how to implement view binding in your activity code,
+    lets find out how to use it in fragments. As we said earlier, the code for fragments
+    is slightly different to the code for activities.
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经学会了如何在活动代码中实现视图绑定，让我们看看如何在片段中使用它。正如我们之前所说，片段的代码与活动的代码略有不同。
+- en: Let’s implement view binding in the Bits and Pizzas app
+  id: totrans-142
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 让我们在 Bits 和 Pizzas 应用程序中实现视图绑定
+- en: We’ll explore how view binding for fragments works by changing up the Bits and
+    Pizzas app you created in [Chapter 9](ch09.xhtml#material_viewscolon_a_material_world).
+    Open the project for this app now.
+  id: totrans-143
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将通过修改您在 [第 9 章](ch09.xhtml#material_viewscolon_a_material_world) 中创建的 Bits
+    和 Pizzas 应用程序来探讨如何为片段实现视图绑定。
+- en: As we’re sure you remember, the Bits and Pizzas app uses Material views such
+    as collapsing toolbars and FABs to provide an interactive UI for a pizza app.
+    The UI is defined by the app’s fragment, which is named `FragmentOrder`.
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您可能记得的那样，Bits 和 Pizzas 应用程序使用 Material 设计视图，如可折叠工具栏和 FAB（浮动操作按钮），为比萨应用程序提供交互式用户界面。该界面由名为
+    `FragmentOrder` 的片段定义。
+- en: '![image](Images/f0419-02.png)'
+  id: totrans-145
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0419-02.png)'
+- en: The code for `FragmentOrder` includes many calls to `findViewById()`. Let’s
+    find out how to use view binding to replace these.
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`FragmentOrder` 的代码包含许多对 `findViewById()` 的调用。我们来看看如何使用视图绑定来替换这些调用。'
+- en: '![image](Images/f0419-03.png)'
+  id: totrans-147
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0419-03.png)'
+- en: Enable view binding for Bits and Pizzas
+  id: totrans-148
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 为 Bits 和 Pizzas 启用视图绑定
+- en: As before, to use view binding in the Bits and Pizzas project, you first need
+    to enable it in the app’s *build.gradle* file.
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与以往一样，在 Bits 和 Pizzas 项目中使用视图绑定，首先需要在应用程序的 *build.gradle* 文件中启用它。
+- en: 'Open the file *BitsandPizzas/app/build.gradle*, and add the following lines
+    to the `android` section:'
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开文件 *BitsandPizzas/app/build.gradle*，并在 `android` 部分添加以下行：
+- en: '![image](Images/f0420-02.png)'
+  id: totrans-151
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0420-02.png)'
+- en: Then choose the Sync Now option to sync the change with the rest of your project.
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后选择“立即同步”选项，将更改与项目的其余部分同步。
+- en: Binding classes are generated for every layout
+  id: totrans-153
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 为每个布局生成绑定类
+- en: 'Just as with the Stopwatch app, enabling view binding in the Bits and Pizzas
+    app automatically creates a binding class for each of the app’s layout files.
+    This app contains two layout files—*activity_main.xml* and *fragment_order.xml*—so
+    two binding classes are generated: `ActivityMainBinding` and `FragmentOrderBinding`.'
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像秒表应用程序一样，在“Bits and Pizzas”应用程序中启用视图绑定会自动为每个应用程序的布局文件创建一个绑定类。该应用程序包含两个布局文件——*activity_main.xml*和*fragment_order.xml*，因此生成两个绑定类：`ActivityMainBinding`和`FragmentOrderBinding`。
+- en: '![image](Images/f0420-03.png)'
+  id: totrans-155
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0420-03.png)'
+- en: As before, each binding class includes a property for each view in its layout
+    with an ID. The layout *fragment_order.xml*, for example, includes a radio group
+    with an ID of `pizza_group`, so the binding class `FragmentOrderBinding` includes
+    a property named `pizzaGroup` whose type is `RadioGroup`.
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如前所述，每个绑定类都包含其布局中每个视图的属性及其ID。例如，布局*fragment_order.xml*包含一个ID为`pizza_group`的单选组，因此绑定类`FragmentOrderBinding`包含一个名为`pizzaGroup`的属性，其类型为`RadioGroup`。
+- en: In the Bits and Pizzas app, the only code that interacts with views is in *OrderFragment.kt*,
+    so we only need to update this file in order to use view binding.
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在“Bits and Pizzas”应用程序中，唯一与视图交互的代码位于*OrderFragment.kt*中，因此我们只需更新此文件以使用视图绑定。
+- en: '![image](Images/f0420-04.png)'
+  id: totrans-158
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0420-04.png)'
+- en: Fragment view binding code is a little different
+  id: totrans-159
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 片段视图绑定代码有点不同
+- en: '![image](Images/f0421-01.png)'
+  id: totrans-160
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0421-01.png)'
+- en: As we said earlier, the view binding code you use in a fragment is slightly
+    different to the code you use in an activity. Before we show you what fragment
+    view binding code looks like, we’re going to dig a little deeper, and show you
+    why the code is different.
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我们之前所说，您在片段中使用的视图绑定代码与在活动中使用的代码略有不同。在展示片段视图绑定代码之前，我们将深入挖掘一下，并向您展示代码之所以不同的原因。
+- en: Activities can access views from onCreate()
+  id: totrans-162
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 活动可以从`onCreate()`开始访问视图
+- en: As you already know, an activity first gets access to its layout when its `onCreate()`
+    method runs. This is the first method in the activity’s lifecycle, and it’s used
+    to inflate the layout (or bind to it with view binding) and perform any initial
+    setup. If a button needs to respond to clicks, for example, the activity assigns
+    an `OnClickListener` to it using code in its `onCreate()` method.
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您已经知道的那样，活动在其`onCreate()`方法运行时首次访问其布局。这是活动生命周期中的第一个方法，用于填充布局（或使用视图绑定绑定到它）并执行任何初始设置。例如，如果一个按钮需要响应点击事件，活动会在其`onCreate()`方法中使用代码分配一个`OnClickListener`给它。
+- en: The activity continues to have access to its layout until its `onDestroy()`
+    method has run. This is the final method in the activity’s lifecycle, and the
+    activity is destroyed after this method has finished running.
+  id: totrans-164
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 活动在其`onDestroy()`方法运行之前可以继续访问其布局。这是活动生命周期中的最后一个方法，活动在此方法运行完毕后被销毁。
+- en: 'Because the activity has access to the views in its layout from `onCreate()`
+    to `onDestroy()`, it can interact with them in any of its methods:'
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为活动在其从`onCreate()`到`onDestroy()`期间可以访问其布局中的视图，所以它可以在其任何方法中与它们进行交互：
+- en: '![image](Images/f0421-02.png)'
+  id: totrans-166
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0421-02.png)'
+- en: That’s what happens with activities, but for fragments the situation’s a little
+    different. Let’s see how.
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是活动的情况，但对于片段，情况略有不同。让我们看看具体是如何的。
+- en: Fragments can access views from onCreateView() to onDestroyView()
+  id: totrans-168
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 片段可以从`onCreateView()`到`onDestroyView()`访问视图。
+- en: As you know, a fragment first gets access to its layout when its `onCreateView()`
+    method runs. This gets called when an activity needs access to the fragment’s
+    layout, so it’s used to inflate the layout and perform any initial setup such
+    as setting `OnClickListener`s.
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所知，片段在其`onCreateView()`方法运行时首次访问其布局。当活动需要访问片段的布局时，会调用此方法，因此它用于填充布局并执行任何初始设置，如设置`OnClickListener`。
+- en: '`onCreateView()`, however, isn’t the first method in the fragment’s lifecycle.
+    There are other methods, such as `onCreate()`, that run before `onCreateView()`,
+    so they can’t interact with the fragment’s views.'
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onCreateView()`，然而，并不是片段生命周期中的第一个方法。还有其他方法，比如`onCreate()`，在`onCreateView()`之前运行，因此它们不能与片段的视图进行交互。'
+- en: After its `onCreateView()` method has run, the fragment continues to have access
+    to its views until its `onDestroyView()` method has finished running. This gets
+    called when the activity no longer needs the fragment’s layout, which may be because
+    the activity needs to navigate to a different fragment, or it’s being destroyed.
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在其`onCreateView()`方法运行后，片段将继续访问其视图，直到其`onDestroyView()`方法运行完毕。当活动不再需要片段的布局时（可能是因为活动需要导航到不同的片段或者活动被销毁），会调用此方法。
+- en: '`onDestroyView()`, however, isn’t the final method in the fragment’s lifecycle.
+    There are other methods, such as `onDestroy(),` that run after `onDestroyView()`,
+    so these can’t interact with the fragment’s views either:'
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，`onDestroyView()` 并不是片段生命周期中的最后一个方法。还有其他方法，例如 `onDestroy()`，在 `onDestroyView()`
+    执行后运行，因此这些方法也不能与片段的视图交互：
+- en: '**An activity can interact with its views from onCreate() to onDestroy().**'
+  id: totrans-173
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**活动可以在其生命周期的 `onCreate()` 到 `onDestroy()` 期间与其视图交互。**'
+- en: ''
+  id: totrans-174
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: '**A fragment can only interact with its views from onCreateView() to onDestroyView().**'
+  id: totrans-175
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**片段只能在其 `onCreateView()` 到 `onDestroyView()` 期间与其视图交互。**'
+- en: '![image](Images/f0422-02.png)'
+  id: totrans-176
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0422-02.png)'
+- en: We’ll show you an overview of the fragment lifecycle on the next page, and then
+    see what fragment view binding code looks like.
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页上向您展示片段生命周期的概述，然后看看片段视图绑定代码的样子。
+- en: What fragment view binding code looks like
+  id: totrans-178
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 片段视图绑定代码的样子
+- en: You’re now ready to see what fragment view binding code is like. Just like activities,
+    you enable view binding in fragments by getting them to use a binding property,
+    but the way in which you do this is slightly different.
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您现在已经准备好看看片段视图绑定代码是什么样子了。就像活动一样，您通过让它们使用一个绑定属性来启用片段的视图绑定，但实现方式略有不同。
+- en: 'Here’s the code:'
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是代码：
+- en: '![image](Images/f0424-02.png)'
+  id: totrans-181
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0424-02.png)'
+- en: 'As you can see, the above code defines two extra properties: `binding` and
+    `_binding`. Let’s take a closer look at what these two properties do.'
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所看到的，上述代码定义了两个额外的属性：`binding` 和 `_binding`。让我们更仔细地看看这两个属性的作用。
+- en: _binding refers to the binding object…
+  id: totrans-183
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: _binding 指的是绑定对象…
+- en: 'As you’ve just seen, the view binding code for fragments defines a `_binding`
+    property like this:'
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您刚刚看到的，片段的视图绑定代码定义了一个 `_binding` 属性，如下所示：
+- en: '![image](Images/f0425-02.png)'
+  id: totrans-185
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0425-02.png)'
+- en: Its type is `FragmentOrderBinding?`, and it’s initialized with `null`.
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它的类型是 `FragmentOrderBinding?`，并且初始化为 `null`。
+- en: 'The `_binding` property is set to an instance of `FragmentOrderBinding` in
+    the fragment’s `onCreateView()` method using this code:'
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`_binding` 属性在片段的 `onCreateView()` 方法中被设置为 `FragmentOrderBinding` 的一个实例，使用以下代码：'
+- en: '![image](Images/f0425-03.png)'
+  id: totrans-188
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0425-03.png)'
+- en: It’s set in this method because it’s when the fragment first has access to its
+    views.
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 之所以在这个方法中设置它，是因为这时片段首次可以访问其视图。
+- en: 'The `_binding` property is set back to `null` in the fragment’s `onDestroyView()`
+    method:'
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`_binding` 属性在片段的 `onDestroyView()` 方法中被设置为 `null`：'
+- en: '![image](Images/f0425-04.png)'
+  id: totrans-191
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0425-04.png)'
+- en: This is because the fragment can no longer access its views after its `onDestroyView()`
+    method gets called.
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是因为片段在其 `onDestroyView()` 方法被调用后无法再访问其视图。
+- en: '...and the binding property provides non-null access to it'
+  id: totrans-193
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: '...而 `binding` 属性提供了对其的非空访问。'
+- en: 'The `binding` property uses a getter to return a non-`null` version of `_binding`,
+    and throws a null pointer exception if `_binding` is `null`:'
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`binding` 属性使用 getter 返回 `_binding` 的非空版本，并在 `_binding` 为 `null` 时抛出空指针异常：'
+- en: '[PRE5]'
+  id: totrans-195
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'This means you can use the `binding` property to interact with the fragment’s
+    views without performing lots of messy null-safety checks. To make a fragment’s
+    FAB respond to clicks, for example, you simply use:'
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这意味着您可以使用 `binding` 属性与片段的视图交互，而无需执行大量混乱的空安全检查。例如，要使片段的 FAB 响应点击，只需使用：
+- en: '[PRE6]'
+  id: totrans-197
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: '![image](Images/f0425-05.png)'
+  id: totrans-198
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0425-05.png)'
+- en: '**Activities and fragments get access to their views at different points in
+    their lifecycles.**'
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**活动和片段在它们的生命周期不同的阶段获取对它们的视图的访问权限。**'
+- en: An *activity* can interact with its views from when it’s been created and its
+    `onCreate()` method is called. It continues to have access to these views until
+    the activity is destroyed, which happens at the end of its lifecycle.
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*活动* 可以在它被创建并且其 `onCreate()` 方法被调用时与其视图交互。它会一直保持对这些视图的访问权限，直到活动被销毁，即在其生命周期结束时。'
+- en: A *fragment*, however, can only interact with its views from when its `onCreateView()`
+    method gets called. This means that the `_binding` property can *only* be set
+    to a view binding object in this method.
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*片段* 只能在其 `onCreateView()` 方法被调用时与其视图交互。这意味着 `_binding` 属性只能在此方法中设置为视图绑定对象。'
+- en: The fragment continues to have access to its views until its `onDestroyView()`
+    method runs. At this point, the fragment’s layout is discarded, so _`binding`
+    needs to be set to null. This prevents the fragment from trying to use the view
+    binding object when it can no longer interact with views.
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 片段在其 `onDestroyView()` 方法运行之前可以继续访问其视图。在这一点上，片段的布局被丢弃，所以 _binding 在不能再与视图交互时需要设置为
+    null。这可以防止片段在无法与视图交互时尝试使用视图绑定对象。
+- en: You now know everything that you need in order to use view binding with a fragment,
+    so let’s update the code for `OrderFragment` in the Bits and Pizzas app.
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经掌握了使用视图绑定与片段的所有必要知识，让我们更新 Bits and Pizzas 应用程序中`OrderFragment`的代码。
+- en: '![image](Images/f0426-02.png)'
+  id: totrans-204
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0426-02.png)'
+- en: The full code for OrderFragment.kt
+  id: totrans-205
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: OrderFragment.kt的完整代码
+- en: 'Here’s the code to make `OrderFragment` use view binding; update the code for
+    *OrderFragment.kt* so it includes the changes shown here (in bold):'
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是让`OrderFragment`使用视图绑定的代码；更新*OrderFragment.kt*的代码，以包含这里显示的更改（用粗体标出）：
+- en: '![image](Images/f0427-02.png)![image](Images/f0428-02.png)'
+  id: totrans-207
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0427-02.png)![image](Images/f0428-02.png)'
+- en: That’s all the code we need to make `OrderFragment` use view binding. Let’s
+    take the app for a test drive, and make sure that it still works.
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们需要让`OrderFragment`使用视图绑定的所有代码。让我们来测试一下应用程序，确保它仍然可以正常工作。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-209
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驾驶'
+- en: When we run the app, it works in the same way as it did before.
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行应用程序时，它的工作方式与以前相同。
+- en: When we click on the FAB without selecting a pizza type, a toast asks us to
+    choose a pizza.
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们点击 FAB 而没有选择披萨类型时，会弹出一个提示框要求我们选择披萨。
+- en: When we select a pizza type and click on the FAB again, a snackbar appears at
+    the bottom of the screen showing us details of our order.
+  id: totrans-212
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们选择披萨类型并再次点击 FAB 时，屏幕底部会出现一个 Snackbar，显示我们订单的详细信息。
+- en: '![image](Images/f0429-02.png)'
+  id: totrans-213
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0429-02.png)'
+- en: Congratulations! You now know how to implement view binding in your activity
+    and fragment code. We’ll continue to use view binding through the rest of this
+    book.
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恭喜！您现在知道如何在活动和片段代码中实现视图绑定。我们将在本书的其余部分继续使用视图绑定。
+- en: Activity Magnets Solution
+  id: totrans-215
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 活动磁铁解决方案
+- en: '![image](Images/common02.png)'
+  id: totrans-216
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: An activity named `MainActivity` uses the file *activity_main.xml* for its layout.
+    The layout includes a `Button` (with an ID of `pow_button`) and a `TextView` {with
+    an ID of `pow_text`). When clicked, the `Button` needs to make the `TextView`
+    display the text “Pow!”
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 名为`MainActivity`的活动使用文件*activity_main.xml*作为其布局。布局包括一个`Button`（ID为`pow_button`）和一个`TextView`（ID为`pow_text`）。点击按钮时，按钮需要使`TextView`显示文本“Pow！”
+- en: Somebody used fridge magnets to write the `MainActivity` code, but a freak kitchen
+    sandstorm dislodged some of the magnets. Can you piece the code back together
+    again?
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有人用冰箱磁铁编写了`MainActivity`的代码，但一个怪异的厨房沙尘暴使一些磁铁脱落了。你能把代码重新拼凑在一起吗？
+- en: '![image](Images/f0431-01.png)'
+  id: totrans-219
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0431-01.png)'
+- en: Your Android Toolbox
+  id: totrans-220
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 您的 Android 工具箱
+- en: '![image](Images/tools.png)'
+  id: totrans-221
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/tools.png)'
+- en: '**You’ve got [Chapter 10](#view_bindingcolon_bound_together) under your belt
+    and now you’ve added view binding to your toolbox.**'
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**您已经掌握了[第10章](#view_bindingcolon_bound_together)，现在您已经将视图绑定添加到您的工具箱中。**'
+- en: '![image](Images/f0433-01.png)'
+  id: totrans-223
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0433-01.png)'

@@ -1,0 +1,1365 @@
+- en: Chapter 19\. And Yet, We Persisted
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第19章。然而，我们坚持下去
+- en: If we take stock of where we are with our app so far, it’s come along quite
+    nicely. We’ve got some solid functionality. The data being pulled is backed by
+    a portable format, specifically JSON, and it’s functionally sound. This is a great
+    starting place to take our app further.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们对我们的应用程序目前的进展进行盘点，可以说进展非常顺利。我们拥有了一些可靠的功能。数据是通过可移植的格式支持的，具体来说是JSON，而且它在功能上是完好的。这是我们进一步开发应用程序的一个很好的起点。
+- en: Detailing Our Books
+  id: totrans-2
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 详述我们的书籍
+- en: First, we should add a new screen to show some more information on a book. Right
+    now, there really isn’t a way to view anything of importance about our books other
+    than the title. And guess what? Books have a TON of information about them. Everything
+    from title, author, ISBN, the list goes on! In fact, some of the most usable information
+    about a book is contained in this information.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们应该添加一个新的屏幕来显示关于一本书的更多信息。目前，除了标题之外，我们实际上没有办法查看关于我们的书籍的任何重要信息。你猜怎么着？书籍包含大量关于它们的信息。从标题、作者、ISBN等等，不胜枚举！实际上，关于一本书的一些最有用的信息都包含在这些信息中。
+- en: 'We know we’ll display a book. Specifically, the information currently available
+    in our book model object, `Book`, is the following:'
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们知道我们将显示一本书。具体来说，我们当前的书籍模型对象`Book`中的信息如下：
+- en: '`title`'
+  id: totrans-5
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`title`'
+- en: '`authors`'
+  id: totrans-6
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`authors`'
+- en: '`isbn`'
+  id: totrans-7
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`isbn`'
+- en: '`pageCount`'
+  id: totrans-8
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`pageCount`'
+- en: '`fiction`'
+  id: totrans-9
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`fiction`'
+- en: That’s not tons of data, but it’s enough. Plus, we’re going to expand on this
+    screen in a bit, but for now let’s add something quickly in Android and iOS.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然这不是大量的数据，但已经足够了。此外，我们稍后将在Android和iOS上扩展此屏幕，但现在让我们快速添加一些内容。
+- en: Android
+  id: totrans-11
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: If you recall [Chapter 2](ch02.html#topics_views) and [Chapter 15](ch15.html#app_setup),
+    what follows should be very familiar.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你回想一下[第2章](ch02.html#topics_views)和[第15章](ch15.html#app_setup)，接下来的内容应该非常熟悉。
+- en: First, let’s define our layout using XML. We know we want to show each of the
+    `Book` instances properties, so let’s just list them out in a vertical fashion
+    that we’ll decorate programmatically. Again, we’ll want to make sure our `LinearLayout`
+    is wrapped in a `ScrollView` so that we can show all our information regardless
+    of screen size, device density, or accessibility settings like large font rendering.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，让我们使用XML定义我们的布局。我们知道我们想要以垂直方式显示每个`Book`实例的属性，所以让我们列出它们，稍后我们会通过编程方式装饰它们。同样，我们希望确保我们的`LinearLayout`被包裹在`ScrollView`中，这样无论屏幕大小、设备密度还是大字体渲染等可访问设置，我们都可以显示所有的信息。
+- en: '[PRE0]'
+  id: totrans-14
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: Let’s save the preceding code as *res/layout/activity_detail.xml*.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们将前面的代码保存为*res/layout/activity_detail.xml*。
+- en: Since we want these `TextViews` to show complete labels, we’ll introduce the
+    concept of placeholder `Strings` in your *strings.xml* file. A placeholder string
+    just accepts special formatting characters and allows them to be replaced with
+    variables. Read up on Java’s `String.format` method for details.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我们希望这些`TextViews`显示完整的标签，所以我们将在*strings.xml*文件中引入占位符`Strings`的概念。占位符字符串只接受特殊的格式化字符，并允许用变量替换它们。详细了解Java的`String.format`方法以获取详细信息。
+- en: 'In *strings.xml*, let’s add some placeholders:'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在*strings.xml*中，让我们添加一些占位符：
+- en: '[PRE1]'
+  id: totrans-18
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: Next, we need a UI controller to show, control, and modify the layout, as well
+    as provide behavior instructions. In our case, an `Activity`.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们需要一个UI控制器来显示、控制和修改布局，以及提供行为指令。在我们的情况下，是一个`Activity`。
+- en: We’ll want to pass this UI controller some information about the `Book`, and
+    in Android, this is where things can get contentious. An `Activity` is created
+    programmatically and opaquely, but as described in [Chapter 1](ch01.html#topics_ui_controllers),
+    we can pass some primitive data via a `Bundle` instance with the `Intent` that
+    starts the controller.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望向UI控制器传递关于`Book`的一些信息，在Android中，这就是事情可能会变得争议的地方。一个`Activity`是以编程方式和不透明方式创建的，但正如在[第1章](ch01.html#topics_ui_controllers)中描述的那样，我们可以通过使用`Intent`启动控制器并通过`Bundle`实例传递一些基本数据。
+- en: For an example like this, you’ll find two schools of thought. Sometimes, one
+    makes much more sense than the other, but a lot of the time it’s really up to
+    you and your team. And feel free to experiment with other approaches besides those
+    details—in fact our current teams use a very different, very custom approach to
+    solve this problem that’s beyond the scope of this chapter.
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于这样的例子，你会发现有两种思路。有时候，一种思路比另一种更合理，但大多数情况下，这取决于你和你的团队。此外，除了这些细节，你可以随意尝试其他方法——事实上，我们当前的团队使用了一种非常不同、非常定制的方法来解决这个问题，这超出了本章的范围。
+- en: 'So, approach number 1: you can serialize the whole object and pass it along
+    as a `String` (or `byte[]`) and deserialize it in the new controller. This makes
+    things pretty straightforward, but remember that `Bundle` is limited to 1 MB in
+    size and is shared between any number of operations, potentially ones you have
+    no knowledge of.'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，第一种方法：您可以将整个对象序列化并作为`String`（或`byte[]`）传递，并在新的控制器中反序列化它。这使得事情变得非常简单，但请记住，`Bundle`的大小限制为1
+    MB，并且在任意数量的操作之间共享，可能还包括您没有知识的操作。
+- en: The second approach is to pass some kind of unique identifier, like an ID number
+    or a URI, and then retrieve the information in full from another source, like
+    a local database, JSON store, or even remote server.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二种方法是传递某种唯一标识符，比如一个ID号或者URI，然后从另一个来源（比如本地数据库、JSON存储或者远程服务器）完整地检索信息。
+- en: For simplicity for this example, and just for now, we’ll use the first approach.
+    This `Activity` will expect a JSON `String` representing a serialized `Book` object
+    in its `Intent` object as an “extra”—let’s call the `String` extra “BOOK_JSON”
+    and save it in a constant. We’ll deserialize it during the `onCreate` callback
+    and decorate our view with those properties.
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于这个例子来说，为了简单起见，目前我们将使用第一种方法。这个`Activity`将期望在其`Intent`对象的“extra”中传递一个表示序列化`Book`对象的JSON
+    `String`——让我们称这个`String`额外信息为“BOOK_JSON”并将其保存在一个常量中。我们将在`onCreate`回调期间对其进行反序列化，并用这些属性装饰我们的视图。
+- en: 'Of course, let’s not forget to register this new `Activity` with our manifest:'
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当然，我们不要忘记在我们的清单中注册这个新的`Activity`：
+- en: '[PRE2]'
+  id: totrans-26
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: Great! We’ve got an `Activity` with a UI that will display all the details we
+    have for a `Book` instance. Let’s jump back to the list view from [Chapter 17](ch17.html#app_lists)
+    and wire up a tap event to pass the selected `Book` instance from the `BrowseContentActivity`
+    to our new `BookDetailActivity`. First, we’ll want to make sure our row (just
+    a `TextView` at the moment) has a `View.OnClickListener` to bundle up its associated
+    `Book` instance and start the `BookDetailActivity`. We can do this once, in the
+    creation phase—the `onCreateViewHolder` method. Since these `Views` are recycled,
+    we just need to make sure we update that association with the appropriate book,
+    which we can do in the bind and update cycle, represented by the `onBindViewHolder`
+    method.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 太棒了！我们有一个带有UI的`Activity`，将显示我们对`Book`实例的所有详细信息。让我们从[第17章](ch17.html#app_lists)跳回到列表视图，并连接一个点击事件，以传递选定的`Book`实例给我们的新`BookDetailActivity`。首先，我们需要确保我们的行（目前只是一个`TextView`）有一个`View.OnClickListener`来捆绑其关联的`Book`实例并启动`BookDetailActivity`。我们可以在创建阶段（`onCreateViewHolder`方法）完成这一操作。由于这些`Views`是可回收的，我们只需要确保我们更新与适当书籍相关联的关系，这可以在绑定和更新周期中完成，由`onBindViewHolder`方法表示。
+- en: 'Your new `BrowseBooksAdapter` should look like this:'
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的新的`BrowseBooksAdapter`应该是这样的：
+- en: If you run the app now, whenever you tap a row from the list view, you should
+    see a book detail screen show up with all the details we have about that book.
+    Congratulations, you’ve just mastered one of the widely used patterns in Android
+    specifically and UI programming generally! Take a moment to give yourself a pat
+    on the back.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果现在运行该应用程序，每当您点击列表视图中的一行时，您应该会看到一个书籍详细信息屏幕显示出我们对该书籍的所有详细信息。恭喜您，您刚刚掌握了Android特定和UI编程通用使用的一种广泛使用的模式！请花一点时间给自己一个鼓励。
+- en: iOS
+  id: totrans-30
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: Let’s start by opening up *Main.storyboard*. Drag a new View Controller object
+    onto the canvas from the Library just like we did to add our other screens. This
+    screen is sitting isolated from the rest of the app currently, so let’s connect
+    it via a segue so we can transition to it later.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们从打开*Main.storyboard*开始。从库中拖动一个新的View Controller对象到画布上，就像我们添加其他屏幕一样。这个屏幕当前与应用程序的其余部分隔离开来，所以让我们通过一个segue连接它，以便稍后可以过渡到它。
+- en: This is an area storyboards excel. If you click on the table view cell inside
+    the Catalog scene—the one we created in [Chapter 4, *User Input*](ch04.html#topics_user_input)—in
+    the Document Outline within the storyboard editor, you can drag while holding
+    down Control, and you’ll be able to wire up a segue *directly* to the table view
+    cell itself.
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是storyboards擅长的地方。如果您在Storyboard编辑器的文档大纲中单击目录场景内的表视图单元格——我们在[第4章，*用户输入*](ch04.html#topics_user_input)中创建的表视图单元格——您可以同时按住Control拖动，然后您将能够直接连接到表视图单元格本身的segue。
+- en: Inside the modal that’s presented, select `Show` as the segue type. If you build
+    and run the app, you’ll see that tapping on a book within the catalog pushes a
+    new view controller—that’s currently blank—onto the view stack. There is currently
+    a bit of UI weirdness we need to fix, however. If you go back to the catalog view,
+    you’ll notice our table view cell stays selected. Additionally, our view is fairly
+    basic at this point—it’s just a white screen. Let’s fix it!
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在呈现的模态内部，选择`Show`作为过渡类型。如果构建并运行应用程序，您将看到在目录中点击书籍会将一个新的视图控制器（目前是空白的）推送到视图堆栈上。然而，目前存在一些UI上的怪异需要修复。如果返回目录视图，您会注意到我们的表视图单元格仍然处于选中状态。另外，我们的视图目前非常基础——只是一个白色屏幕。让我们来修复它吧！
+- en: Add some detail to yo’ detail so you can detail
+  id: totrans-34
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 添加一些详细信息到您的详细信息，以便您可以详细说明
+- en: 'To fix both of those items, we need to create a custom view controller for
+    our new scene. Add a new file to your project called `DetailViewController`. It
+    should inherit from `UIViewController` like so:'
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要修复这两个问题，我们需要为新场景创建一个自定义视图控制器。在项目中添加一个名为`DetailViewController`的新文件。它应该像这样继承自`UIViewController`：
+- en: '[PRE3]'
+  id: totrans-36
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: Remembering our list from earlier and what our Android app currently has, we
+    can recall we’re going to add a few views to our view controller. These will all
+    be labels, so let’s go ahead and add some view outlets now; we can wire them up
+    later in the storyboard editor.
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 记住我们之前的清单和我们的Android应用程序当前拥有的内容，我们可以回想起我们将要向我们的视图控制器中添加一些视图。这些都将是标签，所以让我们现在添加一些视图输出；我们可以稍后在Storyboard编辑器中将它们连接起来。
+- en: 'After adding view outlets, your view controller should now look like so:'
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 添加视图输出后，您的视图控制器现在应该如下所示：
+- en: '[PRE4]'
+  id: totrans-39
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: We have a problem, though. How are we going to fill these properties?
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，我们确实有一个问题。我们如何填充这些属性？
+- en: 'We know they’ll be coming from a book. So let’s create a method call `populate(from:)`
+    that takes a `Book` argument we can use to set the text of our labels. We’ll use
+    this in our catalog view controller to pass a `Book` object in during the segue.
+    The final class with this method should look like so:'
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们知道它们将来自一本书。因此，让我们创建一个名为`populate(from:)`的方法，它接受一个`Book`参数，我们可以用它来设置标签的文本。我们将在我们的目录视图控制器中使用这个方法在过渡时传递一个`Book`对象。最终带有这个方法的类应该如下所示：
+- en: '[PRE5]'
+  id: totrans-42
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'Let’s bounce back over to `CatalogViewController` and wire up this connection.
+    If you’ll recall, our segue is automatically triggered because we wired it up
+    to the table view cell itself. The preparation for the segue occurs in the view
+    controller that triggered the segue. There is a special method we can override
+    to add our custom preparation code: `prepare(for:sender:)`. It takes a `UISegue`
+    object as the first parameter; this object contains the destination view controller,
+    which happens to be our `DetailViewController` from before.'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们返回到`CatalogViewController`并连接这个连接。如果您回忆起来，我们的过渡是自动触发的，因为我们将它连接到了表视图单元格本身。过渡的准备工作发生在触发过渡的视图控制器中。我们可以重写一个特殊的方法来添加我们的自定义准备代码：`prepare(for:sender:)`。它将`UISegue`对象作为第一个参数；这个对象包含目标视图控制器，它恰好是我们之前的`DetailViewController`。
+- en: 'Before we can use this method, though, we need to get an instance of the book
+    for the cell that was tapped from our data source. To do this, we need to add
+    a new method onto `ListDataSource` called `book(for:)` that will take an index
+    path from the table view. Add the following method to `ListDataSource`:'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不过，在使用这种方法之前，我们需要从数据源中获取被点击的单元格所对应的书籍实例。为此，我们需要在`ListDataSource`上添加一个名为`book(for:)`的新方法，该方法将接受来自表视图的索引路径。将以下方法添加到`ListDataSource`中：
+- en: '[PRE6]'
+  id: totrans-45
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: 'Head back over to `CatalogViewController` and override `prepare(for:sender:)`
+    to populate our destination view controller during our segue like so:'
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 返回到`CatalogViewController`并重写`prepare(for:sender:)`以在我们的过渡期间填充我们的目标视图控制器，像这样：
+- en: '[PRE7]'
+  id: totrans-47
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: There isn’t much to this method, but it’s extremely important to understand
+    what’s going on. First, we check to see if our destination view controller type
+    is `DetailViewController`. If it is, we continue forward in our `if` condition
+    checking and make sure there is currently a selected row in the table view. These
+    are both important checks because this method is called for *every* segue that’s
+    triggered from this view controller. If both conditions are true, then we take
+    the `DetailViewController` instance and call the method we created earlier to
+    populate the book instance.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种方法并不复杂，但理解其中的过程非常重要。首先，我们检查目标视图控制器类型是否为`DetailViewController`。如果是，我们继续进行`if`条件检查，并确保当前在表视图中有选定的行。这两个检查非常重要，因为此方法会针对从该视图控制器触发的*每个*转场调用。如果两个条件都为真，则我们获取`DetailViewController`实例，并调用我们之前创建的方法来填充书籍实例。
+- en: 'Now, before we leave this file and head back over to our storyboard editor
+    to wire things up, let’s add one more fix: let’s clear our table row selection.
+    This doesn’t happen automatically because we’re using a standard `UIViewController`
+    as our base class instead of a `UITableViewController`. We want this to happen
+    whenever the view appears, which will provide a nice fade-out animation to provide
+    context to our users as to what row they selected. As such, we’ll do this in the
+    `viewDidAppear(_:)` method that’s part of our view controller life cycle.'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，在我们离开此文件并返回到我们的故事板编辑器以将事物连接起来之前，让我们添加一个修复：让我们清除表行选择。这不会自动发生，因为我们使用的是标准的`UIViewController`作为我们的基类，而不是`UITableViewController`。我们希望这在视图出现时发生，这将为我们的用户提供一个漂亮的淡出动画，以提供他们所选择的行的上下文信息。因此，我们将在`viewDidAppear(_:)`方法中执行此操作，这是我们视图控制器生命周期的一部分。
+- en: 'Our final `CatalogViewController` class should look like so:'
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们最终的`CatalogViewController`类应该如下所示：
+- en: '[PRE8]'
+  id: totrans-51
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: The last part of adding this view is fairly simple and similar to what we’ve
+    done in the past. We need to add the labels for our new outlets in `DetailViewController`
+    onto the scene. Feel free to arrange these however you’d like. Be creative! If
+    you’d like to take a look at the sample project available on our GitHub repository,
+    you can. In it, we’ve used stack views (from our Library picker) to create a view
+    that expands and contracts automatically depending on the size of the screen.
+    However, just dragging labels onto the view with some Auto Layout constraints
+    would suffice for this example. You might end up with something like that looks
+    like [Figure 19-1](#detail).
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 添加此视图的最后部分非常简单，类似于我们过去所做的事情。我们需要在`DetailViewController`中为新的输出添加标签到场景中。请随意安排它们的位置。发挥创意！如果您想查看我们GitHub存储库中提供的示例项目，可以查看。在其中，我们使用堆栈视图（从我们的库选择器中）创建了一个视图，它根据屏幕的大小自动扩展和收缩。但是，只需将标签拖放到视图中，并添加一些自动布局约束即可。您可能最终会得到类似如下的东西，看起来像[图 19-1](#detail)。
+- en: '![You might notice some stretching between views thats perfectly normal](assets/nmdv_1901.png)'
+  id: totrans-53
+  prefs: []
+  type: TYPE_IMG
+  zh: '![您可能会注意到视图之间的一些拉伸 这是完全正常的](assets/nmdv_1901.png)'
+- en: Figure 19-1\. You might notice some stretching between views (that’s perfectly
+    normal!)
+  id: totrans-54
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 19-1。您可能会注意到视图之间的一些拉伸（这是完全正常的！）
+- en: Let’s switch this scene to use our custom class `DetailViewController` by clicking
+    to show the Identity inspector on the right side of the editor and switching from
+    `UIViewController` to `DetailViewController`. Now, Control-drag from the view
+    controller object in the document outline to each label and select the corresponding
+    view outlet we coded earlier.
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们通过点击以显示编辑器右侧的Identity检查器，并从`UIViewController`切换到`DetailViewController`来将此场景切换为使用我们的自定义类`DetailViewController`。现在，从文档大纲中的视图控制器对象控件上进行Control-drag，并选择我们之前编码的相应视图输出。
+- en: If you build and run the project, you’ll see that after you click on an item
+    in the catalog now, that item populates the book detail screen. Awesome!
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您构建并运行项目，您将看到在目录中点击项目后，该项目将填充书籍详细信息屏幕。太棒了！
+- en: Saving Books for Later
+  id: totrans-57
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 保存书籍以便以后阅读
+- en: 'Now that we can see more information about our books, what happens if we find
+    a particularly interesting book and want to save it for later? We could, of course,
+    save it in memory within the application, but it wouldn’t last between application
+    launches. We *could* save it to the filesystem using JSON, but you’ll find that
+    will quickly become cumbersome and not very performant if we’re saving a large
+    number of books. Don’t forget: the dataset we’re using for this example app is
+    small, but the library we’re building this app for has a HUGE number of books
+    available.'
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们可以看到关于我们的书籍更多信息了，如果我们找到一本特别有趣的书想稍后保存，会发生什么呢？当然，我们可以将其保存在应用程序内存中，但这不会在应用程序重新启动之间保持。我们*可以*使用
+    JSON 将其保存到文件系统中，但如果我们要保存大量书籍，你会发现这很快会变得麻烦且性能不佳。别忘了：我们这个示例应用使用的数据集很小，但我们要为这个应用程序构建的图书馆拥有大量的书籍可供选择。
+- en: 'Another major consideration is manipulating that information; things like sort
+    and filter and pagination are easily accomplished using most persistence engines
+    like Core Data, or any flavor of SQL, or Realm or Room, etc. The same cannot be
+    said of a flat file store of JSON objects. Similarly, you’ll notice size start
+    to become an issue when each file must reestablish structure, order, and key names
+    for every object. For small or one-off data objects, a JSON file here and there
+    can not only be fine but even preferable, but for a library of books we want the
+    user to browse and curate, we need something a little more robust: a database.'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个重要的考虑因素是操作这些信息；像排序、过滤和分页这样的事情在大多数持久化引擎（如 Core Data，或任何 flavor 的 SQL，或者 Realm
+    或 Room 等）中很容易实现。但对于一个存储 JSON 对象的平面文件存储来说就不同了。同样地，当每个文件必须重新建立结构、顺序和键名时，你会注意到大小开始成为一个问题。对于小型或一次性数据对象，偶尔使用一个
+    JSON 文件可能不仅可以，甚至更可取，但对于我们希望用户浏览和策展的书籍库来说，我们需要更稳健一点的东西：一个数据库。
+- en: 'While we’re pondering the best approach available (hint: this chapter is about
+    native persistence), let’s go ahead and add a button to toggle a book as a user
+    favorite, which we’ll wire up later in the chapter.'
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们在考虑最佳可用方法时（提示：本章节是关于本地持久化），让我们继续添加一个按钮以切换书籍为用户喜爱，我们稍后会在本章节中进行相关设置。
+- en: Android
+  id: totrans-61
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: 'Since we’re not using an `ActionBar` in our sample app, we’ll deviate slightly
+    from iOS in that we’ll put our save button in the same UI as the informational
+    `TextViews`. Simply add an XML `Button` to the end of the `LinearLayout` and give
+    it an ID of `button_save`. If you’d like to differentiate it visually, use `android:layout_gravity="center"`,
+    like so:'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于我们的示例应用中未使用 `ActionBar`，因此我们会稍微偏离 iOS 的做法，将我们的保存按钮放在信息性 `TextViews` 相同的 UI
+    中。只需在 `LinearLayout` 的末尾添加一个 XML `Button`，并给它一个 ID 为 `button_save`。如果你想在视觉上进行区分，可以使用
+    `android:layout_gravity="center"`，如下所示：
+- en: '[PRE9]'
+  id: totrans-63
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'Your new detail layout should look like this:'
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 新的详细布局应该如下所示：
+- en: '[PRE10]'
+  id: totrans-65
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: We’ll wire up the tap behavior to save the detail a little later, after we’ve
+    established a persistence layer. Stay tuned.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们稍后会在建立持久化层之后处理保存详细信息的点击行为。请保持关注。
+- en: So that was painless. Let’s do the same on iOS, which is slightly more painful.
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样就很简单了。现在让我们在 iOS 上做同样的事情，尽管稍微有些痛苦。
+- en: iOS
+  id: totrans-68
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: Let’s add our button to the navigation bar. This is a pretty common place to
+    put actions like this. Open up *Main.storyboard* and head over to the detail scene
+    if you’re not already there. Search for “Navigation Item” in the Library and drag
+    that over to the scene. This creates a navigation item that is associated with
+    our view controller’s navigation bar that we can edit in the storyboard editor.
+    Click on the navigation item—labeled “Title”—in the Document Outline of the editor.
+    Show the Attributes inspector and clear the value in the Title field so that it’s
+    blank. This will cause the object to change to Navigation Item in the Document
+    Outline.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们将按钮添加到导航栏中。这是放置此类操作的常见地方。如果你还没有进入详细场景，请打开 *Main.storyboard*，然后转到详细场景。在库中搜索“Navigation
+    Item”，将其拖动到场景中。这将创建一个与视图控制器导航栏关联的导航项，我们可以在 storyboard 编辑器中编辑它。在编辑器的文档大纲中点击导航项（标记为“Title”）。显示属性检查器并清除标题字段中的值，以使其为空白。这将导致对象在文档大纲中更改为导航项。
+- en: Note
+  id: totrans-70
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注
+- en: If you select `Push` as the segue type, this is automatically added for you
+    by Xcode because `Push` is a segue type for navigation controllers. However, that
+    segue type is deprecated, which requires us to provide a bit more manual context
+    when we create the scene to keep things inside the storyboard editor. We could,
+    however, do all this in code as well, but it’s arguably easier in the storyboard
+    editor. At a minimum, it helps us keep our UI setup in one place, as opposed to
+    spread across code files and storyboards unnecessarily.
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你选择`Push`作为segue类型，这将由Xcode自动为你添加，因为`Push`是导航控制器的segue类型。然而，该segue类型已被弃用，这要求我们在创建场景时提供更多手动上下文，以保持事物在故事板编辑器内部。然而，我们也可以在代码中完成所有这些操作，但在故事板编辑器中进行操作可能更容易。至少，它帮助我们将UI设置集中在一个地方，而不是在代码文件和故事板中不必要地分散。
+- en: Now, in the Library, search for “Bar Button Item” and drag that item onto the
+    right side of the navigation bar in the scene. In the Attributes inspector for
+    this item, change the title field from “Item” to “Save Book.” Your scene should
+    look like [Figure 19-2](#save-book).
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，在“库”中搜索“Bar Button Item”，并将该项拖放到场景中导航栏的右侧。在该项目的属性检查器中，将标题字段从“Item”更改为“保存书籍”。你的场景应该看起来像[图 19-2](#save-book)。
+- en: '![Save Book button added to the navigation bar](assets/nmdv_1902.png)'
+  id: totrans-73
+  prefs: []
+  type: TYPE_IMG
+  zh: '![保存书籍按钮添加到导航栏](assets/nmdv_1902.png)'
+- en: Figure 19-2\. “Save Book” button added to the navigation bar
+  id: totrans-74
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 19-2\. “保存书籍”按钮添加到导航栏
+- en: Let’s create an action for this new button.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们为这个新按钮创建一个操作。
+- en: 'Open up the Assistant editor, which shows the code and interface side by side.
+    Control-drag on the new button and drop the action inside the view controller
+    below our `populate(for:)` method declaration at the very bottom of the class.
+    This should create a new method inside of `DetailViewController` that looks like
+    this:'
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开助理编辑器，它会将代码和界面并排显示。在新按钮上进行控件拖拽，并将操作放置在我们`populate(for:)`方法声明的视图控制器下面的最底部。这将在`DetailViewController`内创建一个新的方法，看起来像这样：
+- en: '[PRE11]'
+  id: totrans-77
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: If you build and run the project, you’ll see the button at the top right of
+    screen in the book detail screen, but tapping it won’t do anything just yet. Let’s
+    address that now.
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你构建并运行项目，你会在书籍详细信息屏幕的右上角看到按钮，但是目前点击它不会有任何反应。现在让我们解决这个问题。
+- en: Storing Books for Later
+  id: totrans-79
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 为以后存储书籍
+- en: As mentioned before, we need to store our books for later. We need something
+    performant due to the size of our library, something that lasts between launches,
+    and something that will allow us to read and write data to and from. This is starting
+    to sound like a data persistence layer.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如前面提到的，我们需要为以后存储我们的书籍。由于我们的图书馆规模很大，我们需要一些高性能的东西，这些东西可以在启动之间持久存在，并且可以让我们读取和写入数据。这开始听起来像是一个数据持久化层。
+- en: Gasp!
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 哇！
+- en: If you’re building a cross-platform set of apps, like we are in this book, you’ll
+    find this is a major area where the native components diverge. We could use a
+    cross-platform solution, like Realm, but in the interests of staying true to each
+    platform, we’re going to use the most common and supported options available for
+    Android and iOS.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你正在构建跨平台的应用程序集合，就像我们在这本书中所做的那样，你会发现这是一个原生组件分歧的主要领域。我们可以使用像Realm这样的跨平台解决方案，但为了保持对每个平台的忠实，我们将使用Android和iOS中最常见和支持的选项。
+- en: 'First, before we talk about Android and iOS separately, let’s talk about our
+    common goals with our data persistence layer. There are some requirements we have.
+    The expected functionality is as such:'
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，在我们分别讨论Android和iOS之前，让我们谈谈我们与数据持久化层的共同目标。我们有一些要求。期望的功能如下：
+- en: Tapping “Save Book” will save a book identifier to some sort of store.
+  id: totrans-84
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 点击“保存书籍”将会保存一本书的标识符到某种存储器中。
+- en: This data store will be able to show a list of books from our returned identifiers
+    that were saved.
+  id: totrans-85
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 这个数据存储将能够显示我们保存的返回标识符列表中的书籍。
+- en: The detail screen will indicate if a book is saved or not.
+  id: totrans-86
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 详细屏幕将指示书籍是否已保存。
+- en: We will be able to delete books from our list that we’ve saved.
+  id: totrans-87
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 我们将能够从我们保存的列表中删除书籍。
+- en: The first two items in that list are where Android and iOS will have the most
+    different approaches. However, because we are using an MVC architecture, a lot
+    of the code differences will be contained to the Model layer. The View and Controller
+    layers (i.e., the last two items in that list of requirements) will continue to
+    have code that is similar in terms of architecture.
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 和 iOS 在这个列表中的前两个项目是它们最不同的方法。然而，由于我们使用的是 MVC 架构，很多代码差异将被限制在 Model 层。View
+    和 Controller 层（即需求列表中的最后两个项目）在架构上仍然有类似的代码。
+- en: So, without further ado, let’s build a persistence layer.
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，没有更多拖延，让我们构建一个持久化层。
+- en: Android
+  id: totrans-90
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: As mentioned a couple times already, there are a number of ways to persist data
+    using the Android framework, and at the time of the writing, Google suggests we
+    use the Room library. However, we’re going to use SQLite for a couple reasons,
+    the most important being that SQL is extremely mature, well-vetted, and accepted
+    by the databasing community as the gold standard. We have access to SQLite only
+    for local device persistence, but the same basic syntax, rules, and operations
+    apply to all the major SQL databases, like PostgreSql, MySql, and MSSql. Of course
+    you should feel free to experiment with other approaches, like Room. Realm is
+    another popular choice, with the additional benefit of it being cross-platform.
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如前面几次提到的那样，使用 Android 框架持久化数据有多种方式，在撰写本文时，Google 建议我们使用 Room 库。然而，出于几个原因，我们将使用
+    SQLite，其中最重要的原因是 SQL 是非常成熟、经过充分验证，并被数据库社区公认为黄金标准。我们只能访问 SQLite 进行本地设备持久化，但所有主要
+    SQL 数据库（如 PostgreSql、MySql 和 MSSql）都适用相同的基本语法、规则和操作。当然，您可以尝试其他方法，比如 Room。Realm
+    是另一个流行的选择，另一个优势是它跨平台。
+- en: 'In any event, let’s see how we can build a persistence layer with SQLite. First,
+    as with all relational database management systems, we need at least one table.
+    In our example, we’re going to use three: one for `Book` instances, one for authors
+    (that will be represented as `Strings`), and a single table to relate the two.
+    The relational table is sometimes known as a through table, bridge table, pivot
+    table, or join table, but it’s an extremely common paradigm and we think it is
+    a great but simple example on how to use SQL.'
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无论如何，让我们看看如何使用 SQLite 构建持久化层。首先，与所有关系型数据库管理系统一样，我们至少需要一张表。在我们的示例中，我们将使用三张表：一张用于
+    `Book` 实例，一张用于作者（表示为 `Strings`），以及一张表来关联这两者。关系表有时被称为 through 表、bridge 表、pivot
+    表或 join 表，但这是一个非常常见的范例，我们认为这是一个使用 SQL 的很好但简单的示例。
+- en: We’ll use SQL standard “create table” syntax. For the specifics of each keyword,
+    check the dev docs, but we’ll present enough to get you up and running.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用 SQL 标准的“create table”语法。关键字的具体细节，请参阅开发文档，但我们会呈现足够多的内容让您立即上手。
+- en: '[PRE12]'
+  id: totrans-94
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: '[PRE13]'
+  id: totrans-95
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: '[PRE14]'
+  id: totrans-96
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: You’ll want each of these tables created the first time your application is
+    launched, so you have access to them immediately. If you recall the detail around
+    `SqliteOpenHelper` back in [Chapter 7](ch07.html#topics_databases), you might
+    remember you can accomplish this with an overridden `onCreate` method. Remember,
+    this will fire only once during the first app launch following install. Note further
+    that it will not be invoked until the first time you use the subclass to get an
+    instance of a database, with either `getReadableDatabase` or `getWritableDatabase`.
+    For our examples, we’ll always prefer the latter, so we can update our data store.
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您希望在应用程序首次启动时创建每张表，以便立即访问它们。如果您回忆起[第 7 章](ch07.html#topics_databases)中关于 `SqliteOpenHelper`
+    的细节，您可能记得可以通过重写的 `onCreate` 方法来实现这一点。请记住，这只会在第一次使用子类获取数据库实例时触发，使用 `getReadableDatabase`
+    或 `getWritableDatabase` 之一。对于我们的示例，我们总是更喜欢后者，这样我们可以更新我们的数据存储。
+- en: 'Here’s what that might look like:'
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是它可能看起来的样子：
+- en: 'So at this point, we’ve got a nice, shiny new database, but it’s empty—all
+    of our data is still in *catalog.json*. Let’s remedy that. First, we know we’re
+    going to need methods to read and write `Book` instances to and from the database,
+    so let’s set that up. Maybe something like this:'
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们拥有了一个漂亮、闪亮的新数据库，但它是空的——我们所有的数据仍然在 *catalog.json* 中。让我们来解决这个问题。首先，我们知道我们需要方法来读取和写入
+    `Book` 实例到数据库中，所以让我们设置一下。也许像这样：
+- en: Now that we’ve got helpers to read and write `Book` data, let’s update our `DbHelper`
+    class to read out *catalog.json* during the single `onCreate` invocation and write
+    those entries to the database!
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经有了用于读写`Book`数据的帮助程序，让我们更新我们的`DbHelper`类，在单个`onCreate`调用期间读取*catalog.json*并将这些条目写入数据库！
+- en: Now, the first time you get a `SqliteDatabase` instance from your `DbHelper`
+    class, `onCreate` will run and you’ll populate your database from the *catalog.json*
+    file you installed with the app in the *assets* special directory! Not bad!
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，当你从你的`DbHelper`类获取一个`SqliteDatabase`实例时，`onCreate`将会运行，并且你将从*assets*特殊目录中安装的*catalog.json*文件中填充你的数据库！不错！
+- en: We’ve spent a lot of time building out our persistence layer. We’re at the point
+    where we’re about to display our saved books, but before we do that, let’s see
+    what things look like in iOS before we continue.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们花了很多时间来构建我们的持久层。我们现在准备显示我们保存的书籍，但在继续之前，让我们先看看iOS上的情况。
+- en: iOS
+  id: totrans-103
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: 'For Android, we used a database with raw SQL calls to get our data. On iOS,
+    we have another option that allows us to work directly inside of Swift without
+    having to deal with raw SQL: Core Data.'
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于Android，我们使用了一个带有原始SQL调用的数据库来获取我们的数据。在iOS上，我们有另一种选项，允许我们直接在Swift中工作，而不必处理原始SQL：Core
+    Data。
+- en: Core Data
+  id: totrans-105
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: Core Data
+- en: 'Let’s get this out of the way now: Core Data is not a database. Core Data is
+    an *object graph* that just *happens* to use a database as its backing store.
+    It’s a framework available for iOS (and other Apple platforms) that is meant to
+    make working with the data model layer and its persistence seamless and (fairly)
+    easy.'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们先搞清楚一件事：Core Data不是数据库。Core Data是一个*对象图*，只是偶尔使用数据库作为其后备存储。它是为iOS（以及其他Apple平台）提供的一个框架，旨在使与数据模型层及其持久性的工作无缝（而且相对）容易。
+- en: It can be incredibly complex, but for 90% of use cases, it’s a great option
+    for apps. It’s perfect for our application. Why don’t we add it to our project?
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 它可能非常复杂，但对于90%的使用情况来说，这是应用程序的一个很好的选择。它非常适合我们的应用。为什么不将它添加到我们的项目中呢？
+- en: 'To add support for Core Data to an existing project, there are a few things
+    that you need:'
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要将Core Data支持添加到现有项目中，你需要做一些事情：
+- en: A data model file and any entities defined
+  id: totrans-109
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 数据模型文件和定义的任何实体
+- en: A data controller that handles setting up the Core Data stack
+  id: totrans-110
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 处理设置Core Data堆栈的数据控制器
+- en: Initialization logic in your app’s start-up logic
+  id: totrans-111
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 在你应用程序的启动逻辑中进行初始化逻辑
+- en: Getting started with the model file
+  id: totrans-112
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 开始使用模型文件
+- en: Our first item on the list, a data model file, is the easiest one to check off.
+    Go to File > New > File in Xcode and scroll down a bit to the Core Data section.
+    There, select Data Model and hit Next. Let’s name our model “LibraryModel” to
+    keep things simple, but really you could name this model whatever you wanted.
+    You should see a file named *LibraryModel.xcdatamodel*, in your project files.
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 列表上的第一项，数据模型文件，是最容易完成的。在Xcode中，转到 文件 > 新建 > 文件，然后向下滚动到Core Data部分。在那里，选择数据模型然后点击下一步。让我们简单地命名我们的模型为“LibraryModel”，以保持事情简单，但实际上你可以按照自己的意愿命名这个模型。你应该在项目文件中看到一个名为*LibraryModel.xcdatamodel*的文件。
+- en: Core Data uses entities with associated attributes as backing objects. If you
+    click on *LibraryModel.xcdatamodel* you’ll see an empty list of entities.
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Core Data使用具有关联属性的实体作为后备对象。如果你点击*LibraryModel.xcdatamodel*，你将看到一个空的实体列表。
+- en: We’re at an inflection point here.
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在这里处于一个转折点。
+- en: We could continue to use our existing *Book.swift* structure that we’ve been
+    using already and create a separate entity that’s specific to saved books that
+    just contains some kind of identifier (a unique string, for example). This has
+    the benefit of keeping our Core Data stack lightweight. However, it treats Core
+    Data more like a database and limits its true potential in managing the entirety
+    of our model layer.
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以继续使用我们已经在使用的现有*Book.swift*结构，并创建一个单独的实体，专门用于保存书籍，其中仅包含某种标识符（例如唯一字符串）。这样做的好处是保持我们的Core
+    Data堆栈轻量级。然而，这种做法将Core Data视为数据库，限制了它在管理我们模型层整体时的真正潜力。
+- en: Instead, we’re going to continue using our *catalog.json* file as the source
+    of our library data, but only the first time the application starts. This allows
+    us to use Core Data as a cache, of sorts, so we don’t have to read that entire
+    file into memory whenever we want to view the library’s catalog.
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相反，我们将继续使用我们现有的*catalog.json*文件作为我们图书馆数据的来源，但只在应用程序首次启动时。这使我们能够将Core Data用作一种缓存，这样我们就不必在每次查看图书馆目录时将整个文件读入内存。
+- en: To add an entity to Core Data, click the Add Entity button at the bottom of
+    the screen. You’ll see an entity gets created with the generic name of “Entity”
+    in the list of entities. Click to show the Entity inspector on the right side
+    of the screen. Change the Entity name from “Entity” to “Book” and under Class,
+    change the name to “BookManagedObject” to separate the actual file name of our
+    managed object from our entity’s name. The reason for this is to allow us to recognize
+    we are dealing with a Core Data–managed object whenever we deal with objects of
+    the type `BookManagedObject`.
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要向Core Data添加实体，请单击屏幕底部的“添加实体”按钮。您将看到一个名为“Entity”的实体在实体列表中创建。单击以显示屏幕右侧的实体检查器。将实体名称从“Entity”更改为“Book”，并在类下更改名称为“BookManagedObject”，以将我们的托管对象的实际文件名与实体名称分开。这样做的原因是在处理`BookManagedObject`类型的对象时可以识别我们正在处理的是Core
+    Data管理的对象。
+- en: The existing properties inside our *Book.swift* file need to be re-created as
+    attributes inside of our `Book` entity. Do this by clicking the plus symbol under
+    Attributes and adding each existing property and its associated type (e.g., `String`,
+    `Int`, `Bool`, etc.) for each property inside our preexisting `Book` structure.
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*Book.swift*文件中现有的属性需要作为`Book`实体内的属性重新创建。通过单击属性下的加号符号并为我们预先存在的`Book`结构中的每个属性和其关联类型（例如`String`、`Int`、`Bool`等）添加。 '
+- en: Warning
+  id: totrans-120
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: For the `authors` property, you need to specify the type as “Transformable.”
+    Then, with that attribute selected, in the Data Model inspector, set the Custom
+    Class type to `[String]` to indicate in the generated file that it’s a `String`
+    array.
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于`authors`属性，您需要将类型指定为“Transformable”。然后，在数据模型检查器中选择该属性，在生成的文件中设置自定义类类型为`[String]`，以指示它是一个`String`数组。
+- en: Now that we have our `Book` entity defined, let’s have Xcode generate our file
+    for us. Select the book entity in the editor. Show the Data Model inspector and
+    under Codegen change it from Class Definition to Category/Extension. Click Editor
+    > Create NSManagedObject Subclass in the menu bar and hit Next a few times for
+    the default values.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经定义了`Book`实体，让我们让Xcode为我们生成文件。在编辑器中选择书籍实体。显示数据模型检查器，在代码生成下拉菜单中将其从类定义更改为类别/扩展。单击菜单栏中的编辑器
+    > 创建NSManagedObject子类，然后按几次“下一步”使用默认值。
+- en: 'You’ll notice, once everything has been generated, that two new files were
+    created: *BookManagedObject+CoreDataClass.swift* and *BookManagedObject+CoreDataProperties.swift*.
+    The first file is technically unnecessary, so go ahead and drag it to the trash.
+    The second file contains all the Core Data attributes we added as Swift properties
+    decorated with `@NSManaged`. This is some syntactic sugar to let the compiler
+    know Core Data is managing this particular property.'
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦生成完成，您会注意到创建了两个新文件：*BookManagedObject+CoreDataClass.swift* 和 *BookManagedObject+CoreDataProperties.swift*。第一个文件从技术上讲是不必要的，所以请将其拖到垃圾箱中。第二个文件包含了我们添加的所有Core
+    Data属性，这些属性被装饰为带有`@NSManaged`的Swift属性。这是一些语法糖，让编译器知道Core Data正在管理这个特定的属性。
+- en: We are going to use this extension eventually to add some functionality to our
+    model. For now, though, let’s finish setting up the rest of our Core Data stack.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们最终将使用这个扩展来为我们的模型添加一些功能。但是现在，让我们继续完成Core Data堆栈的其余设置。
+- en: Initializing our stack
+  id: totrans-125
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 初始化我们的堆栈
+- en: 'There are three parts to the Core Data stack:'
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Core Data堆栈有三个部分：
+- en: The data model file, which we’ve just created. It holds our entity descriptions.
+  id: totrans-127
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 刚刚创建的数据模型文件，用于保存我们的实体描述。
+- en: The persistent store container, which provides the link to our application and
+    our persistent store. In this case, it will be backed by a SQLite database, but
+    it could be XML or in-memory storage.
+  id: totrans-128
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 持久存储容器，它为我们的应用程序和持久存储提供链接。在这种情况下，它将由SQLite数据库支持，但也可以是XML或内存存储。
+- en: The managed object context, which is the “scratch pad” of sorts where all our
+    `BookManagedObject` instances live while they’re active; this is what’s actually
+    persisted to the database.
+  id: totrans-129
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 托管对象上下文，这是我们所有`BookManagedObject`实例活动时所在的“草稿本”；这实际上是持久存储到数据库的内容。
+- en: We’ve taken care of (1) *LibraryModel.xcdatamodel* is our data model file. But,
+    we still need to set up (2) and (3). Usually, our Core Data stack is initialized
+    on app startup. We’ll wrap everything in a `DataController` object to make things
+    a bit easier to work with as well.
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经处理了 (1) *LibraryModel.xcdatamodel* 是我们的数据模型文件。但是，我们仍然需要设置 (2) 和 (3)。通常，我们的Core
+    Data堆栈在应用启动时初始化。我们将所有内容封装在一个`DataController`对象中，以便稍后更轻松地处理事务。
+- en: 'In Xcode, create a new Swift file named `DataController` and add it to your
+    project. Here’s what `DataController` should look like:'
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Xcode 中，创建一个名为 `DataController` 的新 Swift 文件，并将其添加到您的项目中。`DataController` 应该如下所示：
+- en: '[PRE15]'
+  id: totrans-132
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: Let’s walk through what’s happening here. First, we’re initializing our `DataController`
+    with a completion handler in the `init(completion:)` method. This completion handler
+    will be called after everything has been set up and allows the application startup
+    to continue.
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看这里发生了什么。首先，我们在 `init(completion:)` 方法中使用完成处理程序初始化我们的 `DataController`。此完成处理程序将在所有设置完成后调用，允许应用程序启动继续。
+- en: Note
+  id: totrans-134
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: The store will load serially on whatever thread it’s called from. We can add
+    the store asynchronously by adding a new description for the store when it boots
+    up with the property `shouldAddStoreAsynchronously` set to `true`. For this example,
+    however, we are not using this property to simplify the loading of the Core Data
+    stack.
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 存储将在调用它的任何线程上串行加载。我们可以通过在引导时添加一个新的描述来异步添加存储，该描述在启动时设置了属性 `shouldAddStoreAsynchronously`
+    为 `true`。然而，为了简化 Core Data 栈的加载，本例中我们没有使用此属性。
+- en: Inside the initializer, we first assign the object’s instance variable, `persistentContainer`,
+    to a new instance of an `NSPersistentContainer`. This container does a lot of
+    the setup of linking the data model file and the persistent store coordinator.
+    It’s the “glue” between these two objects. To create it, we pass in the name of
+    our data model file, minus the extension. Once that is created, we take the persistent
+    container object and call `loadPersistentStores(_:)` on it and pass in a closure
+    with a bit of error checking. If the database can’t be connected, the model file
+    can’t be read, or any number of errors, we call `fatalError` to kill the application.
+    Finally, if the store was loaded correctly, we call `completion()`, which is the
+    original closure we passed in during `DataController`’s initialization.
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在初始化器内部，我们首先将对象的实例变量 `persistentContainer` 分配给一个新的 `NSPersistentContainer` 实例。这个容器做了很多工作，将数据模型文件和持久性存储协调器链接在一起。它是这两个对象之间的“粘合剂”。为了创建它，我们传入我们的数据模型文件的名称，去掉扩展名。一旦创建完成，我们获取持久化容器对象，并在其上调用
+    `loadPersistentStores(_:)` 方法，并传入一个带有一些错误检查的闭包。如果无法连接到数据库，无法读取模型文件或任何错误，我们调用 `fatalError`
+    杀死应用程序。最后，如果存储正确加载，我们调用 `completion()`，这是在 `DataController` 初始化期间传入的原始闭包。
+- en: We’ve got our persistent store set up, and through that process, we’ve also
+    got our managed object context set up through the persistent container as a property.
+    We’ll dive into how to use it in a bit. For now, let’s finish setting up our stack
+    and use the `DataController` object we just created.
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经设置好了我们的持久化存储，并且通过持久化容器设置了我们的托管对象上下文作为属性。稍后我们将深入讨论如何使用它。现在，让我们完成设置我们的栈，并使用刚刚创建的
+    `DataController` 对象。
+- en: 'Open up *AppDelegate.swift*. Add a new property called `dataController` with
+    the type `DataController!`. Inside the `application(_:didFinishLaunchingWithOptions:)`
+    method insert the following lines above the `return true` statement at the bottom:'
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开 *AppDelegate.swift*。添加一个名为 `dataController` 类型为 `DataController!` 的新属性。在
+    `application(_:didFinishLaunchingWithOptions:)` 方法中，在底部的 `return true` 语句上面插入以下行：
+- en: '[PRE16]'
+  id: totrans-139
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: 'Your `AppDelegate` should look mostly like this:'
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的 `AppDelegate` 应该大致如下所示：
+- en: '[PRE17]'
+  id: totrans-141
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: 'If you build and run the app, you’ll see the following text in Xcode’s console:
+    `Core Data stack has been initialized.`'
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您构建并运行应用程序，您将在 Xcode 控制台中看到以下文本：`Core Data stack has been initialized.`
+- en: Yes! Our Core Data stack is up and running, however nothing is actually powered
+    by Core Data right now. It’s still powered by *catalog.json*. Let’s switch from
+    using the raw JSON file in our `ListDataSource` to using Core Data directly.
+  id: totrans-143
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是的！我们的 Core Data 栈已经运行起来了，但是现在实际上还没有任何内容是由 Core Data 驱动的。它仍然由 *catalog.json*
+    驱动。让我们从在我们的 `ListDataSource` 中使用原始 JSON 文件切换到直接使用 Core Data。
+- en: Switching from JSON to Core Data
+  id: totrans-144
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 从 JSON 切换到 Core Data
+- en: 'We can do this by first creating a new extension on `BookManagedObject`. You
+    can do this in a new file. Normal practice for Swift extensions is to have the
+    file named something like *BookManagedObject+Extensions.swift*. Inside this file,
+    we’ll create a new fetched results controller, which is essentially an object
+    that controls the results of a Core Data fetch. Here’s what our extension should
+    contain:'
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以通过首先在 `BookManagedObject` 上创建一个新的扩展来完成这个。您可以在一个新文件中完成这个操作。Swift 扩展的常规做法是将文件命名为类似
+    *BookManagedObject+Extensions.swift*。在这个文件中，我们将创建一个新的 fetched results controller，它本质上是一个控制
+    Core Data 获取结果的对象。以下是我们的扩展应包含的内容：
+- en: '[PRE18]'
+  id: totrans-146
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE18]'
+- en: There’s a lot going on here, but really only a few important things. First,
+    we’re creating a new fetch request. Fetch requests are how we query Core Data
+    for our model objects. We’re sorting this request by `title`, which seems like
+    the most appropriate way to sort for a list of books. Next, we’re grabbing the
+    `viewContext` as the managed object context we’re going to be operating on for
+    this fetch. The `viewContext` is the context that operates on the main thread.
+    It’s perfectly acceptable, and recommended, to view managed objects on the main
+    thread. However, if we were writing objects, we’d be performing our actions on
+    a background thread instead.
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里发生了很多事情，但真正重要的只有几件事情。首先，我们正在创建一个新的获取请求。获取请求是我们查询 Core Data 模型对象的方法。我们通过 `title`
+    对请求进行排序，这似乎是对书籍列表进行排序的最合适方式。接下来，我们获取 `viewContext` 作为我们将在此获取操作中操作的托管对象上下文。`viewContext`
+    是在主线程上操作的上下文。在主线程上查看托管对象是完全可以接受的，也是推荐的。然而，如果我们正在编写对象，我们将在后台线程上执行我们的操作。
+- en: After we get our context, we create a fetched results controller object of type
+    `NSFetchedResultsController`. This is a purpose-built Core Data object used to
+    power fetched objects and supply them to a data source like a table view data
+    source or collection view data source. Eventually, we’ll have our `ListDataSource`
+    adhere to the delegate protocol `NSFetchedResultsControllerDelegate` that we’re
+    assigning here so it can receive updates and populate the table view, but for
+    now, we’re just setting the property on `fetchedResultsController` to what’s passed
+    in.
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在获取我们的上下文之后，我们创建了一个类型为 `NSFetchedResultsController` 的获取结果控制器对象。这是一个专为 Core Data
+    设计的对象，用于为类似于表视图数据源或集合视图数据源的数据源提供获取对象并将其供应给它们。最终，我们将让 `ListDataSource` 遵循我们在此处分配的代理协议
+    `NSFetchedResultsControllerDelegate`，以便它可以接收更新并填充表视图，但目前，我们只是将属性设置为传入的 `fetchedResultsController`。
+- en: Finally, we perform the actual fetch in Core Data with `performFetch()`. This
+    method can `throw`, so it’s wrapped in a `try` block to capture any errors. For
+    the sample app, we’re just calling `fatalError`, but in a production app, it would
+    be important to catch the error and handle it appropriately or display messaging
+    to the user.
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，在 Core Data 中使用 `performFetch()` 方法执行实际的获取操作。这个方法可能会 `throw` 异常，所以它被包裹在 `try`
+    块中以捕获任何错误。对于示例应用程序，我们只是调用 `fatalError`，但在生产应用程序中，捕获错误并适当处理或向用户显示消息是非常重要的。
+- en: Let’s use this extension and wire up our data source.
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们使用这个扩展并连接我们的数据源。
+- en: 'Head over to `ListDataSource`. We’re going to perform a few updates to this
+    file. The first thing to update is to remove the `data` property we’ve been using
+    to lazy load the JSON files. Replace that with a new `fetchedResultsController`
+    property like so:'
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 转到 `ListDataSource`。我们将对此文件进行一些更新。首先要更新的是删除我们一直在使用的用于延迟加载 JSON 文件的 `data` 属性。用一个新的
+    `fetchedResultsController` 属性来替换它，如下所示：
+- en: '[PRE19]'
+  id: totrans-152
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE19]'
+- en: 'Next, we need to add a new method to `ListDataSource` called `fetchCatalogResults`
+    that create our catalog fetched results controller we just created earlier. We’ll
+    store this in our new property:'
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们需要向 `ListDataSource` 添加一个名为 `fetchCatalogResults` 的新方法，该方法创建我们刚刚创建的目录获取结果控制器。我们将这个存储在我们的新属性中：
+- en: '[PRE20]'
+  id: totrans-154
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE20]'
+- en: 'Next, we need to add a new method to `ListDataSource` called `fetchCatalogResults`
+    that initializes an instance of the fetched results controller we created earlier.
+    We then take that instance and store it in our new property like so:'
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们需要向 `ListDataSource` 添加一个名为 `fetchCatalogResults` 的新方法，该方法初始化我们之前创建的获取结果控制器的实例。然后，我们将该实例存储在我们的新属性中，如下所示：
+- en: '[PRE21]'
+  id: totrans-156
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE21]'
+- en: We’ve used `fetchedResultsController` to supply the results where possible.
+    The only thing to note is that in the method `book(for:)` we grab a `BookManagedObject`
+    but then convert that using the extension method we created earlier to make it
+    a `Book` instance. We’ll continue to use `Book` instances throughout the view
+    controller and view layers of our application instead of passed-around managed
+    object instances directly.
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经使用 `fetchedResultsController` 来尽可能地提供结果。需要注意的唯一一点是，在方法 `book(for:)` 中，我们获取了一个
+    `BookManagedObject`，然后使用我们早些时候创建的扩展方法将其转换为 `Book` 实例。在应用程序的视图控制器和视图层中，我们将继续使用
+    `Book` 实例而不是直接传递托管对象实例。
+- en: 'The only missing piece is to switch `CatalogViewController` over to use the
+    new data source methods. We do this by calling `dataSource.fetchCatalogResults(with:delegate:)`
+    in the lazy loaded property `dataSource` like so:'
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 唯一缺少的部分是将 `CatalogViewController` 切换到使用新的数据源方法。我们通过在懒加载属性 `dataSource` 中调用 `dataSource.fetchCatalogResults(with:delegate:)`
+    来实现这一点，如下所示：
+- en: '[PRE22]'
+  id: totrans-159
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE22]'
+- en: Build and run the application and you’ll see…nothing in the catalog results.
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 构建并运行应用程序，你会看到……在目录结果中什么也没有。
+- en: If you’ll recall, we created our Core Data objects, but we *did not* populate
+    it with data. A common approach for this with iOS apps is to bundle the application
+    with either a database that’s been pre-populated or some sort of data to jump-start
+    the application via the web or inside the app bundle. In this instance, we’re
+    going to use our *catalog.json* to pre-populate the database if it didn’t exist
+    before it was created.
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你还记得，我们创建了Core Data对象，但是*没有*填充它们的数据。iOS应用程序的常见方法是将预先填充的数据库或某种数据捆绑到应用程序中，通过Web或应用程序包内的方式启动应用程序。在这种情况下，我们将使用我们的*catalog.json*来预填充数据库（如果在创建之前不存在）。
+- en: Seeding the database
+  id: totrans-162
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 种子数据库
+- en: 'Open up the `DataController` we created earlier. Add the following code to
+    the top of the `init(with:)` method along with a new variable called `shouldSeedDatabase`:'
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开我们之前创建的`DataController`。将以下代码添加到`init(with:)`方法的顶部，同时添加一个名为`shouldSeedDatabase`的新变量：
+- en: '[PRE23]'
+  id: totrans-164
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE23]'
+- en: 'First, we grab the database path where it’s expected to be. Then, we set the
+    variable `shouldSeedDatabase` to `true` if the database doesn’t exist yet. It’s
+    a simple bit of logic, but useful. Now, let’s create the method that actually
+    seeds the database. We’ll call it `seedData()`:'
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们获取预期数据库路径。然后，如果数据库尚不存在，我们将变量`shouldSeedDatabase`设置为`true`。这是一个简单的逻辑，但非常有用。现在，让我们创建实际种子数据库的方法。我们将称之为`seedData()`：
+- en: '[PRE24]'
+  id: totrans-166
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE24]'
+- en: Let’s walk through what this code does.
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们详细了解一下这段代码的功能。
+- en: You might recognize this line. First, we grab our *catalog.json* file that exists
+    in the application bundle. Next, we decode it from JSON into an array to `Book`
+    objects. The next line, starting with `persistentContainer.performBackgroundTask`,
+    uses the `NSPersistentContainer` we created as part of initializing our Core Data
+    stack to perform a task in a background queue. This is important because it’s
+    a task that writes to the persistent store, ultimately, and would block the main
+    thread until it’s complete. We get an `NSManagedObjectContext` as part of calling
+    this method, which, in turn, is used to create a new `BookManagedObject` as we
+    loop through our `books` array from the JSON.
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能会认出这行。首先，我们获取应用程序包中存在的*catalog.json*文件。接下来，我们将其从JSON解码为一个数组，其中包含`Book`对象。下一行代码，从`persistentContainer.performBackgroundTask`开始，使用我们在初始化Core
+    Data堆栈时创建的`NSPersistentContainer`在后台队列中执行任务。这很重要，因为这是一个写入持久存储的任务，最终会阻塞主线程直到完成。我们通过调用此方法获得一个`NSManagedObjectContext`，其反过来用于在遍历JSON中的`books`数组时创建一个新的`BookManagedObject`。
+- en: Each `BookManagedObject` is created inside of the background managed object
+    context. It’s important to note that really, it only exists in-memory at this
+    point. It’s not until we actually `save()` on the managed object context that
+    the objects and changes are persisted back through the persistent store coordinator
+    and on through to the database if necessary.
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个`BookManagedObject`都是在后台管理对象上下文中创建的。重要的是要注意，实际上它只存在于内存中。直到我们在管理对象上下文上实际调用`save()`方法，对象和更改才会通过持久存储协调器持久化，并传递到数据库（如果需要的话）。
+- en: 'Running the application will not, however, populate the database. The reason
+    for this is simple: the database already exists and this code checks to make sure
+    it doesn’t before it’ll seed the database. The solution: delete the app from the
+    iOS Simulator and then build and run the application again. If everything goes
+    well, you’ll see, in our catalog view, a list of the same books as before, sorted
+    by `title`.'
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是，运行应用程序不会填充数据库。这是因为数据库已经存在，并且此代码在填充数据库之前检查确保它不存在。解决方案是：从iOS模拟器中删除应用程序，然后再次构建和运行应用程序。如果一切顺利，你将在我们的目录视图中看到与之前相同的书籍列表，按`title`排序。
+- en: 'Whew. Breathe a sigh of relief. We’ve done it. We’re using a database just
+    like in our Android app. However, we’ve taken it a bit further to get the full
+    benefits of using Core Data over just a straight SQLite database. But, we’re not
+    done yet! We need to take this database and utilize it for our original purpose:
+    saving books for later. Let’s jump back on that part of the project!'
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 哦，终于完成了。松了口气。我们就像在我们的Android应用程序中一样使用数据库。但是，我们进一步利用了Core Data的全部优势，而不仅仅是直接使用SQLite数据库。但是，我们还没有完成！我们需要将这个数据库用于我们最初的目的：保存书籍以便以后使用。让我们回到项目的这一部分吧！
+- en: Saving Books
+  id: totrans-172
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 保存书籍
+- en: So our persistence layer saves our books. If later we’re offered a remote service
+    that can update our database with more books from the library, we have both the
+    infrastructure and plumbing in place to do so. So what’s left? Remember that button
+    we added earlier, to mark a `Book` instance as a favorite of the current user?
+    Let’s hook that up now.
+  id: totrans-173
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们的持久化层保存了我们的书籍。如果以后我们提供了一个远程服务，可以从图书馆更新更多书籍到我们的数据库中，我们已经准备好了基础设施和管道来完成这项工作。那还剩下什么呢？还记得我们之前添加的按钮吗，用于将`Book`实例标记为当前用户的收藏书籍？现在让我们来连接它。
+- en: Android
+  id: totrans-174
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: As we’ve mentioned several times, there are several ways to accomplish this,
+    and it’s very fair to assume someone might want to add a column to the `BOOKS`
+    table in the database and set a `INTEGER` value of 0 (false) or 1 (true) there
+    as the toggle is switched (unlike most SQL RDBMSs, SQLite does not have a boolean
+    data type—typically integers are used in the pattern just described). In fact,
+    in the long run, that’s probably how I’d do it to. However, for this example,
+    we’re going to use an alternate approach, first for simplicity, but also to show
+    another common and handy feature built in to the Android framework and discussed
+    in [Part I, *Tasks and Operations*](part01.html#part_1_tasks), in [Chapter 11](ch11.html#topics_preferences).
+  id: totrans-175
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我们多次提到的，有几种方法可以实现这一点，可以合理假设有人可能希望向数据库的`BOOKS`表中添加一列，并将一个`INTEGER`值设置为0（false）或1（true），以便在切换开关时进行操作（与大多数SQL
+    RDBMS不同，SQLite没有布尔数据类型，通常在模式中使用整数）。事实上，在长期来看，这可能是我会做的方式。然而，对于本例子，我们将使用另一种方法，首先是为了简单起见，同时也为了展示Android框架中内置的另一个常见且便利的特性，在[第一部分，*任务和操作*](part01.html#part_1_tasks)，在[第11章](ch11.html#topics_preferences)中有所讨论。
+- en: As mentioned, `SharedPreferences` accepts as `Set` of `Strings`. This seems
+    like an ideal data structure for this kind of work—we want a unique, unordered
+    collection if book IDs (ISBN numbers) by which we can easily identify if a book
+    is a favorite of the user or not. If toggling “on,” we add the ISBN to the `Set`—if
+    toggling “off,” we remove it. Simple! At some point you might want to add a custom
+    UI like a star that turns from gold to gray, or special styling in the list, but
+    for now we’ll just update the text of the button to identify the current state.
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如前所述，`SharedPreferences`接受`Set`类型的`Strings`。这似乎是这种工作的理想数据结构——我们希望通过它可以轻松地识别书籍的唯一、无序集合（通过书籍的ISBN号码），从而确定书籍是否是用户的收藏。如果切换为“打开”，我们将ISBN添加到`Set`中；如果切换为“关闭”，我们则移除它。简单！在某些时候，您可能想要添加一个自定义UI，例如一个从金色变灰色的星星，或者在列表中进行特殊样式设置，但目前我们只会更新按钮的文本来标识当前状态。
+- en: 'So first, let’s make a method that toggles a `Book` in the `Set<String>` we
+    identify in `SharedPreferences`. Let’s assume we’ll define this function in the
+    `BookDetailActivity` class and therefore have local access to a `Context` object
+    (the activity itself) and all its accessors:'
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么首先，让我们创建一个方法来在`SharedPreferences`中切换`Set<String>`中的`Book`。假设我们将在`BookDetailActivity`类中定义此功能，并因此可以本地访问`Context`对象（即活动本身）及其所有访问器：
+- en: 'We can add that method to the button in a click listener like so:'
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以在点击监听器中为按钮添加该方法，如下所示：
+- en: That should do it! Run the app, pick a book from the list, and in the detail
+    page, toggle the favorite setting. Since this value is stored in a persistent
+    structure, the value will persist between app launches and power cycles.
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样！运行应用程序，从列表中选择一本书，在详细页面中切换收藏设置。由于此值存储在持久结构中，因此该值将在应用程序启动和电源循环之间保持不变。
+- en: What We’ve Learned
+  id: totrans-180
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: Congrats! We’ve got a diverse, if basic, set of functionality in our app. The
+    application is usable and consistent between Android and iOS. In this chapter,
+    we’ve learned about data persistence and how different it is in both platforms.
+    Android has a much more approachable database approach to storing and accessing
+    data, whereas iOS takes a more abstract method but offers considerably more functionality
+    for free—albeit with considerable added complexity.
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恭喜！我们的应用程序拥有多样化但基本的功能集。该应用程序在Android和iOS之间的使用方式是一致的。在本章中，我们学习了数据持久化以及它在两个平台上的不同之处。Android有一种更加可接近的数据库方法来存储和访问数据，而iOS采用了一种更抽象的方法，但提供了更多的免费功能，尽管增加了相当多的复杂性。
+- en: 'Before we ride off into the sunset with our app, we need to take a look at
+    one more aspect: networking. Let’s walk through the pitfalls and practices to
+    adding some lightweight connectivity to this app in the next chapter.'
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的应用程序的日落之前，我们还需要再看一个方面：网络连接。让我们在下一章中详细介绍如何向此应用程序添加一些轻量级的连接，以及其中的陷阱和最佳实践。

@@ -1,0 +1,1433 @@
+- en: 'Chapter 16\. Diffutil and Data Binding: *Life in the Fast Lane*'
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第16章。Diffutil和数据绑定：*快车道上的生活*
+- en: '![image](Images/f0671-01.png)'
+  id: totrans-1
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0671-01.png)'
+- en: '**Your app needs to run as smoothly and efficiently as possible.**'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**您的应用程序需要尽可能平稳和高效地运行。**'
+- en: 'But if you’re not careful, large or complex data sets can cause your recycler
+    view to glitch. In this chapter, we’ll introduce you to ***DiffUtil***: a utility
+    class that **adds extra smarts to your recycler view**. You’ll find out how to
+    use it to **make efficient updates** to your recycler view. You’ll discover how
+    ***ListAdapters* make using *DiffUtil* a breeze**. And along the way, you’ll learn
+    **how to get rid of *findViewById()* for good** by implementing **data binding
+    in your recycler view code**.'
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但如果不小心，大型或复杂的数据集可能会导致回收视图出现故障。在本章中，我们将向您介绍***DiffUtil***：这是一个实用类，**为您的回收视图增加额外的智能**。您将了解如何使用它来**进行高效的更新**您的回收视图。您还将发现***ListAdapters*如何让使用*DiffUtil*变得轻而易举**。在此过程中，您将学习如何通过在您的回收视图代码中实现**数据绑定**，彻底摆脱**findViewById()**。
+- en: The recycler view displays task data correctly…
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 回收视图正确显示任务数据…
+- en: 'In the previous chapter, we added a recycler view to the Tasks app that displays
+    its data exactly how we want it to. Each task is shown in a separate card, and
+    each card displays the task name and whether it has been completed. The cards
+    are then laid out in a two-column grid like this:'
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前一章中，我们向任务应用程序添加了一个回收视图，以完全符合我们想要的方式显示其数据。每个任务显示在单独的卡片中，每个卡片显示任务名称及其是否已完成。然后将这些卡片按照两列的网格布局如下显示：
+- en: '![image](Images/f0672-01.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0672-01.png)'
+- en: …but when the data’s updated, the recycler view jumps
+  id: totrans-7
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …但在更新数据时，回收视图会跳动
+- en: Each time we add a new task, the recycler view gets redrawn so that it includes
+    the new record and stays up-to-date. When it does this, however, the recycler
+    view jumps and it’s not very smooth.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次添加新任务时，回收视图会重新绘制，以包括新记录并保持更新。然而，在这个过程中，回收视图会跳动，显示效果不太平滑。
+- en: Each time the recycler view needs to be updated, *its entire list gets redrawn*.
+    There are no smooth transitions to indicate what’s changed, and if the list is
+    very long, the user might lose her place. It’s also inefficient for large data
+    sets, and can lead to performance problems.
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次需要更新回收视图时，*它的整个列表都会重新绘制*。没有流畅的过渡来显示发生了什么变化，如果列表非常长，用户可能会失去自己的位置。对于大型数据集，这也是低效的，并可能导致性能问题。
+- en: Before we solve these problems, let’s have a quick reminder of how the Tasks
+    app is structured.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在解决这些问题之前，让我们快速回顾一下任务应用程序的结构。
+- en: The Tasks app revisited
+  id: totrans-11
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 重新审视的任务应用程序
+- en: As we’re sure you remember, the Tasks app lets the user enter task records,
+    which are stored in a Room database. It includes a recycler view, which displays
+    all of the records that have been entered.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您肯定记得的那样，任务应用程序允许用户输入任务记录，这些记录存储在Room数据库中。它包括一个回收视图，显示已输入的所有记录。
+- en: The app’s main screen is defined by a fragment named `TasksFragment`, which
+    uses a view model named `TasksViewModel`. Its layout—*fragment_tasks.xml*—includes
+    a recycler view that displays a grid of tasks. The recycler view uses an adapter
+    named `TaskItemAdapter`, and its items are arranged using the *task_item.xml*
+    layout file.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序的主屏幕由名为`TasksFragment`的片段定义，该片段使用名为`TasksViewModel`的视图模型。其布局—*fragment_tasks.xml*—包括一个回收视图，显示任务的网格。回收视图使用名为`TaskItemAdapter`的适配器，其项目使用*task_item.xml*布局文件排列。
+- en: 'Here’s how these parts of the app fit together:'
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以下是应用程序的各个部分是如何配合的：
+- en: '![image](Images/f0673-01.png)'
+  id: totrans-15
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0673-01.png)'
+- en: We need to fix `TasksFragment`’s recycler view so that it no longer jumps when
+    a new record gets added. In order to do this, let’s revisit how the recycler view’s
+    data gets set.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要修复`TasksFragment`的回收视图，使其在添加新记录时不再跳动。为了做到这一点，让我们重新审视回收视图如何设置其数据。
+- en: How the recycler view gets its data
+  id: totrans-17
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 回收视图如何获取其数据
+- en: 'The following things happen each time the recycler view’s data needs to be
+    updated:'
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次需要更新回收视图的数据时，都会发生以下事情：
+- en: '**TasksFragment is notified when a record is added to the database.**'
+  id: totrans-19
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当数据库添加记录时，TasksFragment会收到通知。**'
+- en: 'This happens because it observes `TasksViewModel`’s `tasks` property: a `LiveData<List<Task>>`
+    that gets its data from the database.'
+  id: totrans-20
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 发生这种情况是因为它观察`TasksViewModel`的`tasks`属性：一个`LiveData<List<Task>>`，它从数据库获取其数据。
+- en: '![image](Images/f0674-01.png)'
+  id: totrans-21
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0674-01.png)'
+- en: '**TasksFragment sets TaskItemAdapter’s data property, which holds the recycler
+    view’s data.**'
+  id: totrans-22
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment设置TaskItemAdapter的data属性，该属性保存回收视图的数据。**'
+- en: It sets it to a new `List<Task>` (that it gets from the `tasks` property) that
+    includes the latest record changes.
+  id: totrans-23
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它将其设置为从`tasks`属性获取的新`List<Task>`（包括最新的记录更改）。
+- en: '![image](Images/f0674-02.png)'
+  id: totrans-24
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0674-02.png)'
+- en: '**TaskItemAdapter tells the recycler view that the data has changed.**'
+  id: totrans-25
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TaskItemAdapter告知回收视图数据已更改。**'
+- en: The recycler view responds by redrawing and rebinding each item in the list.
+  id: totrans-26
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 当回收视图响应时，它会重新绘制和重新绑定列表中的每个项目。
+- en: '![image](Images/f0674-03.png)'
+  id: totrans-27
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0674-03.png)'
+- en: The data property’s setter calls notifyDataSetChanged()
+  id: totrans-28
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`data`属性的setter调用了`notifyDataSetChanged()`'
+- en: 'The recycler view redraws and rebinds its entire list because of the setter,
+    which we added to `TaskItemAdapter`’s `data` property. Here’s a reminder of the
+    code:'
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回收视图由于setter而重新绘制和重新绑定其整个列表，我们将其添加到了`TaskItemAdapter`的`data`属性中。以下是代码的提醒：
+- en: '![image](Images/f0675-01.png)'
+  id: totrans-30
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0675-01.png)'
+- en: The setter gets called each time the `data` property needs to be updated. As
+    you can see, it sets the `data` property to the new value, and then calls `notifyDataSetChanged()`.
+    This method tells any observers—including the recycler view—that the data set
+    has changed, so the recycler view is redrawn to include the latest changes.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次需要更新`data`属性时都会调用其setter。如您所见，它将`data`属性设置为新值，然后调用`notifyDataSetChanged()`。此方法告知包括回收视图在内的任何观察者数据集已更改，因此回收视图会重新绘制以包括最新更改。
+- en: notifyDataSetChanged() redraws the entire list
+  id: totrans-32
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: '`notifyDataSetChanged()`重新绘制整个列表'
+- en: Using `notifyDataSetChanged()`, however, is problematic. Each time it’s called,
+    it tells the recycler view that the `data` property is out of date in some way,
+    *without specifying how*. As the recycler view doesn’t know what’s changed, it
+    responds by **rebinding and redrawing every item in its list**.
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，使用`notifyDataSetChanged()`存在问题。每次调用它时，都会告诉回收视图`data`属性在某种方式上过时，*但未指明如何过时*。由于回收视图不知道发生了什么变化，它会响应性地**重新绑定和重新绘制列表中的每个项目**。
+- en: When the entire recycler view rebinds and redraws its items in this way, it
+    loses track of the user’s position in the list. If the list contains more than
+    a few records, this can cause the list to jump.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当回收视图以此方式重新绑定和重新绘制其项目时，会丢失用户在列表中的位置跟踪。如果列表包含超过几条记录，这可能导致列表跳动。
+- en: It’s also inefficient for large data sets. If the recycler view contains many
+    items, rebinding and redrawing each item is a lot of unnecessary work and can
+    lead to performance problems.
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于大数据集也不高效。如果回收视图包含许多项目，重新绑定和重新绘制每个项目都是大量不必要的工作，可能会导致性能问题。
+- en: '**Each time notifyDataSetChanged() gets called, the recycler view rebinds and
+    redraws its entire list. This is inefficient, particularly for large data sets.**'
+  id: totrans-36
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**每次调用notifyDataSetChanged()时，回收视图都会重新绑定和重新绘制其整个列表。这对于大数据集尤其低效。**'
+- en: Tell the recycler view what needs to change
+  id: totrans-37
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 告知回收视图需要做出的变更
+- en: A more efficient alternative to calling `notifyDataSetChanged()` is to tell
+    the recycler which items in the list have changed so that it only updates those
+    items. If a new task record gets added to the database, for example, it’s more
+    efficient for the recycler view to just add that item than it is to rebind and
+    redraw the entire list.
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调用`notifyDataSetChanged()`的更有效替代方法是告知回收视图列表中哪些项目已更改，以便仅更新这些项目。例如，如果向数据库添加了新任务记录，回收视图只需添加该项目，而不是重新绑定和重新绘制整个列表。
+- en: Manually working out these differences can be tricky and require a lot of code.
+    The good news, however, is that the recycler view library includes a utility class
+    named `**DiffUtil**` that takes care of all this hard work for you.
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 手动计算这些差异可能会很棘手且需要大量代码。不过好消息是，回收视图库包含一个名为`**DiffUtil**`的实用类，它会为您处理所有这些繁重的工作。
+- en: DiffUtil works out differences between lists
+  id: totrans-40
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: DiffUtil用于计算列表之间的差异
+- en: The `DiffUtil` class specializes in finding out what the differences are between
+    two lists so that you don’t have to.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`DiffUtil`类专门用于查找两个列表之间的差异，从而避免手动处理这些差异。'
+- en: 'Each time an adapter is given a new version of the list its recycler view uses,
+    `DiffUtil` compares it with the old version. It figures out what items have been
+    added, removed, or updated, and it then tells the recycler view what needs to
+    be changed in the most efficient way possible:'
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次适配器接收到列表的新版本时，其回收视图会使用`DiffUtil`将其与旧版本进行比较。它找出哪些项目已添加、删除或更新，然后以最有效的方式告诉回收视图需要进行哪些变更：
+- en: Note
+  id: totrans-43
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: To be precise, it works out what the changes are using Eugene W. Myers’s clever
+    difference algorithm.
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 准确地说，它利用Eugene W. Myers的巧妙差异算法计算变更是什么。
+- en: '![image](Images/f0676-02.png)'
+  id: totrans-45
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0676-02.png)'
+- en: As the recycler view no longer needs to redraw and rebind its entire list, using
+    `DiffUtil` is a much more efficient way of updating a recycler view’s data. It
+    also means that the user doesn’t lose her place in the list, and the recycler
+    view can even provide smooth transition animations to make it clear what changes
+    there have been.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于回收视图不再需要重绘和重新绑定其整个列表，使用DiffUtil是更新回收视图数据的一种更高效的方式。这还意味着用户不会在列表中丢失她的位置，回收视图甚至可以提供平滑的过渡动画，以清楚地显示发生了哪些变化。
+- en: '![image](Images/f0676-03.png)'
+  id: totrans-47
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0676-03.png)'
+- en: Here’s what we’re going to do
+  id: totrans-48
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 这是我们将要做的事情
+- en: In this chapter, we’re going to make improvements to the Tasks app’s recycler
+    view so that it uses `DiffUtil` and populates its views using data binding. These
+    changes will make the recycler view more efficient, and improve the user’s experience
+    of it too.
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们将改进Tasks应用程序的回收视图，使其使用DiffUtil并使用数据绑定填充其视图。这些更改将使回收视图更加高效，并且还将改善用户的使用体验。
+- en: 'Here are the steps we’ll take:'
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们将采取的步骤：
+- en: '**Make the recycler view use DiffUtil.**'
+  id: totrans-51
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**使回收视图使用DiffUtil。**'
+- en: We’ll create a new class named `TaskDiffItemCallback` that uses `DiffUtil` to
+    compare items in a list. We’ll then update the `TaskItemAdapter` code so that
+    it uses this new class. These changes will make the recycler view more efficient,
+    and give the user a smoother experience when they use it.
+  id: totrans-52
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将创建一个名为`TaskDiffItemCallback`的新类，该类使用DiffUtil来比较列表中的项。然后，我们将更新`TaskItemAdapter`的代码，使其使用这个新类。这些更改将使回收视图更加高效，并为用户在使用时提供更流畅的体验。
+- en: '![image](Images/f0677-01.png)'
+  id: totrans-53
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0677-01.png)'
+- en: '**Implement data binding in the recycler view’s layout.**'
+  id: totrans-54
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**在回收视图的布局中实现数据绑定。**'
+- en: We’ll remove the calls to `findViewById()` in the `TaskItemAdapter` code, and
+    populate each item’s views using data binding.
+  id: totrans-55
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 在`TaskItemAdapter`代码中，我们将删除对`findViewById()`的调用，并使用数据绑定填充每个项的视图。
+- en: '![image](Images/f0677-02.png)'
+  id: totrans-56
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0677-02.png)'
+- en: We’ll begin by making the recycler view use `DiffUtil`.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将首先使回收视图使用`DiffUtil`。
+- en: '![image](Images/f0677-03.png)'
+  id: totrans-58
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0677-03.png)'
+- en: We need to implement DiffUtil.ItemCallback
+  id: totrans-59
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们需要实现`DiffUtil.ItemCallback`。
+- en: '![image](Images/f0678-01.png)'
+  id: totrans-60
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0678-01.png)'
+- en: In order to use `DiffUtil` with the Tasks app’s recycler view, we need to create
+    a new class (which we’ll name `TaskDiffItemCallback`) that implements the `**DiffUtil.ItemCallback**`
+    abstract class. This class is used to calculate the difference between two non-null
+    items in a list, and will help make the recycler view more efficient.
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了在Tasks应用的回收视图中使用DiffUtil，我们需要创建一个新类（我们将其命名为`TaskDiffItemCallback`），该类实现了`**DiffUtil.ItemCallback**`抽象类。该类用于计算列表中两个非空项之间的差异，将有助于提高回收视图的效率。
+- en: 'When you implement `DiffUtil.ItemCallback`, you first need to specify the type
+    of objects it works with. This is done using generics like so:'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你实现`DiffUtil.ItemCallback`时，首先需要指定它处理的对象类型。使用泛型来完成，如下所示：
+- en: '![image](Images/f0678-02.png)'
+  id: totrans-63
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0678-02.png)'
+- en: 'You also need to override two methods: `areItemsTheSame()` and `areContentsTheSame()`.'
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您还需要重写两个方法：`areItemsTheSame()`和`areContentsTheSame()`。
+- en: '`**areItemsTheSame()**` is used to check whether two objects that are passed
+    to it refer to the same *item*. We’ll implement it using:'
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`**areItemsTheSame()**`用于检查传递给它的两个对象是否指的是同一个*项目*。我们将使用以下方法实现它：'
+- en: '![image](Images/f0678-03.png)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0678-03.png)'
+- en: so that if both objects have the same `taskId`, it means they refer to the same
+    item, and the method returns *true*.
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，如果两个对象都具有相同的`taskId`，那么它们指的是同一个项目，该方法返回*true*。
+- en: '`**areContentsTheSame()**` is used to check whether the two objects have the
+    same *contents*, and it’s only called if `areItemsTheSame()` is *true*. As `Task`
+    is a data class, we can implement this method using:'
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`**areContentsTheSame()**`用于检查两个对象是否具有相同的*内容*，仅在`areItemsTheSame()`为*true*时调用。由于`Task`是一个数据类，我们可以使用以下方法实现此方法：'
+- en: '![image](Images/f0678-04.png)'
+  id: totrans-69
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0678-04.png)'
+- en: Create TaskDiffItemCallback.kt
+  id: totrans-70
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建TaskDiffItemCallback.kt
+- en: To create the new class, highlight the *com.hfad.tasks* package in the *app/src/main/java*
+    folder, then go to File→New→Kotlin Class/File. Name the file “TaskDiffItemCallback”
+    and choose the Class option.
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建新类，请在*app/src/main/java*文件夹中突出显示*com.hfad.tasks*包，然后转到“文件”→“新建”→“Kotlin 类/文件”。将文件命名为“TaskDiffItemCallback”，选择“类”选项。
+- en: 'Once you’ve created the file, update its code so that it looks like this:'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建文件后，请更新其代码，使其看起来像这样：
+- en: '![image](Images/f0678-05.png)'
+  id: totrans-73
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0678-05.png)'
+- en: A ListAdapter accepts a DiffUtil.ItemCallback argument
+  id: totrans-74
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: ListAdapter接受DiffUtil.ItemCallback参数
+- en: Now that we’ve defined `TaskDiffItemCallback`, we need to use it in the adapter
+    code. To do this, we’ll update `TaskItemAdapter` so that it extends the `**ListAdapter**`
+    class instead of `RecyclerView.Adapter`.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已定义了`TaskDiffItemCallback`，我们需要在适配器代码中使用它。为此，我们将更新`TaskItemAdapter`，使其扩展**ListAdapter**类而不是`RecyclerView.Adapter`。
+- en: '`ListAdapter` is a type of `RecyclerView.Adapter` that’s designed to work with
+    lists. It provides its own backing list so that you don’t have to define your
+    own, and it accepts a `DiffUtil.ItemCallback` in its constructor.'
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`ListAdapter`是一种设计用于处理列表的`RecyclerView.Adapter`类型。它提供自己的后备列表，因此您不必定义自己的列表，并且在其构造函数中接受`DiffUtil.ItemCallback`。'
+- en: 'We’re going to specify that `TaskItemAdapter` is a type of `ListAdapter` that
+    provides its own `List<Task>`, and we’ll pass it an instance of `TaskDiffItemCallback`.
+    Here’s the code to do this:'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将指定`TaskItemAdapter`是`ListAdapter`的一种类型，它提供自己的`List<Task>`，并且我们将向其传递一个`TaskDiffItemCallback`的实例。以下是执行此操作的代码：
+- en: '**A ListAdapter is a type of RecyclerView.Adapter that provides its own backing
+    list. It works well with DiffUtil.**'
+  id: totrans-78
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**ListAdapter是一种RecyclerView.Adapter的类型，它提供自己的后备列表。它与DiffUtil非常配合。**'
+- en: '![image](Images/f0679-01.png)'
+  id: totrans-79
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0679-01.png)'
+- en: We can simplify the rest of TaskItemAdapter’s code
+  id: totrans-80
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们可以简化TaskItemAdapter的其余代码
+- en: Once `TaskItemAdapter` has been changed to extend `ListAdapter`, we can remove
+    its `List<Task> data` property, along with its setter. This property is no longer
+    needed because `ListAdapter`s come with their own backing list, so you don’t need
+    to define your own.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦`TaskItemAdapter`已更改为扩展`ListAdapter`，我们可以删除其`List<Task> data`属性以及其setter。因为`ListAdapter`具有自己的后备列表，所以不再需要此属性。
+- en: We can also delete `TaskItemAdapter`’s `getItemCount()` method. This was needed
+    when the adapter extended `RecyclerView.Adapter`, but `ListAdapter` provides its
+    own implementation, so it’s no longer required.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还可以删除`TaskItemAdapter`的`getItemCount()`方法。当适配器扩展`RecyclerView.Adapter`时，这是必需的，但`ListAdapter`提供了自己的实现，因此不再需要。
+- en: 'Finally, we need to update the adapter’s `onBindViewHolder()` method so that
+    instead of using:'
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们需要更新适配器的`onBindViewHolder()`方法，使其不再使用：
+- en: '[PRE0]'
+  id: totrans-84
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'to get the item at a certain position from the `data` property, it uses:'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要获取`data`属性中特定位置的项目，它使用：
+- en: '[PRE1]'
+  id: totrans-86
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: This gets the item at the specified position from the adapter’s backing list.
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这获取适配器后备列表中指定位置的项目。
+- en: We’ll show you all of the code for this on the next page.
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页上向您展示所有这些代码。
+- en: The updated code for TaskItemAdapter.kt
+  id: totrans-89
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更新后的`TaskItemAdapter.kt`的代码
+- en: 'Here’s the updated `TaskItemAdapter` code; update the code in *TaskItemAdapter.kt*
+    to include all the changes shown here:'
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是更新后的`TaskItemAdapter`代码；请更新*TaskItemAdapter.kt*中的代码，以包含此处显示的所有更改：
+- en: '![image](Images/f0680-02.png)'
+  id: totrans-91
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0680-02.png)'
+- en: Populate the ListAdapter’s list…
+  id: totrans-92
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 填充ListAdapter的列表…
+- en: The final thing that we need to do is pass a list of `Task` records to `TaskItemAdapter`’s
+    backing list.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们最后需要做的是将一组`Task`记录传递给`TaskItemAdapter`的后备列表。
+- en: Previously, we did this by making `TasksFragment` observe `TasksViewModel`’s
+    `tasks` property. Each time the property changes, the fragment updates the `TaskItemAdapter`’s
+    `data` property to the `tasks` property’s new value.
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以前，我们通过使`TasksFragment`观察`TasksViewModel`的`tasks`属性来完成此操作。每次属性更改时，片段都会将`TaskItemAdapter`的`data`属性更新为`tasks`属性的新值。
+- en: 'Here’s a reminder of the code we used to do this:'
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们用来做这件事的代码的提醒：
+- en: '![image](Images/f0681-02.png)'
+  id: totrans-96
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0681-02.png)'
+- en: Now that the adapter uses a backing list instead of the `data` property, we
+    need to use a slightly different approach.
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在适配器使用后备列表而不是`data`属性，因此我们需要使用稍微不同的方法。
+- en: '![image](Images/f0681-03.png)'
+  id: totrans-98
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0681-03.png)'
+- en: …using submitList()
+  id: totrans-99
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …使用submitList()
+- en: To pass a list of tasks to `TaskItemAdapter`’s backing list, we’ll use a method
+    called `submitList()`. This method is used to update a `ListAdapter`’s backing
+    list with a new `List` object, so it’s perfect for this situation.
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要将任务列表传递给`TaskItemAdapter`的后备列表，我们将使用一个名为`submitList()`的方法。此方法用于使用新的`List`对象更新`ListAdapter`的后备列表，因此非常适合这种情况。
+- en: 'Here’s the new code that we need to add to `TasksFragment` (in bold), which
+    we’ll add on the next page:'
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们需要添加到`TasksFragment`（粗体部分）的新代码，我们将在下一页上添加：
+- en: '![image](Images/f0681-04.png)'
+  id: totrans-102
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0681-04.png)'
+- en: When the adapter receives the new list, it uses the `TaskDiffItemCallback` class
+    to compare it with the old version. It then updates the recycler view with the
+    differences instead of replacing the entire list. This approach is more efficient,
+    and leads to a much smoother user experience.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当适配器接收到新列表时，它使用`TaskDiffItemCallback`类将其与旧版本进行比较。 然后，它通过更新差异而不是替换整个列表来更新回收视图。
+    这种方法更有效率，可以带来更流畅的用户体验。
+- en: Let’s see what the updated `TasksFragment` code looks like.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看更新后的`TasksFragment`代码是什么样子的。
+- en: The updated code for TasksFragment.kt
+  id: totrans-105
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TasksFragment.kt的更新代码
+- en: 'Here’s the updated `TasksFragment` code; update the code in *TasksFragment.kt*
+    to include all the changes shown here (in bold):'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是更新的`TasksFragment`代码；请在*TasksFragment.kt*中包括这里显示的所有更改（用粗体表示）：
+- en: '![image](Images/f0682-02.png)'
+  id: totrans-107
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图像](Images/f0682-02.png)'
+- en: Let’s run through what happens when the app runs.
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看应用程序运行时发生了什么。
+- en: What happens when the code runs
+  id: totrans-109
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码运行时发生了什么
+- en: 'The following things happen when the app runs:'
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序运行时发生以下事情：
+- en: '**When the app launches, MainActivity displays TasksFragment.**'
+  id: totrans-111
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**应用程序启动时，MainActivity显示TasksFragment。**'
+- en: '`TasksFragment` uses `TasksViewModel` as its view model.'
+  id: totrans-112
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`TasksFragment`使用`TasksViewModel`作为其视图模型。'
+- en: '![image](Images/f0683-02.png)'
+  id: totrans-113
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图像](Images/f0683-02.png)'
+- en: '**TasksFragment creates a TaskItemAdapter object, and assigns it to the recycler
+    view as its adapter.**'
+  id: totrans-114
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment创建一个TaskItemAdapter对象，并将其分配给回收视图作为其适配器。**'
+- en: '![image](Images/f0683-03.png)'
+  id: totrans-115
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图像](Images/f0683-03.png)'
+- en: '**TasksFragment observes TasksViewModel’s tasks property.**'
+  id: totrans-116
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment观察TasksViewModel的tasks属性。**'
+- en: This property is a `LiveData<List<Task>>` that holds an up-to-date list of records
+    from the database.
+  id: totrans-117
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这个属性是一个`LiveData<List<Task>>`，包含来自数据库的最新记录列表。
+- en: '![image](Images/f0683-04.png)'
+  id: totrans-118
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图像](Images/f0683-04.png)'
+- en: '**Each time the tasks property gets a new value, TasksFragment submits its
+    List<Task> to the TaskItemAdapter.**'
+  id: totrans-119
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**每当tasks属性获得新值时，TasksFragment将其List<Task>提交给TaskItemAdapter。**'
+- en: '![image](Images/f0684-02.png)'
+  id: totrans-120
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图像](Images/f0684-02.png)'
+- en: '**TaskItemAdapter uses TaskDiffItemCallback to compare its old data with the
+    new.**'
+  id: totrans-121
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TaskItemAdapter使用TaskDiffItemCallback来比较其旧数据和新数据。**'
+- en: It uses `TaskDiffItemCallback`’s `areItemsTheSame()` and `areContentsTheSame()`
+    methods to figure out what’s changed.
+  id: totrans-122
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它使用`TaskDiffItemCallback`的`areItemsTheSame()`和`areContentsTheSame()`方法来找出发生了什么变化。
+- en: '![image](Images/f0684-03.png)'
+  id: totrans-123
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图像](Images/f0684-03.png)'
+- en: '**TaskItemAdapter tells the recycler view what’s changed.**'
+  id: totrans-124
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TaskItemAdapter告诉回收视图发生了什么变化。**'
+- en: The recycler view rebinds and redraws the necessary items.
+  id: totrans-125
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 回收视图重新绑定并重绘必要的项目。
+- en: '![image](Images/f0684-04.png)'
+  id: totrans-126
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图像](Images/f0684-04.png)'
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-127
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图像](Images/car.png) 测试驾驶'
+- en: When we run the app, `TasksFragment` displays a grid of cards in the recycler
+    view as before.
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，`TasksFragment`像以前一样在回收视图中显示卡片的网格。
+- en: When we enter a new task name and click on the button, a new task card is added
+    to the recycler view, and the existing cards shuffle along to accommodate it.
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们输入一个新任务名称并点击按钮时，新的任务卡片将添加到回收视图中，现有的卡片将移动以适应它。
+- en: '![image](Images/f0685-02.png)'
+  id: totrans-130
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图像](Images/f0685-02.png)'
+- en: The recycler view behaves in this way because we’re using `DiffUtil` to submit
+    changes to it, instead of replacing the entire list.
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回收视图之所以表现出这种方式，是因为我们使用`DiffUtil`来提交变更给它，而不是替换整个列表。
+- en: BE the ListAdapter
+  id: totrans-132
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 成为ListAdapter
+- en: '![image](Images/common04.png)'
+  id: totrans-133
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图像](Images/common04.png)'
+- en: '**A recycler view’s ListAdapter class has a backing list of Drinks. It uses
+    the Drink class shown on the right. Your job is to play like you’re the ListAdapter,
+    and say if the ItemCallback classes below will correctly spot any changes when
+    the ListAdapter is given a new list. Why? Why not?**'
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**回收视图的ListAdapter类具有Drinks的后备列表。 它使用右侧显示的Drink类。 你的任务是扮演像ListAdapter一样，并说如果给定一个新列表时，下面的ItemCallback类是否能正确地检测到任何变化。
+    为什么？ 为什么不？**'
+- en: '![image](Images/f0686-01.png)![image](Images/f0686-02.png)'
+  id: totrans-135
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图像](Images/f0686-01.png)![图像](Images/f0686-02.png)'
+- en: '![Images](Images/arr.png) **Answers in [“BE the ListAdapter Solution”](#be_the_listadapter_solution).**'
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '![图像](Images/arr.png) **在[“成为ListAdapter的解决方案”](#be_the_listadapter_solution)中的答案。**'
+- en: Recycler views can use data binding
+  id: totrans-137
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 回收视图可以使用数据绑定
+- en: '![image](Images/f0687-01.png)'
+  id: totrans-138
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图像](Images/f0687-01.png)'
+- en: Another way in which we can improve the Tasks app’s recycler view is to make
+    it use data binding.
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们改进Tasks应用程序的回收视图的另一种方式是使其使用数据绑定。
+- en: As you may recall, `TaskItemAdapter`’s `TaskItemViewHolder` inner class uses
+    `findViewById()` to get a reference to the views for each item in the recycler
+    view. The view holder’s `bind()` method then uses these references to add data
+    to each view.
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您可能记得的那样，`TaskItemAdapter` 的 `TaskItemViewHolder` 内部类使用 `findViewById()` 来获取
+    RecyclerView 中每个项的视图引用。然后，视图持有者的 `bind()` 方法使用这些引用向每个视图添加数据。
+- en: 'Here’s a reminder of this code:'
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是这段代码的一个提醒：
+- en: '![image](Images/f0687-02.png)'
+  id: totrans-142
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0687-02.png)'
+- en: If we change the recycler view to use data binding, we can remove the calls
+    to `findViewById()`, and make each view fetch its own data.
+  id: totrans-143
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们更改 RecyclerView 以使用数据绑定，我们可以移除对 `findViewById()` 的调用，并使每个视图获取自己的数据。
+- en: How we’ll implement data binding
+  id: totrans-144
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们将如何实现数据绑定
+- en: 'We’ll make the recycler view use data binding in a similar way to how it’s
+    implemented with fragments. We’ll go through the following steps:'
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使 RecyclerView 类似于 Fragment 中实现数据绑定的方式来使用数据绑定。我们将按以下步骤进行：
+- en: '**Add a data binding variable to task_item.xml.**'
+  id: totrans-146
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**向 task_item.xml 添加一个数据绑定变量。**'
+- en: We’ll add a `<layout>` element to the layout’s root, and create a data binding
+    variable named `task` whose type is `Task`. This will generate a binding class
+    named `TaskItemBinding`.
+  id: totrans-147
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将在布局的根部添加一个 `<layout>` 元素，并创建一个名为 `task` 的数据绑定变量，其类型为 `Task`。这将生成一个名为 `TaskItemBinding`
+    的绑定类。
+- en: '**Set the data binding variable in TaskItemAdapter.**'
+  id: totrans-148
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**在 TaskItemAdapter 中设置数据绑定变量。**'
+- en: We’ll use `TaskItemBinding` to inflate each item’s layout, and set its data
+    binding variable to the `Task` object for that item.
+  id: totrans-149
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将使用 `TaskItemBinding` 来膨胀每个项目的布局，并将其数据绑定变量设置为该项的 `Task` 对象。
+- en: '**Use the data binding variable to set the views data.**'
+  id: totrans-150
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**使用数据绑定变量来设置视图数据。**'
+- en: Finally, we’ll update *task_item.xml* so that each view fetches its data from
+    the layout’s `Task` object.
+  id: totrans-151
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 最后，我们将更新 *task_item.xml*，使每个视图从布局的 `Task` 对象中获取其数据。
+- en: '![image](Images/f0687-03.png)'
+  id: totrans-152
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0687-03.png)'
+- en: Let’s begin by defining the data binding variable.
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们开始定义数据绑定变量。
+- en: Add a data binding variable to task_item.xml
+  id: totrans-154
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 向 task_item.xml 添加一个数据绑定变量
+- en: We’ll begin by adding a `<layout>` element to *task_item.xml*’s root, and specifying
+    a data binding variable. Instead of using it to bind views to a view model, however,
+    we’ll specify that its type is `Task`.
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从在 *task_item.xml* 的根元素添加一个 `<layout>` 元素开始，并指定一个数据绑定变量。然而，我们不会将其用于将视图绑定到视图模型，而是会指定其类型为
+    `Task`。
+- en: 'Here’s the code to do this: update *task_item.xml* to include these changes
+    (in bold):'
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是实现此操作的代码：更新 *task_item.xml* 以包含这些更改（用粗体标记）：
+- en: '![image](Images/f0688-02.png)'
+  id: totrans-157
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0688-02.png)'
+- en: Making *task_item.xml*’s root element a `<layout>` tells Android that you want
+    to use data binding with it, so it generates a new binding class named `TaskItemBinding`.
+    We’ll use this class to inflate the above layout, and set its `task` data binding
+    variable to a `Task` object.
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将 *task_item.xml* 的根元素设为 `<layout>` 会告诉 Android 您希望使用数据绑定，因此它会生成一个名为 `TaskItemBinding`
+    的新绑定类。我们将使用这个类来膨胀上述布局，并将其 `task` 数据绑定变量设置为一个 `Task` 对象。
+- en: The layout gets inflated in the adapter’s view holder code
+  id: totrans-159
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 布局在适配器的视图持有者代码中膨胀
+- en: When we first created the recycler view, we inflated the layout file *task_item.xml*
+    in `TaskItemAdapter`’s `TaskItemViewHolder` inner class. We now need to change
+    this code so that it works with the binding class `TaskItemBinding`. Before we
+    begin, here’s a reminder of the current code.
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们首次创建 RecyclerView 时，我们在 `TaskItemAdapter` 的 `TaskItemViewHolder` 内部类中膨胀了布局文件
+    *task_item.xml*。现在我们需要修改此代码，以便与绑定类 `TaskItemBinding` 一起使用。在我们开始之前，这里是当前代码的一个提醒。
+- en: '![image](Images/f0689-02.png)'
+  id: totrans-161
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0689-02.png)'
+- en: Use the binding class to inflate the layout
+  id: totrans-162
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用绑定类来膨胀布局
+- en: 'The first change that we’ll make to `TaskItemViewHolder` is to inflate *task_item.xml*
+    using the `TaskItemBinding` class. We’ll do this in the view holder’s `inflateFrom()`
+    method like so:'
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将要对 `TaskItemViewHolder` 进行的第一个更改是使用 `TaskItemBinding` 类来膨胀 *task_item.xml*。我们将在视图持有者的
+    `inflateFrom()` 方法中这样做：
+- en: '![image](Images/f0690-02.png)'
+  id: totrans-164
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0690-02.png)'
+- en: 'Notice that we’re now passing the `binding` variable—a `TaskItemBinding` object—to
+    `TaskItemViewHolder`’s constructor. This means that we also need to update `TaskItemViewHolder`’s
+    class definition so that it looks like this:'
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，现在我们将 `binding` 变量（`TaskItemBinding` 对象）传递给 `TaskItemViewHolder` 的构造函数。这意味着我们还需要更新
+    `TaskItemViewHolder` 的类定义，使其看起来像这样：
+- en: '![image](Images/f0690-03.png)'
+  id: totrans-166
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0690-03.png)'
+- en: Set the layout’s data binding variable to a Task
+  id: totrans-167
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 将布局的数据绑定变量设置为 Task
+- en: 'Now that we’ve used the `TaskItemBinding` class to inflate *task_item.xml*,
+    we can use it to set the `task` data binding variable. To do this, we’ll change
+    `TaskItemViewHolder`’s `bind()` method so that it sets `task` to the recycler
+    view’s current `Task` item like so:'
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经使用`TaskItemBinding`类来填充*task_item.xml*，我们可以使用它来设置`task`数据绑定变量。为此，我们将更改`TaskItemViewHolder`的`bind()`方法，使其将`task`设置为当前`Task`项目的recycler
+    view，如下所示：
+- en: '![image](Images/f0690-04.png)'
+  id: totrans-169
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0690-04.png)'
+- en: We’ve removed the lines that set the layout’s `task_name` and `task_done` views
+    because with data binding, these are no longer needed. This means we can also
+    remove the `taskName` and `taskDone` properties from the view holder.
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经删除了设置布局的`task_name`和`task_done`视图的行，因为使用数据绑定，这些不再需要。这意味着我们还可以从视图持有者中删除`taskName`和`taskDone`属性。
+- en: '![image](Images/f0690-05.png)'
+  id: totrans-171
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0690-05.png)'
+- en: We’ll show you the full code for `TaskItemAdapter` (including its `TaskItemViewHolder`
+    inner class) on the next page.
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页上展示`TaskItemAdapter`的完整代码（包括其`TaskItemViewHolder`内部类）。
+- en: The full code for TaskItemAdapter.kt
+  id: totrans-173
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TaskItemAdapter.kt的完整代码
+- en: 'Here’s the updated `TaskItemAdapter` code; make sure that the code in *TaskItemAdapter.kt*
+    includes all the changes shown here (in bold):'
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是更新后的`TaskItemAdapter`代码；确保*TaskItemAdapter.kt*中的代码包含这里显示的所有更改（用**粗体**标出）：
+- en: '![image](Images/f0691-02.png)![image](Images/f0692-02.png)'
+  id: totrans-175
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0691-02.png)![image](Images/f0692-02.png)'
+- en: Use data binding to set the layout’s views
+  id: totrans-176
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用数据绑定来设置布局的视图
+- en: Now that we’ve set *task_item.xml*’s `task` data binding variable to the view
+    holder’s `Task` item, we can use data binding to populate the layout’s views.
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经将*task_item.xml*的`task`数据绑定变量设置为视图持有者的`Task`项目，我们可以使用数据绑定来填充布局的视图。
+- en: '![image](Images/f0692-03a.png)'
+  id: totrans-178
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0692-03a.png)'
+- en: 'You’re already familiar with the code to do this. To set the `task_name` view’s
+    text to the name of the task, for example, we can use:'
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您已经熟悉执行此操作的代码。例如，要将`task_name`视图的文本设置为任务的名称，我们可以使用：
+- en: '![image](Images/f0692-03.png)'
+  id: totrans-180
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0692-03.png)'
+- en: 'and to set the `task_done` checkbox, we can use:'
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要设置`task_done`复选框，我们可以使用：
+- en: '![image](Images/f0692-05.png)'
+  id: totrans-182
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0692-05.png)'
+- en: We’ll show you the full code on the next page.
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页上展示完整代码。
+- en: The full code for task_item.xml
+  id: totrans-184
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: task_item.xml的完整代码
+- en: 'Here’s the updated code for *task_item.xml*; update the code for this file
+    so that it includes all the changes shown here (in bold):'
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是*task_item.xml*的更新代码；更新此文件的代码，以包含这里显示的所有更改（用**粗体**标出）：
+- en: '![image](Images/f0693-02.png)![image](Images/f0694-02.png)'
+  id: totrans-186
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0693-02.png)![image](Images/f0694-02.png)'
+- en: Let’s go through what happens when the code runs, and take it for a test drive.
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看代码运行时会发生什么，并进行测试。
+- en: What happens when the code runs
+  id: totrans-188
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码运行时会发生什么
+- en: 'The following things happen when the app runs:'
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当应用程序运行时，会发生以下事情：
+- en: '**task_item.xml defines a Task data binding variable named task.**'
+  id: totrans-190
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**task_item.xml定义了一个名为task的Task数据绑定变量。**'
+- en: As *task_item.xml* has a `<layout>` element at its root, a binding class named
+    `TaskItemBinding` is generated for this layout.
+  id: totrans-191
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 由于*task_item.xml*在其根部有一个`<layout>`元素，因此为此布局生成了一个名为`TaskItemBinding`的绑定类。
+- en: '![image](Images/f0695-02.png)'
+  id: totrans-192
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0695-02.png)'
+- en: '**TasksFragment creates a TaskItemAdapter object, and assigns it to the recycler
+    view as its adapter.**'
+  id: totrans-193
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment创建了一个TaskItemAdapter对象，并将其分配给recycler view作为其适配器。**'
+- en: '![image](Images/f0695-03.png)'
+  id: totrans-194
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0695-03.png)'
+- en: '**TasksFragment submits a List<Task> to the TaskItemAdapter.**'
+  id: totrans-195
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment向TaskItemAdapter提交了一个List<Task>。**'
+- en: The `List<Task>` contains an up-to-date list of records from the database.
+  id: totrans-196
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`List<Task>`包含来自数据库的最新记录列表。'
+- en: '![image](Images/f0695-04.png)'
+  id: totrans-197
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0695-04.png)'
+- en: '**TaskItemAdapter’s onCreateViewHolder() method is called for each item that
+    needs to be displayed in the recycler view.**'
+  id: totrans-198
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TaskItemAdapter的onCreateViewHolder()方法用于为recycler view中需要显示的每个项目调用。**'
+- en: '`onCreateViewHolder()` calls `TaskItemViewHolder.inflateFrom()`, which creates
+    a `TaskItemBinding` object. It inflates the object’s layout, and uses it to create
+    a `TaskItemViewHolder`.'
+  id: totrans-199
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`onCreateViewHolder()`调用`TaskItemViewHolder.inflateFrom()`，它创建一个`TaskItemBinding`对象。它填充对象的布局，并使用它来创建一个`TaskItemViewHolder`。'
+- en: '![image](Images/f0696-02.png)'
+  id: totrans-200
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0696-02.png)'
+- en: '**TaskItemAdapter’s onBindViewHolder() method is called for each TaskItemViewHolder.**'
+  id: totrans-201
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TaskItemAdapter的onBindViewHolder()方法用于为每个TaskItemViewHolder调用。**'
+- en: This calls the `TaskItemViewHolder`’s `bind()` method, which uses the `TaskItemBinding`
+    object to set the layout’s `task` variable to the item’s `Task`.
+  id: totrans-202
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这调用了`TaskItemViewHolder`的`bind()`方法，该方法使用`TaskItemBinding`对象将布局的`task`变量设置为项目的`Task`。
+- en: '![image](Images/f0696-03.png)'
+  id: totrans-203
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0696-03.png)'
+- en: '**Data binding code in task_item.xml uses the task property to set the views
+    for each item.**'
+  id: totrans-204
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**task_item.xml 中的数据绑定代码使用task属性来设置每个项目的视图。**'
+- en: The `task_name` view’s `text` property is set to `task.taskName`, and the `task_done`
+    view’s `checked` property is set to `task.taskDone`.
+  id: totrans-205
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`task_name`视图的`text`属性设置为`task.taskName`，`task_done`视图的`checked`属性设置为`task.taskDone`。'
+- en: '![image](Images/f0696-04.png)'
+  id: totrans-206
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0696-04.png)'
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-207
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驱动'
+- en: When we run the app, `TasksFragment` displays a grid of cards in the recycler
+    view. It behaves in the same way as before, but this time, we’re using data binding.
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用时，`TasksFragment`在回收视图中显示一个卡片网格。它的行为与以前相同，但这次我们使用数据绑定。
+- en: '![image](Images/f0697-02.png)'
+  id: totrans-209
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0697-02.png)'
+- en: Congratulations! You’ve now learned how to implement data binding with a recycler
+    view, as well as how to utilize `DiffUtil`.
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恭喜！你现在学会了如何在回收视图中实现数据绑定，以及如何利用`DiffUtil`。
+- en: In the next chapter, we’ll build on this knowledge to make the recycler view
+    navigate to individual records.
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在下一章中，我们将进一步利用这些知识使回收视图导航到单个记录。
+- en: Adapter Magnets
+  id: totrans-212
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 适配器磁铁
+- en: '![image](Images/common02.png)'
+  id: totrans-213
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: 'The Bits and Pizzas app includes a recycler view that uses a layout named *pizza_item.xml*
+    for its items. The layout defines a data binding variable (named `pizza`) like
+    this:'
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Bits and Pizzas 应用程序包括一个使用名为*pizza_item.xml*的布局的回收视图用于其项目。布局定义了一个数据绑定变量（命名为`pizza`），如下所示：
+- en: '[PRE2]'
+  id: totrans-215
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: The recycler view uses an adapter named `PizzaAdapter`, shown below. See if
+    you can complete the code for this adapter so that it sets the layout’s `pizza`
+    data binding variable.
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回收视图使用一个名为`PizzaAdapter`的适配器，如下所示。看看你能否完成这个适配器的代码，以便设置布局的`pizza`数据绑定变量。
+- en: '[PRE3]'
+  id: totrans-217
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: '![image](Images/f0699-01.png)'
+  id: totrans-218
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0699-01.png)'
+- en: Adapter Magnets Solution
+  id: totrans-219
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 适配器磁铁解决方案
+- en: '![image](Images/common02.png)'
+  id: totrans-220
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: 'The Bits and Pizzas app includes a recycler view that uses a layout named *pizza_item.xml*
+    for its items. The layout defines a data binding variable (named `pizza`) like
+    this:'
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Bits and Pizzas 应用程序包括一个使用名为*pizza_item.xml*的布局的回收视图用于其项目。布局定义了一个数据绑定变量（命名为`pizza`），如下所示：
+- en: '[PRE4]'
+  id: totrans-222
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: The recycler view uses an adapter named `PizzaAdapter`, shown below. See if
+    you can complete the code for this adapter so that it sets the layout’s `pizza`
+    data binding variable.
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回收视图使用一个名为`PizzaAdapter`的适配器，如下所示。看看你能否完成这个适配器的代码，以便设置布局的`pizza`数据绑定变量。
+- en: '![image](Images/f0700-01.png)![image](Images/f0701-01.png)'
+  id: totrans-224
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0700-01.png)![image](Images/f0701-01.png)'
+- en: BE the ListAdapter Solution
+  id: totrans-225
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 成为 `ListAdapter` 解决方案
+- en: '![image](Images/common04.png)'
+  id: totrans-226
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common04.png)'
+- en: '**A recycler view’s ListAdapter class has a backing list of Drinks. It uses
+    the Drink class shown on the right. Your job is to play like you’re the ListAdapter,
+    and say if the ItemCallback classes below will correctly spot any changes when
+    the ListAdapter is given a new list. Why? Why not?**'
+  id: totrans-227
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**回收视图的`ListAdapter`类有一个名为Drinks的后备列表。它使用右侧显示的Drink类。你的任务是像`ListAdapter`一样操作，并说出当给定一个新列表时，下面的ItemCallback类是否能正确检测到任何更改。为什么？为什么不？**'
+- en: '![image](Images/f0702-01.png)![image](Images/f0702-02.png)'
+  id: totrans-228
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0702-01.png)![image](Images/f0702-02.png)'
+- en: Your Android Toolbox
+  id: totrans-229
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 你的 Android 工具箱
+- en: '![image](Images/tools.png)'
+  id: totrans-230
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/tools.png)'
+- en: '**You’ve got [Chapter 16](#diffutil_and_data_bindingcolon_life_in_t) under
+    your belt and now you’ve added DiffUtil and recycler view data binding to your
+    toolbox.**'
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**你已经掌握了[第16章](#diffutil_and_data_bindingcolon_life_in_t)，现在你已经将DiffUtil和回收视图数据绑定添加到了你的工具箱中。**'
+- en: '![image](Images/f0703-01.png)'
+  id: totrans-232
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0703-01.png)'

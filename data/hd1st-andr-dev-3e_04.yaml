@@ -1,0 +1,2114 @@
+- en: 'Chapter 2\. Building Interactive Apps: *Apps That Do Something*'
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第2章。构建交互式应用程序：*做一些事情的应用程序*
+- en: '![image](Images/f0037-01.png)'
+  id: totrans-1
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0037-01.png)'
+- en: '**Most apps need to respond to the user in some way.**'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**大多数应用程序需要以某种方式响应用户。**'
+- en: And in this chapter, you’ll see how you can make your apps **more interactive**.
+    You’ll discover how to add an ***OnClickListener*** to your activity code so that
+    your app can **listen to what the user’s doing**, and make an appropriate response.
+    You’ll find out more about **how to design layouts**, and you’ll learn how each
+    UI component you add to your layout is derived from **a common View ancestor**.
+    Along the way, you’ll discover **why String resources are so important** for flexible,
+    well-designed apps.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，您将看到如何使您的应用程序**更具交互性**。您将了解如何向活动代码添加***OnClickListener***，以便您的应用程序**监听用户的操作**，并做出适当的响应。您将更多了解**如何设计布局**，并了解您添加到布局的每个UI组件是如何派生自**一个共同的View祖先**。在此过程中，您将发现**为什么字符串资源对于灵活、设计良好的应用程序如此重要**。
+- en: Let’s build a Beer Adviser app
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 让我们构建一个Beer Adviser应用程序
+- en: When you create an Android app, you’re usually going to want it to *do* something.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您创建Android应用程序时，通常希望它*做*一些事情。
+- en: In this chapter, we’re going to show you how to create an app that the user
+    can interact with. We’ll create a Beer Adviser app where users can select the
+    color of beer they enjoy most, click a button, and get back a list of tasty beers
+    to try out.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们将向您展示如何创建用户可以与之交互的应用程序。我们将创建一个Beer Adviser应用程序，用户可以选择他们最喜欢的啤酒颜色，点击按钮，然后获得一系列值得尝试的美味啤酒。
+- en: '![image](Images/f0038-01.png)'
+  id: totrans-7
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0038-01.png)'
+- en: 'Here’s how the app will be structured:'
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是应用程序的结构：
+- en: '**The layout activity_main.xml specifies what the app will look like.**'
+  id: totrans-9
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**布局activity_main.xml指定应用程序的外观。**'
+- en: 'It includes three UI components:'
+  id: totrans-10
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它包括三个UI组件：
+- en: A drop-down list of values called a spinner, which allows the user to choose
+    which color of beer they want
+  id: totrans-11
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 一个名为spinner的值下拉列表，允许用户选择他们想要的啤酒颜色
+- en: A button that, when clicked, will return a selection of beers
+  id: totrans-12
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 一个按钮，当点击时，将返回一系列啤酒
+- en: A text view that displays the beers
+  id: totrans-13
+  prefs:
+  - PREF_IND
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 一个显示啤酒的文本视图
+- en: '**The file strings.xml includes any String resources needed by the layout.**'
+  id: totrans-14
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**文件strings.xml包含布局所需的任何字符串资源。**'
+- en: The button’s label, for example, and the beer colors.
+  id: totrans-15
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 例如，按钮的标签和啤酒颜色。
+- en: '**The activity MainActivity specifies how the app should interact with the
+    user.**'
+  id: totrans-16
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**活动MainActivity指定应用程序应如何与用户交互。**'
+- en: It takes the beer color the user chooses, and uses this to display a list of
+    beers the user might be interested in.
+  id: totrans-17
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它获取用户选择的啤酒颜色，并使用此信息显示用户可能感兴趣的啤酒列表。
+- en: Here’s what we’re going to do
+  id: totrans-18
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 这是我们要做的事情
+- en: 'So let’s get to work. There are a few steps you need to go through to build
+    the Beer Adviser app (we’ll tackle these throughout the rest of the chapter):'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们开始工作吧。构建Beer Adviser应用程序需要您经历一些步骤（我们将在本章的其余部分解决这些问题）：
+- en: '**Create a project.**'
+  id: totrans-20
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**创建一个项目。**'
+- en: You’re creating a brand-new app, so you’ll need to create a new project that
+    includes an empty activity and a layout.
+  id: totrans-21
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 您正在创建一个全新的应用程序，因此您需要创建一个包含空活动和布局的新项目。
+- en: '![image](Images/f0039-01.png)'
+  id: totrans-22
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0039-01.png)'
+- en: '**Update the layout.**'
+  id: totrans-23
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**更新布局。**'
+- en: Once you’ve set up the project, you need to amend the layout so that it includes
+    all the UI components the app needs.
+  id: totrans-24
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 一旦您设置好项目，您需要修改布局，以便包含应用程序所需的所有UI组件。
+- en: '![image](Images/f0039-02.png)'
+  id: totrans-25
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0039-02.png)'
+- en: '**Add String resources.**'
+  id: totrans-26
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**添加字符串资源。**'
+- en: We’ll replace any hardcoded text with `String` resources so that all the text
+    that’s used by the app is held in a single file.
+  id: totrans-27
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将用`String`资源替换任何硬编码文本，以便应用程序使用的所有文本都保存在单个文件中。
+- en: '![image](Images/f0039-03.png)'
+  id: totrans-28
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0039-03.png)'
+- en: '**Make the button respond to clicks.**'
+  id: totrans-29
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**使按钮响应点击。**'
+- en: The layout only specifies the visuals. To make the button *do* something when
+    it’s clicked, you need to write some activity code.
+  id: totrans-30
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 布局仅指定视觉效果。要使按钮在点击时*执行*某些操作，您需要编写一些活动代码。
+- en: '![image](Images/f0039-04.png)'
+  id: totrans-31
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0039-04.png)'
+- en: '**Write the application logic.**'
+  id: totrans-32
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**编写应用程序逻辑。**'
+- en: You’ll add a new method to the activity, and use it to make sure users get the
+    right beer based on their selection.
+  id: totrans-33
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 您将向活动添加一个新方法，并使用它确保用户根据其选择获得正确的啤酒。
+- en: Let’s start by creating the project.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们从创建项目开始。
+- en: Create the project
+  id: totrans-35
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建项目
+- en: '![image](Images/f0040-01.png)'
+  id: totrans-36
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0040-01.png)'
+- en: 'The steps for creating the new project are nearly identical to the ones we
+    used in the previous chapter:'
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建新项目的步骤几乎与我们在上一章中使用的步骤相同：
+- en: Open Android Studio, close any open projects, and choose “New Project” from
+    the welcome screen. This starts the wizard you saw in [Chapter 1](ch01.xhtml#getting_startedcolon_diving_in).
+  id: totrans-38
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 打开Android Studio，关闭任何已打开的项目，并从欢迎屏幕选择“新建项目”。这将启动你在[第1章](ch01.xhtml#getting_startedcolon_diving_in)中看到的向导。
+- en: Make sure the Phone and Tablet option is selected, and choose the Empty Activity
+    option.
+  id: totrans-39
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 确保选择了“手机和平板”选项，并选择“空活动”选项。
+- en: Enter a name of “Beer Adviser” and a package name of “com.hfad.beeradviser”
+    and accept the default save location. Make sure that the language is set to Kotlin,
+    and that the minimum SDK is API 21 so that it will run on most Android devices.
+    Then click on the Finish button.
+  id: totrans-40
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 输入“Beer Adviser”作为名称，包名称为“com.hfad.beeradviser”，并接受默认保存位置。确保语言设置为Kotlin，并且最低SDK为API
+    21，这样可以在大多数Android设备上运行。然后点击完成按钮。
+- en: '![image](Images/f0040-02.png)'
+  id: totrans-41
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0040-02.png)'
+- en: We’ve created a default activity and layout
+  id: totrans-42
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们已创建了一个默认的活动和布局
+- en: '![image](Images/f0041-01.png)'
+  id: totrans-43
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0041-01.png)'
+- en: When you click on the Finish button, Android Studio creates a new project containing
+    an activity named *MainActivity.kt* and a layout named *activity_main.xml*, just
+    as it did for the project we created in [Chapter 1](ch01.xhtml#getting_startedcolon_diving_in).
+    We need to modify these files to make the app look and behave the way we want.
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你点击完成按钮时，Android Studio将创建一个新项目，包含名为 *MainActivity.kt* 的活动和名为 *activity_main.xml*
+    的布局，就像我们在[第1章](ch01.xhtml#getting_startedcolon_diving_in)创建的项目一样。我们需要修改这些文件以使应用程序看起来和行为符合我们的期望。
+- en: 'We’ll start by updating the layout file *activity_main.xml* to modify the app’s
+    appearance. We’ll build up the layout over the next few pages, but for now, switch
+    to the Project view of Android Studio’s explorer, go to the *app/src/main/res/layout*
+    folder, and open the file *activity_main.xml*. Then switch to the code editor,
+    and **replace the entire code** in *activity_main.xml* with the following:'
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从更新布局文件 *activity_main.xml* 开始修改应用的外观。我们将在接下来的几页逐步构建布局，但现在，请切换到Android Studio资源管理器的项目视图，进入
+    *app/src/main/res/layout* 文件夹，打开 *activity_main.xml* 文件。然后切换到代码编辑器，并**用以下内容替换**
+    *activity_main.xml* 中的整个代码：
+- en: '![image](Images/f0041-02.png)![image](Images/f0041-03.png)'
+  id: totrans-46
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0041-02.png)![image](Images/f0041-03.png)'
+- en: The above code features a linear layout (denoted by the `<LinearLayout>` element)
+    and a text view (denoted by the `<TextView>` element). You’ll find out more about
+    these elements later in the chapter, but for now, all you need to know is that
+    the linear layout is used to arrange UI components in a vertical column, and the
+    text view displays the text “Beer types”.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上面的代码包含一个线性布局（由 `<LinearLayout>` 元素表示）和一个文本视图（由 `<TextView>` 元素表示）。稍后你会了解更多关于这些元素的信息，但现在你只需知道线性布局用于在垂直列中排列UI组件，而文本视图显示的文本是“Beer
+    types”。
+- en: Any changes you make to a layout’s XML are reflected in the design editor. Switch
+    to this now by clicking on the Design option at the top of the editor pane.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对布局的XML所做的任何更改都会反映在设计编辑器中。现在通过点击编辑器窗格顶部的“设计”选项切换到该视图。
+- en: '![image](Images/f0041-04.png)'
+  id: totrans-49
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0041-04.png)'
+- en: A closer look at the design editor
+  id: totrans-50
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更详细查看设计编辑器
+- en: 'As you learned in [Chapter 1](ch01.xhtml#getting_startedcolon_diving_in), the
+    design editor presents you with a more visual way of editing layout code than
+    editing XML. It features two different views of the layouts design. One shows
+    you how the layout will look on an actual device, and the other shows you a blueprint
+    of its structure:'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你在[第1章](ch01.xhtml#getting_startedcolon_diving_in)学到的，设计编辑器为你提供了一种比编辑XML更直观的方式来编辑布局代码。它展示了布局设计的两种不同视图。一种显示布局在实际设备上的外观，另一种显示其结构的蓝图：
+- en: '![image](Images/f0042-02.png)![image](Images/f0042-03.png)'
+  id: totrans-52
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0042-02.png)![image](Images/f0042-03.png)'
+- en: To the left of the design editor is a palette that contains components you can
+    drag to the layout. You’ll use this on the next page to add a button to the layout,
+    which later in the chapter will be used to update the text that’s displayed in
+    the app.
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 设计编辑器的左侧是一个包含可拖动到布局中的组件的调色板。你将在下一页使用它来向布局添加按钮，在本章后面将用它来更新应用中显示的文本。
+- en: '![image](Images/f0042-04.png)'
+  id: totrans-54
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0042-04.png)'
+- en: Add a button using the design editor
+  id: totrans-55
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用设计编辑器添加按钮
+- en: 'To add a button to the layout, find the Button component in the palette, click
+    on it, and then drag it into the design editor so it’s positioned above the text
+    view. The button appears in the layout’s design:'
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要向布局中添加按钮，请在工具栏中找到按钮组件，点击它，然后将其拖到设计编辑器中，使其位于文本视图上方。按钮将出现在布局的设计中：
+- en: '![image](Images/f0043-02.png)'
+  id: totrans-57
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0043-02.png)'
+- en: Changes in the design editor are reflected in the XML
+  id: totrans-58
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 设计编辑器中的更改会反映在 XML 中
+- en: 'Dragging UI components to the layout like this is a convenient way of updating
+    the layout. If you switch to the code editor, you’ll see that adding the button
+    via the design editor has added some more code to the underlying XML:'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 拖动 UI 组件到布局中像这样是更新布局的一种便捷方式。如果您切换到代码编辑器，您会看到通过设计编辑器添加按钮已经向底层 XML 添加了更多代码：
+- en: '![image](Images/f0043-03.png)'
+  id: totrans-60
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0043-03.png)'
+- en: activity_main.xml has a new button
+  id: totrans-61
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: activity_main.xml 中有一个新的按钮
+- en: 'As you’ve just seen, the design editor has added a new `<Button>` element to
+    *activity_main.xml*. Its code looks like this:'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您刚刚看到的，设计编辑器已经向 *activity_main.xml* 添加了一个新的 `<Button>` 元素。其代码如下：
+- en: '[PRE0]'
+  id: totrans-63
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: A button in Androidville is a UI component the user can click to trigger an
+    action. The `<Button>` element includes attributes controlling its size and appearance.
+    These attributes aren’t unique to buttons—other UI components such as text views
+    have them too.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Androidville 中的按钮是用户可以点击以触发操作的 UI 组件。`<Button>` 元素包括控制其大小和外观的属性。这些属性并不只属于按钮——其他如文本视图的
+    UI 组件也有它们。
+- en: Buttons and text views are subclasses of the same Android View class
+  id: totrans-65
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 按钮和文本视图都是 Android View 类的子类
+- en: 'There’s a very good reason why buttons and text views have attributes in common—they
+    both inherit from the same Android `**View**` class. You’ll find out more about
+    this as we go through the book, but for now, here are some of the most common
+    attributes:'
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 按钮和文本视图之间具有共同属性的一个很好的原因是它们都继承自相同的 Android **View** 类。在本书中您会进一步了解更多，但现在，这里是一些最常见的属性：
+- en: android:id
+  id: totrans-67
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: android:id
+- en: 'This gives the component an identifying name so that the activity code can
+    access it and control its behavior:'
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这给组件一个标识名称，以便活动代码可以访问它并控制其行为：
+- en: '[PRE1]'
+  id: totrans-69
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: android:layout_width, android:layout_height
+  id: totrans-70
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: android:layout_width, android:layout_height
+- en: 'These attributes specify the width and height of the component. `"wrap_content"`
+    means it should be just big enough for the content, and `"match_parent"` means
+    it should be as wide as the layout containing it:'
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些属性指定了组件的宽度和高度。`"wrap_content"` 表示它应该只大到足够容纳内容，`"match_parent"` 表示它应该与包含它的布局一样宽：
+- en: '[PRE2]'
+  id: totrans-72
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: android:text
+  id: totrans-73
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: android:text
+- en: 'This tells Android what text the component should display, such as the text
+    that appears on a button:'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这告诉 Android 应该显示什么文本作为组件，比如出现在按钮上的文本：
+- en: '[PRE3]'
+  id: totrans-75
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: '![image](Images/f0044-02.png)'
+  id: totrans-76
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0044-02.png)'
+- en: A closer look at the layout code
+  id: totrans-77
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更仔细查看布局代码
+- en: 'Let’s take a closer look at the layout code, and break it down so that you
+    can see what it’s actually doing (don’t worry if your code looks a little different,
+    just follow along):'
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们更仔细地查看布局代码，并将其分解，以便您可以看到它实际上在做什么（如果您的代码看起来有些不同，不要担心，只需跟着操作即可）：
+- en: '![image](Images/f0045-02.png)'
+  id: totrans-79
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0045-02.png)'
+- en: The <LinearLayout> element
+  id: totrans-80
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: '`<LinearLayout>` 元素'
+- en: The first element in the layout code is the `<LinearLayout>`. This element tells
+    Android that the different UI components in the layout should be displayed one
+    after another in a single row or column.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 布局代码中的第一个元素是 `<LinearLayout>`。此元素告诉 Android 布局中的不同 UI 组件应该在单行或单列中依次显示。
+- en: 'You specify the orientation using the `android:orientation` attribute. In this
+    example we’re using:'
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以使用 `android:orientation` 属性来指定方向。在这个例子中，我们使用的是：
+- en: '[PRE4]'
+  id: totrans-83
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: so the UI components are displayed in a single vertical column.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，UI 组件显示在单个垂直列中。
+- en: 'The `<LinearLayout>` element (on the previous page) contains two further elements:
+    a `<Button>` and a `<TextView>`.'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`<LinearLayout>` 元素（在前一页中）包含两个进一步的元素：一个 `<Button>` 和一个 `<TextView>`。'
+- en: The <Button> element
+  id: totrans-86
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: '`<Button>` 元素'
+- en: 'The first element is the `<Button>`:'
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个元素是 `<Button>`：
+- en: '[PRE5]'
+  id: totrans-88
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: '**Using a linear layout means that UI components are displayed in a vertical
+    column or a horizontal row.**'
+  id: totrans-89
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**使用线性布局意味着 UI 组件显示在垂直列或水平行中。**'
+- en: As this is the first element inside the `<LinearLayout>`, it appears first in
+    the layout (at the top of the screen). It has a `layout_width` of `"match_parent"`,
+    which makes it as wide as its parent element, the `<LinearLayout>`. Its `layout_height`
+    is `"wrap_content`“, which means it should be just tall enough to display its
+    text.
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于这是 `<LinearLayout>` 中的第一个元素，它在布局中首先显示（在屏幕顶部）。它的 `layout_width` 是 `"match_parent"`，使其宽度与其父元素
+    `<LinearLayout>` 一样宽。它的 `layout_height` 是 `"wrap_content"`，这意味着它应该只足够高以显示其文本内容。
+- en: The <TextView> element
+  id: totrans-91
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: '`<TextView>` 元素'
+- en: 'The final element inside the `<LinearLayout>` is the `<TextView>`:'
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`<LinearLayout>` 中的最后一个元素是 `<TextView>`：'
+- en: '[PRE6]'
+  id: totrans-93
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: '![image](Images/f0046-02.png)'
+  id: totrans-94
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0046-02.png)'
+- en: As this is the second element and we’ve set the `<LinearLayout>` element’s orientation
+    to `"vertical"`, it’s displayed underneath the button (the first element). Its
+    `layout_width` and `layout_height` attributes are both set to `"wrap_content`"
+    so that it takes up just enough space to contain its text.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于这是第二个元素，并且我们将`<LinearLayout>`元素的方向设置为`"vertical"`，它显示在按钮（第一个元素）的下方。它的`layout_width`和`layout_height`属性都设置为`"wrap_content"`，以便它只占用足够的空间来容纳其文本。
+- en: You’ve seen how adding components to the design editor adds them to the layout
+    XML. The opposite applies too—any changes you make to the layout XML are applied
+    to the design. Let’s see this in action.
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您已经看到将组件添加到设计编辑器会将它们添加到布局 XML 中。相反，对布局 XML 进行的任何更改也会应用到设计中。让我们看看这个过程。
+- en: Let’s update the layout XML
+  id: totrans-97
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 让我们更新布局 XML
+- en: We’ll update the layout by adding a new **spinner** component, and tweaking
+    the button and text view components that are already there. A spinner is a drop-down
+    list of values. When you click it, it expands to show you the list so that you
+    can pick a single value.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将通过添加一个新的**旋转器**组件来更新布局，并微调已经存在的按钮和文本视图组件。旋转器是一个值的下拉列表。当您点击它时，它会展开以显示列表，这样您就可以选择一个单一的值。
+- en: 'Update the *activity_main.xml* code with the following changes (highlighted
+    in bold):'
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用以下更改更新*activity_main.xml*代码（用**粗体**标出）：
+- en: '![image](Images/f0047-02.png)'
+  id: totrans-100
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0047-02.png)'
+- en: The XML changes are reflected in the design editor
+  id: totrans-101
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 设计编辑器中反映了 XML 的更改
+- en: 'Once you’ve changed the layout XML, switch to the design editor. Instead of
+    displaying a layout containing a button with a text view underneath it, the design
+    editor now shows a spinner, button, and text view centered horizontally in a single
+    column like this:'
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦您更改了布局 XML，切换到设计编辑器。设计编辑器现在显示一个水平居中的单列，其中包含一个旋转器、按钮和文本视图，而不是显示一个按钮下面有一个文本视图的布局，就像这样：
+- en: '![image](Images/f0048-02.png)'
+  id: totrans-103
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0048-02.png)'
+- en: '**A spinner provides a drop-down list of values. It allows you to choose a
+    single value from a set of values.**'
+  id: totrans-104
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**旋转器提供一个值的下拉列表。它允许您从一组值中选择一个单一的值。**'
+- en: ''
+  id: totrans-105
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+- en: '**All the UI components you add to layout files—such as buttons, spinners,
+    and text views—use the same or similar attributes because they are all types of
+    View. Behind the scenes, they all inherit from the same Android View class.**'
+  id: totrans-106
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**您添加到布局文件中的所有 UI 组件（如按钮、旋转器和文本视图）使用相同或类似的属性，因为它们都是 View 类型。在幕后，它们都继承自相同的 Android
+    View 类。**'
+- en: Note
+  id: totrans-107
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: These UI components are often referred to as **views** because they inherit
+    from the same View class.
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些 UI 组件通常被称为**视图**，因为它们都继承自相同的 View 类。
+- en: We’ve now added all the components to *activity_main.xml* that we need for the
+    Beer Adviser app’s layout. We still have more work to do, but let’s take the app
+    for a test drive so that we can see how it looks on a device.
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们现在已经向*activity_main.xml*添加了 Beer Adviser 应用程序布局所需的所有组件。我们还有更多工作要做，但让我们先测试一下应用程序，看看它在设备上的效果。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-110
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/car.png) 测试驱动'
+- en: Run the app by choosing the “Run ‘app’” command from the Run menu or clicking
+    on the Run button, and wait patiently for the app to load.
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过从运行菜单中选择“运行‘app’”命令或单击运行按钮来运行应用程序，并耐心等待应用程序加载。
+- en: When the app appears on your device, notice that it displays an empty spinner,
+    button, and text view in a single column.
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当应用程序出现在您的设备上时，请注意它以单列显示一个空的旋转器、按钮和文本视图。
+- en: '![image](Images/f0049-02.png)'
+  id: totrans-113
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0049-02.png)'
+- en: There are warnings in the layout…
+  id: totrans-114
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 布局中有警告...
+- en: '![image](Images/f0050-01.png)'
+  id: totrans-115
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0050-01.png)'
+- en: When you develop layouts in Android Studio, the IDE automatically checks your
+    code for errors, and alerts you to potential improvements. An easy way of viewing
+    any warnings or suggestions is to switch to the design editor view of the layout,
+    and check out the component tree panel. This panel is usually located beneath
+    the palette, and it displays a hierarchical tree of the components in the layout.
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您在 Android Studio 中开发布局时，IDE 会自动检查您的代码是否有错误，并提醒您可能的改进。查看任何警告或建议的简单方法是切换到布局的设计编辑器视图，并查看组件树面板。该面板通常位于调色板下方，并显示布局中组件的分层树。
+- en: 'If Android Studio has any suggestions for how to improve your code, you’ll
+    see a badge or icon to the right of the relevant component. We have warning badges,
+    for example, next to the `find_beer` and `brands` components. If we hover the
+    mouse cursor over each one, we can see messages warning us about hardcoded text:'
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果Android Studio有任何改进代码的建议，你会看到相关组件右侧的徽章或图标。例如，在`find_beer`和`brands`组件旁边有警告徽章。如果我们将鼠标悬停在每个徽章上，就能看到有关硬编码文本的警告信息：
+- en: '![image](Images/f0050-02.png)![image](Images/f0050-03.png)'
+  id: totrans-118
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0050-02.png)![image](Images/f0050-03.png)'
+- en: …because there’s hardcoded text
+  id: totrans-119
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …因为有硬编码文本
+- en: 'When we defined the layout, we hardcoded the text that needs to be displayed
+    in the text view and button components using code like this:'
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们定义布局时，我们使用如下的代码来硬编码需要在文本视图和按钮组件中显示的文本：
+- en: '![image](Images/f0050-04.png)'
+  id: totrans-121
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0050-04.png)'
+- en: While this approach is fine when you’re just learning, hardcoding the text in
+    the layout isn’t the best approach.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你正在学习时，这种方法是可以接受的，但在布局中硬编码文本并不是最佳做法。
+- en: Suppose you’ve created an app that’s a big hit on your local Google Play Store.
+    You don’t want to limit yourself to just one country or language—you want to make
+    it available internationally and for different languages. But if you’ve hardcoded
+    all of the text in your layout files, sending the app global will be difficult.
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设你已经创建了一个在本地Google Play商店非常受欢迎的应用。你不想仅限于一个国家或语言——你希望能够国际化并支持不同的语言。但如果你在布局文件中硬编码了所有的文本，那么将应用推广到全球将会很困难。
+- en: It also makes it much harder to make app-wide changes to the text. Imagine your
+    boss asks you to change the wording in an app because the company’s changed its
+    name. If you’ve hardcoded all of the text, this means that you might need to edit
+    a whole host of files in order to change the text.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这也使得对应用中的文本进行全局更改变得更加困难。想象一下，如果你的老板要求你因为公司更改了名称而修改应用中的措辞。如果你把所有文本都硬编码了，这意味着你可能需要编辑大量文件才能修改文本。
+- en: So what’s the alternative?
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么，有什么替代方法呢？
+- en: Put text in a String resource file
+  id: totrans-126
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 将文本放入字符串资源文件中
+- en: A better approach is to put the text values into a `**String**` **resource file**.
+    This makes it much easier to make app-wide changes to the text used in the application.
+    Instead of having to change hardcoded text values in a whole host of different
+    activity and layout files, you only need to edit the text in the resource file.
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更好的方法是将文本值放入`**String**` **资源文件**中。这样做可以更轻松地对应用中使用的文本进行全局更改。你不再需要在各种不同的活动和布局文件中更改硬编码的文本值，只需编辑资源文件中的文本即可。
+- en: This approach also makes it much easier to localize the app. Instead of hardcoding
+    the text in one language, you can provide separate `String` resource files for
+    each language you want to support. This enables the app to switch the language
+    that’s used in the app so that it matches the device locale.
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这种方法也使得对应用进行本地化变得更加容易。你不再需要在一个语言中硬编码文本，而是可以为每种想要支持的语言提供单独的`String`资源文件。这使得应用可以根据设备的语言环境切换所使用的语言。
+- en: Android Studio helps you extract String resources
+  id: totrans-129
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android Studio帮助你提取字符串资源
+- en: If you have a layout that contains hardcoded text, Android Studio provides you
+    with an easy way of extracting the text and adding it to a `String` resource file.
+    Simply click (or double-click) on each badge warning you about the hardcoded text,
+    then click on the Fix button to fix the problem.
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你的布局中包含硬编码文本，Android Studio提供了一种简单的方法来提取文本并将其添加到字符串资源文件中。只需点击（或双击）每个警告你有关硬编码文本的徽章，然后点击“修复”按钮来解决问题。
+- en: Note
+  id: totrans-131
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: You might need to scroll down to see this button.
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能需要向下滚动才能看到这个按钮。
+- en: Let’s try this with one of the components in the layout. Make sure that you’re
+    using the design view of *activity_main.xml*, and click on the warning badge next
+    to the `find_beer` component.
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们尝试这个方法来处理布局中的一个组件。确保你正在使用*activity_main.xml*的设计视图，并点击`find_beer`组件旁边的警告徽章。
+- en: 'You’ll be shown an explanation about why hardcoded text is a problem. Scroll
+    to the end of this explanation, then click on the Fix button:'
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关于为什么硬编码文本是个问题，你将会看到一个解释。请滚动到这个解释的末尾，然后点击“修复”按钮：
+- en: '![image](Images/f0051-03.png)'
+  id: totrans-135
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0051-03.png)'
+- en: Extract the String resource
+  id: totrans-136
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 提取字符串资源
+- en: When you click on the Fix button, the Extract Resource window appears. This
+    allows you to specify the name of the `String` resource, its value, and the name
+    of the `String` resource file. Make sure that the resource name is “find_beer”,
+    the file name is “strings.xml”, the source set is “main”, and the values directory
+    is checked. Then click on the OK button.
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你点击“修复”按钮时，“提取资源”窗口会出现。这允许你指定`String`资源的名称、值以及`String`资源文件的名称。确保资源名称为“find_beer”，文件名为“strings.xml”，源集为“main”，并检查值目录。然后点击OK按钮。
+- en: When you click on the OK button, Android Studio adds the `find_beer` component’s
+    hardcoded text to a `String` resource file named *strings.xml*, and changes the
+    layout’s XML so that it uses the `String` resource. We’ll look at both of these
+    changes, starting with the `String` resource file.
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你点击OK按钮时，Android Studio会将`find_beer`组件的硬编码文本添加到名为*strings.xml*的`String`资源文件中，并更改布局的XML以使用`String`资源。我们将查看这两个更改，首先是`String`资源文件。
+- en: '![image](Images/f0052-02.png)'
+  id: totrans-139
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0052-02.png)'
+- en: A String resource has been added to strings.xml
+  id: totrans-140
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 已将一个String资源添加到strings.xml中。
+- en: '*strings.xml* is the app’s default `String` resource file, and Android Studio
+    automatically creates this file for you when you create a new project. Open *strings.xml*
+    now by opening it in Android Studio’s explorer: you’ll find *strings.xml* in the
+    *app/src/main/res/values* folder.'
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*strings.xml*是应用的默认`String`资源文件，当你创建新项目时，Android Studio会自动为你创建这个文件。现在通过Android
+    Studio的资源管理器打开*strings.xml*：你会在*app/src/main/res/values*文件夹中找到*strings.xml*。'
+- en: 'The file contents should look something like this:'
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 文件内容应该类似于这样：
+- en: '![image](Images/f0052-03.png)'
+  id: totrans-143
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0052-03.png)'
+- en: '[PRE7]'
+  id: totrans-144
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: 'The above code describes two `String` resources, where each resource is a name/value
+    pair. The first resource is named `app_name` and has a value of “Beer Adviser”,
+    while the second is named `find_beer` and has a value of “Find Beer”. The second
+    resource was added when we extracted the hardcoded text for the `find_beer` component:'
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上面的代码描述了两个`String`资源，每个资源都是一个名称/值对。第一个资源名为`app_name`，值为“Beer Adviser”，而第二个名为`find_beer`，值为“Find
+    Beer”。第二个资源是我们为`find_beer`组件提取硬编码文本时添加的：
+- en: '![image](Images/f0052-04.png)'
+  id: totrans-146
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0052-04.png)'
+- en: We’ll look at `String` resources in more detail a few pages ahead, but for now,
+    let’s see what change was made to *activity_main.xml*.
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在接下来的几页详细讨论`String`资源，但现在让我们看看对*activity_main.xml*进行了什么更改。
+- en: activity_main.xml uses the String resource
+  id: totrans-148
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '*activity_main.xml* 使用了字符串资源。'
+- en: When we told Android Studio to extract the hardcoded text, Android Studio automatically
+    updated the `find_beer` button in *activity_main.xml* so that it uses the extracted
+    `String` resource.
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们告诉Android Studio提取硬编码文本时，Android Studio会自动更新*activity_main.xml*中的`find_beer`按钮，以便使用提取的`String`资源。
+- en: 'Here’s the updated code for the button:'
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是按钮的更新代码：
+- en: '![image](Images/f0053-02.png)![image](Images/f0053-03.png)'
+  id: totrans-151
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0053-02.png)![image](Images/f0053-03.png)'
+- en: As you can see, the `find_beer` button’s `text` attribute has been changed to
+    `"@string/find_beer"`. So what does this mean?
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所看到的，`find_beer`按钮的`text`属性已更改为`"@string/find_beer"`。那这意味着什么呢？
+- en: Let’s start with the first part, `@string`. This is just a way of telling Android
+    to look up a text value from a `String` resource file. Here, it’s the file *strings.xml*
+    that you saw earlier.
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们从`@string`的第一部分开始。这只是一种告诉Android从`String`资源文件中查找文本值的方法。在这里，它就是你之前看到的*strings.xml*文件。
+- en: '![image](Images/f0053-04.png)'
+  id: totrans-154
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0053-04.png)'
+- en: The second part, `find_beer`, tells Android to **look up the value of a resource
+    with the name** `**find_beer**`. So `"@string/find_beer"` is like saying “look
+    up the `String` resource with the name `find_beer`, and use the associated text
+    value.”
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二部分，`find_beer`，告诉Android查找名为`find_beer`的资源的值。所以`"@string/find_beer"` 就像是说“查找名为`find_beer`的`String`资源，并使用相关联的文本值。”
+- en: '![image](Images/f0053-05.png)'
+  id: totrans-156
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0053-05.png)'
+- en: You also can extract String resources manually
+  id: totrans-157
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 你也可以手动提取字符串资源。
+- en: You’ve now learned what changes Android Studio makes to the code when you ask
+    it to extract hardcoded text into a `String` resource. You can also make these
+    changes yourself by directly updating the code in *strings.xml* and *activity_main.xml*.
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你已经学会了当你要求Android Studio将硬编码文本提取到`String`资源中时，Android Studio对代码所做的更改。你也可以通过直接更新*strings.xml*和*activity_main.xml*中的代码来进行这些更改。
+- en: Let’s see how by changing the hardcoded “Beer types” text that’s used by the
+    `brands` component’s `text` attribute so that it uses a `String` resource.
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看如何通过更改`brands`组件的`text`属性中使用的硬编码文本“Beer types”，使其使用一个`String`资源。
+- en: Note
+  id: totrans-160
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: In your own projects, it’s likely that you’ll just use the wizard. We’re showing
+    you how to manually edit the XML because we need to make sure that the code you
+    create matches ours, and updating the XML is the best way of doing this.
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在您自己的项目中，可能只需使用向导。我们向您展示如何手动编辑XML，因为我们需要确保您创建的代码与我们的代码匹配，并且更新XML是实现此目的的最佳方法。
+- en: Add and use a new String resource
+  id: totrans-162
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 添加并使用新的String资源
+- en: 'We’ll start by creating a new `String` resource named `brands`. Open *strings.xml*
+    (located in the *app/src/main/res/values* folder), and add a new line for the
+    `String` resource so that it includes the change shown here (in bold):'
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从创建名为`brands`的新`String`资源开始。打开*app/src/main/res/values*文件夹中的*strings.xml*，并添加一个新行以包含此处显示的更改（用**粗体**标出）：
+- en: '![image](Images/f0054-02.png)'
+  id: totrans-164
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0054-02.png)'
+- en: 'Once you’ve added the `String` resource, open *activity_main.xml* and update
+    the code for the `brands` text view so that it uses the new resource. Update the
+    code so that it includes the change shown here (in bold):'
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 添加了`String`资源后，打开*activity_main.xml*并更新`brands`文本视图的代码，使其使用新资源。更新代码以包含此处显示的更改（用**粗体**标出）：
+- en: '![image](Images/f0054-03.png)'
+  id: totrans-166
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0054-03.png)'
+- en: There’s a summary about using `String` resources on the next page. After that,
+    we’ll take the app for a test drive.
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下一页有关使用`String`资源的摘要。之后，我们将对应用程序进行测试。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-168
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驱动'
+- en: Now that we’ve updated the layout to use `String` resources instead of hardcoded
+    text values, let’s run the app to see how it’s looking. Run the app as before
+    by choosing the “Run ‘app’” command from the Run menu.
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已更新布局以使用`String`资源而不是硬编码文本值，让我们运行应用程序看看效果。选择运行菜单中的“Run 'app'”命令，如前所述。
+- en: 'When we run the app, the text that’s displayed on the button and in the text
+    view has been updated so that it uses the `String` values we added to *strings.xml*:'
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行应用程序后，按钮和文本视图中显示的文本已更新，以使用我们添加到*strings.xml*的`String`值：
+- en: '![image](Images/f0056-02.png)'
+  id: totrans-171
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0056-02.png)'
+- en: Add values to the spinner
+  id: totrans-172
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 向下拉列表框添加值
+- en: The app’s current layout includes a spinner, but when we click on it, it’s empty.
+    This is because we haven’t yet told the spinner what values it should display.
+    Each time you use a spinner in the layout code, you must specify an associated
+    list of values, or it won’t include any, and Android Studio may give you warning
+    messages.
+  id: totrans-173
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当前应用程序的布局中包含一个下拉列表框，但是当我们点击它时，它是空的。这是因为我们还没有告诉下拉列表框应显示哪些值。每次在布局代码中使用下拉列表框时，都必须指定相关联的值列表，否则它将不包含任何值，并且Android
+    Studio可能会显示警告消息。
+- en: 'You specify a list of values for a spinner in a similar way to how you specify
+    the text that’s displayed on a button or in a text view: by adding a resource
+    to *strings.xml* and referring to the resource in the layout. Instead of specifying
+    a single value in a `String` resource, however, you add multiple `String`s to
+    an *array* resource, and use this array for the spinner’s list of values.'
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以像指定按钮或文本视图中显示的文本一样指定下拉列表框的值列表：通过向*strings.xml*添加资源并在布局中引用该资源。但是，你不是在一个`String`资源中指定单个值，而是向*array*资源添加多个`String`，并将此数组用于下拉列表框的值列表。
+- en: '**Resources are noncode assets, such as images or Strings, used by the app.**'
+  id: totrans-175
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**资源是应用程序使用的非代码资产，例如图像或字符串。**'
+- en: Adding an array resource is similar to adding a String
+  id: totrans-176
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 添加一个`String`数组资源类似于添加一个String
+- en: 'As you already know, you add a `String` resource to *strings.xml* using:'
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您已经了解的那样，可以使用以下方式向*strings.xml*添加`String`资源：
+- en: '[PRE8]'
+  id: totrans-178
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: where `string_name` is the name of the `String`, and `string_value` is the value
+    that’s displayed in the app.
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其中`string_name`是`String`的名称，而`string_value`是在应用中显示的值。
+- en: 'To add an array of `String`s to a `String` resource file, you use the following
+    syntax:'
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要向`String`资源文件添加一个`String`数组，可以使用以下语法：
+- en: '![image](Images/f0059-02.png)'
+  id: totrans-181
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0059-02.png)'
+- en: where `string_array_name` is the name of the array, and `string_value1`, `string_value2`,
+    and `string_value3` are the individual `String` values that make up the array.
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其中`string_array_name`是数组的名称，而`string_value1`、`string_value2`和`string_value3`是构成数组的各个`String`值。
+- en: In this app, we want to add a `String` array resource where each item in the
+    array is a beer color. We’ll then attach this array to the spinner so that when
+    the user clicks on the spinner, the beer colors will be displayed.
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此应用中，我们希望添加一个`String`数组资源，数组中的每个项都是一种啤酒颜色。然后，我们将此数组附加到下拉列表框，以便用户单击下拉列表框时显示啤酒颜色。
+- en: Let’s add the new `String` array.
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们添加新的`String`数组。
+- en: Add the string-array to strings.xml
+  id: totrans-185
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 向*strings.xml*添加`String`数组
+- en: 'To add the `String` array, open up *strings.xml*, and add the code below (in
+    bold). This adds a `string-array` resource named `beer_colors` that we’ll attach
+    to the spinner:'
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要添加 `String` 数组，请打开 *strings.xml*，并添加以下代码（用粗体标出）。这将添加一个名为 `beer_colors` 的 `string-array`
+    资源，我们将其附加到 spinner 上：
+- en: '![image](Images/f0060-02.png)'
+  id: totrans-187
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0060-02.png)'
+- en: Get the spinner to display the array’s values
+  id: totrans-188
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 获取 spinner 显示数组的值
+- en: 'A layout references a `String` array resource using similar syntax to how it
+    would retrieve the value of a `String` resource. Rather than use:'
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 布局引用 `String` 数组资源的语法与检索 `String` 资源的值类似。而不是使用：
+- en: 'you use the syntax:'
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以使用以下语法：
+- en: '![image](Images/f0060-03.png)'
+  id: totrans-191
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0060-03.png)'
+- en: '`where array_name` is the name of the array.'
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`where array_name` 是数组的名称。'
+- en: 'Let’s use this in the layout. Go to the layout file *activity_main.xml* and
+    add an `entries` attribute to the spinner like this (in bold):'
+  id: totrans-193
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们在布局中使用它。转到布局文件 *activity_main.xml*，并像这样为 spinner 添加一个 `entries` 属性（用粗体标出）：
+- en: '![image](Images/f0060-04.png)'
+  id: totrans-194
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0060-04.png)'
+- en: We’ll show you the full code for *activity_main.xml* on the next page.
+  id: totrans-195
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页展示 *activity_main.xml* 的完整代码。
+- en: The full code for activity_main.xml
+  id: totrans-196
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '*activity_main.xml* 的完整代码如下'
+- en: Below is the entire code for *activity_main.xml*. Make sure the code for this
+    file includes all of the code shown here.
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是 *activity_main.xml* 的全部代码。确保此文件的代码包含此处显示的所有代码。
+- en: '![image](Images/f0061-02.png)'
+  id: totrans-198
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0061-02.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来测试一下这个应用。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-200
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驱动'
+- en: 'Let’s see what impact the changes have had on the app. Run the app, and you
+    should get something like this:'
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看这些更改对应用程序产生了什么影响。运行应用程序，您应该得到类似于这样的结果：
+- en: '![image](Images/f0062-02.png)'
+  id: totrans-202
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0062-02.png)'
+- en: So far, we’ve created a layout (*activity_main.xml*) that includes a spinner,
+    a button, and a text view. These views use a `String` resource file (*strings.xml*)
+    for their `String` and array values.
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们已经创建了一个布局（*activity_main.xml*），其中包括一个 spinner、一个按钮和一个文本视图。这些视图使用一个 `String`
+    资源文件（*strings.xml*）来获取它们的字符串和数组值。
+- en: The next thing we need to do is get the app to update the `brands` text view
+    each time the user clicks the button.
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们接下来需要做的是每次用户点击按钮时，让应用程序更新 `brands` 文本视图。
+- en: We need to make the app interactive
+  id: totrans-205
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们需要使应用程序具有交互性
+- en: '![image](Images/f0063-01.png)'
+  id: totrans-206
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0063-01.png)'
+- en: 'The Beer Adviser app has the correct appearance and includes all the views
+    we need, but it doesn’t yet provide any beer recommendations. To make the app
+    interactive, we need to make the app do something when the user clicks the `find_beer`
+    button. We want the app to behave something like this:'
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Beer Adviser 应用程序具有正确的外观，并包含我们需要的所有视图，但目前还没有提供任何啤酒推荐。为了使应用程序具有交互性，我们需要在用户点击
+    `find_beer` 按钮时让应用程序执行某些操作。我们希望应用程序的行为类似于这样：
+- en: '**The user chooses a beer color from the spinner and clicks the button.**'
+  id: totrans-208
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用户从 spinner 中选择啤酒颜色并点击按钮。**'
+- en: '**Code in MainActivity responds to the button being clicked.**'
+  id: totrans-209
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity 响应按钮点击的代码。**'
+- en: '**MainActivity passes the selected beer color to a method we’ll create named
+    getBeers.**'
+  id: totrans-210
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity 将选定的啤酒颜色传递给我们将创建的名为 getBeers 的方法。**'
+- en: The `getBeers()` method finds matching brands for the beer color.
+  id: totrans-211
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`getBeers()` 方法找到与啤酒颜色匹配的品牌。'
+- en: '**MainActivity updates the brands text view so that it displays the list of
+    recommended beers on the device.**'
+  id: totrans-212
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity 更新品牌文本视图，以在设备上显示推荐啤酒的列表。**'
+- en: '![image](Images/f0063-02.png)'
+  id: totrans-213
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0063-02.png)'
+- en: To make the app respond to the user in this way, we need to update the code
+    in *MainActivity.kt*, as this is the code that’s responsible for how the app behaves.
+    Android Studio created this file for us when we created the project, so let’s
+    take a look at the current code.
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使应用程序以这种方式响应用户，我们需要更新 *MainActivity.kt* 中的代码，因为这段代码负责应用程序的行为。当我们创建项目时，Android
+    Studio 为我们创建了这个文件，所以让我们看看当前的代码。
+- en: What the MainActivity code looks like
+  id: totrans-215
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: MainActivity 代码示例
+- en: Android Studio created *MainActivity.kt* for us when we created the project.
+    Open this file now (if it’s not already open) by going to the *app/src/main/java*
+    folder and double-clicking on it.
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们创建项目时，Android Studio 为我们创建了 *MainActivity.kt*。如果尚未打开，请转到 *app/src/main/java*
+    文件夹，双击打开该文件。
+- en: 'Here is the code for *MainActivity.kt* that Android Studio created for us:'
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 Android Studio 为我们创建的 *MainActivity.kt* 的代码：
+- en: '![image](Images/f0064-02.png)'
+  id: totrans-218
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0064-02.png)'
+- en: The above code is all you need to create a basic activity. As you can see, it’s
+    a class that extends `AppCompatActivity`, and overrides its `onCreate()` method.
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上面的代码就是创建基本活动所需的全部内容。如您所见，它是一个扩展了`AppCompatActivity`并重写了其`onCreate()`方法的类。
+- en: All activities (not just this one) have to extend an activity class such as
+    `AppCompatActivity`. You’ll find out more about this in [Chapter 5](ch05.xhtml#the_activity_lifecyclecolon_being_an_act),
+    but for now, all you need to know is that when a class extends `AppCompatActivity`,
+    it transforms your plain old Kotlin class into a full-fledged, card-carrying Android
+    activity.
+  id: totrans-220
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有活动（不仅仅是这一个）都必须扩展一个活动类，比如`AppCompatActivity`。有关此内容的更多信息，请参见[第5章](ch05.xhtml#the_activity_lifecyclecolon_being_an_act)，但现在您只需知道，当一个类扩展`AppCompatActivity`时，它将您的普通
+    Kotlin 类转换为一个完整的、持卡的 Android 活动。
+- en: '![image](Images/f0064-03.png)'
+  id: totrans-221
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0064-03.png)'
+- en: 'All activities must also implement the `onCreate()` method. This method gets
+    called when the activity object gets created, and it’s used to perform basic setup
+    such as what layout the activity is associated with. This is done via a call to
+    `setContentView()`. In the example above, the code:'
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有活动还必须实现`onCreate()`方法。当活动对象创建时，此方法将被调用，并用于执行基本设置，例如活动关联的布局是什么。这是通过调用`setContentView()`完成的。在上面的示例中，代码如下：
+- en: '[PRE9]'
+  id: totrans-223
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: tells Android that this activity uses *activity_main.xml* as its layout.
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 告诉 Android 此活动使用 *activity_main.xml* 作为其布局。
+- en: '![image](Images/f0064-04.png)'
+  id: totrans-225
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0064-04.png)'
+- en: You now know what the current `MainActivity` code does. So how do we get it
+    to respond when the user clicks the `find_beer` button?
+  id: totrans-226
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您现在知道当前`MainActivity`代码的作用了。那么当用户点击`find_beer`按钮时，我们如何让它做出响应呢？
+- en: A button can listen for on-click events…
+  id: totrans-227
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 按钮可以监听点击事件…
+- en: Each time the user does something in your app it’s called an **event**. There
+    are many different event types in Androidville, such as clicking a button, swiping
+    the screen, or pressing a hardware key on the device.
+  id: totrans-228
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当用户在您的应用程序中执行操作时，称为**事件**。Androidville 中有许多不同的事件类型，例如点击按钮、滑动屏幕或按设备上的硬件键。
+- en: In this app, we want to know when the user clicks on the `find_beer` button
+    so that we can get the app to do something in response. We can get the app to
+    listen for the button’s **on-click** event so that each time it occurs, we can
+    update the text in the `brands` text view.
+  id: totrans-229
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个应用程序中，我们希望知道用户何时点击`find_beer`按钮，以便我们能够对其做出响应。我们可以让应用程序监听按钮的**点击**事件，以便每次事件发生时，我们可以更新`brands`文本视图中的文本。
+- en: '**You can make a button respond to on-click events by adding an OnClickListener
+    to the button.**'
+  id: totrans-230
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**您可以通过向按钮添加一个 OnClickListener 来使按钮响应点击事件。**'
+- en: …using an OnClickListener
+  id: totrans-231
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …使用 OnClickListener
+- en: You can make the app listen for a button’s on-click events by adding an `**OnClickListener**`
+    to the button. Each time the button is clicked, the `OnClickListener` “hears”
+    the click, and responds to it.
+  id: totrans-232
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以通过向按钮添加一个`**OnClickListener**`来让应用程序监听按钮的点击事件。每次点击按钮时，`OnClickListener`会“听到”点击事件并做出响应。
+- en: '![image](Images/f0065-02.png)'
+  id: totrans-233
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0065-02.png)'
+- en: You specify what action the `OnClickListener` should take by passing it a block
+    of code—a lambda—that specifies what should happen when the button is clicked.
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过传递一个代码块（lambda）来指定`OnClickListener`应该执行的操作，您可以指定当按钮被点击时应该发生什么。
+- en: Note
+  id: totrans-235
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: If your Kotlin lambda knowledge feels a little rusty, we suggest that you refer
+    to Head First Kotlin.
+  id: totrans-236
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您对 Kotlin lambda 的了解感觉有点生疏，我们建议您参考《Head First Kotlin》。
+- en: Here, we want to update the `brands` text view each time the `find_beer` button
+    is clicked. This means that we need to add an `OnClickListener` to the `find_beer`
+    button, and pass it a lambda that tells it how to update the text view.
+  id: totrans-237
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，我们希望每次点击`find_beer`按钮时更新`brands`文本视图。这意味着我们需要向`find_beer`按钮添加一个`OnClickListener`，并传递一个
+    lambda 表达式来告诉它如何更新文本视图。
+- en: Let’s find out how to do this.
+  id: totrans-238
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们找出如何做到这一点。
+- en: Get a reference to the button…
+  id: totrans-239
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 获取按钮的引用…
+- en: To add an `OnClickListener` to the `find_beer` button, you first need to get
+    a reference to the button in the activity code. You do this using a method named
+    `**findViewById**`.
+  id: totrans-240
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要向`find_beer`按钮添加一个`OnClickListener`，您首先需要在活动代码中获取按钮的引用。您可以使用一个名为`**findViewById**`的方法来实现这一点。
+- en: The `findViewById` method lets you get a reference to any view in the layout
+    that has an ID. Simply specify the view’s type and ID, and the method returns
+    a reference to it.
+  id: totrans-241
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`findViewById`方法允许您获取布局中具有特定 ID 的任何视图的引用。只需指定视图的类型和 ID，该方法就会返回对它的引用。'
+- en: 'In this app, we want to get a reference to the button with an ID of “find_beer”,
+    so we use the code:'
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个应用程序中，我们希望获取 ID 为“find_beer”的按钮的引用，因此我们使用以下代码：
+- en: '![image](Images/f0066-02.png)'
+  id: totrans-243
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0066-02.png)'
+- en: …and call its setOnClickListener method
+  id: totrans-244
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …并调用它的`setOnClickListener`方法
+- en: 'Once you have a reference to the button, you can add an `OnClickListener` to
+    it by calling its `setOnClickListener()` method using code like this:'
+  id: totrans-245
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦你有了按钮的引用，你可以通过调用其`setOnClickListener()`方法来为其添加`OnClickListener`，例如以下代码：
+- en: '![image](Images/f0066-03.png)'
+  id: totrans-246
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0066-03.png)'
+- en: Notice that we’re adding the `OnClickListener` code to `MainActivity`’s `onCreate()`
+    method. `onCreate()` runs when the activity gets created, so adding the call to
+    `setOnClickListener()` here means that the `find_beer` button will be able to
+    start responding to clicks as soon as possible.
+  id: totrans-247
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，我们将`OnClickListener`代码添加到`MainActivity`的`onCreate()`方法中。`onCreate()`在活动创建时运行，因此在这里添加`setOnClickListener()`调用意味着`find_beer`按钮将尽快开始响应点击。
+- en: Now that we’ve added an `OnClickListener` to the button, let’s make it do something
+    when the button is clicked.
+  id: totrans-248
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经将`OnClickListener`添加到按钮上了，让我们在按钮被点击时做一些事情。
+- en: Pass a lambda to the setOnClickListener method
+  id: totrans-249
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 将lambda传递给`setOnClickListener`方法
+- en: You make the button do something when it’s clicked by passing a lambda to its
+    `setOnClickListener()` method. The lambda specifies what you want to happen each
+    time the button is clicked.
+  id: totrans-250
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过将lambda传递给其`setOnClickListener()`方法，使按钮在点击时执行某些操作。lambda指定每次点击按钮时要执行的操作。
+- en: '![image](Images/f0067-02.png)'
+  id: totrans-251
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0067-02.png)'
+- en: 'So if you want the button to update some text or perform some other action,
+    you put the code to do this in the lambda:'
+  id: totrans-252
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，如果你希望按钮更新一些文本或执行其他操作，你可以将代码放在lambda中来实现这一点：
+- en: '![image](Images/f0067-03.png)'
+  id: totrans-253
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0067-03.png)'
+- en: We ultimately want the activity to display a list of beer recommendations, but
+    for now, let’s make the button update the `brands` text view with the value that’s
+    selected in the `beer_color` spinner. This will let us test that the button’s
+    `OnClickListener` works before we focus on getting some *real* beer advice.
+  id: totrans-254
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最终，我们希望活动显示一系列啤酒推荐，但现在让我们通过按钮更新`brands`文本视图显示在`beer_color`下拉列表框中选择的值。在专注于获取一些*真正*的啤酒建议之前，这将允许我们测试按钮的`OnClickListener`是否有效。
+- en: 'In order to do this, there are two more things we need to know: how to edit
+    the text in a text view, and how to get the value that’s selected in the spinner.'
+  id: totrans-255
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了实现这一点，我们还需要了解两件事：如何编辑文本视图中的文本以及如何获取下拉列表框中选择的值。
+- en: How to edit a text view’s text
+  id: totrans-256
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 如何编辑文本视图的文本
+- en: As you’ve already learned, you change the text that’s displayed in a text view
+    by updating its `text` attribute in the layout XML. To update the text using activity
+    code, we can therefore get a reference to the text view and update its `text`
+    property.
+  id: totrans-257
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你已经学到的那样，通过更新布局XML中的`text`属性来改变文本视图中显示的文本。要使用活动代码更新文本，我们可以获取文本视图的引用并更新其`text`属性。
+- en: 'To edit the text that’s displayed in the `brands` text view to say “Gottle
+    of geer”, for example, you could use the following code:'
+  id: totrans-258
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要编辑在`brands`文本视图中显示的文本以显示“Gottle of geer”，例如，你可以使用以下代码：
+- en: '![image](Images/f0068-02.png)'
+  id: totrans-259
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0068-02.png)'
+- en: In the Beer Adviser app, we want to update the text view’s `text` property to
+    the value that the user has selected in the `beer_color` spinner. To do this,
+    we need to find out how to get this value.
+  id: totrans-260
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Beer Adviser应用程序中，我们希望更新文本视图的`text`属性，以显示用户在`beer_color`下拉列表框中选择的值。为此，我们需要找出如何获取此值。
+- en: How to get the spinner’s value
+  id: totrans-261
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 如何获取下拉列表框的值
+- en: 'You can get the current value in a spinner using its `**selectedItem**` property.
+    To get the current value from the `beer_color` spinner, for example, you would
+    use the code:'
+  id: totrans-262
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以使用其`**selectedItem**`属性获取下拉列表框中的当前值。例如，要从`beer_color`下拉列表框中获取当前值，你可以使用以下代码：
+- en: '![image](Images/f0068-03.png)'
+  id: totrans-263
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0068-03.png)'
+- en: The `selectedItem` property can hold any type of value, not just `String`s,
+    so you need to convert its value before you can use it.
+  id: totrans-264
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`selectedItem`属性可以保存任何类型的值，而不仅仅是`String`，因此在使用之前需要将其值转换为相应的类型。'
+- en: 'In the Beer Adviser app, for example, we know that the `beer_color` spinner
+    holds an array of `String` values, so the item the user selects must be a `String`.
+    To use this value, we therefore need to convert it to a `String` using code like
+    this:'
+  id: totrans-265
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '例如，在Beer Adviser应用程序中，我们知道`beer_color`下拉列表框保存了一个`String`值的数组，因此用户选择的项目必须是一个`String`。要使用此值，我们因此需要使用以下代码将其转换为`String`： '
+- en: '![image](Images/f0068-04.png)'
+  id: totrans-266
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0068-04.png)'
+- en: 'You could also use it in a `String` template using the following code instead:'
+  id: totrans-267
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你也可以在`String`模板中使用以下代码：
+- en: '[PRE10]'
+  id: totrans-268
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: You now know enough to make the `find_beer` button get the `beer_color` spinner’s
+    value, and display it in the `brands` text view. Before we show you the full code,
+    see if you can piece it together yourself by having a go at the following exercise.
+  id: totrans-269
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你已经了解如何让`find_beer`按钮获取`beer_color`下拉列表的值，并在`brands`文本视图中显示它。在我们展示完整代码之前，看看你是否可以自己拼凑它，尝试以下练习。
+- en: Pool Puzzle
+  id: totrans-270
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 池谜题
+- en: '![image](Images/common01.png)'
+  id: totrans-271
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common01.png)'
+- en: Your **job** is to take code snippets from the pool and place them into the
+    blank lines in `MainActivity`’s `onCreate()` method. You may **not** use the same
+    code snippet more than once, and you won’t need to use all the snippets. Your
+    **goal** is to make the `find_beer` button respond to clicks by getting it to
+    update the `brands` text view with the value selected in the `beer_color` spinner.
+  id: totrans-272
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的**任务**是从池中提取代码片段，并将它们放入`MainActivity`的`onCreate()`方法中的空白行中。你不能多次使用相同的代码片段，也不需要使用所有的片段。你的**目标**是使`find_beer`按钮在点击时响应，通过更新`brands`文本视图显示在`beer_color`下拉列表中选择的值。
+- en: '[PRE11]'
+  id: totrans-273
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: '![image](Images/f0069-01.png)'
+  id: totrans-274
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0069-01.png)'
+- en: Note
+  id: totrans-275
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: '**Note: each thing from the pool can only be used once!**'
+  id: totrans-276
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**注意：池中的每个项目只能使用一次！**'
+- en: Pool Puzzle Solution
+  id: totrans-277
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 池谜题解决方案
+- en: '![image](Images/common01.png)'
+  id: totrans-278
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common01.png)'
+- en: Your **job** is to take code snippets from the pool and place them into the
+    blank lines in `MainActivity`’s `onCreate()` method. You may **not** use the same
+    code snippet more than once, and you won’t need to use all the snippets. Your
+    **goal** is to make the `find_beer` button respond to clicks by getting it to
+    update the `brands` text view with the value selected in the `beer_color` spinner.
+  id: totrans-279
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的**任务**是从池中提取代码片段，并将它们放入`MainActivity`的`onCreate()`方法中的空白行中。你不能多次使用相同的代码片段，也不需要使用所有的片段。你的**目标**是使`find_beer`按钮在点击时响应，通过更新`brands`文本视图显示在`beer_color`下拉列表中选择的值。
+- en: '![image](Images/f0070-01.png)![image](Images/f0070-02.png)'
+  id: totrans-280
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0070-01.png)![image](Images/f0070-02.png)'
+- en: The updated code for MainActivity.kt
+  id: totrans-281
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更新后的MainActivity.kt代码
+- en: We want to update `MainActivity` so that the `find_beer` button responds to
+    clicks. Each time the button is clicked, we want to update the text that’s displayed
+    in the `brands` text view so that it includes the beer color the user selects
+    in the spinner.
+  id: totrans-282
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望更新`MainActivity`，使`find_beer`按钮响应点击。每次点击按钮时，我们希望更新在`brands`文本视图中显示的文本，以包括用户在下拉列表中选择的啤酒颜色。
+- en: 'Below is the updated *MainActivity.kt* code featuring the code you pieced together
+    in the previous exercise. Update *MainActivity.kt* to include these changes (in
+    bold):'
+  id: totrans-283
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是更新后的*MainActivity.kt*代码，包含你在上一个练习中拼凑在一起的代码。更新*MainActivity.kt*以包含这些更改（用粗体表示）：
+- en: '![image](Images/f0071-02.png)'
+  id: totrans-284
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0071-02.png)'
+- en: Before we take the code for a test drive, let’s go through what the code does
+    when it runs.
+  id: totrans-285
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们测试代码之前，让我们看看代码运行时的操作。
+- en: What happens when you run the code
+  id: totrans-286
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 运行代码时会发生什么
+- en: 'When we run the app, choose a beer color, and click on the Find Beer button,
+    the following things happen:'
+  id: totrans-287
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行应用程序时，选择一种啤酒颜色，然后单击“查找啤酒”按钮，会发生以下事情：
+- en: '**The user chooses a beer color from the spinner and clicks on the Find Beer
+    button.**'
+  id: totrans-288
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用户从下拉列表中选择一种啤酒颜色，然后单击“查找啤酒”按钮。**'
+- en: '![image](Images/f0072-02.png)'
+  id: totrans-289
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0072-02.png)'
+- en: '**The button’s OnClickListener hears that it’s been clicked.**'
+  id: totrans-290
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**按钮的OnClickListener监听到被点击的事件。**'
+- en: '![image](Images/f0072-03.png)'
+  id: totrans-291
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0072-03.png)'
+- en: '**The OnClickListener code in MainActivity retrieves the currently selected
+    value of the spinner (in this case Amber).**'
+  id: totrans-292
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity中的OnClickListener代码检索下拉列表当前选择的值（在本例中为Amber）。**'
+- en: '![image](Images/f0072-04.png)'
+  id: totrans-293
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0072-04.png)'
+- en: '**It then updates the text property of the text view to reflect that the user
+    has chosen Amber in the spinner.**'
+  id: totrans-294
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**然后更新文本视图的文本属性，以反映用户在下拉列表中选择了Amber。**'
+- en: '![image](Images/f0072-05.png)'
+  id: totrans-295
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0072-05.png)'
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-296
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驱动'
+- en: Make sure you’ve updated *MainActivity.kt*, and then run the app.
+  id: totrans-297
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 确保你已经更新了*MainActivity.kt*，然后运行应用程序。
+- en: When we choose a beer color from the spinner and click on the Find Beer button,
+    the value we selected is displayed in the text view.
+  id: totrans-298
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们从下拉列表中选择一种啤酒颜色，然后单击“查找啤酒”按钮时，我们选择的值将显示在文本视图中。
+- en: '![image](Images/f0073-02.png)'
+  id: totrans-299
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0073-02.png)'
+- en: Add the getBeers() method
+  id: totrans-300
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 添加`getBeers()`方法
+- en: '![image](Images/f0074-01.png)'
+  id: totrans-301
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0074-01.png)'
+- en: Now that we know that the `find_beer` button can respond to clicks, let’s change
+    its behavior so that each time the user clicks the button, it provides some real
+    beer advice based on the value that’s selected in the spinner. We’ll do this by
+    adding a new `getBeers()` method to *MainActivity.kt*, which we can then call
+    in the button’s `OnClickListener` code.
+  id: totrans-302
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们知道`find_beer`按钮可以响应点击事件，让我们改变它的行为，使得每次用户点击按钮时，根据下拉框中选择的值提供一些真实的啤酒建议。我们将在*MainActivity.kt*中添加一个新的`getBeers()`方法，然后在按钮的`OnClickListener`代码中调用它。
+- en: 'The `getBeers()` method is pure Kotlin code. It has one `String` parameter
+    for the beer color, and returns a `List<String>` of beer suggestions. Add the
+    `getBeers()` method (shown below in bold) to *MainActivity.kt*:'
+  id: totrans-303
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`getBeers()`方法是纯Kotlin代码。它有一个`String`参数用于啤酒颜色，并返回一个啤酒建议的`List<String>`。在*MainActivity.kt*中添加以下**粗体**显示的`getBeers()`方法：'
+- en: '![image](Images/f0074-02.png)'
+  id: totrans-304
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0074-02.png)'
+- en: Next, we need to update the lambda that’s passed to the `find_beer` button’s
+    `setOnClickListener()` method. We’ll make it pass the selected beer color from
+    the spinner to the `getBeers()` method, and update the `brands` text view with
+    its return value.
+  id: totrans-305
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们需要更新传递给`find_beer`按钮的`setOnClickListener()`方法的lambda表达式。我们将使其将从下拉框中选择的啤酒颜色传递给`getBeers()`方法，并更新`brands`文本视图以显示其返回值。
+- en: See if you can piece together the code to do this by having a go at the following
+    exercise.
+  id: totrans-306
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 看看你是否能通过尝试以下练习来拼凑代码。
+- en: Activity Magnets
+  id: totrans-307
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 活动磁贴
+- en: '![image](Images/common02.png)'
+  id: totrans-308
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: Somebody used fridge magnets to complete the code for `MainActivity`, but a
+    freak kitchen whirlwind has dislodged some of the magnets. Can you piece the code
+    back together again?
+  id: totrans-309
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有人用冰箱贴完成了`MainActivity`的代码，但是一场厨房旋风把一些磁贴吹散了。你能把代码再拼回来吗？
+- en: The code needs to call the `getBeers()` method, and display each item it returns
+    in the `brands` text view. Each item should be displayed on a new line.
+  id: totrans-310
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码需要调用`getBeers()`方法，并将其返回的每个项目显示在`brands`文本视图中。每个项目应显示在新行上。
+- en: '![image](Images/f0075-02.png)'
+  id: totrans-311
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0075-02.png)'
+- en: Activity Magnets Solution
+  id: totrans-312
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 活动磁贴解决方案
+- en: '![image](Images/common02.png)'
+  id: totrans-313
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: Somebody used fridge magnets to complete the code for `MainActivity`, but a
+    freak kitchen whirlwind has dislodged some of the magnets. Can you piece the code
+    back together again?
+  id: totrans-314
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有人用冰箱贴完成了`MainActivity`的代码，但是一场厨房旋风把一些磁贴吹散了。你能把代码再拼回来吗？
+- en: The code needs to call the `getBeers()` method, and display each item it returns
+    in the `brands` text view. Each item should be displayed on a new line.
+  id: totrans-315
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码需要调用`getBeers()`方法，并将其返回的每个项目显示在`brands`文本视图中。每个项目应显示在新行上。
+- en: '![image](Images/f0076-01.png)'
+  id: totrans-316
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0076-01.png)'
+- en: The full code for MainActivity.kt
+  id: totrans-317
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: MainActivity.kt的完整代码
+- en: Below is the full code for `MainActivity`. Apply the changes shown in bold to
+    *MainActivity.kt*.
+  id: totrans-318
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是*MainActivity*的完整代码。应用粗体显示的更改到*MainActivity.kt*。
+- en: '![image](Images/f0077-02.png)'
+  id: totrans-319
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0077-02.png)'
+- en: Before we take the code for a final test drive, let’s go through what the code
+    does when it runs.
+  id: totrans-320
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们进行最终测试前，让我们先了解一下代码在运行时的作用。
+- en: What happens when you run the code
+  id: totrans-321
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 当你运行代码时会发生什么？
+- en: 'The following things happen when the app runs:'
+  id: totrans-322
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用运行时发生以下几件事情：
+- en: '**When the user clicks on the Find Beer button, the button’s OnClickListener
+    hears the click.**'
+  id: totrans-323
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户点击查找啤酒按钮时，按钮的OnClickListener监听到了点击事件。**'
+- en: '![image](Images/f0078-02.png)'
+  id: totrans-324
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0078-02.png)'
+- en: '**The OnClickListener code in MainActivity calls the getBeers() method, passing
+    in the beer color selected in the spinner.**'
+  id: totrans-325
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity中的OnClickListener代码调用getBeers()方法，传入从下拉框中选择的啤酒颜色。**'
+- en: The `getBeers()` method returns a list of beers, which `MainActivity` saves
+    in a separate variable.
+  id: totrans-326
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`getBeers()`方法返回一个啤酒列表，`MainActivity`将其保存在一个单独的变量中。'
+- en: '![image](Images/f0078-03.png)'
+  id: totrans-327
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0078-03.png)'
+- en: '**MainActivity formats the list of beers and uses it to set the text property
+    in the text view.**'
+  id: totrans-328
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity格式化啤酒列表，并用它设置文本视图的文本属性。**'
+- en: '![image](Images/f0078-04.png)'
+  id: totrans-329
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0078-04.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-330
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来测试一下这个应用。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-331
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驱动'
+- en: Once you’ve made the changes to the app, go ahead and run it.
+  id: totrans-332
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦你对应用做出了更改，就可以运行它了。
+- en: When we try selecting different beer types and clicking on the Find Beer button,
+    the app displays a selection of suitable beers. We get one set of beers when we
+    choose the Light option, and another selection when we choose the Amber option.
+  id: totrans-333
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们尝试选择不同类型的啤酒并点击“查找啤酒”按钮时，应用程序会显示一系列合适的啤酒。当我们选择“浅色”选项时，会得到一组啤酒，选择“琥珀”选项时会得到另一组啤酒。
+- en: '![image](Images/f0079-02.png)'
+  id: totrans-334
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0079-02.png)'
+- en: Congratulations! You’ve now finished writing your first interactive Android
+    app, and learned how to make the layout’s views respond to the user.
+  id: totrans-335
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恭喜！你现在已经完成了你的第一个交互式安卓应用程序的编写，并学会了如何使布局的视图响应用户。
+- en: Your Android Toolbox
+  id: totrans-336
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 你的安卓工具箱
+- en: '![image](Images/f0080-01.png)'
+  id: totrans-337
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0080-01.png)'
+- en: '**You’ve got [Chapter 2](#building_interactive_appscolon_apps_that) under your
+    belt and now you’ve added building interactive Android apps to your toolbox.**'
+  id: totrans-338
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**你已经掌握了[第二章](#building_interactive_appscolon_apps_that)，现在你的工具箱中又增加了构建交互式安卓应用。**'
+- en: '![image](Images/f0080-02.png)'
+  id: totrans-339
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0080-02.png)'

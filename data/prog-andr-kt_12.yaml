@@ -1,0 +1,954 @@
+- en: Chapter 12\. Trimming Down Resource Consumption with Performance Optimizations
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第 12 章\. 通过性能优化减少资源消耗
+- en: In the previous chapter, you became familiar with ways to examine what’s going
+    on “under the hood” using popular Android profiling tools. This final chapter
+    highlights a medley of performance optimization considerations. There’s no one-size-fits-all
+    approach, so it is helpful to become aware of potential performance pitfalls (and
+    solutions). However, performance issues can sometimes be the result of many compounding
+    problems that individually may not seem noteworthy.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前一章中，您已经熟悉了使用流行的 Android 分析工具来检查“引擎盖下”发生的情况的方法。这一最后一章突出了一系列性能优化考虑因素。没有适用于所有情况的通用方法，因此了解潜在的性能陷阱（及其解决方案）是有帮助的。然而，性能问题有时可能是多个复合问题的结果，单独看起来可能并不重要。
+- en: Performance considerations allow you to examine concerns that may impact your
+    application’s ability to scale. If you can use any of these strategies as “low-hanging
+    fruit” in your code base, it’s well worth going for the biggest win with the smallest
+    amount of effort. Not every section of this chapter will be suitable for every
+    project you work on, but they are still useful considerations to be aware of when
+    writing any Android application. These topics range from view system performance
+    optimizations to network data format, caching, and more.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 性能考虑因素允许您检查可能影响应用程序扩展能力的问题。如果可以在代码库中使用这些策略中的任何一个作为“低成本成果”，那么追求最大收益是非常值得的。本章的每个部分并不适合您工作的每个项目，但在编写任何
+    Android 应用程序时，它们仍然是有用的考虑因素。这些主题涵盖从视图系统性能优化到网络数据格式、缓存等内容。
+- en: 'We are aware that the View system is to be replaced by Jetpack Compose: however,
+    the View system is not going anywhere for years, even with Jetpack. The first
+    half of this chapter is dedicated to view topics every project could benefit from:
+    potential optimizations for the Android View system. The way you set up view hierarchies
+    can end up having a substantial impact on performance if you are not careful.
+    For this reason, we look at two easy ways to optimize view performance: reducing
+    view hierarchy complexity with `ConstraintLayout`, and creating drawable resources
+    for animation/customized backgrounds.'
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们知道 View 系统将被 Jetpack Compose 取代：但是，即使有了 Jetpack，View 系统在未来几年也不会消失。本章的前半部分专注于每个项目都能从中受益的视图主题：Android
+    View 系统的潜在优化。如果不小心设置视图层次结构，它可能会对性能产生重大影响。因此，我们看看两种简单的优化视图性能的方法：使用`ConstraintLayout`减少视图层次结构的复杂性，并为动画/自定义背景创建可绘制资源。
+- en: Achieving Flatter View Hierarchy with ConstraintLayout
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用 ConstraintLayout 实现更平坦的视图层次结构
+- en: As a general rule, you want to keep your view hierarchies in Android as flat
+    as possible. Deeply nested hierarchies affect performance, both when a view first
+    inflates and when the user interacts with the screen. When view hierarchies are
+    deeply nested, it can take longer to send instructions back up to the root `ViewGroup`
+    containing all your elements and traverse back down to make changes to particular
+    views.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为一般规则，您希望在 Android 中保持视图层次结构尽可能平坦。深度嵌套的层次结构会影响性能，无论是在视图首次膨胀时还是用户与屏幕进行交互时都是如此。当视图层次结构深度嵌套时，发送指令到包含所有元素的根`ViewGroup`并遍历以对特定视图进行更改可能需要更长时间。
+- en: In addition to the profiling tools mentioned in [Chapter 11](ch11.html#android_profiling_tools),
+    Android Studio offers *Layout Inspector*, which analyzes your application at runtime
+    and creates a 3D rendering of the view elements stacked on the screen. You can
+    open Layout Inspector by clicking the bottom corner tab of Android Studio, as
+    shown in [Figure 12-1](#layout_inspector).
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了在 [第 11 章](ch11.html#android_profiling_tools) 中提到的分析工具外，Android Studio 还提供了*布局检查器*，它可以在运行时分析您的应用程序并在屏幕上创建视图元素的
+    3D 渲染。您可以通过单击 Android Studio 底部角标打开布局检查器，如 [图 12-1](#layout_inspector) 所示。
+- en: '![Layout Inspector](assets/pawk_1201.png)'
+  id: totrans-7
+  prefs: []
+  type: TYPE_IMG
+  zh: '![布局检查器](assets/pawk_1201.png)'
+- en: Figure 12-1\. Layout Inspector allows you to rotate the 3D rendering for devices
+    running API 29+.
+  id: totrans-8
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 12-1\. 布局检查器允许您旋转运行 API 29+ 的设备的 3D 渲染。
+- en: When child components are drawn, they are drawn on top of the parent `View`,
+    stacking one on top of the other. Layout Inspector does provide a *Component Tree*
+    pane to the left so that you are able to drill down the elements and inspect their
+    properties. To better understand what happens when users interact with Android
+    UI widgets, [Figure 12-2](#view_hierarchy) shows a bird’s-eye view of the very
+    same layout hierarchy provided in the Component Tree.
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当子组件被绘制时，它们会叠加在父`View`上。布局检查器提供了一个*组件树*窗格，位于左侧，以便您可以深入了解元素并检查它们的属性。为了更好地理解用户与Android
+    UI小部件交互时发生的情况，[图12-2](#view_hierarchy)展示了与组件树中提供的完全相同的布局层次结构的鸟瞰图。
+- en: Even for a relatively simple layout, a view hierarchy can grow in complexity
+    pretty quickly. Managing many nested layouts can come with additional costs such
+    as increased difficulty managing touch events, slower GPU rendering, and difficulty
+    guaranteeing the same spacing/size of views across different-sized screens.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 即使对于相对简单的布局，视图层次结构也可以迅速变得复杂起来。管理许多嵌套布局可能会带来额外的成本，例如更难管理触摸事件、更慢的 GPU 渲染以及难以保证在不同尺寸屏幕上视图的相同间距/大小。
+- en: '![Layout Inspector](assets/pawk_1202.png)'
+  id: totrans-11
+  prefs: []
+  type: TYPE_IMG
+  zh: '![布局检查器](assets/pawk_1202.png)'
+- en: Figure 12-2\. The elements of a running activity stretched out in their entirety.
+  id: totrans-12
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图12-2. 运行活动的元素完全展开。
+- en: On top of the visual changes your app might call for, the Android OS could also
+    be affecting view properties on its own. Changes on view properties, called by
+    either you or the OS, could trigger a re-layout of your view hierarchy. Whether
+    this happens or not depends on how views are implemented (by yourself or by an
+    external dependency), how often layout components trigger dimension resizing,
+    and where they are located in the view hierarchy.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了您的应用程序可能需要的视觉更改之外，Android 操作系统还可能会独立影响视图属性。由您或操作系统调用的视图属性更改可能会触发视图层次结构的重新布局。是否发生这种情况取决于视图如何实现（由您自己或外部依赖实现），布局组件触发尺寸调整的频率以及它们在视图层次结构中的位置。
+- en: 'Not only must we worry about hierarchy complexity, but we also must be mindful
+    of avoiding certain types of views that could end up costing our application twice
+    the number of traversals necessary to send instructions to the Android OS. Some
+    older layout types in Android are prone to “double taxation” when relative positioning
+    is enabled:'
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不仅必须担心层次结构的复杂性，还必须注意避免某些类型的视图，这些视图可能会使应用程序付出两倍于发送指令给Android操作系统所需遍历次数的代价。在Android中，一些较旧的布局类型在启用相对定位时容易出现“双重征税”：
+- en: '`RelativeLayout`'
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`RelativeLayout`'
+- en: 'Without fail, this always traverses its child elements at least twice: once
+    for layout calculations for each position and size and once to finalize positioning.'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这总是至少两次遍历其子元素：一次用于每个位置和大小的布局计算，一次用于最终定位。
+- en: '`LinearLayout`'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`LinearLayout`'
+- en: This sets its orientation to horizontal or sets `android:setMeasureWithLargestChildEnabled="true"`
+    while in vertical orientation; both cases make two passes for each child element.
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在水平方向设置其方向或在垂直方向上设置`android:setMeasureWithLargestChildEnabled="true"`，这两种情况都会为每个子元素进行两次遍历。
+- en: '`GridLayout`'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`GridLayout`'
+- en: This can end up making double traversals if the layout uses weight distribution
+    or sets `android:layout_gravity` to any valid value.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果布局使用权重分配或将`android:layout_gravity`设置为任何有效值，可能会导致双重遍历。
+- en: The cost of double taxation can become far more severe when any one of these
+    cases is located closer to the root of the tree, and can even cause exponential
+    traversals. The deeper the view hierarchy is, the longer it takes for input events
+    to be processed and for views to be updated accordingly.
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当这些情况之一位于树的更接近根部时，双重征税的成本可能会变得更加严重，甚至可能导致指数遍历。视图层次结构越深，处理输入事件和相应地更新视图所需的时间就越长。
+- en: As a good practice, it’s best to lower the negative impact of view re-layout
+    on app responsiveness. To keep hierarchies flatter and more robust, Android advocates
+    using `ConstraintLayout`. `ConstraintLayout` helps create a responsive UI for
+    complex layouts with a flat-view hierarchy.
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为一个良好的实践，最好降低视图重新布局对应用程序响应性的负面影响。为了保持更平坦和更健壮的层次结构，Android倡导使用`ConstraintLayout`。`ConstraintLayout`帮助为复杂布局创建响应式UI。
+- en: 'There are a few rules of `ConstraintLayout` to remember:'
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`ConstraintLayout`时需要记住几个规则：
+- en: Every view must have at least one horizontal and one vertical constraint.
+  id: totrans-24
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 每个视图必须至少有一个水平和一个垂直约束。
+- en: The Start/End of a view may only chain itself to the Start/End of other views.
+  id: totrans-25
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 视图的起始/结束只能链接到其他视图的起始/结束。
+- en: The Top/Bottom of a view may only chain itself to the Top/Bottom of other views.
+  id: totrans-26
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 视图的顶部/底部只能链接到其他视图的顶部/底部。
+- en: Android Studio’s design preview shows how the parent ties the view to the designated
+    end of the screen, as shown in [Figure 12-3](#constraint_layout_attrs).
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android Studio的设计预览显示父视图如何将视图绑定到屏幕的指定端点，如[图12-3](#constraint_layout_attrs)所示。
+- en: '![pawk 1203](assets/pawk_1203.png)'
+  id: totrans-28
+  prefs: []
+  type: TYPE_IMG
+  zh: '![pawk 1203](assets/pawk_1203.png)'
+- en: Figure 12-3\. In this particular `ConstraintLayout`, the spinner button constrains
+    all parent sides to the center of the screen. The text elements in the upper-left
+    corner are only constrained to the top and left sides of the parent.
+  id: totrans-29
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图12-3。在这个特定的`ConstraintLayout`中，微调按钮将所有父边约束到屏幕中心。左上角的文本元素只约束到父视图的顶部和左侧。
+- en: When highlighted, the zigzagged lines appear on a view to indicate where a side
+    is constrained to. A zigzag indicates a constraint one way to a view while a squiggly
+    line indicates that the two views constrain to each other.
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当突出显示时，锯齿状的线条出现在视图上，指示约束一侧到视图的位置，而波浪线则表示两个视图互相约束。
+- en: This book does not cover additional useful features of `ConstraintLayout`, like
+    barriers, guidelines, groups, and creating constraints. The best way to get to
+    know `ConstraintLayout` is to experiment with the elements yourself in *Split
+    View* within the design panel, as shown in [Figure 12-4](#split_view).
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书不涵盖`ConstraintLayout`的其他有用功能，如屏障、指南线、组和创建约束等。了解`ConstraintLayout`的最佳方法是在设计面板中的*分割视图*中自行尝试这些元素，如[图12-4](#split_view)所示。
+- en: '![Split View](assets/pawk_1204.png)'
+  id: totrans-32
+  prefs: []
+  type: TYPE_IMG
+  zh: '![分割视图](assets/pawk_1204.png)'
+- en: Figure 12-4\. The Split View of the design panel shows half code and half design
+    for layout files.
+  id: totrans-33
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图12-4。设计面板的分割视图显示了布局文件的半代码和半设计。
+- en: Using `ConstraintLayout`, especially when `ViewGroup` elements might be deeply
+    nested or inefficient, is an easy way to address potential performance bottlenecks
+    at runtime for any Android application. In the next section, we shift focus on
+    performance optimizations from views themselves to view animations.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`ConstraintLayout`，特别是当`ViewGroup`元素可能被深度嵌套或效率低下时，是解决任何Android应用程序运行时潜在性能瓶颈的简单方法。在下一节中，我们将把重点从视图本身的性能优化转移到视图动画。
+- en: Reducing Programmatic Draws with Drawables
+  id: totrans-35
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用可绘制对象减少程序绘制
+- en: 'Another potential performance issue for any Android project is programmatic
+    draws at runtime. Once in a while, Android developers run into a view element
+    which does not have access to certain properties in a layout file. Suppose you
+    wanted to render a view with rounded corners only on the top two corners. One
+    way to approach this is with a programmatic draw via a Kotlin extension function:'
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 任何Android项目的另一个潜在性能问题是运行时的程序绘制。偶尔，Android开发人员会遇到布局文件中某些视图元素无法访问特定属性的情况。假设您想要在视图上渲染仅在顶部两个角具有圆角的视图。一种方法是通过Kotlin扩展函数以编程方式绘制：
+- en: '[PRE0]'
+  id: totrans-37
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: This is fine and valid; however, too many programmatic draws can end up choking
+    the RenderThread and subsequently block the UI thread from being able to process
+    further events until runtime drawings complete. Furthermore, the cost of altering
+    views programmatically becomes higher if a particular view needs to resize to
+    meet constraints. Resizing a view element at runtime means you won’t be able to
+    use the `LayoutInflater` to adjust how the elements fit with the new dimensions
+    of the original altered view.
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是正常且有效的；然而，如果程序绘制过多，可能会导致渲染线程卡住，随后阻塞UI线程无法在运行时完成后续事件处理。此外，如果特定视图需要调整大小以满足约束，则以编程方式更改视图的成本会更高。在运行时调整视图元素的大小意味着您无法使用`LayoutInflater`来调整元素如何适应原始更改后视图的新尺寸。
+- en: 'You can offload overhead that would otherwise occur by using drawables, which
+    are stored in the */drawables* folder in your resource assets. The following code
+    shows how a `Drawable` XML file achieves the same goal of rounding the top two
+    corners of a view element:'
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以通过使用存储在资源资产的*/drawables*文件夹中的可绘制对象来避免可能发生的开销。以下代码显示了一个`Drawable` XML文件如何实现在视图元素的顶部两个角实现相同目标的圆角化：
+- en: '[PRE1]'
+  id: totrans-40
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: 'You can then add the name of the file as a `Drawable` type to the background
+    attribute in the View’s layout file the name of the `Drawable` file:'
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，您可以将文件名作为`Drawable`类型添加到视图布局文件中的背景属性中`Drawable`文件的名称：
+- en: '[PRE2]'
+  id: totrans-42
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: In the previous section, we briefly touched on the initial stages of how user
+    interaction sends instructions to the Android OS. To understand where animations
+    come in, we will now dive a little further into the full process of how Android
+    renders the UI. Let’s consider the case where a user in TrekMe presses the “Create
+    a Map” button.
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前一节中，我们简要介绍了用户交互如何向 Android 操作系统发送指令的初始阶段。为了理解动画是如何发生的，我们现在将更深入地了解 Android
+    渲染 UI 的完整过程。让我们考虑 TrekMe 中的用户按下“创建地图”按钮的情况。
+- en: The stages we cover in the remainder of this section show how the OS processes
+    user events with a screen and how it is able to execute draw instructions from
+    software to hardware. We explain all the phases the Android OS performs in a draw
+    up to where animations occur in the *Sync* stage, as shown in [Figure 12-5](#android_ui_render_phases).
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本节剩余部分中，我们将介绍操作系统如何处理屏幕上的用户事件以及如何能够从软件到硬件执行绘制指令的全部过程。我们解释了 Android 操作系统在绘制中执行的所有阶段，直到动画发生在
+    *Sync* 阶段为止，如 [图 12-5](#android_ui_render_phases) 所示。
+- en: '![How Android UI renders](assets/pawk_1205.png)'
+  id: totrans-45
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Android UI 渲染方式](assets/pawk_1205.png)'
+- en: Figure 12-5\. Animation occurs at the Sync stage, after traversal is performed.
+  id: totrans-46
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 12-5\. 动画发生在遍历执行后的 Sync 阶段。
+- en: '*VSync* represents the time given between frame draws on the screen. In an
+    app, when a user touches a view element on the screen, *input handling* occurs.
+    In the *Input* stage, the Android OS makes a call to *invalidate* all the parent
+    view element nodes up the tree by copying a set of instructions to keep track
+    of dirtied state. Invalidation does not redraw the view itself, but rather, indicates
+    to the system later on which marked view must be redrawn later. This is done by
+    propagating the copied information up the view hierarchy so that it can all be
+    executed on the way back down at a later stage. [Figure 12-6](#display_list) shows
+    what invalidation looks like after user input occurs when someone touches a button:
+    traversing up the node, then copying a set of `DisplayList` instructions up each
+    parent view. Even though the arrow points down the elements, indicating child
+    elements, the traversal and the copying of `getDisplayList()` actually goes up
+    to the root before going back down.'
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*VSync* 代表屏幕上帧绘制之间给定的时间。在应用程序中，当用户触摸屏幕上的视图元素时，*输入处理* 就会发生。在 *输入* 阶段，Android
+    操作系统通过复制一组指令来跟踪脏状态，调用 *invalidate* 来使树上所有父视图元素节点无效。无效并不会重新绘制视图本身，而是在稍后指示系统哪些标记的视图必须稍后重新绘制。这是通过将复制的信息向上传播到视图层次结构中，以便在稍后的阶段在返回时执行的。[图 12-6](#display_list)
+    显示了当用户输入后发生无效时的情况，当有人触摸按钮时：遍历节点，然后将一组 `DisplayList` 指令复制到每个父视图上。尽管箭头指向下方的元素，表示子元素，但遍历和复制
+    `getDisplayList()` 实际上是向上到根部再返回向下。'
+- en: '![DisplayList](assets/pawk_1206.png)'
+  id: totrans-48
+  prefs: []
+  type: TYPE_IMG
+  zh: '![显示列表](assets/pawk_1206.png)'
+- en: Figure 12-6\. The `DisplayList` object is a set of compact instructions used
+    to instruct which views need to be redrawn on the Canvas. These instructions are
+    copied up every parent view element to the root hierarchy during invalidation
+    and then executed during traversal.
+  id: totrans-49
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 12-6\. `DisplayList` 对象是一组紧凑的指令，用于指示在画布上需要重新绘制哪些视图。这些指令在无效期间被复制到根层次结构的每个父视图元素中，然后在遍历期间执行。
+- en: 'The Android UI system then schedules the next stage, known as *traversal*,
+    which contains its own subset of rendering stages:'
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，Android UI 系统安排下一个阶段，称为 *遍历*，其中包含自己的一组渲染阶段：
+- en: Measure
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 测量
+- en: This calculates `MeasureSpecs` and passes it to the child element for measuring.
+    It does this recursively, all the way down to the leaf nodes.
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这计算 `MeasureSpecs` 并将其传递给子元素进行测量。它递归地执行此操作，一直到叶节点。
+- en: Layout
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 布局
+- en: This sets the view position and sizing of a child layout.
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这设置了子布局的视图位置和大小。
+- en: Draw
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 绘制
+- en: This renders the views using a set of instructions given by a set of `DisplayList`
+    instructions.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这使用一组 `DisplayList` 指令渲染视图。
+- en: 'In the next stage, *Sync*, the Android OS syncs the `DisplayList` info between
+    the CPU and GPU. When the CPU starts talking to the GPU in Android, the JNI takes
+    its set of instructions in the Java Native layer within the UI thread and sends
+    a synthetic copy, along with some other information, to the GPU from the RenderThread.
+    The RenderThread is responsible for animations and offloading work from the UI
+    thread (instead of having to send the work to the GPU). From there, the CPU and
+    GPU communicate with each other to determine what instructions ought to be executed
+    and then combined visually to render on the screen. Finally, we reach the *Execute*
+    stage, where the OS finally executes `DisplayList` operations in optimized fashion
+    (like drawing similar operations together at once). [“Drawn Out: How Android Renders”](https://oreil.ly/P5WbO)
+    is an excellent talk that provides more detail on Android rendering at the system
+    level.^([1](ch12.html#idm46669736237984))'
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '在接下来的阶段，“Sync”中，Android操作系统在CPU和GPU之间同步`DisplayList`信息。当CPU在Android中与GPU交流时，JNI在UI线程内的Java本地层接受其一套指令，并从RenderThread向GPU发送一个合成副本，以及其他一些信息。RenderThread负责动画并从UI线程卸载工作（而不是必须将工作发送到GPU）。从那里，CPU和GPU彼此通信以确定应执行的指令，并在屏幕上合并视觉上渲染。最后，我们到达“Execute”阶段，在此阶段，操作系统以优化的方式执行`DisplayList`操作（例如一次性绘制相似的操作）。[“Drawn
+    Out: How Android Renders”](https://oreil.ly/P5WbO)是一个关于Android渲染系统层面更详细信息的优秀讨论。^([1](ch12.html#idm46669736237984))'
+- en: 'As of Android Oreo, animations, such as circular reveals, ripples, and vector
+    drawable animations, live only in the `RenderThread`, meaning that these kinds
+    of animations are nonblocking for the UI thread. You can create these animations
+    with custom drawables. Consider the case where we wish to animate a shadowed ripple
+    in the View background whenever a user presses some kind of `ViewGroup`. You can
+    combine a set of drawables to make this happen, starting with `RippleDrawable`
+    type `Drawable` to create the ripple animation itself:'
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 截至Android Oreo，如圆形揭示、涟漪和矢量可绘制动画等动画仅存在于`RenderThread`中，这意味着这些类型的动画对UI线程是非阻塞的。您可以使用自定义可绘制对象创建这些动画。考虑这样一种情况，我们希望在用户按下某种`ViewGroup`时，在视图背景中动画显示阴影涟漪。您可以组合一组可绘制对象来实现这一点，从`RippleDrawable`类型的`Drawable`开始创建涟漪动画本身：
+- en: '[PRE3]'
+  id: totrans-59
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: '`RippleDrawable`, whose equivalent on XML is `ripple`, requires a color attribute
+    for ripple effects. To apply this animation to a background, we can use another
+    drawable file:'
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`RippleDrawable`，其在XML中的等效物是`ripple`，需要一个颜色属性用于涟漪效果。要将此动画应用于背景，我们可以使用另一个可绘制文件：'
+- en: '[PRE4]'
+  id: totrans-61
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'We can use DrawableStates, a set of framework-provided states that can be specified
+    on a `Drawable`. In this case, we use DrawableStates on a selector to determine
+    the animation as well as whether the animation occurs on press or not. Finally,
+    we create a `Drawable` used to render different states. Each state is represented
+    by a child drawable. In this case, we apply the ripple drawable animation only
+    when the view has been pressed:'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以使用DrawableStates，这是一组可以在`Drawable`上指定的框架提供的状态。在这种情况下，我们在选择器上使用DrawableStates来确定动画以及动画是否在按下时发生。最后，我们创建一个用于渲染不同状态的`Drawable`。每个状态由一个子可绘制对象表示。在这种情况下，我们仅在视图被按下时应用涟漪可绘制动画：
+- en: '[PRE5]'
+  id: totrans-63
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: Note
+  id: totrans-64
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: As mentioned in the beginning of the chapter, the view system build around Jetpack
+    Compose is completely different from the view system in Android, with its own
+    sets of UI management, graphics, runtime/compile time behavior, and more. If Jetpack
+    Compose is done with programmatic draws, would that mean using Jetpack Compose
+    is not efficient for drawing? While XML currently renders faster than Compose
+    rendering itself, optimizations are underway for closing the gap on render time.
+    However, you should keep in mind the major advantage Compose holds is the ability
+    to update, or recompose, Composable views quickly and far more efficiently than
+    the current Android view framework.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如本章开头提到的，围绕Jetpack Compose构建的视图系统与Android中的视图系统完全不同，具有其自己的UI管理、图形、运行时/编译时行为等一套。如果Jetpack
+    Compose是通过编程方式进行绘制，那是否意味着使用Jetpack Compose来绘制不高效？尽管XML当前比Compose本身的渲染速度更快，但正在进行优化以缩小渲染时间差距。然而，您应牢记Compose所具有的主要优势是能够快速更新或重新组合可组合视图，比当前的Android视图框架效率更高。
+- en: We’re done talking about view performance optimizations, and we’ll move on to
+    more performance optimization tips around various parts of an Android application
+    for the remainder of the chapter.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经讨论完视图性能优化，接下来我们将继续讨论围绕Android应用程序各个部分的更多性能优化提示。
+- en: Minimizing Asset Payload in Network Calls
+  id: totrans-67
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在网络调用中最小化资产负载
+- en: In Android, it’s important to use minimal payload to avoid slower loads, battery
+    drainage, and using too much data. In the previous chapter, we started looking
+    at network payload data formats. Both images and serialized data formats are the
+    usual suspects for causing the most bloat, so it’s important to check your payload’s
+    data format.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android中，使用最小的负载是很重要的，以避免加载变慢、耗电、以及使用过多的数据。在前一章中，我们开始研究网络负载数据格式。图像和序列化数据格式通常是导致最多膨胀的罪魁祸首，因此检查负载的数据格式是很重要的。
+- en: If you don’t need transparency for the images you work with in your Android
+    project, it’s better to work with JPG/JPEG since this format intrinsically doesn’t
+    support transparency and compresses better than PNG. When it comes to blowing
+    up bitmaps for thumbnails, it probably makes sense to render the image in much
+    lower resolution.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果在Android项目中处理的图像不需要透明度，最好使用JPG/JPEG格式，因为这种格式本质上不支持透明度，并且比PNG格式压缩更好。当需要为缩略图放大位图时，可能更合理地以更低分辨率呈现图像。
+- en: In the industry, JSON is commonly used as the data payload in networking. Unfortunately,
+    JSON and XML payloads are horrible for compression since the data format accounts
+    for spaces, quotes, returns, acmes, and more. Binary serialization formats like
+    *protocol buffers*, an accessible data format in Android which might serve as
+    a cheaper alternative. You can define the data structs, which Protobuf is able
+    to compress much smaller than XML and JSON data. Check out [Google Developers](https://oreil.ly/6dUL0)
+    for more on protocol buffers.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在工业界，JSON通常被用作网络传输中的数据负载。不幸的是，JSON和XML数据负载对于压缩来说很糟糕，因为数据格式包括空格、引号、换行符、顶点等等。像*协议缓冲区*这样的二进制序列化格式，是Android中的一种可访问的数据格式，可能是一种更便宜的替代方案。您可以定义数据结构，Protobuf能够将数据压缩得比XML和JSON数据小得多。查看[Google
+    Developers](https://oreil.ly/6dUL0)了解更多关于协议缓冲区的信息。
+- en: Bitmap Pooling and Caching
+  id: totrans-71
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 位图池和缓存
+- en: 'TrekMe uses Bitmap pooling to avoid allocating too many `Bitmap` objects. Bitmap
+    pooling reuses an existing instance, when possible. Where does this “existing
+    instance” come from? After a `Bitmap` is no longer visible, instead of making
+    it available for garbage collection (by just not keeping a reference on it), you
+    can put the no-longer-used `Bitmap` into a “bitmap pool.” Such a pool is just
+    a container for available bitmaps for later use. For example, TrekMe uses a simple
+    in-memory dequeue as a bitmap pool. To load an image into an existing bitmap,
+    you have to specify which bitmap instance you want to use. You can do that using
+    the `inBitmap` parameter^([2](ch12.html#idm46669736078176)) of `BitMapFactory.Options`:'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: TrekMe使用位图池来避免分配过多的`Bitmap`对象。位图池在可能的情况下重用现有实例。这个“现有实例”是从哪里来的呢？当一个`Bitmap`不再可见时，不要让它可供垃圾回收（只是不保留对它的引用），您可以将不再使用的`Bitmap`放入“位图池”中。这样的池只是一个容器，用于存放以后使用的可用位图。例如，TrekMe使用一个简单的内存双端队列作为位图池。要将图像加载到现有位图中，您必须指定要使用的位图实例。您可以使用`BitMapFactory.Options`的`inBitmap`参数^([2](ch12.html#idm46669736078176))来实现这一点：
+- en: '[PRE6]'
+  id: totrans-73
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: 'It’s worth noting that image-loading libraries like Glide can save you from
+    having to handle bitmap craziness yourself. Using these libraries results in bitmap
+    caching for free in your applications. In cases where network calls are slow,
+    fetching a fresh instance of a `Bitmap` could be costly. This is when fetching
+    from a bitmap cache can save a lot of time and resources. If a user revisits a
+    screen, the screen is able to load almost immediately instead of having to make
+    another network request. We can distinguish two kinds of caches: *in-memory* and
+    *filesystem* caches. In-memory caches provide the fastest object retrieval, at
+    the cost of using more memory. Filesystem caches are typically slower, but they
+    do have a low memory footprint. Some applications rely on in-memory LRU cache,^([3](ch12.html#idm46669736066224))
+    while others use filesystem-based cache or a mix of the two approaches.'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 值得注意的是，像 Glide 这样的图片加载库可以帮助你避免处理位图的复杂性。使用这些库可以在应用程序中免费实现位图缓存。在网络调用较慢的情况下，获取新的
+    `Bitmap` 实例可能会很昂贵。这时，从位图缓存中获取可以节省大量时间和资源。如果用户重新访问一个屏幕，则该屏幕几乎可以立即加载，而无需再次进行网络请求。我们可以区分两种缓存：*内存*
+    和 *文件系统* 缓存。内存缓存提供最快的对象检索速度，但会消耗更多内存。文件系统缓存通常较慢，但内存占用较低。一些应用程序依赖于内存中的 LRU 缓存，^([3](ch12.html#idm46669736066224))
+    而其他应用则使用基于文件系统的缓存或两种方法的混合。
+- en: 'As an example, if you perform HTTP requests in your application, you can use
+    *OkHttp* to expose a nice API to use a filesystem cache. *OkHttp* (which is also
+    included as a transitive dependency of the popular library, *Retrofit*) is a popular
+    client library widely used in Android for networking. Adding caching is relatively
+    easy:'
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，如果你的应用程序执行 HTTP 请求，可以使用 *OkHttp* 提供一个漂亮的 API 来使用文件系统缓存。*OkHttp*（也是流行库 *Retrofit*
+    的传递依赖项）是 Android 网络中广泛使用的流行客户端库。添加缓存相对较容易：
+- en: '[PRE7]'
+  id: totrans-76
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: With *OkHttp* client building, it is easy to create configurations with custom
+    interceptors to better suit the use case of an application. For example, interceptors
+    can force the cache to refresh at a designated interval. Caching is a great tool
+    for a device working with limited resources in its environment. For this reason,
+    Android developers ought to use cache to keep track of calculated computations.
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 *OkHttp* 客户端构建时，可以轻松创建具有自定义拦截器的配置，以更好地适应应用程序的使用场景。例如，拦截器可以强制缓存在指定间隔内刷新。在设备资源有限的环境中，缓存是一个很好的工具。因此，Android
+    开发者应该利用缓存来跟踪计算的结果。
+- en: Tip
+  id: totrans-78
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: A nice open source library that supports both *in-memory* and *filesystem* cache
+    is [Dropbox Store](https://oreil.ly/urfwv).
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个不错的支持 *内存* 和 *文件系统* 缓存的开源库是 [Dropbox Store](https://oreil.ly/urfwv)。
+- en: Reducing Unnecessary Work
+  id: totrans-80
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 减少不必要的工作
+- en: 'For your application to consume resources frugally, you want to avoid leaving
+    in code that is doing unnecessary work. Even senior developers commonly make these
+    kinds of mistakes, causing extra work and memory to be allocated unnecessarily.
+    For example, custom views in Android require particular attention. Let’s consider
+    a custom view with a circular shape. For a custom view implementation, you can
+    subclass any kind of `View` and override the `onDraw` method. Here is one possible
+    implementation of `CircleView`:'
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了节约应用程序的资源消耗，应避免编写不必要的代码。即使是资深开发人员通常也会犯这类错误，导致不必要的工作和内存分配。例如，在 Android 中，自定义视图需要特别注意。让我们考虑一个带有圆形形状的自定义视图。对于自定义视图的实现，你可以子类化任何类型的
+    `View` 并重写 `onDraw` 方法。这里是 `CircleView` 的一个可能实现：
+- en: '[PRE8]'
+  id: totrans-82
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: The `onDraw` method is invoked every time the view needs to be redrawn. That
+    can happen quite frequently, especially if the view is animated or moved. Therefore,
+    you should never instantiate new objects in `onDraw`. Such mistakes result in
+    unnecessarily allocating a lot of objects, which puts high pressure on the garbage
+    collector. In the previous example, a new `Paint` instance is created every time
+    the rendering layer draws `CircleView`. You should never do that.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次需要重新绘制视图时都会调用 `onDraw` 方法。这可能会频繁发生，特别是如果视图被动画化或移动。因此，你绝不应在 `onDraw` 中实例化新对象。这样的错误会导致不必要地分配大量对象，增加垃圾收集器的压力。在前面的例子中，每次渲染层绘制
+    `CircleView` 时都会创建一个新的 `Paint` 实例。你绝对不能这样做。
+- en: 'Instead, it is better to instantiate the `Paint` object once as a class attribute:'
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另外，最好将 `Paint` 对象实例化为类属性一次：
+- en: '[PRE9]'
+  id: totrans-85
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: Now the `paint` object is allocated only once. For the purposes of this existing
+    class, sometimes the `paint` value would be set to different colors. However,
+    if the assignment is not dynamic, you can take it a step further by evaluating
+    the `paint` value lazily.
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在 `paint` 对象仅分配一次。对于这个现有类的目的，有时会将 `paint` 值设置为不同的颜色。但是，如果赋值不是动态的，您可以通过惰性评估
+    `paint` 值来进一步处理。
+- en: You want to keep your inject balanced and your dependencies light whenever possible.
+    For repositories, services, and other singleton dependencies (dependencies that
+    are single objects in memory, like `object`), it makes sense to make use of `lazy`
+    delegation so that there is a singleton instance rather than copies of the same
+    object sitting in the heap.
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在可能的情况下，您希望保持注入的平衡和依赖关系的轻量化。对于仓库、服务和其他单例依赖项（内存中的单一对象，如 `object`），使用 `lazy` 委托是有意义的，这样就有一个单例实例，而不是在堆中存在多个相同对象的副本。
+- en: 'Consider the code we examined earlier in [“Detecting Memory Leaks with LeakCanary”](ch11.html#Detecting_Memory_Leaks_with_LeakCanary_id):'
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 考虑我们之前在 [“使用 LeakCanary 检测内存泄漏”](ch11.html#Detecting_Memory_Leaks_with_LeakCanary_id)
+    中检查过的代码：
+- en: '[PRE10]'
+  id: totrans-89
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: 'In this class, the `settings` dependency is injected using Hilt—you can tell
+    that by the `@ViewModelInject`. At the time we wrote this example, we were using
+    Hilt 2.30.1-alpha and only dependencies available in the activity scope could
+    be injected into the `ViewModel`. In other words, a newly created `MapImportViewModel`
+    is always injected into the same `Settings` instance, as long as the activity
+    isn’t re-created. So the bottom line is: a dependency injection framework such
+    as Hilt can assist you in scoping the lifecycle of your dependencies. In TrekMe,
+    `Settings` is scoped in the application. Therefore, `Settings` is technically
+    a singleton.'
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个类中，使用 Hilt 注入了 `settings` 依赖项—您可以通过 `@ViewModelInject` 看出来。在编写此示例时，我们使用的是
+    Hilt 2.30.1-alpha，并且只能将活动范围内可用的依赖项注入到 `ViewModel` 中。换句话说，只要活动没有重新创建，新创建的 `MapImportViewModel`
+    就始终注入到同一个 `Settings` 实例中。因此，总体而言：像 Hilt 这样的依赖注入框架可以帮助您管理依赖项的生命周期。在 TrekMe 中，`Settings`
+    被作用域在应用程序中。因此，`Settings` 在技术上是一个单例。
+- en: Note
+  id: totrans-91
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Hilt is a dependency injection (DI) framework that provides a standard way to
+    use DI in your application. The framework also has the benefit of managing lifecycles
+    automatically, and has extensions available for use with Jetpack components like
+    ViewModels and WorkManager.
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Hilt 是一个依赖注入（DI）框架，为你的应用程序提供了一种标准的 DI 使用方式。该框架还具有自动管理生命周期的好处，并且有适用于 Jetpack
+    组件（如 ViewModels 和 WorkManager）的扩展。
+- en: The avoidance of unnecessary work expands into every scope of Android development.
+    When drawing objects to render on the UI, it makes sense to recycle already-drawn
+    pixels. Likewise, since we know that making network calls in Android drains the
+    battery, it’s good to examine how many calls are made and how frequently they’re
+    called. Perhaps you have a shopping cart in your application. It may make good
+    business sense to make updates to the remote server so that a user can access
+    their cart cross-platform. On the other hand, it may also be worth exploring updating
+    a user’s cart in local storage (save for a periodic network update). Of course,
+    these kinds of business decisions exist outside the scope of this book, but technical
+    consideration can always help to make for more thoughtful features.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 避免不必要的工作扩展到 Android 开发的每个范围。在绘制要渲染到 UI 上的对象时，重复利用已经绘制的像素是有意义的。同样，由于我们知道在 Android
+    中进行网络调用会耗费电池，因此检查调用次数和频率是很好的。也许您的应用程序中有一个购物车。为了让用户跨平台访问其购物车，更新远程服务器可能是一个不错的商业决策。另一方面，也值得探索在本地存储中更新用户的购物车（定期进行网络更新）。当然，这些商业决策超出了本书的范围，但技术上的考虑总是有助于制定更加
+    thoughtful 的功能。
+- en: Using Static Functions
+  id: totrans-94
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用静态函数
+- en: When a method or a property isn’t tied to any class instance (e.g., doesn’t
+    alter an object state), it sometimes makes sense to use *static functions*/*properties*.
+    We’ll show different scenarios where using static functions is more appropriate
+    than using inheritance.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当方法或属性不与任何类实例绑定时（例如不改变对象状态），有时使用 *静态函数*/*属性* 是有意义的。我们将展示使用静态函数比使用继承更合适的不同场景。
+- en: Kotlin makes it very easy to use static functions. A `companion object` within
+    a class declaration holds static constants, properties, and functions that can
+    be referenced anywhere in the project. For example, an Android service can expose
+    a static property `isStarted`, which can only be modified by the service itself,
+    as shown in [Example 12-1](#gpx_recording_service_ex).
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 极大地简化了静态函数的使用。在类声明中的 `companion object` 包含了静态常量、属性和函数，可以在项目的任何地方引用。例如，Android
+    服务可以暴露一个静态属性 `isStarted`，该属性只能由服务本身修改，如示例 [12-1](#gpx_recording_service_ex) 所示。
+- en: Example 12-1\. `GpxRecordingService.isStarted`
+  id: totrans-97
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 12-1\. `GpxRecordingService.isStarted`
+- en: '[PRE11]'
+  id: totrans-98
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: 'In [Example 12-1](#gpx_recording_service_ex), `GpxRecordingService` can internally
+    change the value of `isStarted`. While doing so, an event is sent through the
+    event bus, notifying all registered components. Moreover, the status of the `GpxRecordingService`
+    is accessible from anywhere in the app as a read-only `GpxRecordingService.isStarted`
+    property. But remember to avoid accidentally saving an `Activity`, `Fragment`,
+    `View`, or `Context` to a static member: that could end in a hefty memory leak!'
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在示例 [12-1](#gpx_recording_service_ex) 中，`GpxRecordingService` 可以在内部更改 `isStarted`
+    的值。在此过程中，通过事件总线发送事件，通知所有注册的组件。此外，`GpxRecordingService` 的状态可以从应用的任何地方以只读的 `GpxRecordingService.isStarted`
+    属性访问。但请记住避免意外地将 `Activity`、`Fragment`、`View` 或 `Context` 保存到静态成员中，否则可能导致严重的内存泄漏！
+- en: Minification and Obfuscation with R8 and ProGuard
+  id: totrans-100
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用 R8 和 ProGuard 进行缩小和混淆
+- en: It is a common practice to *minify*, or shrink, release builds for production
+    so that unused code and resources can be removed. Minifying your code allows you
+    to ship smaller APKs to Google PlayStore more securely. *Minification* shrinks
+    your code by removing unused methods. Minifying your code also gives you the power
+    of *obfuscation* as an additional security feature. Obfuscation garbles the names
+    of classes/fields/methods and removes debugging attributes in order to discourage
+    reverse engineering.
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 常见做法是对生产中的发布构建进行 *缩小*，以便删除未使用的代码和资源。通过缩小代码，您可以更安全地向 Google PlayStore 提交更小的 APK。*缩小*
+    通过删除未使用的方法来减小您的代码。缩小代码还为您提供了 *混淆* 的功能作为额外的安全功能。混淆会乱化类/字段/方法的名称，并删除调试属性，以防止反向工程。
+- en: For Android users, R8 is now the default minification tool provided by the Android
+    Gradle plug-in 5.4.1+. ProGuard, R8’s stricter and more powerful predecessor,
+    had a heavier focus on optimizing heavy reflection like the ones found in Gson.
+    In comparison, the newer minification tool R8 does not support this feature. However,
+    R8 is successful in achieving smaller compression and optimization for Kotlin.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于 Android 用户，R8 现在是 Android Gradle 插件 5.4.1+ 提供的默认缩小工具。ProGuard 是 R8 的严格和更强大的前身，主要专注于优化
+    Gson 等中重度反射的内容。相比之下，更新的缩小工具 R8 不支持此功能。然而，R8 在实现更小的压缩和优化方面取得了成功。
+- en: 'Configurations can be done through `proguardFile` (you will see an example
+    at the end of the section). R8 reads the rules provided for the `proguardFile`
+    and executes shrinking and obfuscation accordingly. You can then assign a *proguardFile*
+    to a certain flavor and build type in *build.gradle*:'
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以通过 `proguardFile` 进行配置（您将在本节末尾看到一个示例）。R8 读取提供给 `proguardFile` 的规则，并相应地执行缩小和混淆。然后可以将
+    *proguardFile* 分配给特定的风格和构建类型在 *build.gradle* 中：
+- en: '[PRE12]'
+  id: totrans-104
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: It’s common practice to shrink your APK to upload to the PlayStore. However,
+    it’s important to be watchful and prevent unintentionally shrinking/obfuscating
+    code that might need to be used by a third-party library at runtime. Kotlin uses
+    metadata in Java classes for Kotlin constructs. However, when R8 shrinks Kotlin
+    classes, it is unable to keep state with the Kotlin metadata. In a best-case scenario,
+    shrinking/obfuscating such classes might cause wonky behavior; in a worst-case
+    scenario, it might cause inexplicable crashes.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 缩小 APK 以上传到 PlayStore 是一种常见做法。然而，重要的是要警惕，避免无意中缩小/混淆可能在运行时需要由第三方库使用的代码。Kotlin
+    使用 Java 类中的元数据来支持 Kotlin 构造。然而，当 R8 缩小 Kotlin 类时，它无法保持与 Kotlin 元数据的状态同步。在最好的情况下，缩小/混淆这样的类可能会导致异常行为；在最坏的情况下，可能会导致难以解释的崩溃。
+- en: 'To demonstrate a scenario where ProGuard accidentally obfuscates too much application
+    code, we observe some wonky behavior on the popular open source library, Retrofit.
+    Perhaps your application works perfectly fine in debugging mode, but in release
+    mode, a networking call inexplicably returns a `NullPointerException`. Unfortunately,
+    Kotlin Gson models go blank even while annotating properties/fields with Retrofit’s
+    `@SerializedName`, thanks to Kotlin reflection. As a result, you must add a rule
+    in your proguard file to prevent the Kotlin model class from obfuscating. Oftentimes,
+    you may end up having to include your model classes by adding them directly in
+    your `proguardFile`. Here is an example of adding model domain classes to a `proguardFile`
+    so that release builds don’t accidentally obfuscate the aforementioned classes:'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了展示 ProGuard 在意外混淆太多应用程序代码的场景，我们观察到流行的开源库 Retrofit 出现了一些奇怪的行为。也许你的应用在调试模式下运行正常，但在发布模式下，一个网络调用莫名其妙地返回了`NullPointerException`。不幸的是，即使在
+    Retrofit 的`@SerializedName`注解属性/字段的情况下，Kotlin Gson 模型也会变空，这要归功于 Kotlin 反射。因此，你必须在你的
+    ProGuard 文件中添加一条规则，以防止 Kotlin 模型类被混淆。通常情况下，你可能会不得不通过直接将它们添加到你的`proguardFile`中来包含你的模型类。以下是向`proguardFile`添加模型域类的示例，以确保发布版本不会意外地混淆上述类：
+- en: '[PRE13]'
+  id: totrans-107
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: 'A good piece of advice is: always test the release build!'
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个很好的建议是：始终测试发布版本！
+- en: Summary
+  id: totrans-109
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 摘要
+- en: 'This chapter covered the following important performance optimization tips:'
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章覆盖了以下重要的性能优化技巧：
+- en: In the Android view framework, deeply nested view hierarchies take longer to
+    draw and traverse than flatter hierarchies. Consider using `ConstraintLayout`,
+    where you can flatten nested views.
+  id: totrans-111
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 在 Android 视图框架中，深度嵌套的视图层次结构比较扁平的层次结构绘制和遍历时间更长。考虑使用`ConstraintLayout`，在这里你可以扁平化嵌套视图。
+- en: In the Android view framework, it is better to move programmatic draws and animations
+    to drawable resources to offload the work on the RenderThread at runtime.
+  id: totrans-112
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 在 Android 视图框架中，最好将程序绘制和动画移至可绘制资源，以便在运行时将工作卸载到 RenderThread 上。
+- en: Using JSON and XML formats for network data payload is horrible for compression.
+    Use protocol buffers for much smaller data compression.
+  id: totrans-113
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 对于网络数据负载，使用 JSON 和 XML 格式进行压缩效果很差。使用协议缓冲区可以实现更小的数据压缩。
+- en: 'Avoid unnecessary work whenever possible: make sure you’re not ringing off
+    unnecessary network calls for constant updates, and try to recycle drawn objects.'
+  id: totrans-114
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 尽可能避免不必要的工作：确保你不会为了常量更新而进行不必要的网络调用，并尝试回收绘制对象。
+- en: Optimizations in performance and memory can come from taking an honest look
+    at the code you write. Are you unintentionally creating objects within a loop
+    that could be created once outside a loop? What expensive operations could be
+    reduced to less-intensive operations?
+  id: totrans-115
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 通过诚实地查看你编写的代码，可以实现性能和内存的优化。你是否无意中在循环中创建对象，而这些对象可以在循环外创建一次？哪些昂贵的操作可以减少为较不密集的操作？
+- en: You can use a ProGuard file to make your application as small as possible and
+    add custom rules for shrinking, obfuscating, and optimizing your app.
+  id: totrans-116
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 你可以使用 ProGuard 文件尽可能地减小应用程序的大小，并添加自定义规则来收缩、混淆和优化你的应用程序。
+- en: 'Let’s face it: Android can be a challenge to keep up with. It’s OK to take
+    information in stride as it becomes relevant for you. Such a strategy guarantees
+    learning opportunities that stay with you for a long time. No matter where you’re
+    at in your journey, one of your best resources for both Kotlin and Android (besides
+    this book) is the open source community. Both Android and Kotlin are living, breathing
+    communities from which you can ascertain the newest and most relevant information.
+    To keep yourself current, you can turn to additional resources like Twitter, [Slack](https://oreil.ly/m853Y),
+    and [KEEP](https://oreil.ly/KZPlx). You may well also find that you can return
+    to this book to revisit popular, evergreen problems that show up in Android from
+    time to time. We hope you enjoyed this book.'
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 面对现实吧：Android 可能是一个难以跟进的挑战。逐步接受信息是可以的，这种策略保证了能够长期记住的学习机会。无论你的旅程处于什么阶段，除了这本书以外，Kotlin
+    和 Android 的最佳资源之一是开源社区。无论是 Android 还是 Kotlin，它们都是不断发展的社区，你可以从中获取最新和最相关的信息。为了保持自己的知识更新，你可以寻找像
+    Twitter、[Slack](https://oreil.ly/m853Y) 和 [KEEP](https://oreil.ly/KZPlx) 这样的额外资源。你可能会发现，随着时间的推移，在
+    Android 中经常出现的流行和经典问题，你也可以回到这本书中查阅。希望你喜欢这本书。
+- en: '^([1](ch12.html#idm46669736237984-marker)) Chet Haase and Romain Guy. “Drawn
+    Out: How Android Renders.” Google I/O ’18, 2017.'
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch12.html#idm46669736237984-marker)) Chet Haase 和 Romain Guy。“绘制过程：Android
+    的渲染方式。” Google I/O ’18，2017年。
+- en: ^([2](ch12.html#idm46669736078176-marker)) The instance of `Bitmap` that you
+    supply must be a mutable bitmap.
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([2](ch12.html#idm46669736078176-marker)) 提供的`Bitmap`实例必须是可变位图。
+- en: ^([3](ch12.html#idm46669736066224-marker)) LRU stands for Least Recently Used.
+    As you can’t cache objects indefinitely, caching is always related to an eviction
+    strategy to maintain the cache at a target or acceptable size. In an LRU cache,
+    the “oldest” objects are evicted first.
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([3](ch12.html#idm46669736066224-marker)) LRU代表最近最少使用。由于无法无限缓存对象，缓存始终与一种逐出策略相关联，以维护缓存的目标或可接受的大小。在LRU缓存中，“最旧”的对象首先被逐出。

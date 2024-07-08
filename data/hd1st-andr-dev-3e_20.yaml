@@ -1,0 +1,2218 @@
+- en: 'Chapter 17\. Recycler View Navigation: *Pick a Card*'
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第17章 回收视图导航：*挑选一张卡片*
+- en: '![image](Images/f0705-01.png)'
+  id: totrans-1
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0705-01.png)'
+- en: '**Some apps rely on the user selecting an item from a list.**'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**一些应用依赖于用户从列表中选择项目。**'
+- en: And in this chapter, you’ll learn **how to make recycler views a core part of
+    your app design** by **making their items clickable**. You’ll discover how to
+    **implement recycler view navigation** by making the app navigate to a new screen
+    each time the user clicks on a record. You’ll find out **how to show the user
+    extra information** about their chosen record, and update it in the database.
+    By the end of this chapter, you’ll have all the tools you need to **transform
+    your awesome ideas into the app of your dreams**…
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并且在本章中，您将学习**如何使回收视图成为应用设计的核心部分**，通过**使它们的项目可点击**。您将了解如何通过使应用程序在每次用户点击记录时导航到新屏幕来**实现回收视图导航**。您将了解如何向用户显示关于其选择记录的额外信息，并在数据库中更新它。到本章结束时，您将拥有将您的出色想法转变为梦想应用程序所需的所有工具...
+- en: Recycler views can be used for navigation
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 回收视图可用于导航
+- en: In the previous two chapters, you learned how to build a recycler view that
+    displays a scrollable list of data, and used `DiffUtil` to make it more efficient.
+    But this isn’t the end of the story.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前两章中，您学习了如何构建一个显示可滚动数据列表的回收视图，并使用`DiffUtil`使其更高效。但这并不是全部故事的结束。
+- en: Recycler views are a major component of many Android apps because, in addition
+    to displaying lists of data, you can use them to navigate through the app. When
+    the user clicks on an item in the recycler view, you can make the app navigate
+    to a new fragment, which displays further details of that record.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回收视图是许多Android应用程序的重要组成部分，因为除了显示数据列表外，您还可以使用它们浏览应用程序。当用户在回收视图中点击项目时，您可以使应用程序导航到一个新的片段，显示该记录的更多详细信息。
+- en: 'To see how this works, we’re going to change up the Tasks app so that when
+    the user clicks on one of the tasks in its recycler view, it navigates to a new
+    fragment. This fragment will display the record that’s been selected, and let
+    the user update or delete it:'
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 看看这是如何工作的，我们将改变任务应用，这样当用户点击其回收视图中的一个任务时，它将导航到一个新的片段。这个片段将显示所选择的记录，并允许用户更新或删除它：
+- en: '![image](Images/f0706-01.png)'
+  id: totrans-8
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0706-01.png)'
+- en: How the Tasks app is currently structured
+  id: totrans-9
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 当前任务应用的结构
+- en: Before we look at how we need to change the Tasks app, let’s remind ourselves
+    of its current structure.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在看看我们需要如何改变任务应用之前，让我们回顾一下它当前的结构。
+- en: The app is comprised of a single activity (`MainActivity`), which displays a
+    fragment named `TasksFragment`. This fragment is the app’s main screen, and its
+    layout includes a recycler view that displays a grid of tasks. The recycler view
+    uses an adapter named `TaskItemAdapter`, and its items are arranged using the
+    layout file.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序由一个活动（`MainActivity`）组成，显示一个名为`TasksFragment`的片段。这个片段是应用程序的主屏幕，其布局包括一个回收视图，显示任务的网格。回收视图使用一个名为`TaskItemAdapter`的适配器，其项目使用布局文件进行排列。
+- en: '`TasksFragment` uses a view model named `TasksViewModel`. The view model is
+    responsible for the fragment’s business logic, and gets its data from a Room database
+    using an interface named `TaskDao`.'
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`TasksFragment`使用一个名为`TasksViewModel`的视图模型。视图模型负责片段的业务逻辑，并使用名为`TaskDao`的接口从Room数据库获取数据。'
+- en: 'Here’s how these components fit together:'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些组件如何配合：
+- en: '![image](Images/f0707-01.png)'
+  id: totrans-14
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0707-01.png)'
+- en: We’re going to make the recycler view navigate to a new fragment
+  id: totrans-15
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们将使回收视图导航到一个新的片段
+- en: 'We’re going to update the Tasks app so that when the user clicks on a task
+    in the recycler view, it displays a fragment named `EditTaskFragment`. Here’s
+    what the new fragment will look like:'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将更新任务应用程序，这样当用户点击回收视图中的任务时，它将显示一个名为`EditTaskFragment`的片段。下面是新片段的样子：
+- en: '![image](Images/f0708-01.png)'
+  id: totrans-17
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0708-01.png)'
+- en: As you can see, `EditTaskFragment` includes an edit text and a checkbox that
+    let the user edit the task. The edit text displays the name of the task, and the
+    checkbox shows whether the task has been completed.
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所见，`EditTaskFragment`包括一个编辑文本和一个复选框，让用户编辑任务。编辑文本显示任务的名称，复选框显示任务是否已完成。
+- en: 'The fragment also includes an Update Task button, which, when clicked, updates
+    the record in the database, and a Delete Task button, which deletes the record.
+    When either of these are clicked, the app navigates back to `TasksFragment`, which
+    displays an updated list of tasks in its recycler view:'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 片段还包括一个更新任务按钮，点击后更新数据库中的记录，和一个删除任务按钮，点击后删除记录。当点击其中任何一个按钮时，应用程序导航回`TasksFragment`，在其可回收视图中显示更新后的任务列表：
+- en: '![image](Images/f0708-02.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0708-02.png)'
+- en: Here’s what we’re going to do
+  id: totrans-21
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们打算做什么
+- en: 'We’re going to build the new version of the app in the following three stages:'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将按以下三个阶段构建应用的新版本：
+- en: '**Make items in the recycler view respond to clicks.**'
+  id: totrans-23
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**使可回收视图中的项目响应点击。**'
+- en: We’ll update the app so that when we click on a task in the recycler view, its
+    ID is displayed in a toast.
+  id: totrans-24
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将更新应用程序，以便在点击可回收视图中的任务时，显示其ID的提示。
+- en: '![image](Images/f0709-01.png)'
+  id: totrans-25
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0709-01.png)'
+- en: '**Navigate to EditTaskFragment when an item is clicked.**'
+  id: totrans-26
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**点击项目时导航到EditTaskFragment。**'
+- en: We’ll create `EditTaskFragment`, and use the Navigation component to navigate
+    to it when the user clicks on a task record. We’ll display the task’s ID in the
+    new fragment.
+  id: totrans-27
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将创建`EditTaskFragment`，并使用导航组件在用户点击任务记录时导航到它。我们将在新的片段中显示任务的ID。
+- en: '![image](Images/f0709-02.png)'
+  id: totrans-28
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0709-02.png)'
+- en: '**Display the task record in EditTaskFragment, and let the user update or delete
+    the record.**'
+  id: totrans-29
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**在EditTaskFragment中显示任务记录，并允许用户更新或删除记录。**'
+- en: We’ll create a view model for `EditTaskFragment`, which will use the `TaskDao`
+    interface to interact with the database.
+  id: totrans-30
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将为`EditTaskFragment`创建一个视图模型，该视图模型将使用`TaskDao`接口与数据库交互。
+- en: '![image](Images/f0709-03.png)'
+  id: totrans-31
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0709-03.png)'
+- en: '![image](Images/f0709-04.png)'
+  id: totrans-32
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0709-04.png)'
+- en: We’ll begin by making the recycler view respond to clicks.
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从使可回收视图响应点击开始。
+- en: Make each item clickable
+  id: totrans-34
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使每个项目可点击
+- en: '![image](Images/f0710-01.png)'
+  id: totrans-35
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0710-01.png)'
+- en: The first change we’re going to make to the Tasks app is to make it display
+    a toast when the user clicks on one of the items in the recycler view.
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将首先对Tasks应用进行的更改是，在可回收视图中的项目被点击时显示一个提示。
+- en: We can make each item respond to clicks by adding an `OnClickListener` to each
+    item’s root view. To do this, we’ll call each item’s `setOnClickListener()` method
+    immediately after each item’s data gets added to its layout.
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以通过为每个项目的根视图添加`OnClickListener`使每个项目响应点击。为此，我们将在每个项目的数据添加到其布局后立即调用每个项目的`setOnClickListener()`方法。
+- en: The best place to add each `OnClickListener` is in the `TaskItemViewHolder`’s
+    `bind()` method, since this is where the layout’s data binding variable gets set
+    to a `Task` item. As you may recall, the `bind()` method gets called by `TaskItemAdapter`’s
+    `onBindViewHolder()` method, which fires each time the recycler view needs to
+    display an item’s data.
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最佳位置以添加每个`OnClickListener`是在`TaskItemViewHolder`的`bind()`方法中，因为这是布局的数据绑定变量设置为`Task`项目的地方。您可能还记得，`bind()`方法由`TaskItemAdapter`的`onBindViewHolder()`方法调用，后者每次需要显示项目数据时都会触发。
+- en: 'Here’s the code to add an `OnClickListener` to the root view of each item’s
+    layout; we’ll add this to *TaskItemAdapter.kt* a few pages ahead:'
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以下是向每个项目布局的根视图添加`OnClickListener`的代码；我们将在稍后几页中的*TaskItemAdapter.kt*中添加这些代码：
+- en: '![image](Images/f0710-02.png)![image](Images/f0710-03.png)'
+  id: totrans-40
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0710-02.png)![image](Images/f0710-03.png)'
+- en: Now that you know how to add an `OnClickListener` to each item, let’s make it
+    display a toast when an item is clicked.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您知道如何为每个项目添加`OnClickListener`后，让我们在点击项目时显示一个提示。
+- en: Where should we create the toast?
+  id: totrans-42
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们应该在哪里创建提示框？
+- en: 'To display a toast each time an item’s clicked, we *could* simply add the following
+    code (in bold) to the view holder’s `setOnClickListener()` method:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当点击项目时显示提示，我们**可以**简单地将以下代码（加粗）添加到视图持有者的`setOnClickListener()`方法中：
+- en: '![image](Images/f0711-02.png)'
+  id: totrans-44
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0711-02.png)'
+- en: This approach, however, would mean that we’d be putting code that describes
+    the app’s behavior in the view holder code. This code is responsible for binding
+    data to each item’s layout, so it’s not an appropriate place for us to put this
+    kind of code.
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，这种方法意味着我们会将描述应用行为的代码放入视图持有者代码中。此代码负责将数据绑定到每个项目的布局，因此这不是我们放置这种代码的合适位置。
+- en: Adding the toast code to the view holder would also make the view holder code
+    less flexible. It would mean that each time the user clicks on an item, it could
+    only display a toast, and couldn’t be reused elsewhere.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将提示代码添加到视图持有者将使视图持有者代码不太灵活。这意味着每次用户点击项目时，只能显示一个提示，并且不能在其他地方重复使用。
+- en: So what’s the alternative?
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么替代方案是什么？
+- en: We’ll make TasksFragment pass the toast code in a lambda
+  id: totrans-48
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们将让 TasksFragment 通过 lambda 传递 toast 代码。
+- en: An alternative is to define the code each item needs to execute in `TasksFragment`,
+    and pass it to `TaskItemViewHolder`—via `TaskItemAdapter`—in a lambda. Doing so
+    means that the *fragment* controls what happens when an item is clicked instead
+    of the view holder.
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一种方法是在 `TasksFragment` 中定义每个项需要执行的代码，并通过 lambda 将其传递给 `TaskItemViewHolder`—通过
+    `TaskItemAdapter`。这样做意味着*fragment*控制项被点击时发生的事情，而不是视图持有者。
+- en: Before we look at the code, let’s run through how it will work.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们查看代码之前，让我们看一下它将如何工作。
+- en: How the code will work
+  id: totrans-51
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码如何运行
+- en: 'Here’s what the code we’re going to write will do:'
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们将要编写的代码将会做的事情：
+- en: '**TasksFragment will pass a lambda to TaskItemAdapter’s constructor.**'
+  id: totrans-53
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment 将会在 TaskItemAdapter 的构造函数中传递一个 lambda。**'
+- en: The lambda includes the code to display a toast.
+  id: totrans-54
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: Lambda 包含显示 toast 的代码。
+- en: '![image](Images/f0712-02.png)'
+  id: totrans-55
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0712-02.png)'
+- en: '**When the TaskItemAdapter’s onBindViewHolder() method is called, it calls
+    the TaskItemViewHolder’s bind() method, and passes it the lambda.**'
+  id: totrans-56
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当调用 TaskItemAdapter 的 onBindViewHolder() 方法时，它调用 TaskItemViewHolder 的 bind()
+    方法，并将 lambda 传递给它。**'
+- en: '![image](Images/f0712-03.png)'
+  id: totrans-57
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0712-03.png)'
+- en: '**The TaskItemViewHolder adds the lambda to each item’s OnClickListener.**'
+  id: totrans-58
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TaskItemViewHolder 将 lambda 添加到每个项的 OnClickListener 中。**'
+- en: When the user clicks on each item (a `CardView`), it executes the lambda and
+    displays the toast.
+  id: totrans-59
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 当用户点击每个项（一个 `CardView`）时，它执行 lambda 并显示 toast。
+- en: '![image](Images/f0712-04.png)'
+  id: totrans-60
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0712-04.png)'
+- en: So that’s how the code will work.
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样代码就会运行。
+- en: To implement this, we need to update the `TasksFragment`, `TaskItemAdapter`,
+    and `TaskItemViewHolder` code. We’ll begin by updating the `TaskItemAdapter` and
+    `TaskItemViewHolder` code so that the adapter is able to accept the lambda, and
+    pass it to the view holder.
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要实现这一点，我们需要更新 `TasksFragment`、`TaskItemAdapter` 和 `TaskItemViewHolder` 的代码。我们将从更新
+    `TaskItemAdapter` 和 `TaskItemViewHolder` 的代码开始，以便适配器能够接受 lambda，并将其传递给视图持有者。
+- en: We’ll show you the code for this on the next page.
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页展示这段代码。
+- en: The full code for TaskItemAdapter.kt
+  id: totrans-64
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TaskItemAdapter.kt 的完整代码
+- en: 'Here’s the `TaskItemAdapter` and `TaskItemViewHolder` code; update *TaskItemAdapter.kt*
+    to include all the changes shown here (in bold):'
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 `TaskItemAdapter` 和 `TaskItemViewHolder` 的代码；请更新 *TaskItemAdapter.kt*，确保包含这里显示的所有更改（用粗体表示）：
+- en: '![image](Images/f0713-02.png)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0713-02.png)'
+- en: We’ll pass a lambda to TaskItemAdapter
+  id: totrans-67
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们将在 TaskItemAdapter 中传递一个 lambda
+- en: Now that `TaskItemAdapter` includes a lambda parameter in its constructor, we
+    need to pass one to it in the `TasksFragment` code where it gets created.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在 `TaskItemAdapter` 在其构造函数中包含了一个 lambda 参数，我们需要在创建它的 `TasksFragment` 代码中传递一个
+    lambda。
+- en: 'As you may recall, `TasksFragment` creates a `TaskItemAdapter` object in its
+    `onCreateView()` method, which it then assigns to the recycler view like so:'
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您可能还记得的那样，`TasksFragment` 在其 `onCreateView()` 方法中创建了一个 `TaskItemAdapter` 对象，并将其分配给
+    RecyclerView，如下所示：
+- en: '![image](Images/f0714-02.png)'
+  id: totrans-70
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0714-02.png)'
+- en: 'As we want to display a toast each time an item in the recycler view is clicked,
+    we can update this code so that it passes the following lambda to `TaskItemAdapter`’s
+    constructor:'
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为我们希望每次在 RecyclerView 中的项被点击时显示 toast，我们可以更新这段代码，以便将以下 lambda 传递给 `TaskItemAdapter`
+    的构造函数：
+- en: '![image](Images/f0714-03.png)'
+  id: totrans-72
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0714-03.png)'
+- en: The adapter passes the lambda to `TaskItemViewHolder`’s `bind()` method, which
+    uses the lambda in the `OnClickListener` code it assigns to each item’s root view.
+    When the user clicks on an item in the recycler view, the lambda is executed.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 适配器将 lambda 传递给 `TaskItemViewHolder` 的 `bind()` 方法，后者在分配给每个项根视图的 `OnClickListener`
+    代码中使用 lambda。当用户点击 RecyclerView 中的项时，lambda 就会执行。
+- en: You’ve now learned everything that you need to know to make an item in the recycler
+    view display a toast when it’s clicked. Let’s see what the full code for `TasksFragment`
+    looks like.
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你已经学会了如何使 RecyclerView 中的项在被点击时显示 toast。让我们看看 `TasksFragment` 的完整代码是什么样的。
+- en: '![image](Images/f0714-04.png)'
+  id: totrans-75
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0714-04.png)'
+- en: The full code for TasksFragment.kt
+  id: totrans-76
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: TasksFragment.kt 的完整代码。
+- en: '![image](Images/f0715-01.png)'
+  id: totrans-77
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0715-01.png)'
+- en: 'Here’s the updated `TasksFragment` code; make sure that the code in *TasksFragment.kt*
+    includes all the changes shown here (in bold):'
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是更新后的 `TasksFragment` 代码；确保 *TasksFragment.kt* 中的代码包括这里显示的所有更改（用粗体表示）：
+- en: '![image](Images/f0715-02.png)![image](Images/f0716-02.png)'
+  id: totrans-79
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0715-02.png)![image](Images/f0716-02.png)'
+- en: Let’s see what happens when the code runs.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看代码运行时会发生什么。
+- en: What happens when the code runs
+  id: totrans-81
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码运行时会发生什么。
+- en: 'The following things happen when the app runs:'
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序运行时发生以下事情：
+- en: '**TasksFragment creates a TaskItemAdapter object, and assigns it to the recycler
+    view as its adapter.**'
+  id: totrans-83
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`TasksFragment`创建一个`TaskItemAdapter`对象，并将其分配给RecyclerView作为其适配器。**'
+- en: The fragment passes a lambda (named `clickListener`) to the adapter, telling
+    it to display a toast when it’s executed.
+  id: totrans-84
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 片段将一个lambda（名为`clickListener`）传递给适配器，告诉它在执行时显示一个提示。
+- en: '![image](Images/f0717-02.png)'
+  id: totrans-85
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0717-02.png)'
+- en: '**TasksFragment submits a List<Task> to the TaskItemAdapter.**'
+  id: totrans-86
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`TasksFragment`向`TaskItemAdapter`提交一个`List<Task>`。**'
+- en: The `List<Task>` contains an up-to-date list of records from the database.
+  id: totrans-87
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`List<Task>`包含来自数据库的最新记录列表。'
+- en: '![image](Images/f0717-03.png)'
+  id: totrans-88
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0717-03.png)'
+- en: '**TaskItemAdapter’s onCreateViewHolder() method is called for each item that
+    needs to be displayed in the recycler view.**'
+  id: totrans-89
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**对每个需要显示在RecyclerView中的项目，`TaskItemAdapter`的`onCreateViewHolder()`方法都会被调用。**'
+- en: This creates a set of `TaskItemViewHolder`s.
+  id: totrans-90
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这创建了一组`TaskItemViewHolder`。
+- en: '![image](Images/f0717-04.png)'
+  id: totrans-91
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0717-04.png)'
+- en: '**TaskItemAdapter’s onBindViewHolder() method is called for each TaskItemViewHolder.**'
+  id: totrans-92
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**对每个`TaskItemViewHolder`调用`TaskItemAdapter`的`onBindViewHolder()`方法。**'
+- en: This calls the `TaskItemViewHolder`’s `bind()` method, passing it the item that
+    was clicked and the `clickListener` lambda.
+  id: totrans-93
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这调用了`TaskItemViewHolder`的`bind()`方法，将被点击的项目和`clickListener` lambda传递给它。
+- en: '![image](Images/f0718-02.png)'
+  id: totrans-94
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0718-02.png)'
+- en: '**The TaskItemViewHolder’s bind() method adds an OnClickListener to the root
+    view of each view holder’s layout.**'
+  id: totrans-95
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`TaskItemViewHolder`的`bind()`方法将一个OnClickListener添加到每个视图持有者布局的根视图上。**'
+- en: In this example, the root view is a `CardView`.
+  id: totrans-96
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 在这个示例中，根视图是一个`CardView`。
+- en: '![image](Images/f0718-03.png)'
+  id: totrans-97
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0718-03.png)'
+- en: '**When the user clicks on an item in the recycler view, the OnClickListener
+    registers the click.**'
+  id: totrans-98
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户点击RecyclerView中的项目时，OnClickListener注册了点击事件。**'
+- en: It executes the `clickListener` lambda, which displays a toast.
+  id: totrans-99
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 执行`clickListener` lambda，显示一个提示。
+- en: '![image](Images/f0718-04.png)'
+  id: totrans-100
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0718-04.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们带着这个应用程序来试驾一下。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-102
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/car.png) 测试驾驶'
+- en: When we run the app, `TasksFragment` displays a grid of cards in the recycler
+    view as before. If we click on one of the tasks, the app displays its ID in a
+    toast.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，`TasksFragment`如前所述在RecyclerView中显示一组卡片。如果我们点击其中一个任务，应用程序会显示其ID的提示。
+- en: '![image](Images/f0719-02.png)'
+  id: totrans-104
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0719-02.png)'
+- en: You’ve now learned how to make a recycler view’s items respond to click events.
+    We’ll use this knowledge to make the app navigate to a new fragment when an item
+    is clicked.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你已经学会了如何使RecyclerView的项目响应点击事件。我们将使用这些知识使应用程序在点击项目时导航到一个新的片段。
+- en: Before we do this, try the following exercise.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们这样做之前，试试以下练习。
+- en: Adapter Magnets
+  id: totrans-107
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 适配器磁铁
+- en: '![image](Images/common02.png)'
+  id: totrans-108
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: 'The Bits and Pizzas app includes a recycler view that uses a layout named *pizza_item.xml*
+    to display `Pizza` objects. The `Pizza` data class looks like this:'
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Bits and Pizzas应用程序包含一个使用名为*pizza_item.xml*的布局来显示`Pizza`对象的RecyclerView。`Pizza`数据类如下所示：
+- en: '[PRE0]'
+  id: totrans-110
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: The recycler view uses an adapter named `PizzaAdapter`, shown below. See if
+    you can complete the code for this adapter so that when one of its items is clicked,
+    it executes a lambda that’s passed to the adapter in its constructor.
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: RecyclerView使用一个名为`PizzaAdapter`的适配器，如下所示。看看你能否完成这个适配器的代码，以便当其项目之一被点击时，执行一个传递给适配器构造函数的lambda。
+- en: 'Hint: The lambda should accept a `pizzaId` argument, and return `Unit`.'
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 提示：lambda应该接受一个`pizzaId`参数，并返回`Unit`。
+- en: '[PRE1]'
+  id: totrans-113
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: '![image](Images/f0721-01.png)'
+  id: totrans-114
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0721-01.png)'
+- en: Adapter Magnets Solution
+  id: totrans-115
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 适配器磁铁解决方案
+- en: '![image](Images/common02.png)'
+  id: totrans-116
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: 'The Bits and Pizzas app includes a recycler view that uses a layout named *pizza_item.xml*
+    to display `Pizza` objects. The `Pizza` data class looks like this:'
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Bits and Pizzas应用程序包含一个使用名为*pizza_item.xml*的布局来显示`Pizza`对象的RecyclerView。`Pizza`数据类如下所示：
+- en: '[PRE2]'
+  id: totrans-118
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: The recycler view uses an adapter named `PizzaAdapter`, shown below. See if
+    you can complete the code for this adapter so that when one of its items is clicked,
+    it executes a lambda that’s passed to the adapter in its constructor.
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: RecyclerView使用一个名为`PizzaAdapter`的适配器，如下所示。看看你能否完成这个适配器的代码，以便当其项目之一被点击时，执行一个传递给适配器构造函数的lambda。
+- en: 'Hint: The lambda should accept a `pizzaId` argument, and return `Unit`.'
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 提示：lambda应该接受一个`pizzaId`参数，并返回`Unit`。
+- en: '![image](Images/f0722-01.png)![image](Images/f0723-01.png)'
+  id: totrans-121
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0722-01.png)![image](Images/f0723-01.png)'
+- en: We want to use the recycler view to navigate to a new fragment
+  id: totrans-122
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们希望使用RecyclerView导航到一个新的片段
+- en: '![image](Images/f0724-01.png)'
+  id: totrans-123
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0724-01.png)'
+- en: So far, you’ve learned how to make items in a recycler view respond to click
+    events. When the user clicks on a task in the Tasks app’s recycler view, for example,
+    it displays a toast.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，您已经学会了如何使RecyclerView中的项目响应点击事件。例如，当用户点击Tasks应用程序的RecyclerView中的任务时，它会显示一个Toast。
+- en: 'Next, we’re going to change this behavior so that when the user clicks on an
+    item, the app navigates to a new fragment (which we’ll create) and displays the
+    task’s ID. Here’s what the new version of the app will look like:'
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们将更改此行为，以便用户单击项目时，应用程序导航到一个新的片段（我们将创建），并显示任务的ID。下面是应用程序的新版本的样子：
+- en: '![image](Images/f0724-02.png)'
+  id: totrans-126
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0724-02.png)'
+- en: To get this working, we’ll use the Navigation component to navigate to the new
+    fragment, and the Safe Args plug-in to pass the fragment the task’s ID. This means
+    that we needs to update the project and the app’s *build.gradle* files to include
+    these components.
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使其工作，我们将使用导航组件导航到新的片段，并使用安全参数插件传递任务的ID。这意味着我们需要更新项目和应用的*build.gradle*文件以包含这些组件。
+- en: Update the project build.gradle file…
+  id: totrans-128
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更新项目的build.gradle文件……
+- en: We’ll begin by updating the project’s *build.gradle* file so that it specifies
+    which version of the Navigation component we want to use, and adds a classpath
+    for the Safe Args plug-in.
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将首先更新项目的*build.gradle*文件，以便指定我们要使用的导航组件版本，并为Safe Args插件添加一个类路径。
+- en: 'To do this, open the file *Tasks/build.gradle*, and add the following lines
+    (in bold) to the relevant sections:'
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要做到这一点，打开文件*Tasks/build.gradle*，并在相关部分添加以下行（用**粗体**标出）：
+- en: '![image](Images/f0725-02.png)'
+  id: totrans-131
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0725-02.png)'
+- en: …then update the app build.gradle file
+  id: totrans-132
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: ……然后更新应用的build.gradle文件
+- en: We also need to add the Safe Args plug-in to the app’s *build.gradle* file,
+    along with a dependency for the Navigation component.
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还需要将Safe Args插件添加到应用的*build.gradle*文件中，并添加导航组件的依赖项。
+- en: Open the file *Tasks/app/build.gradle*, and add the following lines (in bold)
+    to the appropriate sections
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开文件*Tasks/app/build.gradle*，并在适当的部分添加以下行（用**粗体**标出）。
+- en: '![image](Images/f0725-03.png)'
+  id: totrans-135
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0725-03.png)'
+- en: Once you’ve made these changes, click on the Sync Now option to sync the changes
+    you’ve made with the rest of your project.
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 完成这些更改后，点击“立即同步”选项，将所做的更改与项目的其余部分同步。
+- en: Now that we’ve enabled the Navigation component and the Safe Args plug-in, let’s
+    create the new fragment that we want the app to be able to navigate to.
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经启用了导航组件和Safe Args插件，让我们创建新的片段，使应用程序能够导航到该片段。
+- en: Create EditTaskFragment…
+  id: totrans-138
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建EditTaskFragment……
+- en: We’re going to create a new fragment named `EditTaskFragment` that the app will
+    navigate to when the user clicks an item in the recycler view.
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将创建一个名为`EditTaskFragment`的新片段，当用户点击RecyclerView中的项目时，应用程序将导航到该片段。
+- en: To do this, highlight the *com.hfad.tasks* package in the *app/src/main/java*
+    folder, then choose File→New→Fragment→Fragment (Blank). Name the fragment “EditTaskFragment”,
+    name its layout “fragment_edit_task”, and make sure the language is set to Kotlin.
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要做到这一点，请在*app/src/main/java*文件夹中的*com.hfad.tasks*包中突出显示，然后选择文件→新建→Fragment→Fragment（空白）。将片段命名为“EditTaskFragment”，命名其布局为“fragment_edit_task”，并确保语言设置为Kotlin。
+- en: '![image](Images/f0726-02.png)'
+  id: totrans-141
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0726-02.png)'
+- en: We’ll update the code for `EditTaskFragment` and its layout a few pages ahead.
+    Before that, let’s create a navigation graph that will tell the app how to navigate
+    between the app’s fragments.
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将更新`EditTaskFragment`的代码及其布局，这在接下来的几页中。在此之前，让我们创建一个导航图，告诉应用程序如何在其片段之间导航。
+- en: …and create a navigation graph
+  id: totrans-143
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …并创建导航图
+- en: We’ll add a navigation graph to the project in the same way that we did for
+    the other apps we created.
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在项目中添加一个导航图，就像我们为其他创建的应用程序一样。
+- en: Select the *Tasks/app/src/main/res* folder in the project explorer, and then
+    choose File→New→Android Resource File. When prompted, enter a file name of “nav_graph”,
+    choose a resource type of “Navigation”, and click on the OK button. This creates
+    a navigation graph named *nav_graph.xml*.
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在项目资源管理器中选择*Tasks/app/src/main/res*文件夹，然后选择文件→新建→Android资源文件。当提示时，输入文件名“nav_graph”，选择资源类型“Navigation”，然后点击OK按钮。这将创建一个名为*nav_graph.xml*的导航图。
+- en: '![image](Images/f0726-03.png)'
+  id: totrans-146
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0726-03.png)'
+- en: 'The navigation graph needs to describe how the user will navigate between `TasksFragment`
+    and `EditTaskFragment`. Here’s how the navigation needs to work:'
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导航图需要描述用户如何在`TasksFragment`和`EditTaskFragment`之间导航。以下是导航需要工作的方式：
+- en: '**The app displays TasksFragment.**'
+  id: totrans-148
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**应用程序显示TasksFragment。**'
+- en: This is the first fragment the user needs to see, so it needs to be the navigation
+    graph’s start destination.
+  id: totrans-149
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这是用户需要看到的第一个片段，因此它需要成为导航图的起始目的地。
+- en: '![image](Images/f0726-04.png)'
+  id: totrans-150
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0726-04.png)'
+- en: '**When the user clicks an item in TasksFragment’s recycler view, the app navigates
+    to EditTaskFragment.**'
+  id: totrans-151
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户在TasksFragment的回收视图中点击项目时，应用程序将导航到EditTaskFragment。**'
+- en: '`TasksFragment` will pass `EditTaskFragment` a `Long` parameter containing
+    the task ID for the clicked item.'
+  id: totrans-152
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`TasksFragment` 将向 `EditTaskFragment` 传递一个包含点击项目的任务ID的`Long`参数。'
+- en: '**When the user clicks a button in EditTaskFragment (which we’ll add to the
+    fragment later in the chapter), the app navigates back to TasksFragment.**'
+  id: totrans-153
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户在EditTaskFragment中点击按钮（稍后在本章中添加到该片段），应用程序将导航回TasksFragment。**'
+- en: '![image](Images/f0726-05.png)'
+  id: totrans-154
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0726-05.png)'
+- en: We’ll show you the full code for this on the next page.
+  id: totrans-155
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页展示此操作的完整代码。
+- en: Update the navigation graph
+  id: totrans-156
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更新导航图
+- en: 'Here’s the full code for the navigation graph; update *nav_graph.xml* to include
+    the changes shown here (in bold):'
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是导航图的完整代码；请更新*nav_graph.xml*，以包含这里显示的更改（用粗体标出）：
+- en: '![image](Images/f0727-02.png)'
+  id: totrans-158
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0727-02.png)'
+- en: Next, let’s link the navigation graph to `MainActivity` so that it displays
+    each fragment when we navigate to it.
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，让我们将导航图链接到`MainActivity`，以便在导航到各个片段时显示它。
+- en: Add a NavHostFragment to MainActivity’s layout
+  id: totrans-160
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在MainActivity的布局中添加NavHostFragment
+- en: To link the navigation graph we just created to `MainActivity`, we need to add
+    a navigation host to its layout, and tell it to use *nav_graph.xml* as its navigation
+    graph. This will let `MainActivity` display the correct fragment as the user navigates
+    through the app.
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要将我们刚刚创建的导航图链接到`MainActivity`，我们需要向其布局添加导航宿主，并告诉它使用*nav_graph.xml*作为其导航图。这将允许`MainActivity`在用户通过应用程序导航时显示正确的片段。
+- en: '![image](Images/f0728-02.png)'
+  id: totrans-162
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0728-02.png)'
+- en: 'We’ll add the navigation host to the layout in the same way that we did in
+    previous chapters: by adding a `NavHostFragment` to *activity_main.xml*’s `FragmentContainerView`.
+    Update *activity_main.xml* so that it includes the changes below (in bold):'
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将以与前几章相同的方式向布局中添加导航宿主：通过将`NavHostFragment`添加到*activity_main.xml*的`FragmentContainerView`。更新*activity_main.xml*，使其包含下面的更改（用粗体标出）：
+- en: '![image](Images/f0728-03.png)'
+  id: totrans-164
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0728-03.png)'
+- en: That’s all the code we need to change for `MainActivity`’s layout. Next, let’s
+    make `TasksFragment` navigate to `EditTaskFragment` when the user clicks an item
+    in its recycler view.
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们需要更改`MainActivity`布局的所有代码。接下来，让我们在用户点击其回收视图中的项目时，使`TasksFragment`导航到`EditTaskFragment`。
+- en: Make TasksFragment navigate to EditTaskFragment
+  id: totrans-166
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使`TasksFragment`导航到`EditTaskFragment`
+- en: Each time the user clicks on an item in `TasksFragment`’s recycler view, we
+    want the app to navigate to `EditTaskFragment`, passing it the ID of the `Task`
+    that was clicked.
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次用户点击`TasksFragment`回收视图中的项目时，我们希望应用程序导航到`EditTaskFragment`，并向其传递被点击的`Task`的ID。
+- en: '![image](Images/f0729-01.png)'
+  id: totrans-168
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0729-01.png)'
+- en: 'One way of doing this would be to update the lambda that `TasksFragment` passes
+    to its `TaskItemAdapter` so that it includes all the necessary navigation code
+    like this:'
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一种做法是更新`TasksFragment`传递给其`TaskItemAdapter`的lambda，使其包含所有必要的导航代码，如下所示：
+- en: '![image](Images/f0729-02.png)'
+  id: totrans-170
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0729-02.png)'
+- en: As you can see, this uses the `TasksFragmentDirections` class (generated by
+    the Safe Args plug-in) to pass the item’s task ID to `EditTaskFragment`, and navigate
+    to that fragment.
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如您所见，这里使用了`TasksFragmentDirections`类（由Safe Args插件生成），将项目的任务ID传递给`EditTaskFragment`，并导航到该片段。
+- en: This approach, however, means that we’re adding business logic—deciding when
+    `TasksFragment` should navigate to `EditTaskFragment`—to the fragment code, instead
+    of adding it to `TasksViewModel`. As you learned in [Chapter 13](ch13.xhtml#data_bindingcolon_building_smart_layouts),
+    the view model code should make this kind of decision instead of the fragment.
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，这种方法意味着我们正在向片段代码中添加业务逻辑——决定`TasksFragment`何时导航到`EditTaskFragment`，而不是将其添加到`TasksViewModel`中。正如您在[第13章](ch13.xhtml#data_bindingcolon_building_smart_layouts)中学到的，视图模型代码应该做出这种决定，而不是片段。
+- en: To address this, we’ll use a similar approach to the one we used for the Guessing
+    Game app in [Chapter 13](ch13.xhtml#data_bindingcolon_building_smart_layouts).
+    We’ll add a new live data property to `TasksViewModel`, which will hold the ID
+    for the task the user clicks on. When this property changes value, `TasksFragment`
+    will respond by navigating to `EditTaskFragment`, passing it the ID.
+  id: totrans-173
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了解决这个问题，我们将使用类似于 [第 13 章](ch13.xhtml#data_bindingcolon_building_smart_layouts)
+    中猜数字游戏应用的方法。我们将向 `TasksViewModel` 添加一个新的 LiveData 属性，用于存储用户点击任务时的任务 ID。当此属性的值发生变化时，`TasksFragment`
+    将响应并导航到 `EditTaskFragment`，并将任务 ID 传递给它。
+- en: '![image](Images/f0729-03.png)'
+  id: totrans-174
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0729-03.png)'
+- en: Add a new property to TasksViewModel
+  id: totrans-175
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 为 `TasksViewModel` 添加一个新属性
+- en: 'We’ll begin by adding a new live data property to `TasksViewModel` that specifies
+    the task ID that `TasksFragment` needs to pass to `EditTaskFragment`. We’ll name
+    this property `navigateToTask`, and define it using the following code (we’ll
+    add this to *TasksViewModel.kt* on the next page):'
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将首先向 `TasksViewModel` 添加一个新的 LiveData 属性，指定 `TasksFragment` 需要传递给 `EditTaskFragment`
+    的任务 ID。我们将命名这个属性为 `navigateToTask`，并使用以下代码定义它（我们将在 *TasksViewModel.kt* 的下一页中添加这段代码）：
+- en: '![image](Images/f0730-02.png)'
+  id: totrans-177
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0730-02.png)'
+- en: As you can see, the `navigateToTask` property uses a mutable backing property
+    marked as `private`, which means that only `TasksViewModel` can set it. This protects
+    the property from unwanted updates by other classes.
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所看到的，`navigateToTask` 属性使用一个标记为**私有**的可变后备属性，这意味着只有 `TasksViewModel` 可以设置它。这样可以防止其他类对属性进行不必要的更新。
+- en: Add methods to update the new property
+  id: totrans-179
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 添加方法来更新新属性
+- en: Each time the user clicks on a task in the recycler view, we want `TasksFragment`
+    to navigate to `EditTaskFragment`, and pass it the task’s ID.
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当用户在 RecyclerView 中点击任务时，我们希望 `TasksFragment` 导航到 `EditTaskFragment`，并将任务的
+    ID 传递给它。
+- en: To enable this, we’ll add two methods to the `TasksViewModel`—`onTaskClicked()`
+    and `onTaskNavigated()`—which will be used to set the value of `navigateToTask`’s
+    backing property. `onTaskClicked()` will set the property to the task’s ID, and
+    `onTaskNavigated()` will set it to `null`.
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了实现这一点，我们将在 `TasksViewModel` 中添加两个方法——`onTaskClicked()` 和 `onTaskNavigated()`——用于设置
+    `navigateToTask` 的后备属性的值。`onTaskClicked()` 将把属性设置为任务的 ID，而 `onTaskNavigated()`
+    将把它设置为 `null`。
+- en: '![image](Images/f0730-03.png)'
+  id: totrans-182
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0730-03.png)'
+- en: 'Here’s the code for the two methods:'
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是两个方法的代码：
+- en: '![image](Images/f0730-04.png)'
+  id: totrans-184
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0730-04.png)'
+- en: Those are all the changes we need to make to `TasksViewModel`. We’ll show you
+    the full code on the next page.
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些是我们需要对 `TasksViewModel` 进行的所有更改。我们将在下一页上展示完整的代码。
+- en: The full code for TasksViewModel.kt
+  id: totrans-186
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`TasksViewModel.kt` 的完整代码'
+- en: 'Here’s the updated `TasksViewModel` code; make sure that the code in *TasksViewModel.kt*
+    includes all the changes shown here (in bold):'
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是更新后的 `TasksViewModel` 代码；确保 *TasksViewModel.kt* 中的代码包含这里显示的所有更改（用**粗体**标记）：
+- en: '![image](Images/f0731-02.png)'
+  id: totrans-188
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0731-02.png)'
+- en: Now that we’ve updated `TasksViewModel`, let’s see what changes we need to make
+    to the `TasksFragment` code.
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经更新了 `TasksViewModel`，让我们看看需要对 `TasksFragment` 代码进行哪些更改。
+- en: Make TasksFragment navigate to EditTaskFragment
+  id: totrans-190
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使 `TasksFragment` 导航到 `EditTaskFragment`
+- en: We need to update the code for `TasksFragment` so that when the user clicks
+    on a task, it navigates to `EditTaskFragment`, passing it the task’s ID.
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要更新 `TasksFragment` 的代码，以便当用户点击任务时，它导航到 `EditTaskFragment`，并将任务的 ID 传递给它。
+- en: To do this, we’ll call `TasksViewModel`’s `onTaskClicked()` method when the
+    user clicks on a task, and navigate to `EditTaskFragment` when its `navigateToTask`
+    property gets updated to a new task ID.
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了实现这一点，当用户点击任务时，我们将调用 `TasksViewModel` 的 `onTaskClicked()` 方法，并在其 `navigateToTask`
+    属性更新为新的任务 ID 时导航到 `EditTaskFragment`。
+- en: Call onTaskClicked() when the user clicks a task
+  id: totrans-193
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 当用户点击任务时调用 `onTaskClicked()` 方法
+- en: 'To call the `onTaskClicked()` method, we’ll pass the lambda below (in bold)
+    to `TaskItemAdapter`’s constructor:'
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要调用 `onTaskClicked()` 方法，我们将将下面的 lambda（用**粗体**标记）传递给 `TaskItemAdapter` 的构造函数：
+- en: '![image](Images/f0732-01.png)'
+  id: totrans-195
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0732-01.png)'
+- en: 'Each time the user clicks on a task, the lambda will get executed: it will
+    call `TasksViewModel`’s `onTaskClicked()` method, setting the `navigateToTask`
+    property to the task’s ID.'
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当用户点击任务时，lambda 将被执行：它将调用 `TasksViewModel` 的 `onTaskClicked()` 方法，将 `navigateToTask`
+    属性设置为任务的 ID。
+- en: '![image](Images/f0732-02.png)'
+  id: totrans-197
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0732-02.png)'
+- en: Navigate to EditTaskFragment when navigateToTask gets updated
+  id: totrans-198
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 当 `navigateToTask` 更新时导航到 `EditTaskFragment`
+- en: To make `TasksFragment` navigate to `EditTaskFragment`, we’ll make it observe
+    `TaskViewModel`’s `navigateToTask` property. When this property is set to a `Long`
+    task ID, the fragment will navigate to `EditTaskFragment`, passing it the ID.
+    We’ll then set the `navigateToTask` property back to null by calling the view
+    model’s `onTaskNavigated()` method.
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使`TasksFragment`导航到`EditTaskFragment`，我们将使其观察`TaskViewModel`的`navigateToTask`属性。当该属性设置为`Long`类型的任务ID时，片段将导航到`EditTaskFragment`，并将ID传递给它。然后，我们通过调用视图模型的`onTaskNavigated()`方法将`navigateToTask`属性设置回null。
+- en: 'Here’s the code to do this:'
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是执行此操作的代码：
+- en: '![image](Images/f0732-03.png)'
+  id: totrans-201
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0732-03.png)'
+- en: Let’s update the `TasksFragment` code.
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们更新`TasksFragment`的代码。
+- en: The full code for TasksFragment.kt
+  id: totrans-203
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`TasksFragment.kt`的完整代码如下'
+- en: '![image](Images/f0733-01.png)'
+  id: totrans-204
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0733-01.png)'
+- en: 'Here’s the updated `TasksFragment` code; make sure that the code in includes
+    all the changes shown here (in bold):'
+  id: totrans-205
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是更新后的`TasksFragment`代码；确保代码包含所有这里显示的更改（用粗体标出）：
+- en: '![image](Images/f0733-02.png)![image](Images/f0734-02.png)'
+  id: totrans-206
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0733-02.png)![image](Images/f0734-02.png)'
+- en: We’ve now updated the code for `TasksViewModel` and `TasksFragment` so that
+    when the user clicks on a task in the recycler view, `TasksFragment` navigates
+    to `EditTaskFragment` and passes it the task’s ID.
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们现在已经更新了`TasksViewModel`和`TasksFragment`的代码，以便当用户在`recyclerView`中点击任务时，`TasksFragment`导航到`EditTaskFragment`并将任务的ID传递给它。
+- en: The next thing we need to do is display the task ID in `EditTaskFragment`’s
+    layout. Let’s do this now.
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要做的下一件事是在`EditTaskFragment`的布局中显示任务ID。现在让我们来做这件事。
+- en: Make EditTaskFragment display the task ID
+  id: totrans-209
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使`EditTaskFragment`显示任务ID
+- en: We’re going to make `EditTaskFragment` display the task ID by updating the fragment’s
+    layout and Kotlin code. We’ll add a text view to the layout, and then use Kotlin
+    code to retrieve the task’s ID and add it to the text view.
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使`EditTaskFragment`通过更新片段的布局和Kotlin代码显示任务ID。我们将在布局中添加一个文本视图，然后使用Kotlin代码检索任务的ID并将其添加到文本视图中。
+- en: 'We’ll begin by adding the text view to the fragment’s layout; update *fragment_edit_task.xml*
+    so that it matches the code shown here:'
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从在片段的布局中添加文本视图开始；更新*fragment_edit_task.xml*以使其与此处显示的代码匹配：
+- en: '![image](Images/f0735-01.png)'
+  id: totrans-212
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0735-01.png)'
+- en: We also need to update EditTaskFragment.kt
+  id: totrans-213
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们还需要更新`EditTaskFragment.kt`。
+- en: 'Now that we’ve added a text view to `EditTaskFragment`’s layout, we need to
+    set its text to the task ID. To do this, we’ll add the following code to the fragment’s
+    `onCreateView()` method:'
+  id: totrans-214
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经在`EditTaskFragment`的布局中添加了一个文本视图，我们需要设置其文本为任务ID。为了做到这一点，我们将以下代码添加到片段的`onCreateView()`方法中：
+- en: '![image](Images/f0735-02.png)'
+  id: totrans-215
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0735-02.png)'
+- en: As you can see, this uses the `EditTaskFragmentArgs` class (generated by the
+    Safe Args plug-in) to get the value of the `taskId` argument that’s been passed
+    to `EditTaskFragment`. It then uses this to set the text view’s text.
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所看到的，这里使用了`EditTaskFragmentArgs`类（由Safe Args插件生成）来获取传递给`EditTaskFragment`的`taskId`参数的值。然后，它使用这个值来设置文本视图的文本。
+- en: Let see what the full code for `EditTaskFragment` looks like.
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看`EditTaskFragment`的完整代码是什么样子的。
+- en: '![image](Images/f0735-03.png)'
+  id: totrans-218
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0735-03.png)'
+- en: The full code for EditTaskFragment.kt
+  id: totrans-219
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`EditTaskFragment.kt`的完整代码如下'
+- en: 'Here’s the full code for `EditTaskFragment`; replace the code in *EditTaskFragment.kt*
+    so that it matches the code shown here:'
+  id: totrans-220
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是`EditTaskFragment`的完整代码；请将*EditTaskFragment.kt*中的代码替换为此处显示的代码：
+- en: '![image](Images/f0736-02.png)'
+  id: totrans-221
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0736-02.png)'
+- en: Let’s go through what happens when the code runs.
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看代码运行时发生了什么。
+- en: What happens when the code runs
+  id: totrans-223
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码运行时发生了什么
+- en: 'The following things happen when the app runs:'
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当应用程序运行时，会发生以下事情：
+- en: '**TasksFragment creates a TaskItemAdapter object, and assigns it to the recycler
+    view as its adapter.**'
+  id: totrans-225
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`TasksFragment`创建了一个`TaskItemAdapter`对象，并将其分配给了`recyclerView`作为其适配器。**'
+- en: The fragment passes a `clickListener` lambda to the adapter, telling it to call
+    `TasksViewModel`’s `onTaskClicked()` method when it’s executed.
+  id: totrans-226
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 片段将一个`clickListener` lambda传递给适配器，在执行时告诉它调用`TasksViewModel`的`onTaskClicked()`方法。
+- en: '![image](Images/f0737-02.png)'
+  id: totrans-227
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0737-02.png)'
+- en: '**TasksFragment submits a List<Task> to the TaskItemAdapter.**'
+  id: totrans-228
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`TasksFragment`向`TaskItemAdapter`提交了一个`List<Task>`。**'
+- en: The `List<Task>` contains an up-to-date list of records from the database.
+  id: totrans-229
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`List<Task>`包含来自数据库的最新记录列表。'
+- en: '![image](Images/f0737-03.png)'
+  id: totrans-230
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0737-03.png)'
+- en: '**TaskItemAdapter creates a set of TaskItemViewHolders, and an OnClickListener
+    is set to each view holder’s root view.**'
+  id: totrans-231
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**`TaskItemAdapter`创建了一组`TaskItemViewHolder`，并为每个视图持有者的根视图设置了一个`OnClickListener`。**'
+- en: In this example, the root view is a `CardView`.
+  id: totrans-232
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 在这个例子中，根视图是一个`CardView`。
+- en: '![image](Images/f0737-04.png)'
+  id: totrans-233
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0737-04.png)'
+- en: '**When the user clicks on a task in the recycler view, the OnClickListener
+    registers the click, and executes the lambda.**'
+  id: totrans-234
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户在 RecyclerView 中点击任务时，OnClickListener 注册点击事件，并执行 lambda 表达式。**'
+- en: It calls `TasksViewModel`’s `onTaskClicked()` method, which sets its `_navigateToTask`
+    property to the ID of the task that was clicked.
+  id: totrans-235
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它调用 `TasksViewModel` 的 `onTaskClicked()` 方法，该方法将其 `_navigateToTask` 属性设置为被点击任务的
+    ID。
+- en: '![image](Images/f0738-02.png)'
+  id: totrans-236
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0738-02.png)'
+- en: '**TasksFragment is notified that TasksViewModel’s navigateToTask property—which
+    uses _navigateToTask as its backing property—has been updated.**'
+  id: totrans-237
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**TasksFragment 得知 TasksViewModel 的 `navigateToTask` 属性已更新，该属性使用 _navigateToTask
+    作为其后备属性。**'
+- en: It navigates to `EditTaskFragment`, passing it the value of the `navigateToTask`
+    property.
+  id: totrans-238
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 导航到 `EditTaskFragment`，传递 `navigateToTask` 属性的值。
+- en: '![image](Images/f0738-03.png)'
+  id: totrans-239
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0738-03.png)'
+- en: '**EditTaskFragment gets the value of the taskId that’s been passed to it, and
+    displays it in its layout.**'
+  id: totrans-240
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**EditTaskFragment 获取传递给它的 taskId 的值，并在其布局中显示它。**'
+- en: '![image](Images/f0738-04.png)'
+  id: totrans-241
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0738-04.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来测试一下这个应用程序。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-243
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/car.png) 测试驾驶'
+- en: When we run the app, `TasksFragment` displays a grid of cards in the recycler
+    view as before.
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，`TasksFragment` 如以前一样在 RecyclerView 中显示卡片网格。
+- en: When we click on one of the tasks, the app navigates to `EditTaskFragment`,
+    which displays the task’s ID.
+  id: totrans-245
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们点击其中一个任务时，应用程序导航到 `EditTaskFragment`，该片段显示任务的 ID。
+- en: '![image](Images/f0739-02.png)'
+  id: totrans-246
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0739-02.png)'
+- en: You’ve now learned how to use a recycler view to navigate to a new fragment,
+    and tell it which item was clicked.
+  id: totrans-247
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您现在学会了如何使用 RecyclerView 导航到新的片段，并告诉它点击了哪个项目。
+- en: Next, we’ll update the Tasks app so that when the user clicks on an item, `EditTaskFragment`
+    displays the task’s complete details, and lets her update or delete the record
+    in the database.
+  id: totrans-248
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们将更新 Tasks 应用程序，以便当用户点击项目时，`EditTaskFragment` 显示任务的完整详情，并允许她在数据库中更新或删除记录。
+- en: We want to use EditTaskFragment to update task records
+  id: totrans-249
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们希望使用 EditTaskFragment 更新任务记录
+- en: '![image](Images/f0740-01.png)'
+  id: totrans-250
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0740-01.png)'
+- en: We’ve now updated the Tasks app so that when the user clicks on a task in the
+    recycler view, it navigates to `EditTaskFragment`, which displays the task’s ID.
+  id: totrans-251
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们现在已经更新了 Tasks 应用程序，以便当用户在 RecyclerView 中点击任务时，它导航到 `EditTaskFragment`，该片段显示任务的
+    ID。
+- en: What we *really* want, however, is for `EditTaskFragment` to display the complete
+    task record, and let the user update or delete it in the database.
+  id: totrans-252
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但我们*真正*想要的是，`EditTaskFragment` 显示完整的任务记录，并允许用户在数据库中更新或删除它。
+- en: 'To do this, we’re going to update `EditTaskFragment` so that it looks like
+    this:'
+  id: totrans-253
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为此，我们将更新 `EditTaskFragment`，使其如下所示：
+- en: '![image](Images/f0740-02.png)'
+  id: totrans-254
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0740-02.png)'
+- en: 'The new version of the fragment will work as follows:'
+  id: totrans-255
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 片段的新版本将如下工作：
+- en: '**When the user clicks on a task in the recycler view, EditTaskFragment displays
+    its details.**'
+  id: totrans-256
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户在 RecyclerView 中点击任务时，EditTaskFragment 显示其详细信息。**'
+- en: It gets the task record from the database, and displays the task name and whether
+    it has been completed.
+  id: totrans-257
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它从数据库获取任务记录，并显示任务名称及其完成状态。
+- en: '**When the user updates the task’s details and clicks on the Update Task button,
+    the changes are saved.**'
+  id: totrans-258
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户更新任务的详细信息并点击“更新任务”按钮时，更改将被保存。**'
+- en: It updates the record in the database, and navigates back to `TasksFragment`.
+  id: totrans-259
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它会更新数据库中的记录，并导航回到 `TasksFragment`。
+- en: '**When the user clicks on the Delete Task button, the task is deleted.**'
+  id: totrans-260
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当用户点击“删除任务”按钮时，任务将被删除。**'
+- en: It deletes the task record from the database, and navigates to `TasksFragment`.
+  id: totrans-261
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它从数据库中删除任务记录，并导航到 `TasksFragment`。
+- en: For each of these actions, the fragment needs to interact with the app’s Room
+    database, which means that it needs to use the `TaskDao` interface we defined
+    in [Chapter 14](ch14.xhtml#room_databasescolon_room_with_a_view). Before we update
+    the app, let’s have a quick reminder of what `TaskDao` does.
+  id: totrans-262
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于这些操作中的每一个，片段需要与应用程序的 Room 数据库进行交互，这意味着它需要使用我们在 [第14章](ch14.xhtml#room_databasescolon_room_with_a_view)
+    中定义的 `TaskDao` 接口。在我们更新应用程序之前，让我们快速回顾一下 `TaskDao` 的功能。
+- en: Use TaskDao to interact with database records
+  id: totrans-263
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用 TaskDao 与数据库记录交互
+- en: As you learned in [Chapter 14](ch14.xhtml#room_databasescolon_room_with_a_view),
+    you interact with records held in a Room database using a DAO interface. The Tasks
+    app, for example, includes a DAO named `TaskDao` that lets us interact with task
+    records.
+  id: totrans-264
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您在 [第14章](ch14.xhtml#room_databasescolon_room_with_a_view) 中学到的，可以使用 DAO 接口与
+    Room 数据库中的记录交互。例如，Tasks 应用程序包括一个名为 `TaskDao` 的 DAO，允许我们与任务记录进行交互。
+- en: 'Here’s a reminder of what the `TaskDao` code looks like:'
+  id: totrans-265
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是`TaskDao`代码的提醒：
+- en: '![image](Images/f0741-01.png)'
+  id: totrans-266
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0741-01.png)'
+- en: As you can see, the interface includes methods to get one or more records from
+    the database, and suspendable coroutines to insert, update, and delete records
+    in a background thread.
+  id: totrans-267
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如您所见，接口包括从数据库获取一个或多个记录的方法，以及在后台线程中插入、更新和删除记录的可暂停协程。
+- en: We’ll create a view model to access TaskDao’s methods
+  id: totrans-268
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们将创建一个视图模型来访问`TaskDao`的方法
+- en: We need to use `TaskDao`’s methods to let `EditTaskFragment` get a task record
+    from the database, update its details, or delete it. Instead of adding the code
+    for this to `EditTaskFragment`, we’ll create a new view model (named `EditTaskViewModel`),
+    which will take care of the fragment’s business logic and data.`EditTaskViewModel`
+    will access `TaskDao`’s methods, and pass the results to `EditTaskFragment`.
+  id: totrans-269
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要使用`TaskDao`的方法，让`EditTaskFragment`从数据库获取任务记录，更新其详细信息或删除它。我们不会把这些代码添加到`EditTaskFragment`中，而是会创建一个新的视图模型（命名为`EditTaskViewModel`），它将处理片段的业务逻辑和数据。`EditTaskViewModel`将访问`TaskDao`的方法，并将结果传递给`EditTaskFragment`。
+- en: Let’s go and create `EditTaskViewModel`.
+  id: totrans-270
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们去创建`EditTaskViewModel`。
+- en: '![image](Images/f0741-02.png)'
+  id: totrans-271
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0741-02.png)'
+- en: Create EditTaskViewModel
+  id: totrans-272
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建EditTaskViewModel
+- en: To create `EditTaskViewModel`, highlight the *com.hfad.tasks* package in the
+    *app/src/main/java* folder, then go to File→New→Kotlin Class/File. Name the file
+    “EditTaskViewModel” and choose the Class option.
+  id: totrans-273
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建`EditTaskViewModel`，请在*app/src/main/java*文件夹中突出显示*com.hfad.tasks*包，然后转到File→New→Kotlin
+    Class/File。将文件命名为“EditTaskViewModel”，选择Class选项。
+- en: The view model needs to get a task record…
+  id: totrans-274
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 视图模型需要获取一个任务记录…
+- en: 'The first thing that `EditTaskViewModel` needs to do is get a task record from
+    the app’s database so that it can be displayed in `EditTaskFragment`’s layout.
+    To enable this, we’ll pass the view model two things in its constructor: a task
+    ID to tell it which task to get, and a `TaskDao` object that it will use to interact
+    with the database.'
+  id: totrans-275
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`EditTaskViewModel`首先需要做的是从应用程序的数据库获取一个任务记录，以便可以在`EditTaskFragment`的布局中显示它。为此，我们将在其构造函数中传递两件事给视图模型：一个任务ID来告诉它获取哪个任务，以及一个`TaskDao`对象，它将用于与数据库交互。'
+- en: '![image](Images/f0742-02.png)'
+  id: totrans-276
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0742-02.png)'
+- en: We’ll also add a `LiveData<Task>` property to the view model (named `task)`,
+    which we’ll set using `TaskDao`’s `get()` method. This will set the property to
+    the task record the user wants to see.
+  id: totrans-277
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还将在视图模型中添加一个`LiveData<Task>`属性（命名为`task`），我们将使用`TaskDao`的`get()`方法设置它。这将把属性设置为用户想要查看的任务记录。
+- en: 'Here’s the code to do this; we’ll show you the full `EditTaskViewModel` code
+    a couple pages ahead:'
+  id: totrans-278
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以下是完成此操作的代码；我们将在后面的几页上展示完整的`EditTaskViewModel`代码：
+- en: '![image](Images/f0742-03.png)'
+  id: totrans-279
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0742-03.png)'
+- en: …and include methods to update and delete the task
+  id: totrans-280
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …并包括更新和删除任务的方法
+- en: 'We’ll also add `updateTask()` and `deleteTask()` methods to `EditTaskViewModel`,
+    which `EditTaskFragment` will use to update or delete task records. These methods
+    will call `TaskDao`’s `update()` and `delete()` coroutines like so:'
+  id: totrans-281
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还将在`EditTaskViewModel`中添加`updateTask()`和`deleteTask()`方法，`EditTaskFragment`将使用它们来更新或删除任务记录。这些方法将像这样调用`TaskDao`的`update()`和`delete()`协程：
+- en: '![image](Images/f0742-04.png)'
+  id: totrans-282
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0742-04.png)'
+- en: Before we add this code to `EditTaskViewModel`, let’s see what else the view
+    model code needs to do.
+  id: totrans-283
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们将此代码添加到`EditTaskViewModel`之前，让我们看看视图模型代码还需要做什么。
+- en: EditTaskViewModel will tell EditTaskFragment when to navigate
+  id: totrans-284
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`EditTaskViewModel`会告诉`EditTaskFragment`何时导航'
+- en: The final thing `EditTaskViewModel` needs to do is tell `EditTaskFragment` when
+    it should navigate back to `TasksFragment`. To enable this, we’ll add a new `LiveData<Boolean>`
+    property (named `navigateToList`) to the view model, along with a backing property
+    named `_navigateToList`. `EditTaskFragment` will observe `navigateToList` so that
+    when it’s value becomes *true*, it navigates to `TasksFragment`.
+  id: totrans-285
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`EditTaskViewModel`最后需要做的一件事是告诉`EditTaskFragment`何时应该导航回到`TasksFragment`。为此，我们将在视图模型中添加一个新的`LiveData<Boolean>`属性（命名为`navigateToList`），以及一个名为`_navigateToList`的支持属性。`EditTaskFragment`将观察`navigateToList`，因此当其值变为*true*时，它将导航到`TasksFragment`。'
+- en: We’ll set `_navigateToList` to *true* in the view model’s `updateTask()` and
+    `deleteTask()` methods. This means that as soon as a task record has been updated
+    or deleted, the app will navigate to `TasksFragment`.
+  id: totrans-286
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在视图模型的`updateTask()`和`deleteTask()`方法中将`_navigateToList`设置为*true*。这意味着一旦任务记录已更新或删除，应用程序将导航到`TasksFragment`。
+- en: '![image](Images/f0743-02.png)'
+  id: totrans-287
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0743-02.png)'
+- en: 'Here’s the updated code for these methods:'
+  id: totrans-288
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些方法的更新代码如下：
+- en: '![image](Images/f0743-03.png)'
+  id: totrans-289
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0743-03.png)'
+- en: We’ll also add a new method to `EditTaskViewModel` named `onNavigatedToList()`,
+    which sets `_navigateToList` back to *false*.
+  id: totrans-290
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还将向 `EditTaskViewModel` 添加一个名为 `onNavigatedToList()` 的新方法，该方法将 `_navigateToList`
+    设置回 *false*。
+- en: 'Here’s the code for this method:'
+  id: totrans-291
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是此方法的代码：
+- en: '![image](Images/f0743-04.png)'
+  id: totrans-292
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0743-04.png)'
+- en: We’ll show you the entire code for `EditTaskViewModel` on the next page.
+  id: totrans-293
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页上展示 `EditTaskViewModel` 的完整代码。
+- en: The full code for EditTaskViewModel.kt
+  id: totrans-294
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: EditTaskViewModel.kt 的完整代码
+- en: 'Here’s the full `EditTaskViewModel` code; make sure that the code in *EditTaskViewModel.kt*
+    includes all the changes shown here (in bold):'
+  id: totrans-295
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是完整的 `EditTaskViewModel` 代码；确保 *EditTaskViewModel.kt* 中的代码包含这里显示的所有更改（用粗体表示）：
+- en: '![image](Images/f0744-02.png)'
+  id: totrans-296
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0744-02.png)'
+- en: That’s all the code we need for `EditTaskViewModel`. So what’s next?
+  id: totrans-297
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们需要的整个 `EditTaskViewModel` 的代码。接下来是什么？
+- en: EditTaskViewModel needs a view model factory
+  id: totrans-298
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: EditTaskViewModel 需要一个视图模型工厂
+- en: '![image](Images/f0745-01.png)'
+  id: totrans-299
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0745-01.png)'
+- en: The next thing we’ll do is define a view model factory named `EditTaskViewModelFactory`,
+    which `EditTaskFragment` will use to create an instance of `EditTaskViewModel`.
+    As you learned in [Chapter 11](ch11.xhtml#view_modelscolon_model_behavior), a
+    view model factory is needed for all view models that—like `EditTaskViewModel`—don’t
+    include a no-argument constructor.
+  id: totrans-300
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来要做的是定义一个名为 `EditTaskViewModelFactory` 的视图模型工厂，`EditTaskFragment` 将使用它来创建
+    `EditTaskViewModel` 的实例。正如你在[第11章](ch11.xhtml#view_modelscolon_model_behavior)中学到的，对于所有像
+    `EditTaskViewModel` 这样没有无参数构造函数的视图模型，都需要一个视图模型工厂。
+- en: '![image](Images/f0745-02.png)'
+  id: totrans-301
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0745-02.png)'
+- en: Create EditTaskViewModelFactory
+  id: totrans-302
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 创建 EditTaskViewModelFactory
+- en: To create the factory, highlight the *com.hfad.tasks* package in the *app/src/main/java*
+    folder, then go to File→New→Kotlin Class/File. Name the file “EditTaskViewModelFactory”
+    and choose the Class option.
+  id: totrans-303
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建工厂，请在 *app/src/main/java* 文件夹中的 *com.hfad.tasks* 包中突出显示，然后转到 文件→新建→Kotlin
+    Class/File。将文件命名为“EditTaskViewModelFactory”，选择“类”选项。
+- en: 'Once you’ve created the file, update the code in *EditTaskViewModelFactory.kt*
+    so that it looks like this:'
+  id: totrans-304
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建完文件后，更新 *EditTaskViewModelFactory.kt* 中的代码，使其看起来像这样：
+- en: '![image](Images/f0745-03.png)'
+  id: totrans-305
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0745-03.png)'
+- en: Now that we’ve written the code for `EditTaskViewModel` and its factory, let’s
+    update the code for `EditTaskFragment` and its layout. We’ll begin with the layout.
+  id: totrans-306
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经编写了 `EditTaskViewModel` 及其工厂的代码，让我们更新 `EditTaskFragment` 和其布局的代码。我们将从布局开始。
+- en: fragment_edit_task.xml needs to display the task
+  id: totrans-307
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: fragment_edit_task.xml 需要显示任务
+- en: We’re going to update *fragment_edit_task.xml* so that it includes an edit text
+    and a checkbox, which will be used to display `Task` data. We’ll use data binding
+    to bind these views to the `taskName` and `taskDone` properties in `EditTaskViewModel`’s
+    `task`.
+  id: totrans-308
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将更新 *fragment_edit_task.xml*，以包含编辑文本和复选框，这些将用于显示 `Task` 数据。我们将使用数据绑定将这些视图绑定到
+    `EditTaskViewModel` 的 `task` 中的 `taskName` 和 `taskDone` 属性。
+- en: We’ll also add two buttons to the layout, which will call `EditTaskViewModel`’s
+    `deleteTask()` and `updateTask()` methods, and let the user update or delete the
+    task record.
+  id: totrans-309
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还将向布局添加两个按钮，这些按钮将调用 `EditTaskViewModel` 的 `deleteTask()` 和 `updateTask()`
+    方法，并允许用户更新或删除任务记录。
+- en: 'Here’s the updated code for the layout; update the code for *fragment_edit_task.xml*
+    so that it includes these changes (in bold):'
+  id: totrans-310
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是布局的更新代码；更新 *fragment_edit_task.xml* 的代码，以包含这些更改（用粗体表示）：
+- en: '![image](Images/f0746-01.png)![image](Images/f0747-02.png)'
+  id: totrans-311
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0746-01.png)![image](Images/f0747-02.png)'
+- en: We need to update EditTaskFragment.kt too
+  id: totrans-312
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们也需要更新 EditTaskFragment.kt
+- en: 'The final change that we need to make to the Tasks app is to update `EditTaskFragment`’s
+    Kotlin code. The code needs to do three things:'
+  id: totrans-313
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要对 Tasks 应用程序进行的最后更改是更新 `EditTaskFragment` 的 Kotlin 代码。代码需要执行三个操作：
+- en: '**Set the layout’s viewModel data binding variable.**'
+  id: totrans-314
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**设置布局的 viewModel 数据绑定变量。**'
+- en: We’ll set it to an instance of `EditTaskViewModel`, which the fragment will
+    create.
+  id: totrans-315
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将其设置为 `EditTaskViewModel` 的一个实例，该实例将由片段创建。
+- en: '**Set the layout’s lifecycle owner.**'
+  id: totrans-316
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**设置布局的生命周期所有者。**'
+- en: This is so that the layout can interact with live data properties.
+  id: totrans-317
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这样可以使布局能够与实时数据属性进行交互。
+- en: '**Observe the view model’s navigateToList property.**'
+  id: totrans-318
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**观察视图模型的 navigateToList 属性。**'
+- en: When this becomes *true*, the fragment will navigate to `TasksFragment`, and
+    call `EditTaskViewModel`’s `onNavigatedToList()` method.
+  id: totrans-319
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 当这个条件变为 *true* 时，片段将导航到 `TasksFragment`，并调用 `EditTaskViewModel` 的 `onNavigatedToList()`
+    方法。
+- en: As you’re already familiar with all the code to do this, we’ll show you the
+    updated code for `EditTaskFragment` on the next page.
+  id: totrans-320
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于你已经熟悉如何完成所有这些代码，我们将在下一页上展示 `EditTaskFragment` 的更新代码。
+- en: The full code for EditTaskFragment.kt
+  id: totrans-321
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: EditTaskFragment.kt 的完整代码
+- en: 'Here’s the full `EditTaskFragment` code: make sure that the code in *EditTaskFragment.kt*
+    includes all the changes shown here (in bold):'
+  id: totrans-322
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是完整的`EditTaskFragment`代码：确保*EditTaskFragment.kt*文件中的代码包含此处显示的所有更改（加粗部分）。
+- en: '![image](Images/f0748-02.png)![image](Images/f0749-02.png)'
+  id: totrans-323
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0748-02.png)![图片](Images/f0749-02.png)'
+- en: That’s everything that we need to make `EditTaskFragment` display a `Task` in
+    its layout, and let the user update or delete it. Let’s go through what the code
+    does when it runs.
+  id: totrans-324
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们需要让`EditTaskFragment`在其布局中显示一个`Task`并允许用户更新或删除它的所有内容。让我们来看看代码在运行时做了什么。
+- en: What happens when the code runs
+  id: totrans-325
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码运行时会发生什么
+- en: 'The following things happen when the app runs:'
+  id: totrans-326
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序运行时会发生以下事情：
+- en: '![Images](Images/1.png) **When the user clicks on a task, TasksFragment navigates
+    to EditTaskFragment, passing it the task ID.**'
+  id: totrans-327
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/1.png) **当用户点击任务时，TasksFragment导航到EditTaskFragment，并传递任务ID。**'
+- en: '![image](Images/f0750-02.png)'
+  id: totrans-328
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0750-02.png)'
+- en: '![Images](Images/2.png) **EditTaskFragment gets a reference to its EditTaskViewModel
+    object.**'
+  id: totrans-329
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/2.png) **EditTaskFragment获取其EditTaskViewModel对象的引用。**'
+- en: '![image](Images/f0750-03.png)'
+  id: totrans-330
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0750-03.png)'
+- en: '![Images](Images/3.png) **EditTaskViewModel calls the TaskDao object’s get()
+    method, passing it the task ID.**'
+  id: totrans-331
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/3.png) **EditTaskViewModel调用TaskDao对象的get()方法，传递任务ID。**'
+- en: '![image](Images/f0750-04.png)'
+  id: totrans-332
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0750-04.png)'
+- en: '![Images](Images/4.png) **The TaskDao’s get() method returns a LiveData<Task>,
+    which is assigned to EditTaskViewModel’s task property.**'
+  id: totrans-333
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/4.png) **TaskDao的get()方法返回一个LiveData<Task>，赋给EditTaskViewModel的task属性。**'
+- en: '![image](Images/f0750-05.png)'
+  id: totrans-334
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0750-05.png)'
+- en: '![Images](Images/5a.png) **When the user clicks on the Update Task button,
+    it calls EditTaskViewModel’s updateTask() method.**'
+  id: totrans-335
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/5a.png) **当用户点击更新任务按钮时，它调用EditTaskViewModel的updateTask()方法。**'
+- en: This method uses `TaskDao`’s `update()` method to update the record in the database.
+  id: totrans-336
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 此方法使用`TaskDao`的`update()`方法来更新数据库中的记录。
+- en: '![image](Images/f0751-02.png)'
+  id: totrans-337
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0751-02.png)'
+- en: '![Images](Images/5b.png) **When the user clicks on the Delete Task button,
+    it calls EditTaskViewModel’s deleteTask() method.**'
+  id: totrans-338
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/5b.png) **当用户点击删除任务按钮时，它调用EditTaskViewModel的deleteTask()方法。**'
+- en: This method uses `TaskDao`’s `delete()` method to delete the record.
+  id: totrans-339
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 此方法使用`TaskDao`的`delete()`方法来删除记录。
+- en: '![image](Images/f0751-03.png)'
+  id: totrans-340
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0751-03.png)'
+- en: '![Images](Images/6.png) **The app navigates to TasksFragment.**'
+  id: totrans-341
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/6.png) **应用程序导航到TasksFragment。**'
+- en: Any changes that have been made to the task record are reflected in the recycler
+    view.
+  id: totrans-342
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 对任务记录进行的任何更改都会在循环视图中反映出来。
+- en: '![image](Images/f0751-04.png)'
+  id: totrans-343
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0751-04.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-344
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来测试一下这个应用程序。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-345
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/car.png) 测试驾驶'
+- en: When we run the app, `TasksFragment` displays a grid of cards in the recycler
+    view as before.
+  id: totrans-346
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，`TasksFragment`像以前一样在循环视图中显示一组卡片。
+- en: When we click on one of the tasks, the app navigates to `EditTaskFragment`,
+    which displays the task’s record.
+  id: totrans-347
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们点击其中一个任务时，应用程序导航到`EditTaskFragment`，显示任务的记录。
+- en: When we make changes to the task and click on the Update Task button, the changes
+    are saved to the database and displayed in `TasksFragment`’s recycler view.
+  id: totrans-348
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们对任务进行更改并点击更新任务按钮时，更改将保存到数据库，并在`TasksFragment`的循环视图中显示。
+- en: '![image](Images/f0752-02.png)'
+  id: totrans-349
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0752-02.png)'
+- en: That’s what happens when we try to update a task. What about when we delete
+    one?
+  id: totrans-350
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们尝试更新任务时会发生什么？删除任务时呢？
+- en: When we click on a task, the app navigates to `EditTaskFragment` and displays
+    the task record as before.
+  id: totrans-351
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们点击一个任务时，应用程序导航到`EditTaskFragment`，并像以前一样显示任务记录。
+- en: When we click on the Delete Task button, the record is deleted from the database.
+    When the app navigates to `TasksFragment`, the record no longer appears in the
+    recycler view.
+  id: totrans-352
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们点击删除任务按钮时，记录会从数据库中删除。当应用程序导航到`TasksFragment`时，该记录将不再出现在循环视图中。
+- en: '![image](Images/f0753-02.png)'
+  id: totrans-353
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0753-02.png)'
+- en: Congratulations! You’ve now learned how to build an app that uses a recycler
+    view to navigate to records, which you can then update or delete. This technique
+    gives you a powerful and flexible way of organizing the data in your app.
+  id: totrans-354
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恭喜！现在你已经学会了如何构建一个应用程序，使用循环视图导航到记录，然后可以更新或删除它们。这种技术为你在应用程序中组织数据提供了一种强大而灵活的方式。
+- en: Your Android Toolbox
+  id: totrans-355
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 你的安卓工具箱
+- en: '![image](Images/tools.png)'
+  id: totrans-356
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/tools.png)'
+- en: '**You’ve got [Chapter 17](#recycler_view_navigationcolon_pick_a_car) under
+    your belt and now you’ve added recycler view navigation to your toolbox.**'
+  id: totrans-357
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**你已经掌握了[第17章](#recycler_view_navigationcolon_pick_a_car)，现在你已经将循环视图导航添加到你的工具箱中。**'
+- en: '![image](Images/f0754-01.png)'
+  id: totrans-358
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0754-01.png)'

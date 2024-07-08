@@ -1,0 +1,989 @@
+- en: Chapter 16\. Building an App
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第16章 构建一个应用程序
+- en: Imagine yourself walking through the broad, worn oak doors of Dunn & Lewis Memorial
+    Library in search of knowledge. As you enter, you are greeted with a seemingly
+    never-ending sea of wooden shelves rivaling the Great Library of Alexandria. You
+    stagger from shelf to shelf but have no idea what books are available and where
+    they are located. Frustrated, and alone, you are about to leave the library for
+    good when an old librarian beckons you closer.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想象一下自己走进邓恩与刘易斯纪念图书馆宽阔而磨损的橡木门，以寻找知识。当你进入时，你会看到一个似乎没有尽头的木制书架大海，与亚历山大图书馆不相上下。你蹒跚地从一架架书架走向另一架书架，但不知道哪些书可供阅读，它们位于哪里。感到沮丧而孤独时，你正准备永远离开图书馆，这时一位老图书管理员示意你靠近。
+- en: 'The librarian has a musty, but familiar, smell of old books and mahogany about
+    him. You walk closer, but before you can go much further he points knowingly to
+    a flyer taped on the wall that heralds your salvation: an app is available for
+    download to help you find the books you need. Your days of wandering are over!'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 图书管理员身上散发着古老书籍和红木的阴郁却熟悉的气味。你走近一些，但在你能走得更远之前，他指向墙上贴着的传单，预示着你的拯救：可以下载一个应用程序来帮助你找到所需的书籍。你漫游的日子结束了！
+- en: But, where is the app? You can’t download it. What do you mean it doesn’t exist
+    yet? The librarian whispers quietly in a gruff voice, “If you build it, they will
+    download it,” and disappears into the darkness of the corridor.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是，这个应用程序在哪里？你无法下载它。你是说它还不存在？图书管理员低声喃喃道：“如果你建造它，他们将下载它”，然后消失在走廊的黑暗中。
+- en: We’re going to build this app.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将要构建这个应用程序。
+- en: Now, forgetting about our ominous and magical librarian for a moment, in [Chapter 15](ch15.html#app_setup),
+    we showed you how to set up your environment and create the simplest, most bare-bones
+    application possible. In reality, however, apps are much more complex. For starters,
+    they are usually more than just one screen. In order to really learn a platform
+    it’s necessary to build something of sufficient complexity—beyond the basic “hello
+    world” example—so you can get an understanding of the boundaries and nuances of
+    the technologies used. To give us something complex enough to work on, we’re going
+    to build an app for a library—yes, the same app foretold by our librarian guide—to
+    help patrons of Dunn & Lewis Memorial Library find the books they need.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，暂且忘记我们那位不祥和神奇的图书管理员，在[第15章](ch15.html#app_setup)中，我们向你展示了如何设置环境并创建可能的最简单、最基础的应用程序。但是，在现实中，应用程序要复杂得多。首先，它们通常不只是一个屏幕。为了真正学习一个平台，需要构建一个足够复杂的东西——超出基本的“Hello
+    World”示例——以便你能够理解使用的技术的边界和细微差别。为了给我们提供足够复杂的东西来工作，我们将为邓恩与刘易斯纪念图书馆构建一个应用程序——是的，正是我们的图书管理员指引的同一个应用程序——帮助图书馆的读者找到他们需要的书籍。
+- en: 'In this chapter we will:'
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中我们将：
+- en: Create a new project for our app.
+  id: totrans-7
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 为我们的应用程序创建一个新项目。
+- en: Give a brief overview of the app we’re building.
+  id: totrans-8
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 给出我们正在构建的应用程序的简要概述。
+- en: Add a simple welcome screen.
+  id: totrans-9
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 添加一个简单的欢迎屏幕。
+- en: Let’s get started before the blood moon rises and our project is doomed!
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们在血月升起之前开始吧，否则我们的项目注定失败！
+- en: Creating a New Project
+  id: totrans-11
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建一个新项目
+- en: Ideally, you’ve gotten your environment set up already. If not, head over to
+    the first chapter of [Part II](part02.html#part_2_app) and spend some time to
+    get both Android and iOS ready for development. Once you’re ready to go, let’s
+    dive in with Android first.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 理想情况下，你已经设置好了你的环境。如果没有，请移步到[第二部分](part02.html#part_2_app)的第一章，并花些时间准备好Android和iOS进行开发。一旦准备就绪，我们首先来看Android。
+- en: Android Studio
+  id: totrans-13
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android Studio
+- en: If you are not coming to the new project flow directly from the installation
+    flow, you can always get here by selecting File from the Android Studio toolbar,
+    then New Project.
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你不是直接从安装流程来到新项目流程，你可以通过选择Android Studio工具栏中的“文件”，然后选择“新建项目”来到这里。
+- en: Android Studio will allow you to choose from some basic project templates, like
+    Basic Activity or Empty Activity, or more advanced things like Java Library (*.jar*,
+    straight Java) or Android Library (*.aar*, Java, plus resources and other Android
+    specific files). You may want to try some of these others out later, but for now,
+    let’s just go with Empty Activity, as shown in [Figure 16-1](#figures_android_setup_choose_project).
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android Studio将允许你从一些基本的项目模板中进行选择，比如基本活动或空活动，或者更高级的东西，如Java库（*.jar*，纯Java）或Android库（*.aar*，Java加资源和其他特定于Android的文件）。你可能稍后想尝试一些其他选项，但现在让我们选择空活动，如[图16-1](#figures_android_setup_choose_project)所示。
+- en: The first step in the create project flow is to configure your project. Here,
+    you’ll determine the application’s location on disk, the namespace, and the minimum
+    API that your application will support. This last bit is actually pretty important.
+    You can always check out distribution numbers for the [various Android versions](https://oreil.ly/3h0X1).
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建项目流程的第一步是配置您的项目。在这里，您将确定应用程序在磁盘上的位置、命名空间以及应用程序将支持的最低 API。这最后一点实际上非常重要。您可以随时查看各种[Android版本的分布数据](https://oreil.ly/3h0X1)。
+- en: '![Choose Project](assets/nmdv_1601.png)'
+  id: totrans-17
+  prefs: []
+  type: TYPE_IMG
+  zh: '![选择项目](assets/nmdv_1601.png)'
+- en: Figure 16-1\. Choose project
+  id: totrans-18
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: Figure 16-1\. 选择项目
+- en: At the time of this writing, it looks like it’s pretty safe to choose OS 19,
+    codename KitKat, version 4.4\. That covers all but a couple percent of the installs
+    at this time. However, if your app is likely to target more technically savvy
+    users, or affluent countries, you might want to choose OS 20, codename Lollipop,
+    version 5.0\. This will cost you about 7% of the world, but will make development
+    a bit easier. Android 5 was a big step forward in Android development and is a
+    line of demarcation for a lot of modern APIs. This is your decision, but for this
+    simple project, we’ll choose Kitkat, as shown in [Figure 16-2](#figures_android_setup_configure_project).
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在撰写本文时，看起来选择 OS 19，代号 KitKat，版本 4.4 是相当安全的选择。这覆盖了除了少数几个安装以外的所有情况。然而，如果您的应用程序可能面向更技术精通的用户或富裕国家，您可能想选择
+    OS 20，代号 Lollipop，版本 5.0。这将使您损失大约7%的全球市场份额，但会使开发工作变得更加轻松。Android 5 在 Android 开发中迈出了重要一步，并且是许多现代
+    API 的分水岭。这是您的决定，但对于这个简单的项目，我们将选择 KitKat，如[图 16-2](#figures_android_setup_configure_project)所示。
+- en: '![Configure Project](assets/nmdv_1602.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![配置项目](assets/nmdv_1602.png)'
+- en: Figure 16-2\. Configure project
+  id: totrans-21
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: Figure 16-2\. 配置项目
+- en: That’s really it! Run your project from the toolbar shortcut (looks like a green
+    Play button) or press control/command + R or from Run select Run App or Run from
+    the submenu.
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就是这样了！从工具栏快捷方式运行您的项目（看起来像一个绿色的播放按钮）或按下 control/command + R 键或从“运行”中选择“运行应用程序”或从子菜单中选择“运行”。
+- en: The first time you do this, you’ll need either a connected device or to create
+    and launch an emulator, as shown in [Figure 16-3](#figures_android_setup_create_emulator).
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首次进行此操作时，您需要连接设备或创建并启动模拟器，如[图 16-3](#figures_android_setup_create_emulator)所示。
+- en: '![Create Emulator](assets/nmdv_1603.png)'
+  id: totrans-24
+  prefs: []
+  type: TYPE_IMG
+  zh: '![创建模拟器](assets/nmdv_1603.png)'
+- en: Figure 16-3\. Create emulator and choose emulator or device
+  id: totrans-25
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: Figure 16-3\. 创建模拟器并选择模拟器或设备
+- en: Now, you should see “Hello World!” print to the screen, as shown in [Figure 16-4](#figures_android_setup_hello_world).
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，您应该看到“Hello World！”打印到屏幕上，如[图 16-4](#figures_android_setup_hello_world)所示。
+- en: '![Hello, World!](assets/nmdv_1604.png)'
+  id: totrans-27
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Hello, World!](assets/nmdv_1604.png)'
+- en: Figure 16-4\. Hello World!
+  id: totrans-28
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: Figure 16-4\. Hello World!
+- en: You should also see a toolbar with My Application (or the application you provided
+    in the project configuration step). So how does it know to say “Hello World!”?
+    Well, the Empty Activity project template isn’t really empty—if you open *MainActivity.java*,
+    you’ll see a reference to a layout file, *R.layout.activity_main*. Find that file
+    in *res/layout* or just control/command-click the line in the code editor. You’ll
+    probably see a `ConstrainLayout`, with a `TextView` child. Note the `android:text`
+    attribute of the `TextView` is set to the string value of “Hello World!”
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您还应该看到一个带有“我的应用程序”（或您在项目配置步骤中提供的应用程序）的工具栏。它是如何知道要显示“Hello World！”的？嗯，空白活动项目模板并不真正为空——如果您打开
+    *MainActivity.java*，您会看到对布局文件 *R.layout.activity_main* 的引用。在 *res/layout* 中找到该文件，或者在代码编辑器中直接按
+    control/command 键单击该行。您可能会看到一个 `ConstrainLayout`，其中包含一个 `TextView` 子元素。请注意 `TextView`
+    的 `android:text` 属性设置为字符串值“Hello World！”
+- en: Let’s make a quick edit. Change the text value of the `TextView` to say “iOS
+    is awesome!” “iOS?!” you exclaim—yep, iOS…let’s get the whole competition nonsense
+    out of the way. Both platforms are incredible. You may prefer a feature or syntactical
+    turn in one or the other, but let’s face it—both do an amazing job allowing us
+    to express our ideas.
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们快速编辑一下。将`TextView`的文本值改为“iOS 真棒！”“iOS？！”你惊呼——是的，iOS……让我们把整个竞争无意义的事情放在一边。这两个平台都非常出色。也许您更喜欢其中一个平台的某个功能或语法转折，但让我们面对现实——两者都能出色地帮助我们表达我们的想法。
+- en: Anyway—run your app again. Now you should see something a little different,
+    as shown in [Figure 16-5](#figures_android_setup_ios_is_awesome).
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无论如何，再次运行您的应用程序。现在，您应该看到一些略有不同的东西，如[图 16-5](#figures_android_setup_ios_is_awesome)所示。
+- en: '![iOS is awesome!](assets/nmdv_1605.png)'
+  id: totrans-32
+  prefs: []
+  type: TYPE_IMG
+  zh: '![iOS 真棒！](assets/nmdv_1605.png)'
+- en: Figure 16-5\. iOS is awesome!
+  id: totrans-33
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: Figure 16-5\. iOS 真棒！
+- en: That’s it! You’ve downloaded and installed Android Studio, created a basic app,
+    and changed some visual values. While this is a pretty basic example, don’t worry—in
+    a couple chapters we’ll walk you through creating a full-featured app using all
+    of the tasks in the first part of this book.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样！您已经下载并安装了 Android Studio，创建了一个基本的应用程序，并更改了一些视觉值。虽然这只是一个非常基本的示例，但不用担心——在接下来的几章中，我们将带您逐步完成使用本书第一部分中所有任务创建一个功能齐全的应用程序。
+- en: Xcode
+  id: totrans-35
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Xcode
+- en: The process of setting up an iOS project in Xcode is similar to Android Studio,
+    but there is a bit more of a software wizard process to follow. To get started,
+    you’ll want to launch Xcode by going to Applications and double-clicking the Xcode
+    application. Whenever Xcode launches, you’ll see a screen similar to [Figure 16-6](#figures_xcode_launch).
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Xcode 中设置 iOS 项目的过程类似于 Android Studio，但是需要遵循更多的软件向导流程。要开始，请转到“应用程序”并双击“Xcode”应用程序以启动
+    Xcode。当 Xcode 启动时，您将看到一个类似于 [图 16-6](#figures_xcode_launch) 的屏幕。
+- en: '![Xcode splash screen](assets/nmdv_1606.png)'
+  id: totrans-37
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Xcode 启动画面](assets/nmdv_1606.png)'
+- en: Figure 16-6\. Xcode splash screen
+  id: totrans-38
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 16-6\. Xcode 启动画面
+- en: Click the “Create a new Xcode project” button to start your project. A new Xcode
+    window will open, and you’ll be presented with a list of templates to provide
+    a project skeleton with some views and boilerplate code to get your started quickly.
+    There are a number of options available for building both applications and libraries,
+    but we’re going to focus in on the application options available. Our particular
+    project will have a number of screens, but for now we’re going to use “Single
+    View App” as a way to get up and running quickly without too much overhead. Select
+    that as an option and hit Next in the template chooser.
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 单击“创建新的 Xcode 项目”按钮以启动您的项目。将打开一个新的 Xcode 窗口，并显示一个模板列表，为项目提供一些视图和样板代码，以便快速启动。有许多选项可用于构建应用程序和库，但我们将专注于可用的应用程序选项。我们的特定项目将具有多个屏幕，但现在我们将使用“单视图应用”作为一种快速启动和减少开销的方式。选择该选项并在模板选择器中点击“下一步”。
+- en: Tip
+  id: totrans-40
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: If you don’t see the Xcode launch screen, don’t fear! Head over to the menu
+    bar and select File > New > Project to get started.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您未看到 Xcode 启动画面，请不要担心！转到菜单栏，选择“文件” > “新建” > “项目”来开始。
+- en: Next, there are a number of options we can use to bootstrap the project. Most
+    of these options are fine with their defaults. We can change everything on this
+    screen later, but it’s helpful to set some of them ahead of time. The first option
+    we should fill in is Product Name. This is part of the name iOS uses for our application
+    internally, along with the organization identifier. By default, it’s also the
+    name that’s displayed to the user underneath the icon of the app on a device’s
+    launch screen. Let’s put “Library Buddy” as the name of our application.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们有多种选项可用于启动项目。这些选项中大多数都可以使用默认设置。稍后我们可以在屏幕上更改所有内容，但提前设置一些选项是有帮助的。我们应该首先填写的选项是产品名称。这是
+    iOS 在内部使用的应用程序名称的一部分，与组织标识符一起。默认情况下，它也是在设备启动屏幕上应用程序图标下显示给用户的名称。让我们将我们的应用程序命名为“图书馆小伙伴”。
+- en: The Organization Identifier field is usually a reverse domain-style identifier
+    of a company or organization (or individual!). Feel free to use whatever identifier
+    you’d prefer, but for the purposes of this book, we’ll use “com.oreilly” as our
+    identifier.
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 组织标识符字段通常是公司或组织（或个人！）的反向域样式标识符。随意使用您喜欢的标识符，但出于本书的目的，我们将使用“com.oreilly”作为我们的标识符。
+- en: Make sure the language selected is Swift and none of the checkmarks for Core
+    Data or unit and UI tests are checked. Click Next to move forward. Select the
+    file location where you want the project to live and hit the Create button to
+    create the project. Whenever the project is finished being created, you’ll see
+    the project open up in an Xcode window with the project files displayed on the
+    left side.
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 确保选择的语言是 Swift，并且未选中 Core Data 或单元和 UI 测试的任何复选标记。点击“下一步”继续。选择要放置项目的文件位置，并点击“创建”按钮创建项目。项目创建完成后，您将看到项目在
+    Xcode 窗口中打开，并且项目文件显示在左侧。
+- en: Click the “Build and Run” button (it looks like a play button) in the top left
+    of the project window. This will build the project, open up an iOS Simulator,
+    and run the application. You should see something like [Figure 16-7](#figures_ios_simulator)
+    running inside an iOS device on your desktop when the project is built and running.
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 点击项目窗口左上角的“构建和运行”按钮（看起来像一个播放按钮）。这将构建项目，在 iOS 模拟器上打开并运行应用程序。当项目构建并运行时，您应该看到类似于[图
+    16-7](#figures_ios_simulator) 在桌面上的 iOS 设备内运行的内容。
+- en: Warning
+  id: totrans-46
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: If there isn’t an iOS Simulator selected by default in the drop-down near the
+    “Build and Run” button described previously, you’ll need to use it to select one.
+    If no simulators are listed, head to the menu bar and select Window > Devices
+    & Simulators to bring up the Device Organizer. Select Simulators at the top of
+    the window and then click the “+” button at the bottom left of the screen to add
+    a new simulator to use for development.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果在之前描述的“构建和运行”按钮附近的下拉菜单中默认没有选择 iOS 模拟器，则需要使用它来进行选择。如果没有列出任何模拟器，请前往菜单栏，选择“窗口”
+    > “设备与模拟器”，以打开设备组织器。在窗口顶部选择“模拟器”，然后单击屏幕左下角的“+”按钮以添加一个新的模拟器用于开发。
+- en: '![Our Single View Application running in an iOS Simulator within Xcode](assets/nmdv_1607.png)'
+  id: totrans-48
+  prefs: []
+  type: TYPE_IMG
+  zh: '![我们在 Xcode 中 iOS 模拟器内运行的单视图应用程序](assets/nmdv_1607.png)'
+- en: Figure 16-7\. Our “Single View Application” running in an iOS Simulator within
+    Xcode
+  id: totrans-49
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 16-7\. 在 Xcode 中 iOS 模拟器中运行的“单视图应用程序”
+- en: In the interest of fairness with our Android example—and to demonstrate a complete
+    lack of bias or prejudice against one platform or another—let’s go ahead and add
+    a label to our application’s screen that gives praise to Android. In the list
+    of files, click on Main.storyboard, click the “+” button at the top right of the
+    window, and drag a label object onto the blank white canvas. Double-click on the
+    label so you can change the text to “Android is awesome!” Drag the label to center
+    it in the view and build and run the application like you did before and you’ll
+    see a screen that looks like [Figure 16-8](#figures_android_simulator).
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了与我们的 Android 示例公平对待，并展示不对任何一个平台有偏见或偏好，让我们继续为我们应用程序的屏幕添加一个赞扬 Android 的标签。在文件列表中，点击
+    Main.storyboard，在窗口右上角点击“+”按钮，然后将一个标签对象拖动到空白的白色画布上。双击标签以更改文本为“Android 很棒！”将标签拖动到视图中心，并像之前一样构建和运行应用程序，您将看到一个类似于[图
+    16-8](#figures_android_simulator) 的屏幕。
+- en: '![Android is awesome!](assets/nmdv_1608.png)'
+  id: totrans-51
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Android 很棒！](assets/nmdv_1608.png)'
+- en: Figure 16-8\. Android is awesome!
+  id: totrans-52
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 16-8\. Android 很棒！
+- en: All right, we’ve got our project created and it’s (ideally) able to build and
+    run on an iOS Simulator. Before we go further, let’s talk about what we’re building.
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好的，我们已经创建了我们的项目，并且（理想情况下）可以在 iOS 模拟器上构建和运行。在我们进一步之前，让我们谈谈我们要构建的内容。
+- en: App Architecture
+  id: totrans-54
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 应用架构
+- en: 'Without getting into too much detail, the application we’re building over the
+    next few chapters will have a number of unique screens that display different
+    types of data. Whenever the app launches, we’ll have a Welcome screen, along with
+    three buttons. These three buttons will take you to different parts of the app:
+    a listing of all the books available; a listing of all books a user has saved
+    for later; and a search screen where a user can search for a specific title or
+    author.'
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在不深入细节的情况下，接下来几章中我们正在构建的应用程序将具有多个独特的屏幕，显示不同类型的数据。每当应用程序启动时，我们将有一个欢迎屏幕，以及三个按钮。这三个按钮将带您进入应用程序的不同部分：所有可用书籍的列表；用户保存的所有书籍的列表；以及一个搜索屏幕，用户可以在其中搜索特定的标题或作者。
+- en: From these screens, we’ll also build out a separate, reusable screen that is
+    used by each of these screens to list all the information about a particular book.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从这些屏幕中，我们还将构建一个单独的可重复使用的屏幕，每个屏幕都将使用它来列出关于特定书籍的所有信息。
+- en: One of the benefits of Android and iOS is that you are not locked into a specific
+    choice in terms of how to structure your app. There are a number of options available,
+    but both platforms seem to have a preference for MVC- or MVVM-style application
+    development. As such, we’ll use that approach to build our apps.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 和 iOS 的好处之一是，您在如何构建应用程序结构方面并不被限制于特定选择。有许多可用的选项，但两个平台似乎更倾向于 MVC 或 MVVM
+    风格的应用程序开发。因此，我们将采用这种方法来构建我们的应用程序。
+- en: Model-View-Controller
+  id: totrans-58
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 模型-视图-控制器
+- en: Model-View-Controller or MVC is, arguably, the most common approach to application
+    development. Basically, it’s an architectural pattern that guides the code structure
+    of the objects that make up your application. The “model” in MVC is a representation
+    of the data the application needs. This could be persisted data (i.e., books saved
+    for later) or transient data that is received from a network request. There is
+    a separation between this data and the views an application contains; controllers
+    are objects that facilitate communication between both the data model and views.
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 模型-视图-控制器（MVC）可以说是应用程序开发中最常见的方法。基本上，它是一种指导构成应用程序的对象代码结构的架构模式。MVC 中的“模型”是应用程序需要的数据的表示。这可以是持久化数据（例如稍后保存的书籍）或从网络请求接收到的瞬时数据。该数据与应用程序包含的视图之间存在分离；控制器是促进数据模型和视图之间通信的对象。
+- en: Typically, the controller is responsible for getting data from a database or
+    a network resource, and it gives that data to a view or view model that’s passed
+    to the view for display. There are special controllers that are responsible for
+    displaying the views themselves as well. In Android, these are `Activity` objects
+    and in iOS, they are `UIViewController`s.
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常，控制器负责从数据库或网络资源获取数据，并将该数据传递给视图或视图模型以供显示。还有一些特殊的控制器负责直接显示视图。在 Android 中，这些是`Activity`对象，在
+    iOS 中，它们是`UIViewController`。
+- en: The primary goal of an MVC architecture is to utilize and respect the inherent
+    boundaries in objects to prevent close coupling of objects. This makes maintenance
+    easier, and it provides a defined, straightforward way to think about code.
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: MVC 架构的主要目标是利用和尊重对象中的固有边界，以防止对象之间的紧耦合。这样做可以更容易进行维护，并提供了一种明确定义、直观的编码方式。
+- en: 'With MVC in mind, let’s look at how we can create the first screen a user sees
+    when they open up the app: the welcome screen.'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以 MVC 架构为基础，让我们看看如何创建用户打开应用时看到的第一个屏幕：欢迎屏幕。
+- en: Building Our First Screen
+  id: totrans-63
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 构建我们的第一个屏幕
+- en: If you recall from our preceding example, the application screen inside the
+    emulator on Android and simulator on iOS is pretty basic and devoid of any kind
+    of design or data. We should fix that.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您还记得我们之前的示例，Android 模拟器和 iOS 模拟器中的应用程序屏幕非常基础，没有任何设计或数据。我们应该解决这个问题。
+- en: Note
+  id: totrans-65
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Note that both Android and iOS use the notion of a “launch screen.” This is
+    a static image displayed while the application itself is performing setup operations.
+    Note that very little can be done to decorate this beyond drawable objects, and
+    things like interactive UI elements or network requests are either impossible
+    or unadvisable.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，无论是 Android 还是 iOS 都使用“启动屏幕”的概念。这是在应用程序本身执行设置操作时显示的静态图像。请注意，除了可绘制对象外，几乎无法对其进行装饰，像交互式
+    UI 元素或网络请求这样的东西要么不可能，要么不建议。
+- en: Android
+  id: totrans-67
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: In the Android framework, the launch screen happens during app initialization
+    and only displays an XML drawable. That means no logic, and not even `Drawable`
+    class instances are available (although, after API 26, custom XML drawables are
+    allowed, which could reference back to a `Drawable` subclass). Also be aware that
+    this happens so early in the process that the framework doesn’t have access to
+    many of the values we might normally take advantage of, like API version, so trying
+    to provide different drawable files for different versions would fail. We’ll provide
+    detailed instruction on how to set this up in the following section.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Android 框架中，启动屏幕发生在应用初始化期间，并且仅显示 XML drawable。这意味着没有逻辑，甚至没有`Drawable`类的实例可用（尽管在
+    API 26 之后，允许使用自定义 XML drawable，它可以引用回`Drawable`子类）。还要注意，此过程发生得非常早，因此框架无法访问许多我们通常利用的值，如
+    API 版本，因此尝试为不同版本提供不同的 drawable 文件将失败。我们将在下一节详细介绍如何设置这一点。
+- en: Launch Screen
+  id: totrans-69
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 启动屏幕
+- en: 'In the Android framework, the launch screen displayed while the application
+    is initializing is exactly equal to the theme’s window background. This can be
+    any `Drawable` instance, which of course means it can be a group of drawing operations
+    grouped within a single instance. For our example, let’s use a black background
+    and center our logo, using a `layer-list` XML `Drawable`. We’ll name the file
+    *launch_drawable.xml* and save it in *res/drawable*:'
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Android 框架中，应用初始化时显示的启动屏幕与主题的窗口背景完全相同。这可以是任何`Drawable`实例，这意味着它可以是一组在单个实例中分组的绘图操作。在我们的示例中，让我们使用黑色背景并居中我们的logo，使用`layer-list`
+    XML `Drawable`。我们将文件命名为*launch_drawable.xml*并保存在*res/drawable*中：
+- en: '[PRE0]'
+  id: totrans-71
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'You’ll notice a reference to a compiled bitmap resource. In your favorite photo
+    editing software, generate some stylized version of the application name, library
+    name, maybe a symbolic representation, or just the initials—whatever, it’s up
+    to you. As with all compiled resources in Android, file names must be all lowercase,
+    words separated with underscores, and only alphanumeric characters: a-z and 0-9\.
+    Let’s name the image file *dlml_logo.xml* and save it in our *res/drawable* directory.
+    The system will make this a constant value of the global `R` class, in the following
+    format: `R.{resource_tye}.{file_name_minus_ext}`, so in this case, `R.drawable.dlml_logo`
+    would be an integer identifier for the `Bitmap` resource of our logo.'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您会注意到有一个编译的位图资源的引用。在您最喜欢的照片编辑软件中，生成应用程序名称的某些风格化版本、库名称、可能是符号表示或只是首字母缩写——无论如何，由您决定。与Android中的所有编译资源一样，文件名必须全部小写，单词用下划线分隔，只能是字母数字字符：a-z和0-9。让我们将图像文件命名为*dlml_logo.xml*并保存在我们的*res/drawable*目录中。系统将使此成为全局`R`类的常量值，格式如下：`R.{resource_tye}.{file_name_minus_ext}`，因此在这种情况下，`R.drawable.dlml_logo`将是我们标志的位图资源的整数标识符。
+- en: If you so choose, you could create a double-sized image and add it to the */res/drawable/xhdpi*
+    directory. See the preceding note for specifics on density-specific images.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你愿意，你可以创建一个双倍大小的图像，并将其添加到*/res/drawable/xhdpi*目录中。关于特定密度图像的详细信息，请参阅前面的注释。
+- en: 'Moving on from general resources and returning to our examination of theme
+    implementation, in a values file (let’s use the *styles.xml* that Android Studio
+    should already have created for you, in the *res/values* directory), let’s replace
+    the project default theme with a simple theme of our own:'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 离开一般资源并回到我们主题实现的检查，让我们在值文件中（让我们使用Android Studio应该已经为您创建的*res/values/styles.xml*文件）用我们自己的简单主题替换项目默认主题：
+- en: '[PRE1]'
+  id: totrans-75
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: Obviously, we could and probably should set a number of other theme-specific
+    values, like color, action bar, and coordinator layout support, etc., but for
+    the purpose of this example, we’ll keep it simple.
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显然，我们可以而且可能应该设置许多其他特定于主题的值，如颜色、操作栏和协调布局支持等，但是出于本示例的目的，我们将保持简单。
+- en: 'To register this theme with your app, you’ll use the application’s manifest
+    *AndroidManifest.xml*. You’ll be using this manifest file several times when configuring
+    your application, but we’ll take it one step at a time. For now, let’s just register
+    our theme:'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要将此主题注册到您的应用程序中，您将使用应用程序的清单文件*AndroidManifest.xml*。配置应用程序时，您将多次使用此清单文件，但我们一次只做一步。现在，让我们只是注册我们的主题：
+- en: '[PRE2]'
+  id: totrans-78
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: That’s it! Now, when your application launches, before the user can interact,
+    they’ll see the drawable we provided in *launch_drawable.xml*. At first, while
+    your application is still young and innocent and lightweight, this might only
+    flash momentarily, or launch may happen so fast the user doesn’t see it at all,
+    but as more activities, permissions, assets, resources, external libraries, and
+    build configurations are added, initialization time will increase, so it’s usually
+    a good idea to let the user know what application is being launched and that they’re
+    not simply hung, but rather being hand-crafted a unique experience.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就这样！现在，在用户可以交互之前，当你的应用启动时，他们将看到我们在*launch_drawable.xml*中提供的可绘制内容。一开始，当您的应用程序还很年轻、无辜和轻便时，这可能只会短暂闪现，或者启动可能如此快速，用户根本看不到它，但随着添加更多活动、权限、资产、资源、外部库和构建配置，初始化时间将会增加，因此让用户知道正在启动哪个应用程序并且他们不仅仅是卡住了，而是正在手工打造独特的体验通常是一个好主意。
+- en: iOS
+  id: totrans-80
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: After you’ve added a screen on Android, you’ll find it’s not altogether different
+    on iOS. We’re going to start within the storyboard editor in Xcode. Click on our
+    application’s main storyboard, *Main.storyboard*, within the project navigator
+    on the left side of the screen. This will bring up the storyboard editor.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在您在Android上添加屏幕之后，您会发现在iOS上并不完全不同。我们将从Xcode的Storyboard编辑器开始。在屏幕左侧的项目导航器中点击我们应用程序的主Storyboard，*Main.storyboard*。这将打开Storyboard编辑器。
+- en: Tip
+  id: totrans-82
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: There is also *LaunchScreen.storyboard*. This is used to present a design when
+    the application is launching, but before it’s active.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有*LaunchScreen.storyboard*。这是用于在应用程序启动时呈现设计，但在其激活之前。
+- en: Storyboards are a format for keeping views—called “scenes”—and their transitions
+    between other scenes organized within an Xcode project. They can, and should,
+    contain multiple scenes that are linked together via segues—predetermined transitions
+    between scenes—as well as simple views like buttons, labels, etc., within the
+    scenes themselves. Storyboards can even link to other storyboards!
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 故事板是一种格式，用于在Xcode项目中组织视图（称为“场景”）及其之间的过渡。它们可以并且应该包含多个通过转场连接的场景，以及场景本身的简单视图，如按钮、标签等。故事板甚至可以链接到其他故事板！
+- en: When we open up *Main.storyboard*, you should see one scene called View Controller
+    Scene in the document outline on the left. This scene is automatically created
+    as part of the boilerplate code created in the Single View Application we created
+    earlier. We could reuse this scene and rename it, but instead we’re going to create
+    a new scene.
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们打开*Main.storyboard*时，您应该在左侧的文档大纲中看到一个名为“View Controller Scene”的场景。这个场景是我们在之前创建的单视图应用程序的样板代码中自动创建的。我们可以重用这个场景并重新命名它，但我们将创建一个新的场景。
+- en: First, click the Library button, the leftmost button near the top right of the
+    project window. This will bring up a floating window where you can drag and drop
+    views and components onto the storyboard editor. Scroll down until you see the
+    View Controller object in the list of results, or search for “view controller”
+    as shown below.
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，点击库按钮，即项目窗口右上角最左边的按钮。这将打开一个浮动窗口，您可以在其中将视图和组件拖放到故事板编辑器中。向下滚动，直到在结果列表中找到“View
+    Controller”对象，或者如下所示搜索“view controller”。
+- en: Next, drag the View Controller object from the window down onto the storyboard
+    editor canvas. Place the new view controller scene wherever you’d like on the
+    canvas. Additionally, you can double-click on the View Controller object and a
+    new scene will be placed within the canvas for you.
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，从窗口中将“View Controller”对象拖动到故事板编辑器画布上。将新的视图控制器场景放置在画布上任意位置。此外，您还可以双击“View
+    Controller”对象，画布中将放置一个新的场景。
+- en: Now, let’s add some text to this view. We do this by using the Library window
+    again and find the Label object. Drag the label over our new view controller scene.
+    Whenever you hover over the scene, it’ll highlight blue to indicate that this
+    is the scene where the label will be embedded. Once you are on the correct scene,
+    let go of the label and it’ll appear selected on the screen. You’ll also notice
+    it appears within the Document Outline in our new scene on the left side of the
+    editor as shown.
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，让我们向这个视图添加一些文本。我们可以再次使用库窗口，找到标签对象。将标签拖动到我们的新视图控制器场景中。当你悬停在场景上时，它会变成蓝色高亮，表示这是标签将嵌入的场景。一旦你在正确的场景上，释放标签，它将出现在屏幕上被选中。你还会注意到它显示在编辑器左侧的新场景文档大纲中。
+- en: Let’s change the text of the label to display something else. Within the storyboard
+    editor, there are a number of inspectors you can toggle through on the right side
+    of the screen. These inspectors change context based on the object selected. With
+    the label still selected—or by clicking on it to select it—click the Attributes
+    inspector icon, which happens to be the fourth button from the left. You should
+    see a screen like the one shown in [Figure 16-9](#figures_attributes_inspector).
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们更改标签的文本以显示其他内容。在故事板编辑器中，右侧有许多检查器可以切换。这些检查器根据所选对象改变上下文。仍然选择标签，或者点击它来选择它，点击属性检查器图标，即最左边的第四个按钮。您应该看到一个类似于[图16-9](#figures_attributes_inspector)所示的屏幕。
+- en: '![Attributes inspector in Xcode](assets/nmdv_1609.png)'
+  id: totrans-90
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Xcode中的属性检查器](assets/nmdv_1609.png)'
+- en: Figure 16-9\. Attributes inspector in Xcode
+  id: totrans-91
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图16-9\. Xcode中的属性检查器
+- en: The Attributes inspector—as well as the subsequent Size and Connections inspectors—is
+    where most of the configuration of views themselves is done within Xcode. Within
+    the subsection called “Label” you can see a number of options that correspond
+    to settings for the Label object we have added to the scene. There is a text field
+    with the string “Label” set as its value. Changing that value will change the
+    text the label is currently displaying. Let’s update it to something like “Welcome.”
+    We can also change the appearance or font of the label within this inspector if
+    we’d like.
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 属性检查器——以及随后的大小和连接检查器——是Xcode中完成视图本身大部分配置的地方。在名为“标签”的子部分中，您可以看到与我们添加到场景中的标签对象设置对应的许多选项。有一个文本字段，其值设为“标签”。更改该值将更改标签当前显示的文本。让我们将其更新为“欢迎”。如果需要，我们还可以在此检查器中更改标签的外观或字体。
+- en: Once you’re happy with how your label looks, you could build and run the application
+    like we did earlier in this chapter by clicking the “Build and Run” button near
+    the top of the project window. However, it won’t get you very far. Nothing will
+    have changed as far as the app is concerned, partially due to the giant arrow
+    pointing to the left of the original view controller scene that was included in
+    the project template. That arrow indicates that this is initial view controller
+    to be shown from the storyboard.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦您对标签的外观感到满意，您可以通过点击项目窗口顶部附近的“构建和运行”按钮来构建和运行应用程序，就像我们在本章早些时候所做的那样。然而，这不会让您有多远。在应用程序的角度来看，没有任何变化，部分原因是由于指向项目模板中包含的原始视图控制器场景左侧的巨大箭头。该箭头表示这是从Storyboard中显示的初始视图控制器。
+- en: Changing this is as simple as ticking a checkbox.
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 更改这个操作就像选中一个复选框一样简单。
+- en: Select our new view controller scene, not the individual views inside it, by
+    clicking directly on the scene in the Document Outline on the left side of the
+    screen or by clicking the white rectangle above the simulated phone screen. If
+    the Attributes inspector isn’t active, click it again once the view controller
+    scene has been selected. Under the View Controller subsection, there is a checkbox
+    labeled Is Initial View Controller that should be unchecked. Check this checkbox
+    and the giant, magic arrow should move beside your new view controller.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 选择我们的新视图控制器场景，而不是其中的个别视图，可以通过直接点击屏幕左侧的文档大纲中的场景，或者点击模拟手机屏幕上方的白色矩形来实现。如果属性检查器未激活，请在选择视图控制器场景后再次点击它。在“视图控制器”子部分下，有一个名为“是否初始视图控制器”的复选框应取消选中状态。选中此复选框后，巨大的、神奇的箭头应该会移到您的新视图控制器旁边。
+- en: Let’s build and run the application and see what happens.
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们构建和运行应用程序，看看会发生什么。
+- en: You should see within the simulator that the app has started up and used our
+    new scene as the default scene that’s displayed. Hooray!
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您应该在模拟器中看到应用程序已启动并使用我们的新场景作为显示的默认场景。万岁！
+- en: Don’t celebrate quite yet, though.
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不过，还不要太快庆祝。
+- en: 'Although we’ve added a new screen to our application, we probably want more
+    functionality than just displaying a static screen. In fact, we might want to
+    change and reference some of the views on the screen in code to make them a bit
+    more dynamic. We’ve been using the storyboard editor to create our view. Let’s
+    take a look at the other side of displaying views in iOS: the view controller.'
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管我们已经向我们的应用程序添加了一个新屏幕，但我们可能希望拥有比仅显示静态屏幕更多的功能。实际上，我们可能想要在代码中更改和引用屏幕上的一些视图，使它们变得更加动态。我们一直在使用Storyboard编辑器来创建我们的视图。现在让我们来看看在iOS中显示视图的另一面：视图控制器。
+- en: Adding a view controller
+  id: totrans-100
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 添加一个视图控制器
+- en: To create a new view controller in Xcode, one that will control our Welcome
+    scene, we need to add a new file. To do this, click the “+” button on the bottom
+    left of the Xcode screen and New File… or go to File > New > File in the menu
+    bar. Clicking either of these options will bring up the same modal window to select
+    the type of file we’ll be adding to our project.
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要在Xcode中创建一个新的视图控制器，用于控制我们的欢迎场景，我们需要添加一个新文件。为此，请在Xcode屏幕左下角点击“+”按钮，然后选择“新建文件…”或者在菜单栏中选择“文件”
+    > “新建” > “文件”。点击任一选项都会弹出同一个模态窗口，以选择要添加到我们项目中的文件类型。
+- en: We could select Swift File as an empty Swift file for almost any code file,
+    but for this particular type of object file we’re creating, let’s select Cocoa
+    Touch Class because a view controller is part of Cocoa Touch—the framework that
+    drives iOS—and click Next.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于几乎任何代码文件，我们可以选择Swift文件作为空的Swift文件，但对于我们正在创建的这种特定类型的对象文件，请选择Cocoa Touch Class，因为视图控制器是Cocoa
+    Touch的一部分——这是驱动iOS的框架——然后点击“下一步”。
+- en: Within this screen, set the subclass to be `UIViewController` and the name to
+    be `WelcomeViewController`. Make sure “Also create XIB file” is unchecked and
+    the language is Swift before clicking Next and the Create button to use the default
+    location. You should now see a new file added to the project navigator on the
+    left side of the screen named *WelcomeViewController.swift.*
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个屏幕中，将子类设置为 `UIViewController`，名称设置为 `WelcomeViewController`。确保“同时创建 XIB 文件”未被选中，并且语言设置为
+    Swift，然后点击“下一步”和“创建”按钮以使用默认位置。现在你应该能看到在项目导航器左侧屏幕上添加了一个名为 *WelcomeViewController.swift*
+    的新文件。
+- en: Tip
+  id: totrans-104
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: There is a convention of naming view controllers with a suffix of `ViewController`.
+    This is standard practice and encouraged over naming your view controller something
+    like `WelcomeController` or `WelcomeScene` to follow conventions.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一个命名约定，即将视图控制器命名为 `ViewController` 后缀。这是标准做法，并鼓励使用此方式，而不是像 `WelcomeController`
+    或 `WelcomeScene` 这样命名您的视图控制器以符合约定。
+- en: 'This file contains some boilerplate code that looks like this:'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此文件包含一些看起来像这样的样板代码：
+- en: '[PRE3]'
+  id: totrans-107
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: This is a fairly empty file at the moment and currently only declares an object
+    named `WelcomeViewController` that inherits from `UIViewController`. If you’ll
+    remember from earlier in the chapter, `UIViewController` is the base class from
+    which view controllers inherit; it’s similar (but not exactly the same) to `Activity`
+    in the preceding Android section.
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此时这个文件还相当空，目前只声明了一个名为 `WelcomeViewController` 的对象，它继承自 `UIViewController`。如果你还记得本章早些时候的内容，`UIViewController`
+    是视图控制器继承的基类；它类似于前面 Android 部分中的 `Activity`，但不完全相同。
+- en: Now that we have our view controller created, let’s wire this up to our view
+    controller scene from before.
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经创建了我们的视图控制器，让我们将其连接到之前的视图控制器场景。
+- en: Head back over to our storyboard editor by clicking on *Main.storyboard* in
+    the project navigator on the left side of Xcode. Once you’re inside the editor,
+    click on our new view controller scene, the one we set earlier to be the initial
+    view controller for the app, to select it in the editor. Show the Identity inspector
+    by clicking the third button from the left on the right side of the screen. Under
+    the Custom Class subsection there is a field called “Class” that currently has
+    a grayed-out `UIViewController` displayed. This is the class, or type, of object
+    that owns this view. Set this field to `WelcomeViewController`.
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过点击 Xcode 左侧项目导航器中的 *Main.storyboard*，返回到我们的 storyboard 编辑器。一旦你在编辑器内部，点击我们的新视图控制器场景，即我们之前设置为应用程序初始视图控制器的场景，以在编辑器中选择它。点击屏幕右侧第三个按钮，显示身份检查器。在“自定义类”子部分下，有一个名为“类”的字段，当前显示为灰色的
+    `UIViewController`。这是拥有此视图的对象的类或类型。将此字段设置为 `WelcomeViewController`。
+- en: The first thing you might notice is that the name of our scene has changed in
+    the Document Outline on the left. Before it read “View Controller Scene,” and
+    it now reads “Welcome View Controller Scene.” Let’s go ahead and delete the original
+    view controller scene that came with the project template by clicking on the scene
+    title in the Document Outline and hitting the Delete button.
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能注意到的第一件事是，在左侧的文档大纲中，我们场景的名称已更改。之前它读作“View Controller Scene”，现在它读作“Welcome
+    View Controller Scene”。让我们继续删除项目模板中附带的原始视图控制器场景，方法是点击文档大纲中的场景标题，然后点击删除按钮。
+- en: Outlets for our views
+  id: totrans-112
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 我们视图的 outlet
+- en: Remember how we mentioned before that we wanted to be able to control views
+    from within the view controller? We’re going to do that now with an outlet.
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 记住我们之前提到过，我们想要能够从视图控制器内部控制视图吗？现在我们将使用 outlet 来实现这一点。
+- en: 'An outlet is a way to bind a particular view to a view controller. This view
+    is then able to be configured and passed around as a reference via code. As such,
+    it’s easiest if we start there. Head back over to our *WelcomeViewController.swift*
+    file. Let’s first delete the commented-out boilerplate code to wind up with a
+    class that looks like so:'
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Outlet 是将特定视图绑定到视图控制器的一种方式。然后，通过代码可以配置和传递此视图的引用。因此，最好从这里开始。返回到我们的 *WelcomeViewController.swift*
+    文件。让我们首先删除注释掉的样板代码，以便得到一个看起来像这样的类：
+- en: '[PRE4]'
+  id: totrans-115
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'Right below the `class` declaration, add the following line:'
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 `class` 声明的下方，添加以下行：
+- en: '[PRE5]'
+  id: totrans-117
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'This creates a property in the class called `headerLabel` that is of a type
+    `UILabel`, which happens to be the same type of object our label is in our view
+    controller scene. Now, let’s have our welcome view controller change the color
+    of the label whenever the scene loads by adding the following line at the end
+    of our already existing `viewDidLoad()` method:'
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将在类中创建一个名为`headerLabel`的属性，其类型为`UILabel`，这恰好是我们视图控制器场景中标签的对象类型。现在，让我们让我们的欢迎视图控制器在场景加载时更改标签的颜色，方法是在我们已经存在的`viewDidLoad()`方法的末尾添加以下行：
+- en: '[PRE6]'
+  id: totrans-119
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: 'This sets the `textColor` property on the label after the view is loaded to
+    red. The whole *WelcomeViewController.swift* file should now look like so:'
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将在视图加载后将标签的`textColor`属性设置为红色。整个*WelcomeViewController.swift*文件现在应该如下所示：
+- en: '[PRE7]'
+  id: totrans-121
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: We’ve added an outlet to our view controller class, but building and running
+    the application now won’t change anything yet. We’re so close! We still need to
+    wire up the welcome label in our storyboard.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们向我们的视图控制器类添加了一个输出，但是现在构建和运行应用程序不会改变任何东西。我们离成功如此之近！我们还需要在我们的Storyboard中连接欢迎标签。
+- en: Wiring it all up
+  id: totrans-123
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 连接一切
+- en: Head back over to the storyboard editor. Hold the Control button down and hold
+    the mouse button or trackpad button down over the yellow “Welcome View Controller”
+    icon in the floating rectangle above the scene. Drag your mouse cursor over to
+    the welcome label we created and a blue line connecting the two should appear.
+    Release the mouse button and a floating window labeled Outlets will appear; the
+    `headerLabel` property we created on `WelcomeViewController` should be listed.
+    Click on `headerLabel` and the window should disappear.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 返回到Storyboard编辑器。按住Control键并在场景上方的浮动矩形中按住鼠标按钮或触控板按钮，覆盖黄色的“Welcome View Controller”图标。将鼠标光标拖动到我们创建的welcome标签上，两者之间应该出现一条连接两者的蓝线。释放鼠标按钮，会出现一个标有Outlets的浮动窗口；我们在`WelcomeViewController`上创建的`headerLabel`属性应该被列出。点击`headerLabel`，窗口应该消失。
+- en: Within the Connections inspector on the right side of the screen, you can confirm
+    that `headerLabel` is now connected to `Header Label` within our scene.
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在屏幕右侧的连接检查器中，您可以确认`headerLabel`现在已经连接到我们场景中的`Header Label`。
+- en: Build and run the application by clicking on the “Build and Run” button in the
+    top left of the project window and you should now see a label with red text displaying
+    the word “Welcome” on your simulator screen.
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过点击项目窗口左上角的“Build and Run”按钮来构建和运行应用程序，现在你应该可以在模拟器屏幕上看到一个显示单词“Welcome”的红色文本标签。
+- en: What We’ve Learned
+  id: totrans-127
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: Let’s talk about what you’ve learned in this chapter.
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们谈谈你在这一章学到了什么。
+- en: First, we learned how to create a new project in both Android Studio and Xcode.
+    Next, we talked a little bit about the Model-View-Controller, or MVC, architectural
+    pattern. We also discussed the app we’re building at a very high level. Finally,
+    we walked through the process of adding a new screen—in our case a simple welcome
+    screen—to the library app we’re building. We also learned how to create the visual
+    components of a view and how to wire it all up and manipulate it inside of the
+    code.
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们学习了如何在Android Studio和Xcode中创建一个新项目。接下来，我们简要介绍了模型-视图-控制器（MVC）架构模式。我们还讨论了我们正在构建的应用程序的概述。最后，我们步骤步骤地学习了如何向我们正在构建的图书馆应用程序添加一个新的屏幕——在我们的案例中是一个简单的欢迎屏幕。我们还学习了如何创建视图的视觉组件，并且如何在代码中连接并操作它。
+- en: Whew. This was a long chapter and we’ve just started building something useful.
+    Let’s take a deeper dive into our application and learn how to display some lists
+    of data in the next chapter, as well as adding a bit more style to our app!
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 哇。这是一章很长，我们刚刚开始建立一些有用的东西。让我们在下一章深入探讨我们的应用程序，并学习如何在应用程序中显示一些数据列表，并向我们的应用程序添加更多的样式！

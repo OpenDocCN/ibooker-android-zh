@@ -1,0 +1,1099 @@
+- en: Chapter 20\. Networking and Our App
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第20章 网络和我们的应用
+- en: Wow. We’ve come a long way with our app. The last chapter, dealing with databases,
+    was a doozy. We’ve now got a great app for browsing through our catalog of books.
+    We can *even* favorite some books for later to check them out again. That’s great!
+    It’s probably time to set this app aside and start working on another project.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 哇。我们的应用已经走了很长一段路了。上一章处理数据库，确实让人费了一番周折。现在我们有了一个很棒的应用来浏览我们的图书目录。我们甚至可以将一些书籍标记为喜爱，以便稍后再查看。太棒了！也许现在是时候把这个应用搁置一下，开始着手另一个项目了。
+- en: 'But wait! The librarian from before, our octogenarian guide and muse, ambles
+    up to you from out of the shadows of wherever you’re working and lets you in on
+    a secret that makes your hair stand on end: this isn’t the only library of this
+    type. There are multiple locations scattered throughout the globe in different
+    countries and they all must be displayed in this app to help patrons—such as yourself—unlock
+    the knowledge contained within.'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但等等！之前那位图书馆员，我们的八旬导游和灵感来源，从你正在工作的地方的阴影中走了出来，告诉你一个让你毛骨悚然的秘密：这不是唯一的这种类型的图书馆。在全球各地不同的国家散布着多个位置，它们都必须在这个应用程序中显示，以帮助像你这样的读者解锁其中蕴含的知识。
+- en: Looks like we’re not done yet with this project.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 看起来我们还没有完成这个项目。
+- en: 'Now, how might we go about supporting this new feature? It’s possible we could
+    use the same approach as before with our catalog: bundle the list of locations
+    with the app. However, that approach seems a bit static and unchanging. What if
+    a location closes and a weary traveler searches for the knowledge of mankind in
+    vain? It might be best, instead, to use this as an opportunity to finally break
+    down the barriers around this app and let it communicate with the outside world
+    via, you guessed it, the Internet! This will allow our data to be dynamic and
+    changing, just like the world around it.'
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们如何支持这个新功能呢？我们可能可以像之前处理我们的目录一样：将位置列表与应用捆绑在一起。然而，这种方法似乎有点静态和不变。如果一个地方关闭了，一个疲惫的旅行者徒劳地搜索人类的知识，那该怎么办呢？也许最好的方法是，利用这个机会终于打破这个应用周围的障碍，让它通过互联网与外界通信！这将使我们的数据像周围的世界一样动态和变化。
+- en: So buckle up. Let’s dial in and start searching!
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以准备好了。让我们调整设置，开始搜索吧！
+- en: Searching the World
+  id: totrans-6
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 探索世界
+- en: 'Fundamentally, interacting with a search endpoint is the same for Android as
+    it is for iOS. It consists of the following steps:'
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从根本上讲，与搜索端点的交互在Android和iOS上都是相同的。它包括以下步骤：
+- en: A button or search bar to initiate the search.
+  id: totrans-8
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 一个按钮或搜索栏来启动搜索。
+- en: A string of text to pass to a network service somewhere.
+  id: totrans-9
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 一串文本，传递到某个网络服务的地方。
+- en: A response containing the results of our query.
+  id: totrans-10
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 一个包含我们查询结果的响应。
+- en: A screen that displays our results—most likely a list or table view.
+  id: totrans-11
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 显示我们结果的屏幕——很可能是一个列表或表视图。
+- en: The first thing we need is a way to initiate the search in the UI. On Android,
+    since again we’ve omitted the `ActionBar` for our `Activities`, we’ll add an AOSP-provided
+    component called `SearchView` to the top of the `BrowseContentActivity` UI. When
+    a string is entered and actionable (button press, Enter key, IME action), we’ll
+    pass that value to a web service, which will open the returns in a new `Activity`
+    when it returns successfully and complete.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们首先需要一种在UI中启动搜索的方法。在Android上，因为我们再次省略了`ActionBar`，我们将在`BrowseContentActivity`的顶部添加一个名为`SearchView`的AOSP提供的组件。当输入字符串并且可操作（按钮按下、Enter键、IME动作）时，我们将把该值传递给一个Web服务，在成功返回时将结果显示在一个新的`Activity`中。
+- en: 'For now, let’s modify the layout of *res/layout/activity_browse.xml* to include
+    a `SearchView`:'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，让我们修改*res/layout/activity_browse.xml*的布局，以包含一个`SearchView`：
+- en: '[PRE0]'
+  id: totrans-14
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: 'Now, let’s wire up some basic functionality in our existing `Activity`:'
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，让我们在现有的`Activity`中连接一些基本功能：
+- en: Add new search activity to manifest.
+  id: totrans-16
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 在清单中添加新的搜索活动。
+- en: Show search activity and layout.
+  id: totrans-17
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 显示搜索活动和布局。
+- en: Update this log statement to call the search method in the local project.
+  id: totrans-18
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 更新此日志语句，以调用本地项目中的搜索方法。
+- en: Fix emoji.
+  id: totrans-19
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 修复表情符号。
+- en: Meanwhile, on iOS, we’ll add a search button to the top of the catalog screen.
+    That will display a `UISearchController` with a `UISearchBar` that we’ll use to
+    capture the text a search user is searching for; we’ll use that for a request
+    to our search endpoint.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与此同时，在iOS上，我们将在目录屏幕顶部添加一个搜索按钮。这将显示一个`UISearchController`，其中包含一个`UISearchBar`，我们将用它来捕获搜索用户正在搜索的文本；我们将用它来请求我们的搜索端点。
+- en: Let’s get started with the UI!
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们从UI开始吧！
+- en: Android
+  id: totrans-22
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: 'Let’s prepare a simple layout and `Activity` to display our search results:'
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们准备一个简单的布局和`Activity`来显示我们的搜索结果：
+- en: '[PRE1]'
+  id: totrans-24
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: This will provide a spinner to show the user that something is happening while
+    we wait for the results to arrive from the server.
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将提供一个旋转器，向用户显示正在发生的事情，同时等待来自服务器的结果。
+- en: Our `Activity` should expect a `String` extra for the query passed from the
+    `SearchView`—we’ll use this to perform a fetch to the web service and manipulate
+    the UI as appropriate.
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的`Activity`应该期望从`SearchView`传递一个`String`额外参数作为查询，我们将使用它来执行从Web服务获取数据并根据需要操作UI。
+- en: Let’s make some assumptions here. Let’s say our URL is *magic://my.app/search*
+    (we’re going to use the scheme “magic://” so that we don’t forget the missing
+    pieces—most Java HTTP clients will reject that scheme with a friendly, descriptive
+    error), and it accepts a `GET` query parameter named `query`. It will return a
+    JSON response that is an array of `Location` objects, or an empty array if none
+    matches.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们在这里做一些假设。假设我们的URL是*magic://my.app/search*（我们将使用方案“magic://”，以便不会忘记缺失的部分——大多数Java
+    HTTP客户端将拒绝具有友好描述错误的此方案），并接受名为`query`的`GET`查询参数。它将返回一个JSON响应，其中包含一个`Location`对象数组，如果没有匹配项则返回一个空数组。
+- en: 'Let’s say the JSON looks something like this:'
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设JSON看起来像这样：
+- en: '[PRE2]'
+  id: totrans-29
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: 'And our data structure will look something like this:'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们的数据结构将看起来像这样：
+- en: We’ve got a layout, a model, and a general strategy—what’s left is the actual
+    implementation of our logic. We’ll take the deep dive in the next section.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经有了布局、模型和一般策略，剩下的是实际实现我们的逻辑。我们将在下一节深入探讨。
+- en: iOS
+  id: totrans-32
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: The approach we’ll take on iOS is very similar, but ever so slightly different.
+    On iOS, it’s common to have a button in our navigation bar to initiate the search
+    process. To start, open up *Main.storyboard* and head over to the welcome scene.
+    From the library, drag a bar button item onto the right side of the navigation
+    bar. An outline should appear where you can drop the bar button item. Using the
+    Attributes inspector, set the value for System Item to “Search.” Notice that this
+    will change the button displayed on the screen from a plain button labeled “Item”
+    to a button with a magnifying glass icon.
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在iOS上的方法非常相似，但略有不同。在iOS上，通常在导航栏中有一个按钮来启动搜索过程。首先，打开*Main.storyboard*并转到欢迎场景。从库中拖动一个条形按钮项目到导航栏的右侧。应该会出现一个轮廓，您可以在其中放置条形按钮项目。使用属性检查器，将系统项的值设置为“搜索”。注意，这将从标有“项目”的普通按钮更改为带有放大镜图标的按钮。
+- en: Now, the welcome screen will function as our jump-off point. We’re going to
+    segue to another view controller to handle displaying our search bar and search
+    results. To facilitate this action, drag a new Table View Controller object from
+    the library onto the canvas near the welcome scene. Next, in the Table View scene,
+    expand the table view and select the table view cell object in the Document Outline.
+    Inside the Attributes inspector on the right side of the screen, set the Reuse
+    Identifier value to `LocationCell`. Then, if you’d like, in the Identity inspector
+    set the Title value to “Locations” so that this title will display on this screen
+    whenever it’s shown.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，欢迎屏幕将作为我们的起点。我们将segue到另一个视图控制器来处理显示搜索栏和搜索结果。为了执行此操作，在画布的欢迎场景附近从库中拖动一个新的表视图控制器对象。然后，在表视图场景中，展开表视图并选择文档大纲中的表视图单元对象。在屏幕右侧的属性检查器中，将重用标识符的值设置为`LocationCell`。然后，如果您愿意，在身份检查器中将标题值设置为“位置”，以便每当显示时，屏幕上会显示此标题。
+- en: Finally, head back over the welcome screen and Control-click and drag from the
+    search button we placed earlier over to the new Locations scene with the Kind
+    set to Show. This will wire up a segue that will present the Table View scene
+    whenever we click on the magnifying glass button on the welcome screen.
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，回到欢迎屏幕，控制点击并从我们之前放置的搜索按钮拖动到新的位置场景，设置类型为“显示”。这将连接一个segue，每当我们点击欢迎屏幕上的放大镜按钮时，将呈现表视图场景。
+- en: Build and run the app and you’ll see the new search button at the top right
+    of screen. Tap the icon and it should present a blank table view with no results
+    shown.
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 构建并运行应用程序，您将看到屏幕右上方的新搜索按钮。点击图标，应该会呈现一个空白的表视图，不显示任何结果。
+- en: Unfortunately, this is where our journey ends with the storyboard editor when
+    it comes to searching. We’ve got one more step and that’s to create a custom class
+    for the results view controller so we’re able to initiate the searching. Add a
+    new Cocoa Touch Class inheriting from `UITableViewController` named `LocationsTableViewController`
+    to the project by going to File > New > File in the menu bar. To switch our table
+    view controller over to this class, select the Locations scene, and in the Identity
+    inspector, set the value for Custom Class to “LocationsTableViewController.”
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不幸的是，当涉及到搜索时，我们在 storyboard 编辑器中的旅程就到此为止了。我们还有一个步骤，那就是为结果视图控制器创建一个自定义类，以便我们能够初始化搜索。通过在菜单栏中选择
+    File > New > File，添加一个名为 `LocationsTableViewController` 的新 Cocoa Touch 类，它继承自
+    `UITableViewController`。要将我们的表视图控制器切换到这个类，选择 Locations 场景，在 Identity inspector
+    中将 Custom Class 的值设置为 “LocationsTableViewController”。
+- en: Controlling our searches
+  id: totrans-38
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 控制我们的搜索
+- en: There is a handy class in iOS called `UISearchController` that makes updating
+    the UI for searching fairly straightforward and simple. However, it’s not possible
+    to utilize this class in the storyboard editor or Interface Builder. We’ll have
+    to re-create it manually.
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 iOS 中有一个方便的类叫做 `UISearchController`，可以很简单地更新 UI 来进行搜索。然而，在 storyboard 编辑器或
+    Interface Builder 中无法使用这个类。我们必须手动重新创建它。
+- en: 'Open up *LocationsTableViewController.swift*. The first thing we’re going to
+    do is delete all the boilerplate code that Xcode gives us whenever we inherit
+    from `UITableViewController`. Delete some of the existing methods you see so you
+    end up with a view controller that looks like this:'
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开 *LocationsTableViewController.swift*。我们要做的第一件事是删除从 `UITableViewController`
+    继承时 Xcode 给出的所有样板代码。删除你看到的一些现有方法，以便最终得到一个看起来像这样的视图控制器：
+- en: '[PRE3]'
+  id: totrans-41
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: The first thing we’re going to do is instantiate and save our search controller
+    to use whenever our initial view controller, `LocationsTableViewController`, loads
+    its view. If you’ll recall from our discussion of the life of a view controller
+    in [Chapter 2](ch02.html#topics_views), this is done by overriding the `viewDidLoad`
+    method on a view controller. In this instance, we’re using a `UITableViewController`
+    as our parent class; however, `UITableViewController` inherits from `UIViewController`
+    so it adheres to the same set of methods.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们要做的第一件事是在我们的初始视图控制器 `LocationsTableViewController` 加载其视图时实例化并保存我们的搜索控制器以供使用。如果你还记得我们在
+    [第2章](ch02.html#topics_views) 中讨论过的视图控制器的生命周期，这是通过在视图控制器上覆盖 `viewDidLoad` 方法来完成的。在这个示例中，我们将
+    `UITableViewController` 作为父类使用；然而，`UITableViewController` 继承自 `UIViewController`，因此它遵循相同的一组方法。
+- en: 'Inside the body of `viewDidLoad`, add the following code:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 `viewDidLoad` 方法的方法体中添加以下代码：
+- en: '[PRE4]'
+  id: totrans-44
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: This code creates a new `UISearchController` object and assigns it to the variable
+    `searchController`. We then set the `delegate` on the search bar to respond to
+    whenever a search is done being entered by the user. We’ll adhere to that protocol
+    momentarily, so let’s continue—ignoring the compiler error for now, of course.
+    Next, we set some placeholder text for the search bar that’s created. In this
+    instance, it’s just “Search Locations by Country,” but it could be whatever we
+    desire to give users some guidance about what we’re actually searching.
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这段代码创建了一个新的 `UISearchController` 对象，并将其赋给变量 `searchController`。然后，我们设置了搜索栏的
+    `delegate`，以便在用户输入搜索内容后进行响应。我们马上就会遵循这个协议，所以让我们继续——当然，现在先忽略编译器错误。接下来，我们为创建的搜索栏设置了一些占位文本。在这个示例中，它只是“Search
+    Locations by Country”，但实际上可以是任何我们希望为用户提供搜索指导的文本。
+- en: The next two lines are important for the display of the search results. `UISearchController`
+    is utilized to provide a consistent experience for searching in iOS. There are
+    some predefined behaviors that we want to configure to make searching as best
+    of an experience as possible. The first property, `obscuresBackgroundDuringPresentation`,
+    prevents the search controller from dimming the current view controller we’re
+    in to display the search results. This is important because when we initialize
+    our search controller, we’re not providing a new `searchResultsViewController`
+    directly, so our search results are going to display in this view controller.
+    If this view controller is dimmed, the experience might seem a bit off for users.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面两行对于显示搜索结果非常重要。`UISearchController`用于在iOS中提供一致的搜索体验。有一些预定义的行为，我们希望配置以使搜索体验尽可能好。第一个属性，`obscuresBackgroundDuringPresentation`，防止搜索控制器将当前视图控制器调暗以显示搜索结果。这一点很重要，因为当我们初始化搜索控制器时，我们并没有直接提供一个新的`searchResultsViewController`，所以我们的搜索结果将显示在这个视图控制器中。如果这个视图控制器变暗，用户体验可能会有些不对劲。
+- en: Because of this, we also need to make sure that `definesPresentationContext`
+    is set to `true` so that when the `UISearchController` displays its results view,
+    the view controller we’re in is the one that provides the context of the results
+    display and the search bar display. It basically means this view controller will
+    prevent the search bar from remaining on-screen if we navigate to another view.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，我们还需要确保将`definesPresentationContext`设置为`true`，这样当`UISearchController`显示其结果视图时，我们所在的视图控制器就是提供结果显示和搜索栏显示上下文的视图控制器。基本上意味着该视图控制器将防止搜索栏在导航到另一个视图时仍然保留在屏幕上。
+- en: The last thing we do is set the `searchController` we just created as the search
+    controller for the navigation item. This allows the parent navigation controller
+    that controls this view to display the search bar inside its navigation bar (among
+    other things). We also set a property called `hidesSearchBarWhenScrolling` that
+    keeps the search bar visible at all times.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们做的最后一件事是将刚刚创建的`searchController`设置为导航项的搜索控制器。这允许控制此视图的父导航控制器在其导航栏中显示搜索栏（以及其他内容）。我们还设置了一个名为`hidesSearchBarWhenScrolling`的属性，以确保搜索栏始终可见。
+- en: 'Now, we need to make our view controller adhere to `UISearchBarDelegate`. This
+    is the protocol necessary to update the table view that’s displaying the search
+    results. Whenever the Search button is tapped on the keyboard (or the Return key
+    hit), this method is called. A simple, but temporarily incomplete, version of
+    this method could be added as an extension onto `LocationsTableViewController`
+    like so:'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，我们需要让我们的视图控制器遵循`UISearchBarDelegate`。这是更新显示搜索结果的表视图所需的协议。每当键盘上的搜索按钮被点击（或者按下Return键），就会调用此方法。这个方法的一个简单但临时不完整的版本可以作为一个扩展添加到`LocationsTableViewController`上，像这样：
+- en: '[PRE5]'
+  id: totrans-50
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: If you build and run the project, you’ll see something like this whenever you
+    tap on the magnifying glass to view the location search screen.
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你构建并运行项目，每当你点击放大镜查看位置搜索屏幕时，你会看到类似于这样的内容。
+- en: We’re very close to populating this table view. It’s time to start communicating
+    with the network!
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们离填充这个表视图非常近了。现在是开始与网络通信的时候了！
+- en: Building a Search Endpoint
+  id: totrans-53
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 构建搜索端点
+- en: Now, you might have noticed this *isn’t* a book on web services, per se. This
+    puts us in something of a conundrum because in order to communicate with a web
+    service we need to have…a web service. There are a number of ways you can approach
+    this. If you’d like, you could just follow along in the code without actually
+    hitting a web service. Luckily, the app should still function just fine, there
+    just won’t be any results. In a second, we’ll look at what our library locations
+    JSON that the app is going to consume will look like, so you could put that somewhere
+    locally and have the app consume that file.
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，你可能已经注意到，这并不是一本关于网络服务的书籍。这让我们陷入了一些困境，因为为了与网络服务通信，我们需要有……一个网络服务。有几种方法可以解决这个问题。如果你愿意，你可以只是在代码中跟着进行，而不实际访问网络服务。幸运的是，应用程序应该仍然可以正常运行，只是没有任何结果。接下来，我们将看一下我们的应用程序将要消耗的库位置
+    JSON 文件是什么样子，这样你可以将其放在本地某个地方，并让应用程序消耗该文件。
+- en: Warning
+  id: totrans-55
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: If you add a file locally, you’ll need to make sure you specify the `Content-Type`
+    of the content as `application/json`. Some services, like Google Drive, have support
+    for this, but this is outside the scope of this book.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您在本地添加文件，您需要确保您指定内容的 `Content-Type` 为 `application/json`。一些服务（如 Google Drive）支持这一点，但这超出了本书的范围。
+- en: A perfectly viable option, however, is to write a very quick-and-dirty node.js
+    service to handle serving out the content. In fact, the authors have written such
+    a service. It uses Express to make things simple. If you know anything about Node,
+    it’s very easy to work with a service locally.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 完全可行的一个选项是编写一个非常快速和简单的 node.js 服务来处理提供内容。实际上，作者已经写了这样一个服务。它使用 Express 让事情变得简单。如果你对
+    Node 有所了解，那么在本地工作时非常容易处理服务。
+- en: Installing Node and Express
+  id: totrans-58
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 安装 Node 和 Express
+- en: What follows is the quickest “get up and running” with a web service you’ll
+    ever find. If you are already up to speed with Node, you can probably skip this
+    part. Or, if you’re not interested in installing and working with Node, you can
+    safely skip this part as well. The instructions were largely taken from the Node
+    and Express websites. Let’s go!
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是最快的“快速启动和运行”网络服务的方法。如果您已经熟悉 Node，您可能可以跳过这部分。或者，如果您不想安装和使用 Node，您也可以安全地跳过这部分。这些说明大部分来源于
+    Node 和 Express 的官方网站。让我们开始吧！
+- en: Navigate to [*https://nodejs.org*](https://nodejs.org) and install the latest
+    version of Node.
+  id: totrans-60
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 转到 [*https://nodejs.org*](https://nodejs.org) 并安装最新版本的 Node。
+- en: Open up Terminal and create a directory to hold your project called *library-node-service*.
+  id: totrans-61
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 打开终端并创建一个名为 *library-node-service* 的目录来存放你的项目。
+- en: '[PRE6]'
+  id: totrans-62
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: Initialize a new Node project by calling `npm init` at the prompt. There will
+    be a number of options, and you can safely hit Enter to go past all of them and
+    use the default values.
+  id: totrans-63
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 通过在提示符号处调用 `npm init` 来初始化一个新的 Node 项目。会有一些选项，你可以安全地按 Enter 键跳过所有选项并使用默认值。
+- en: Run the command `npm install express --save` to install Express to the project.
+    Express is a lightweight framework useful for writing quick-and-dirty Node services.
+    Perfect for our use case.
+  id: totrans-64
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 运行命令 `npm install express --save` 来将 Express 安装到项目中。Express 是一个轻量级框架，非常适合快速编写
+    Node 服务。非常适合我们的使用场景。
+- en: 'Create a file named *index.js* if it doesn’t exist already and put the following
+    code in that file:'
+  id: totrans-65
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 如果 *index.js* 文件不存在，请创建一个名为 *index.js* 的文件，并将以下代码放入该文件中：
+- en: '[PRE7]'
+  id: totrans-66
+  prefs:
+  - PREF_IND
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: Copy a version of *catalog.json* from the Xcode or Android Studio project and
+    put it in the same directory as *index.js*. (Do the same with *locations.json*
+    when we create it in just a moment.)
+  id: totrans-67
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 从 Xcode 或者 Android Studio 项目中复制 *catalog.json* 的版本，并将其放在与 *index.js* 相同的目录中。（当我们马上创建
+    *locations.json* 时，也是同样的操作。）
+- en: To run the app locally, type `node index.js` from the command prompt. Your app
+    should now be accessible at *[*http://localhost:3000*](http://localhost:3000)*.
+    You can check this by going to *[*http://localhost:3000/catalog*](http://localhost:3000/catalog)*;
+    you should see a list of all the books in our *catalog.json* file.
+  id: totrans-68
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 要在本地运行应用程序，请在命令提示符中输入 `node index.js`。你的应用现在应该可以通过 *[*http://localhost:3000*](http://localhost:3000)*
+    访问。你可以通过访问 *[*http://localhost:3000/catalog*](http://localhost:3000/catalog)*
+    来检查，你应该能看到我们 *catalog.json* 文件中所有书籍的列表。
+- en: Locations JSON File
+  id: totrans-69
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 位置 JSON 文件
+- en: 'We’re going to be using JSON again as the transport structure for the data
+    we’re receiving from our web service. Here’s what our `locations.json` file should
+    look like:'
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将再次使用 JSON 作为从网络服务接收到的数据的传输结构。以下是我们的 `locations.json` 文件应该如何看起来的示例：
+- en: '[PRE8]'
+  id: totrans-71
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: As you might have noticed, this contains a few locations. These are just example
+    locations (and not actually real) and used to illustrate the structure of our
+    data. Feel free to add more locations as you see fit. It’s an opportunity to be
+    a bit creative!
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可能已经注意到，这里包含一些位置信息。这些只是示例位置（实际并不存在），用来展示我们数据的结构。随意添加更多位置，以您认为合适的方式。这是一个发挥创造力的机会！
+- en: Calling Our Service
+  id: totrans-73
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 调用我们的服务
+- en: In order to send a request to our service, it’s good practice in Android and
+    iOS to build an object that’s responsible for handling the communication instead
+    of directly dealing with API calls in our view layer. The object we’re creating
+    will be called `LocationsController`, and it’ll be an intermediary between our
+    search user interface and our network service. Once the object is created, we’ll
+    wire everything up.
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了向我们的服务发送请求，在 Android 和 iOS 中，将一个对象建立为处理通信的责任对象，而不是直接在我们的视图层中处理 API 调用，这是一个良好的做法。我们将创建的对象称为
+    `LocationsController`，它将作为我们搜索用户界面和网络服务之间的中介。一旦创建了对象，我们将一切连接起来。
+- en: Let’s check out how this is done in Android first.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，让我们看看在 Android 上如何完成这个。
+- en: Android
+  id: totrans-76
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Android
+- en: 'So while there are a number of services that can aid in interacting with RESTful
+    web services, we’re going to again defer to standard libraries (for the most part)
+    to make the network request as shown in [Chapter 9](ch09.html#topics_networking).
+    Since we’re assuming the result will come back as a JSON string, we’ll once again
+    fall back on the Gson library discussed in [Chapter 12](ch12.html#topics_transports).
+    Since we’ve seen so much of this already in our evolving app, like deserializing
+    JSON, the `RecyclerView` with `Adapter` mechanism, and passing data via `Intents`,
+    let’s just jump right in. What follows is a single `Activity` with all of the
+    relevant search and UI code encapsulated. If this app were to get any larger or
+    need more flexibility in its feature set, you’d probably want to start separating
+    out logical blocks into the appropriate classes and interfaces right away—but
+    since we’ve seen almost all of this before, let’s just blast out a quick and dirty
+    feature-full file and ship to our client (who’re never known for either their
+    patience or their appreciation of elegant code):'
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所以，虽然有很多服务可以帮助与RESTful网络服务交互，但我们将再次依赖标准库（大部分时间）来发起网络请求，如[第9章](ch09.html#topics_networking)所示。因为我们假设结果将作为JSON字符串返回，我们将再次依赖在[第12章](ch12.html#topics_transports)讨论过的Gson库。由于我们在应用程序的发展中已经看到了这么多，比如解析JSON，使用`RecyclerView`和`Adapter`机制，以及通过`Intents`传递数据，让我们直接开始吧。接下来是一个单独的`Activity`，其中包含所有相关的搜索和UI代码封装。如果这个应用程序要变得更大或需要更多功能的灵活性，你可能会想要立即将逻辑块分离到适当的类和接口中，但既然我们已经看到了几乎所有的内容，让我们快速地生成一个功能齐全的文件并交给我们的客户（他们以对代码的优雅和耐心而闻名）：
+- en: (Remember to add this `Activity` to your *AndroidManifest.xml*!)
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: （记得将这个`Activity`添加到你的*AndroidManifest.xml*中！）
+- en: Pretty long! So what’s going on in there? Previously, we’ve broken operations
+    down line by line and explained precisely what each statement or expression was
+    intended to do. As we mature as developers, let’s depart from that a bit—we’ll
+    do our best to explain what’s happening here like we would to an experienced colleague,
+    one who may be about to review the code or run some QA, or even just catch up
+    with the feature for potential extensions.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 非常长！那么里面发生了什么？以前，我们逐行分解操作并精确解释每个语句或表达式的目的。随着我们作为开发人员的成熟，让我们离开这一点一点——我们将尽力像对经验丰富的同事解释这里发生的事情，可能是要审查代码或运行一些QA，甚至只是了解可能扩展的功能。
+- en: Obviously, we’ have an `Activity`, so a dedicated screenful of information.
+    The `Activity` expects a `String` to be passed to it immediately, representing
+    a search query, that it got from the `SearchView` in the `BrowseContentActivity`.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显然，我们有一个`Activity`，一个专门的屏幕信息。`Activity`期望立即传递一个`String`，代表搜索查询，它从`BrowseContentActivity`中的`SearchView`获取。
+- en: The `Activity`’s layout initially shows a `ProgressBar` spinning in the center
+    of the screen to show we’re doing work in the background. The `RecyclerView` is
+    not rendered until we’ve successfully fetched content.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Activity`的布局最初显示一个在屏幕中心旋转的`ProgressBar`，以显示我们正在后台工作。直到我们成功获取内容之前，`RecyclerView`不会被渲染。'
+- en: During the creation cycle, we’ll take that search term and append it to the
+    known URL of our search web service. We’ll use standard library classes like `URL`
+    and `HttpConnection` to get the server’s response as bytes and read them into
+    a `String`.
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在创建周期中，我们将获取该搜索词并将其附加到我们搜索web服务的已知URL上。我们将使用像`URL`和`HttpConnection`这样的标准库类来获取服务器的响应作为字节并将其读入`String`中。
+- en: Let’s make sure we do that in a background `Thread` so we don’t block the UI
+    while the network request is happening; we’ve all seen even simple responses sometimes
+    take several seconds (or more) to resolve—it’s not good if our UI is frozen that
+    whole time.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们确保在后台`Thread`中执行此操作，以免在网络请求发生时阻塞UI；我们都看到即使简单的响应有时也需要几秒钟（或更多）才能解析——如果我们的UI在整个时间内都被冻结那就不好了。
+- en: 'Since we know we’re dealing with a traditional RESTful JSON response, we’ll
+    use Gson to parse it into what we expect: a collection of `Location` objects.
+    Assuming that’s successful, let’s hide the `ProgressBar` and show the `RecyclerView`
+    and then pass those `Location` instances to a custom `Adapter` and attach it.
+    If there’s a failure in the network call, or the deserialization operation, we’re
+    just logging out failure—in a production-ready app, you’d probably want some kind
+    of UI to display to the user, report it back to you, or even retry the operation.'
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 既然我们知道我们正在处理传统的 RESTful JSON 响应，我们将使用 Gson 将其解析为我们期望的内容：一组`Location`对象。假设这是成功的，让我们隐藏`ProgressBar`，显示`RecyclerView`，然后将这些`Location`实例传递给自定义的`Adapter`并附加它。如果网络调用失败或反序列化操作失败，我们只是记录失败—在一个生产就绪的应用程序中，你可能希望向用户显示某种
+    UI 来报告错误，或者甚至重试操作。
+- en: Now that our `RecyclerView` has a primed and populated `Adapter`, we should
+    see a list of all the `Location` objects returned from our search, presented in
+    an arbitrary `String` representing the physical location of the library.
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们的`RecyclerView`具有准备好并填充好的`Adapter`后，我们应该看到从我们搜索中返回的所有`Location`对象列表，呈现为表示图书馆物理位置的任意`String`。
+- en: Even poorly designed, high line count code can be pretty straightforward if
+    we know how to use the tools we’re given.
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 即使设计不佳、代码行数众多，只要我们知道如何使用给定的工具，也可以变得非常简单。
+- en: Let’s see how our iOS friends handle this…
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看我们的 iOS 朋友是如何处理这个的…
+- en: iOS
+  id: totrans-88
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: iOS
+- en: 'In Xcode, add a new Swift file to the project called `LocationsController`.
+    If you’ll recall, our UI has one primary purpose: retrieve a list of additional
+    library locations from a given country. The service we built has an endpoint that
+    does just this. If you hit *http://localhost:3000/locations?country=`<country
+    name>`*, you’ll see a list of filtered locations for a given country. So, we have
+    a parameter, `country`, where we can pass our country name.'
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Xcode 中，向项目中添加一个名为`LocationsController`的新 Swift 文件。如果你还记得，我们的 UI 的主要目的是从给定国家获取额外图书馆位置的列表。我们构建的服务有一个端点专门用于此目的。如果你访问
+    *http://localhost:3000/locations?country=`<country name>`*，你将看到针对给定国家的过滤位置列表。因此，我们有一个名为`country`的参数，可以传递我们的国家名称。
+- en: 'In code, we might think of `LocationsController` as having one method that
+    fetches the locations for a given country. We can express that with a method like
+    so:'
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在代码中，我们可以将`LocationsController`视为具有一个方法来获取给定国家的位置信息。我们可以用以下方法表达：
+- en: '[PRE9]'
+  id: totrans-91
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'We need to define `Location` as well. We know we’ll be working with JSON, so
+    we can utilize a structure and `Codable` similar to how we did earlier for `Book`
+    in our *catalog.json* file. Using our *locations.json* file as a guide, we arrive
+    at a `Location` object that looks like this:'
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还需要定义`Location`。我们知道我们将使用 JSON，因此我们可以利用类似我们之前在 *catalog.json* 文件中为`Book`所做的方式，创建一个结构和`Codable`。参考我们的
+    *locations.json* 文件，我们得到一个看起来像这样的`Location`对象：
+- en: '[PRE10]'
+  id: totrans-93
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: Note
+  id: totrans-94
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Note the property `streetAddress`. In our JSON, that property is named `the_address`.
+    Because these don’t match, a private enum called `CodingKeys` has been created
+    that provides mapping between the JSON values and the structure values. Unfortunately,
+    when one property doesn’t match, you have to specify all the values being encoded
+    and decoded in the JSON, so it makes `Codable` a bit more manual, but still mostly
+    automatic.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意`streetAddress`属性。在我们的 JSON 中，该属性被命名为`the_address`。由于这些不匹配，已创建了一个名为`CodingKeys`的私有枚举，它提供了
+    JSON 值和结构值之间的映射。不幸的是，当一个属性不匹配时，你必须指定在 JSON 中被编码和解码的所有值，因此这使得`Codable`有些手动化，但仍然大多自动化。
+- en: 'That being said, `JSONDecoder` can help you for some cases like converting
+    from snake-case in the JSON to camel-case in the properties like so:'
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 话虽如此，`JSONDecoder`在某些情况下可以帮助你，比如将 JSON 中的蛇形命名转换为属性中的驼峰命名，如下所示：
+- en: '[PRE11]'
+  id: totrans-97
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: 'Now, if we were to use the `fetchLocations(for:)` method we just declared,
+    it would work well on a fast connection, but there is a major problem that could
+    hamper it as our dataset grows or as our network connection degrades: it’s synchronous
+    and potentially all on the main thread. This means that if we call this from the
+    main thread, we would need to sit and wait for the process to finish before anything
+    else could happen; our app would be unresponsive and appear to freeze.'
+  id: totrans-98
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，如果我们使用刚刚声明的`fetchLocations(for:)`方法，在快速连接上将很好地工作，但存在一个可能阻碍其性能的主要问题，即它是同步的，而且可能全部在主线程上运行。这意味着如果我们从主线程调用它，我们需要等待这个过程完成，然后才能继续其他操作；我们的应用将会无响应，并且看起来会冻结。
+- en: That’s not a great experience.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这并不是一个很好的体验。
+- en: 'Fortunately, it’s pretty easy to fix using closures. A common, Swift-y pattern
+    for network operations is to supply a completion handler that’s executed whenever
+    the operation completes. Keeping that in mind, let’s adjust our method signature
+    so that the `[Location]` array that’s returned is returned in the completion handler.
+    We’ll also use an error handler to provide a closure to execute code if the operation
+    was a not a success. This ends up looking like so:'
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幸运的是，使用闭包修复问题非常容易。网络操作的常见 Swift 模式是提供一个完成处理程序，该处理程序在操作完成时执行。记住这一点，我们将调整方法签名，以便返回的
+    `[Location]` 数组在完成处理程序中返回。我们还将使用错误处理程序，以提供一个闭包来执行操作失败时的代码。最终看起来是这样的：
+- en: '[PRE12]'
+  id: totrans-101
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: 'If we include our `Location` structure, we have a file that looks like this:'
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们包括我们的 `Location` 结构体，我们将得到一个看起来像这样的文件：
+- en: '[PRE13]'
+  id: totrans-103
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: URLSession and friends
+  id: totrans-104
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: URLSession 及其相关
+- en: Let’s take our `fetchLocations(for:completionHandler:errorHandler:)` method
+    and define the functionality it provides. For that, we’ll delve into the `URLSession`
+    library with a specific type of `URLSessionTask`—namely, `URLSessionDataTask`.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看我们的 `fetchLocations(for:completionHandler:errorHandler:)` 方法，定义它所提供的功能。为此，我们将深入研究
+    `URLSession` 库，具体使用 `URLSessionTask` 的一种特定类型——即 `URLSessionDataTask`。
+- en: 'There are a number of ways to interact with the web, but `URLSession` has broken
+    up the interactions into three types with three different implementations of `URLSessionTask`—essentially,
+    one network request—to make things a bit easier to use: the types of tasks are
+    `URLSessionDataTask`, `URLSessionDownloadTask`, and `URLSessionUploadTask`.'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与 web 互动的方式有很多种，但 `URLSession` 将这些交互分解为三种类型，每种类型都有三种不同的 `URLSessionTask` 实现——基本上是一个网络请求——以使事情变得更容易使用：这些任务类型是
+    `URLSessionDataTask`、`URLSessionDownloadTask` 和 `URLSessionUploadTask`。
+- en: Each of these are purpose-built and provide functionality unique to that purpose.
+    The data task, or `URLSessionDataTask`, we’ll be using is intended to be used
+    to retrieve data from a URL—in other words, our use case. For a more thorough
+    look at these objects, check out [Chapter 9](ch09.html#topics_networking).
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个都是专为特定目的而构建的，提供了独特于该目的的功能。数据任务或 `URLSessionDataTask`，我们将使用它来从 URL 中检索数据，换句话说，我们的使用案例。要更深入地了解这些对象，请查看
+    [第9章](ch09.html#topics_networking)。
+- en: 'Let’s take a look at how we’ll use `URLSessionDataTask` in our code:'
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看如何在我们的代码中使用 `URLSessionDataTask`：
+- en: '[PRE14]'
+  id: totrans-109
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: The first thing we do is create a URL to where our location search service resides.
+    It’s currently at *[*http://localhost:3000/locations*](http://localhost:3000/locations)*
+    if you followed along with the Node part of this chapter, but if not, then you’ll
+    need to use whatever URL is relevant here. The `URL(string:)` initializer generates
+    a nullable `URL`—or `URL?` type—so we are also force unwrapping that property
+    with a `!` because, in this instance, we know it won’t be `nil`. (And if it is,
+    we probably want to know about by having the app crash versus silently failing
+    too!)
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们要做的第一件事是创建一个 URL，指向我们的位置搜索服务所在的位置。如果你跟随本章节的 Node 部分，它目前位于 *[*http://localhost:3000/locations*](http://localhost:3000/locations)*，但如果没有，你需要使用适当的
+    URL。`URL(string:)` 初始化器生成一个可空的 `URL` 类型，因此我们还使用了 `!` 进行强制解包，因为在这种情况下，我们知道它不会是
+    `nil`。（如果是，我们可能希望通过应用程序崩溃来知道！）
+- en: Next, we use the `shared` class property on `URLSession` to grab the shared
+    session. The session itself generates our `URLSessionDataTask` through the `dataTask(with:completionHandler:)`
+    method; we are never creating and instantiating `URLSessionDataTask` directly.
+    This task is saved to the `task` variable.
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们使用 `URLSession` 的 `shared` 类属性来获取共享会话。会话本身通过 `dataTask(with:completionHandler:)`
+    方法生成我们的 `URLSessionDataTask`；我们从未直接创建和实例化 `URLSessionDataTask`。这个任务保存在 `task`
+    变量中。
+- en: 'The completion handler passed has three parameters: `data`, `response`, and
+    `error`. The `data` parameter is an object of type `Any?` that contains the data
+    retrieved by the response. The `response` parameter contains the raw `URLResponse`
+    received, and the `error` property is an `Error?` object used to validate the
+    success or failure of the response.'
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 传递的完成处理程序有三个参数：`data`、`response` 和 `error`。`data` 参数是一个 `Any?` 类型的对象，包含响应检索的数据。`response`
+    参数包含接收到的原始 `URLResponse`，`error` 属性是一个 `Error?` 对象，用于验证响应的成功或失败。
+- en: 'Right now, adding this to our `fetchLocations(for:completionHandler:errorHandler)`
+    method would call our service, but because the body of the completion closure
+    passed in is empty, nothing would happen. Let’s fix that. Here’s what the entire
+    body of our method should look like:'
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在，将这段代码添加到我们的`fetchLocations(for:completionHandler:errorHandler)`方法中会调用我们的服务，但由于传入的完成闭包体为空，所以什么也不会发生。让我们修复这个问题。这是我们方法整体应该看起来的样子：
+- en: '[PRE15]'
+  id: totrans-114
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: 'Inside the body of `dataTask(with:completionHandler:)` we’re passing in a trailing
+    closure that does the following:'
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`dataTask(with:completionHandler:)`的主体内，我们传入一个尾随闭包，执行以下操作：
+- en: It checks for a server error via the `error` parameter that was passed into
+    the method. If an error occurred, we call the `errorHandler` closure that was
+    passed in and then `return`.
+  id: totrans-116
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 它通过传入方法的`error`参数检查服务器错误。如果发生错误，我们调用传入的`errorHandler`闭包然后`return`。
+- en: If everything is good server side (i.e., `error` is `nil`), then we proceed
+    to check to make sure our response was a valid HTTP status code, which is anything
+    less than `300`. If the response isn’t valid, we also call `errorHandler`, but
+    there is no server error to pass along, so we just pass `nil`.
+  id: totrans-117
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 如果服务器端一切正常（即`error`为`nil`），然后我们继续检查确保我们的响应是有效的HTTP状态码，即任何小于`300`的情况。如果响应无效，我们也调用`errorHandler`，但没有服务器错误传递，所以我们只传递`nil`。
+- en: If we’re good server side and client side with errors, we check the data returned.
+    The `data` object shouldn’t be empty, and we’re expecting a `Data` object that
+    we’re going to use, momentarily, to decode. If the data is empty, we call `errorHandler`,
+    yet again, with a `nil` error so we can execute our error-handling code.
+  id: totrans-118
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 如果服务器端和客户端没有错误，我们检查返回的数据。`data`对象不应该为空，并且我们期望一个`Data`对象，稍后我们将使用它来解码。如果数据为空，我们再次调用`errorHandler`，并且传递一个`nil`错误，以便我们可以执行我们的错误处理代码。
+- en: 'Let’s wrap up this object by taking our `data` object and decoding it from
+    raw JSON into an array of `Location`s. After adding this, we end up with the following
+    code in our *LocationsController.swift* file:'
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们通过将我们的`data`对象解码为一个`Location`数组来结束这个对象。添加完成后，我们在*LocationsController.swift*文件中的代码如下：
+- en: '[PRE16]'
+  id: totrans-120
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: 'All right. We’ve got a working network client we can use to search for locations.
+    We’re *almost* done, but the final missing piece of this is that we need to add
+    it to the original UI we created. Let’s head back over to `LocationsTableViewController`
+    and add the following to our `UISearchBarDelegate` method, `searchBarTextDidEndEditing(_:)`:'
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好了。我们有一个可以用来搜索位置的工作网络客户端。我们*几乎*完成了，但这个的最后一个缺失的部分是我们需要将其添加到我们创建的原始UI中。让我们回到`LocationsTableViewController`，并将以下内容添加到我们的`UISearchBarDelegate`方法`searchBarTextDidEndEditing(_:)`中：
+- en: '[PRE17]'
+  id: totrans-122
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: Let’s walk through this code.
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来分析这段代码。
+- en: First, we grab the `country` we’re searching for from the search bar’s `text`
+    property. This is a `String` type, so it could be `nil`; we fix this with the
+    `??` operator that means “if the thing preceding this operator is `nil`, use the
+    thing after this operator as the value.” In our case, we set it to an empty string.
+    After that, we call `fetchLocations` on a new property we’ve added to the class
+    that holds the `LocationsController` we just created. We pass in a `completionHandler`
+    and an `errorHandler` closure that set a local property that contains the locations
+    returned and reloads the table view contained in this view.
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们从搜索栏的`text`属性中获取我们正在搜索的`country`。这是一个`String`类型，所以它可能为`nil`；我们使用`??`操作符修复这个问题，意思是“如果前面的东西是`nil`，就使用该操作符后面的东西作为值”。在我们的情况下，我们将其设置为空字符串。之后，我们调用我们刚刚创建的`LocationsController`类中的新属性上的`fetchLocations`。我们传入一个`completionHandler`和一个`errorHandler`闭包，设置一个包含返回的位置并重新加载包含在这个视图中的表视图的本地属性。
+- en: Notice that we dispatch to the main thread in order to update the table view
+    from our closure. We don’t know what thread this call is coming from, and any
+    UI updates *must* be done on the main thread.
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，我们为了从我们的闭包中更新表视图而分派到主线程。我们不知道这个调用来自哪个线程，任何UI更新*必须*在主线程上完成。
+- en: 'We’ve got one more thing to adjust in this class before we’re ready to test
+    it out. We need to make our table view get its data from the `locations` array
+    that we’re storing in the class now. Luckily, if you’ll recall, this class is
+    the table view’s `dataSource` so it’s as easy as updating the `UITableViewDataSource`
+    protocol method definitions to the following:'
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们测试之前，我们需要在这个类中调整的另一件事是，我们需要让我们的表视图从我们现在存储在类中的`locations`数组中获取数据。幸运的是，如果你还记得，这个类是表视图的`dataSource`，所以更新`UITableViewDataSource`协议方法定义如下就很容易了：
+- en: '[PRE18]'
+  id: totrans-127
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE18]'
+- en: 'The full `LocationsViewController` class looks like this now:'
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在完整的`LocationsViewController`类看起来是这样的：
+- en: '[PRE19]'
+  id: totrans-129
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE19]'
+- en: Build and run the application, click the magnifying glass, and search for a
+    country and you’ll get…nothing. Why?
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 构建并运行应用程序，点击放大镜，搜索一个国家，你会得到……什么也没有。为什么？
+- en: 'Well, if you look at the console, you’ll notice the following error:'
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 嗯，如果你查看控制台，你会注意到以下错误：
+- en: '[PRE20]'
+  id: totrans-132
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE20]'
+- en: The reason for this is Apple’s security practices request an *https://* URL
+    and we’re using an *http://* URL. The fix for this is easy and, in fact, is mentioned
+    in the error message. You’ll need to add an exception to your app’s *Info.plist*
+    file. This file is where application-level configurable values go.
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是因为苹果的安全实践要求使用*https://* URL，而我们正在使用*http://* URL。这个问题的修复很容易，并且实际上在错误消息中已经提到了。你需要在你的应用程序的*Info.plist*文件中添加一个例外。这个文件是用来存放应用程序级可配置值的地方。
+- en: To add the exception to your domain, go to *Info.plist* and in the last row
+    of data displayed, click the “+” button to add a new property. From the drop-down,
+    select App Transport Security Settings. Then, add a new child property for Allow
+    Arbitrary Loads and set its value from NO to YES. This makes it so that any nonsecure
+    URL can be used by the app. If you build and run the app now and search for “France,”
+    you should see [Figure 20-1](#france) in the simulator.
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要在您的域中添加例外情况，请转到*Info.plist*并在显示的最后一行数据中点击“+”按钮以添加一个新属性。从下拉菜单中选择“App Transport
+    Security Settings”。然后，添加一个名为Allow Arbitrary Loads的新子属性，并将其值从NO设置为YES。这样，应用程序可以使用任何非安全URL。如果你现在构建并运行应用程序，并搜索“France”，你应该在模拟器中看到[图20-1](#france)。
+- en: '![Vive lé Simulator!](assets/nmdv_2001.png)'
+  id: totrans-135
+  prefs: []
+  type: TYPE_IMG
+  zh: '![Vive lé Simulator!](assets/nmdv_2001.png)'
+- en: Figure 20-1\. Vive lé Simulator!
+  id: totrans-136
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图20-1\. Vive lé Simulator!
+- en: Warning
+  id: totrans-137
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: Look out! You made your app less secure by allowing arbitrary loads. In the
+    interests of this example, we’re using this technique. Really, you should be using
+    an HTTPS URL to communicate with your service. Don’t deploy an app in the wild
+    with this enabled unless you know what you’re doing. Another available option
+    is to set `NSAllowsLocalNetworking` to `YES` in your app’s *Info.plist* instead,
+    which allows local file loads.
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意！通过允许任意加载，你使你的应用程序不够安全。出于这个例子的目的，我们使用了这种技术。实际上，你应该使用一个HTTPS URL来与你的服务通信。除非你知道自己在做什么，否则不要在生产环境中启用此选项。另一个可用的选项是在你的应用程序的*Info.plist*中设置`NSAllowsLocalNetworking`为`YES`，这允许本地文件加载。
+- en: 'If you submit an app with Allow Arbitrary Loads enabled, be prepared: you’ll
+    have to justify that decision during App Review!'
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你提交了一个启用了允许任意加载的应用程序，请做好准备：你将需要在应用审核过程中为这个决定辩护！
+- en: 'There’s one more thing we can do to make it apparent a network call is happening.
+    We can add calls to `UIApplication.shared.isNetworkActivityIndicatorVisible` to
+    make the network activity indicator in the status bar active and inactive whenever
+    a call is happening. We can do this before we start the `URLSessionDataTask` we
+    created in our `LocationsController` like so:'
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有一件事我们可以做来显示网络调用正在发生。我们可以在我们的`LocationsController`中创建`URLSessionDataTask`之前调用`UIApplication.shared.isNetworkActivityIndicatorVisible`来激活和停用状态栏中的网络活动指示器。就像这样：
+- en: '[PRE21]'
+  id: totrans-141
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE21]'
+- en: Then, we can set `UIApplication.shared.isNetworkActivityIndicatorVisible` to
+    `false` inside the completion handler whenever it completes.
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，在完成处理程序中，我们可以将`UIApplication.shared.isNetworkActivityIndicatorVisible`设置为`false`，每当它完成时。
+- en: That’s all we’ll cover on networking for now with iOS.
+  id: totrans-143
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们暂时只讨论iOS的网络问题到这里。
+- en: What We’ve Learned
+  id: totrans-144
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: 'We’ve seen how to talk to the internet in both Android and iOS. There are similarities,
+    but each operating also has its own unique way of handling communication with
+    a web service. There are a lot of moving parts, but we’ve seen how to:'
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经看到了如何在Android和iOS中与互联网通信。虽然有相似之处，但每个操作系统处理与Web服务通信的方式也各不相同。有很多复杂的部分，但我们已经看到了如何：
+- en: Add a new screen that handles searching
+  id: totrans-146
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 添加一个处理搜索的新屏幕
+- en: Create a network client to communicate with an API
+  id: totrans-147
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 创建一个网络客户端来与API通信
+- en: Wire up a search UI with the network client
+  id: totrans-148
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 使用网络客户端连接搜索界面
+- en: There is a lot more functionality contained inside Android and iOS, and we’ve
+    just scratched the surface. Check out [Chapter 9](ch09.html#topics_networking)
+    for more detail and examples of how to add networking to your app.
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android和iOS中包含了更多的功能，我们只是触及了表面。查看[第9章](ch09.html#topics_networking)以获取有关如何将网络功能添加到您的应用程序的更多详细信息和示例。

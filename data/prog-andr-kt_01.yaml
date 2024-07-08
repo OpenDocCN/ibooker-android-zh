@@ -1,0 +1,1942 @@
+- en: Chapter 1\. Kotlin Essentials
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第一章 Kotlin 基础
+- en: Kotlin was created by the JetBrains team from St. Petersburg, Russia. JetBrains
+    is perhaps best known for the IntelliJ Idea IDE, the basis for Android Studio.
+    Kotlin is now used in a wide variety of environments across multiple operating
+    systems. It has been nearly five years since Google announced support for Kotlin
+    on Android. According to the [Android Developers Blog](https://oreil.ly/PrfQm),
+    as of 2021, over 1.2 million apps in the Google Play store use Kotlin, including
+    80% of the top one thousand apps.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 是由俄罗斯圣彼得堡的 JetBrains 团队创建的。JetBrains 以 IntelliJ Idea IDE 而闻名，后者是 Android
+    Studio 的基础。现在 Kotlin 已经广泛应用于多种操作系统环境中。自从 Google 宣布在 Android 上支持 Kotlin 已经将近五年了。根据
+    [Android Developers Blog](https://oreil.ly/PrfQm)，截至 2021 年，Google Play 商店中超过
+    120 万款应用程序使用 Kotlin，其中包括前一千名应用程序中的 80%。
+- en: If you’ve picked up this book, we are assuming that you are already an Android
+    developer and that you are familiar with Java.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果你拿起这本书，我们假设你已经是一名 Android 开发者，并且对 Java 很熟悉。
+- en: Kotlin was designed to interoperate with Java. Even its name, taken from an
+    island near St. Petersburg, is a sly allusion to Java, an island in Indonesia.
+    Though Kotlin supports other platforms (iOS, WebAssembly, Kotlin/JS, etc.), a
+    key to Kotlin’s broad use is its support for the Java virtual machine (JVM). Since
+    Kotlin can be compiled to Java bytecode, it can run anywhere that a JVM runs.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 被设计与 Java 互操作。甚至它的名字，取自圣彼得堡附近的一个岛屿，是对 Java 的一个机智影射，Java 是印度尼西亚的一个岛屿。尽管
+    Kotlin 支持其他平台（iOS、WebAssembly、Kotlin/JS 等），Kotlin 被广泛使用的关键是其对 Java 虚拟机（JVM）的支持。由于
+    Kotlin 可以编译为 Java 字节码，它可以在任何支持 JVM 运行的地方运行。
+- en: Much of the discussion in this chapter will compare Kotlin to Java. It’s important
+    to understand, though, that Kotlin is not just warmed-over Java with some added
+    bells and whistles. Kotlin is a new and different language with connections to
+    Scala, Swift, and C# that are nearly as strong as its connection with Java. It
+    has its own styles and its own idioms. While it is possible to think Java and
+    write Kotlin, thinking in idiomatic Kotlin will reveal the full power of the language.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章的大部分讨论将 Kotlin 与 Java 进行比较。然而，重要的是要理解 Kotlin 不仅仅是加了一些新功能的 Java。Kotlin 是一种全新的不同的语言，与
+    Java 的联系几乎与它与 Scala、Swift 和 C# 的联系一样紧密。它有自己的风格和习惯用法。虽然可以以 Java 的思维写 Kotlin，但以
+    Kotlin 的习惯用法思考将展示语言的全部威力。
+- en: We realize that there may be some Android developers who have been working with
+    Kotlin for some time, and who have never written any Java at all. If this sounds
+    like you, you may be able to skim this chapter and its review of the Kotlin language.
+    However, even if you are fairly handy with the language, this may be a good chance
+    to remind yourself of some of the details.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们意识到可能有一些 Android 开发者长期以来一直使用 Kotlin，从未写过任何 Java。如果你是这样的人，你可能可以略过本章以及其对 Kotlin
+    语言的回顾。然而，即使你对该语言相当熟悉，这也可能是一个提醒你某些细节的好机会。
+- en: 'This chapter isn’t meant to be a full-fledged primer on Kotlin, so if you are
+    completely new to Kotlin, we recommend the excellent *Kotlin in Action*.^([1](ch01.html#idm46669770421056))
+    Instead, this chapter is a review of some Kotlin basics: the type system, variables,
+    functions, and classes. Even if you are not a Kotlin language expert, it should
+    provide enough of a foundation for you to understand the rest of the book.'
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章并不意味着要对 Kotlin 进行全面介绍，所以如果你对 Kotlin 完全陌生，我们推荐优秀的 *Kotlin 实战*。^([1](ch01.html#idm46669770421056))
+    相反，本章是对 Kotlin 基础的回顾：类型系统、变量、函数和类。即使你不是 Kotlin 语言专家，它也应为你理解本书的其余内容提供足够的基础。
+- en: As with all statically typed languages, Kotlin’s type system is the meta language
+    that Kotlin uses to describe itself. Because it is an essential aspect for discussing
+    Kotlin, we’ll start by reviewing it.
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 和所有静态类型语言一样，Kotlin 的类型系统是 Kotlin 用来描述自身的元语言。因为这是讨论 Kotlin 的一个重要方面，我们将从回顾它开始。
+- en: The Kotlin Type System
+  id: totrans-8
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Kotlin 类型系统
+- en: Like Java, Kotlin is a statically typed language. The Kotlin compiler knows
+    the type of every entity that a program manipulates. It can make deductions^([2](ch01.html#idm46669761440208))
+    about those entities and, using those deductions, identify errors that will occur
+    when code contradicts them. Type checking allows a compiler to catch and flag
+    an entire large class of programming errors. This section highlights some of the
+    most interesting features of Kotlin’s type system, including the `Unit` type,
+    functional types, null safety, and generics.
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像 Java 一样，Kotlin 是一种静态类型语言。Kotlin 编译器了解程序操作的每个实体的类型。它可以推断^([2](ch01.html#idm46669761440208))
+    这些实体，并使用这些推断识别代码与之相悖时将会发生的错误。类型检查允许编译器捕捉和标记整个大类编程错误。本节重点介绍 Kotlin 类型系统的一些最有趣的特性，包括
+    `Unit` 类型、函数类型、空安全和泛型。
+- en: Primitive Types
+  id: totrans-10
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 原始类型
+- en: The most obvious difference between Java’s and Kotlin’s type systems is that
+    Kotlin has no notion of a *primitive type*.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Java 和 Kotlin 类型系统之间最明显的区别是，Kotlin 没有 *原始类型* 的概念。
+- en: Java has the types `int`, `float`, `boolean`, etc. These types are peculiar
+    in that they do not inherit from Java’s base type, `Object`. For instance, the
+    statement `int n = null;` is not legal Java. Neither is `List<int> integers;`.
+    In order to mitigate this inconsistency, each Java primitive type has a *boxed
+    type* equivalent. `Integer`, for instance, is the analog of `int`; `Boolean` of
+    `boolean`; and so on. The distinction between primitive and boxed types has nearly
+    vanished because, since Java 5, the Java compiler automatically converts between
+    the boxed and unboxed types. It is now legal to say `Integer i = 1`.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Java 有 `int`、`float`、`boolean` 等类型。这些类型的特殊之处在于它们不继承 Java 的基本类型 `Object`。例如，语句
+    `int n = null;` 在 Java 中是非法的。`List<int> integers;` 也是如此。为了减轻这种不一致性，每个 Java 原始类型都有一个
+    *装箱类型* 等价物。例如，`Integer` 是 `int` 的类比；`Boolean` 是 `boolean` 的类比，依此类推。原始类型和装箱类型之间的区别几乎已经消失，因为自
+    Java 5 以来，Java 编译器自动在原始类型和装箱类型之间转换。现在可以合法地说 `Integer i = 1`。
+- en: Kotlin does not have primitive types cluttering up its type system. Its single
+    base type, `Any`, analogous to Java’s `Object`, is the root of the entire Kotlin
+    type hierarchy.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 的类型系统中没有原始类型，它的单一基础类型`Any`类似于 Java 的`Object`，是整个 Kotlin 类型层次结构的根。
+- en: Note
+  id: totrans-14
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'Kotlin’s internal representation of simple types is not connected to its type
+    system. The Kotlin compiler has sufficient information to represent, for instance,
+    a 32-bit integer with as much efficiency as any other language. So, writing `val
+    i: Int = 1` might result in using a primitive type or a boxed type, depending
+    on how the `i` variable is used in the code. Whenever possible, the Kotlin compiler
+    will use primitive types.'
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 'Kotlin 对简单类型的内部表示与其类型系统无关。Kotlin 编译器具有足够的信息来以与任何其他语言一样的效率表示 32 位整数。因此，写 `val
+    i: Int = 1` 可能会使用原始类型或装箱类型，这取决于在代码中如何使用变量 `i`。尽可能地，Kotlin 编译器会使用原始类型。'
+- en: Null Safety
+  id: totrans-16
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 空安全
+- en: 'A second major difference between Java and Kotlin is that *nullability* is
+    part of Kotlin’s type system. A nullable type is distinguished from its nonnullable
+    analog by the question mark at the end of its name; for example, `String` and
+    `String?`, `Person` and `Person?`. The Kotlin compiler will allow the assignment
+    of `null` to a nullable type: `var name: String? = null`. It will not, however,
+    permit `var name: String = null` (because `String` is not a nullable type).'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 'Java 和 Kotlin 的第二个主要区别在于 *可空性* 是 Kotlin 类型系统的一部分。可空类型通过其名称末尾的问号来区分其非可空模拟；例如，`String`
+    和 `String?`，`Person` 和 `Person?`。Kotlin 编译器允许将 `null` 赋给可空类型：`var name: String?
+    = null`。但它不允许 `var name: String = null`（因为 `String` 不是可空类型）。'
+- en: '`Any` is the root of the Kotlin type system, just like `Object` in Java. However,
+    there’s a significant difference: `Any` is the base class for all nonnullable
+    classes, while `Any?` is the base class for all nullable ones. This is the basis
+    of *null safety*. In other words, it may be useful to think of Kotlin’s type system
+    as two identical type trees: all nonnullable types are subtypes of `Any` and all
+    nullable types are subtypes of `Any?`.'
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Any` 是 Kotlin 类型系统的根，就像 Java 中的 `Object`。然而，有一个显著的区别：`Any` 是所有非空类的基类，而 `Any?`
+    是所有可空类的基类。这是 *空安全* 的基础。换句话说，可以将 Kotlin 的类型系统视为两个相同的类型树：所有非空类型都是 `Any` 的子类型，所有可空类型都是
+    `Any?` 的子类型。'
+- en: 'Variables must be initialized. There is no default value for a variable. This
+    code, for instance, will generate a compiler error:'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 变量必须初始化。变量没有默认值。例如，以下代码会生成编译错误：
+- en: '[PRE0]'
+  id: totrans-20
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: As described earlier, the Kotlin compiler makes deductions using type information.
+    Often the compiler can figure out the type of an identifier from information it
+    already has. This process is called *type inference*. When the compiler can infer
+    a type, there is no need for the developer to specify it. For instance, the assignment
+    `var name = "Jerry"` is perfectly legal, despite the fact that the type of the
+    variable `name` has not been specified. The compiler can infer that the variable
+    `name` must be a `String` because it is assigned the value `"Jerry"` (which is
+    a `String`).
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如前面所述，Kotlin 编译器使用类型信息进行推断。通常编译器可以从它已有的信息中推断出标识符的类型。这个过程称为*类型推断*。当编译器可以推断出类型时，开发人员无需指定它。例如，赋值`var
+    name = "Jerry"`是完全合法的，尽管并未指定变量`name`的类型。编译器可以推断变量`name`必须是`String`，因为它被赋予了值`"Jerry"`（这是一个`String`）。
+- en: 'Inferred types can be surprising, though. This code will generate a compiler
+    error:'
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 推断类型有时会让人感到意外。这段代码将生成编译器错误：
+- en: '[PRE1]'
+  id: totrans-23
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: The compiler inferred the type `String` for the variable `name`, not the type
+    `String?`. Because `String` is not a nullable type, attempting to assign `null`
+    to it is illegal.
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 编译器为变量`name`推断了类型`String`，而不是类型`String?`。因为`String`不是可空类型，试图将`null`赋给它是非法的。
+- en: 'It is important to note that a *nullable* type is not the same as its *nonnullable*
+    counterpart. As makes sense, a nullable type behaves as the supertype of the related
+    nonnullable type. This code, for instance, compiles with no problem because a
+    `String` is a `String?`:'
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 需要注意的是，*可空*类型与其*非空*对应类型并不相同。理所当然地，可空类型表现为相关非空类型的超类型。例如，下面的代码没有任何问题地编译，因为`String`是`String?`：
+- en: '[PRE2]'
+  id: totrans-26
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: 'On the other hand, the following code will not compile at all, because a `String?`
+    is *not* a `String`:'
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一方面，以下代码根本无法编译，因为`String?` *不是* `String`：
+- en: '[PRE3]'
+  id: totrans-28
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: 'Simply changing the type of the parameter will not entirely fix the problem:'
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仅仅改变参数的类型并不能完全解决问题：
+- en: '[PRE4]'
+  id: totrans-30
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: This snippet fails with the error `Only safe (?.) or non-null asserted (!!.)
+    calls are allowed on a nullable receiver of type String?`.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这段代码会因为错误`Only safe (?.) or non-null asserted (!!.) calls are allowed on a nullable
+    receiver of type String?`而失败。
+- en: 'Kotlin requires that nullable variables be handled safely—in a way that cannot
+    generate a null pointer exception. In order to make the code compile, it must
+    correctly handle the case in which `name` is `null`:'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 要求对可空变量进行安全处理，以避免生成空指针异常。为了使代码编译通过，必须正确处理`name`为`null`的情况：
+- en: '[PRE5]'
+  id: totrans-33
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'Kotlin has special operators, `?.` and `?:`, that simplify working with nullable
+    entities:'
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 有特殊的操作符，`?.` 和 `?:`，可以简化与可空实体的工作：
+- en: '[PRE6]'
+  id: totrans-35
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: 'In the preceding example, when `name` is not `null`, the value of `name?.length`
+    is the same as the value of `name.length`. When `name` is `null`, however, the
+    value of `name?.length` is `null`. The expression does not throw a null pointer
+    exception. Thus, the first operator in the previous example, the safe operator
+    `?.`, is syntactically equivalent to:'
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前面的示例中，当`name`不为`null`时，`name?.length`的值与`name.length`的值相同。然而，当`name`为`null`时，`name?.length`的值为`null`。该表达式不会抛出空指针异常。因此，在前面的示例中，第一个操作符，安全操作符`?.`，在语法上等同于：
+- en: '[PRE7]'
+  id: totrans-37
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: The second operator, the *elvis operator* `?:`, returns the left expression
+    if it is non-null, or the right expression otherwise. Note that the expression
+    on the right-hand side is evaluated only if the left expression is null.
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二个操作符，*Elvis 操作符* `?:`，如果左侧表达式非空，则返回左侧表达式的值；否则返回右侧表达式的值。请注意，仅当左侧表达式为null时才会评估右侧表达式。
+- en: 'It is equivalent to:'
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相当于：
+- en: '[PRE8]'
+  id: totrans-40
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: The Unit Type
+  id: totrans-41
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 单元类型
+- en: In Kotlin, *everything* has a value. Always. Once you understand this, it is
+    not difficult to imagine that even a method that doesn’t specifically return anything
+    has a default value. That default value is named `Unit`. `Unit` is the name of
+    exactly one object, the value things have if they don’t have any other value.
+    The type of the `Unit` object is, conveniently, named `Unit`.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Kotlin 中，*每个*东西都有一个值。一旦你理解了这一点，就不难想象即使一个方法没有明确返回任何内容，它也有一个默认值。那个默认值被命名为`Unit`。`Unit`恰好是一个对象的名称，如果它们没有任何其他值，就会使用这个值。`Unit`对象的类型方便地被命名为`Unit`。
+- en: The whole concept of `Unit` can seem odd to Java developers who are used to
+    a distinction between expressions—things that have a value—and statements—things
+    that don’t.
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Unit`的整个概念对于习惯于表达式有值和语句无值之间区别的 Java 开发人员可能显得奇怪。'
+- en: 'Java’s conditional is a great example of the distinction between a *statement*
+    and an *expression* because it has one of each! In Java you can say:'
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Java的条件语句是区分*语句*和*表达式*的一个很好的例子，因为它同时具有两者！在Java中，你可以说：
+- en: '[PRE9]'
+  id: totrans-45
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'You cannot, however, say:'
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，你不能说：
+- en: '[PRE10]'
+  id: totrans-47
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: Statements, like the `if` statement, do not return a value. You cannot assign
+    the value of an `if` statement to a variable, because `if` statements don’t return
+    anything. The same is true for loop statements, case statements, and so on.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 语句，比如`if`语句，不返回任何值。你不能将`if`语句的值赋给一个变量，因为`if`语句不返回任何东西。对于循环语句、case语句等也是如此。
+- en: 'Java’s `if` statement, however, has an analog, the *ternary expression*. Since
+    it is an expression, it returns a value and that value can be assigned. This is
+    legal Java (provided both `doThis` and `doThat` return integers):'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，Java的`if`语句有一个类似物，称为*三元表达式*。由于它是一个表达式，它返回一个值，并且可以被赋值。这在Java中是合法的（只要`doThis`和`doThat`都返回整数）：
+- en: '[PRE11]'
+  id: totrans-50
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: 'In Kotlin, there is no need for two conditionals because `if` is an expression
+    and returns a value. For example, this is perfectly legal:'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Kotlin中，没有必要有两个条件语句，因为`if`是一个表达式并返回一个值。例如，这是完全合法的：
+- en: '[PRE12]'
+  id: totrans-52
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: 'In Java, a method with `void` as the return type is like a statement. Actually,
+    this is a bit of a misnomer because `void` isn’t a type. It is a reserved word
+    in the Java language that indicates that the method does not return a value. When
+    Java introduced generics, it introduced the type `Void` to fill the void (intended!).
+    The two representations of “nothing,” the keyword and the type, however, are confusing
+    and inconsistent: a function whose return type is `Void` must explicitly return
+    `null`.'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Java中，返回类型为`void`的方法类似于一个语句。实际上，这有点不准确，因为`void`不是一种类型。它是Java语言中的保留字，表示该方法不返回任何值。当Java引入泛型时，引入了类型`Void`来填补这个空白（有意思！）。然而，“空白”的两种表现形式，关键字和类型，却令人困惑且不一致：返回类型为`Void`的函数必须明确返回`null`。
+- en: 'Kotlin is much more consistent: all functions return a value and have a type.
+    If the code for a function does not return a value explicitly, the function has
+    the value `Unit`.'
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin更加一致：所有函数都返回一个值并具有一个类型。如果函数的代码没有明确返回一个值，那么函数的值为`Unit`。
+- en: Function Types
+  id: totrans-55
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 函数类型
+- en: 'Kotlin’s type system supports *function types*. For example, the following
+    code defines a variable, `func`, whose value is a function, the lambda `{ x ->
+    x.pow(2.0) }`:'
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin的类型系统支持*函数类型*。例如，下面的代码定义了一个变量`func`，其值是一个函数，即lambda表达式`{ x -> x.pow(2.0)
+    }`：
+- en: '[PRE13]'
+  id: totrans-57
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: Since `func` is a function that takes one `Double` type argument and returns
+    a `Double`, it’s type is `(Double) -> Double`.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于`func`是一个接受一个`Double`类型参数并返回`Double`类型的函数，它的类型是`(Double) -> Double`。
+- en: 'In the previous example, we specified the type of `func` explicitly. However,
+    the Kotlin compiler can infer a lot about the type of the variable `func` from
+    the value assigned to it. It knows the return type because it knows the type of
+    `pow`. It doesn’t, however, have enough information to guess the type of the parameter
+    `x`. If we supply that, though, we can omit the type specifier for the variable:'
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在上一个例子中，我们显式指定了`func`的类型。然而，Kotlin编译器可以从赋给它的值中推断出`func`变量的类型的许多信息。它知道返回类型，因为它知道`pow`的类型。然而，它没有足够的信息来猜测参数`x`的类型。如果我们提供了它，我们可以省略变量的类型说明符：
+- en: '[PRE14]'
+  id: totrans-60
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: Note
+  id: totrans-61
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'Java’s type system cannot describe a function type—there is no way to talk
+    about functions outside the context of the classes that contain them. In Java,
+    to do something similar to the previous example, we would use the functional type
+    `Function`, like this:'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Java的类型系统不能描述一个函数类型——没有办法在类的上下文之外谈论函数。在Java中，要做类似前面例子的事情，我们可以使用函数类型`Function`，像这样：
+- en: '[PRE15]'
+  id: totrans-63
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: The variable `func` has been assigned an anonymous instance of the type `Function`
+    whose method `apply` is the given lambda.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 变量`func`被赋予了一个类型为`Function`的匿名实例，其方法`apply`是给定的lambda表达式。
+- en: 'Thanks to function types, functions can receive other functions as parameters
+    or return them as values. We call these *higher-order functions*. Consider a template
+    for a Kotlin type: `(A, B) -> C`. It describes a function that takes two parameters,
+    one of type `A` and one of type `B` (whatever types those may be), and returns
+    a value of type `C`. Because Kotlin’s type language can describe functions, `A`,
+    `B`, and `C` can all, themselves, be functions.'
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于函数类型的存在，函数可以接受其他函数作为参数或将它们作为值返回。我们称这些为*高阶函数*。考虑一个 Kotlin 类型的模板：`(A, B) ->
+    C`。它描述了一个接受两个参数的函数，类型分别为 `A` 和 `B`（无论这些类型是什么），并返回类型为 `C` 的值。因为 Kotlin 的类型语言可以描述函数，`A`、`B`
+    和 `C` 都可以是函数本身。
+- en: If that sounds rather meta, it’s because it is. Let’s make it more concrete.
+    For `A` in the template, let’s substitute `(Double, Double)` `->` `Int`. That’s
+    a function that takes two `Double`s and returns an `Int`. For `B`, let’s just
+    substitute a `Double`. So far, we have `((Double, Double)` `->` `Int,` `Double)`
+    `->` `C`.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果听起来有些抽象，那是因为确实如此。让我们更具体地说明。对于模板中的 `A`，让我们替换为 `(Double, Double)` `->` `Int`。这是一个接受两个
+    `Double` 并返回一个 `Int` 的函数。对于 `B`，让我们简单地替换为一个 `Double`。到目前为止，我们有 `((Double, Double)`
+    `->` `Int,` `Double)` `->` `C`。
+- en: 'Finally, let’s say our new functional type returns a `(Double)` `->` `Int`,
+    a function that takes one parameter, a `Double`, and returns an `Int`. The following
+    code shows the complete signature for our hypothetical function:'
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，假设我们的新功能类型返回一个 `(Double)` `->` `Int`，一个接受一个 `Double` 参数并返回一个 `Int` 的函数。以下代码显示了我们假想函数的完整签名：
+- en: '[PRE16]'
+  id: totrans-68
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: We have just described a function type that takes two arguments. The first is
+    a function (`surface`) of two parameters, both `Double`s, that returns an `Int`.
+    The second is a `Double` (`x`). Our `getCurve` function returns a function that
+    takes one parameter, a `Double` (`y`), and returns an `Int`.
+  id: totrans-69
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们刚刚描述了一个接受两个参数的函数类型。第一个是一个接受两个 `Double` 参数的函数 (`surface`)，返回一个 `Int`。第二个是一个
+    `Double` (`x`)。我们的 `getCurve` 函数返回一个函数，该函数接受一个 `Double` 参数 (`y`)，并返回一个 `Int`。
+- en: The ability to pass functions as arguments into other functions is a pillar
+    of functional languages. Using higher-order functions, you can reduce code redundancy,
+    while not having to create new classes as you would in Java (subclassing `Runnable`
+    or `Function` interfaces). When used wisely, higher-order functions improve code
+    readability.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将函数作为参数传递给其他函数是函数式语言的重要支柱。使用高阶函数，可以减少代码冗余，而不必像在 Java 中那样创建新的类（子类化 `Runnable`
+    或 `Function` 接口）。明智地使用高阶函数可以提高代码的可读性。
+- en: Generics
+  id: totrans-71
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 泛型
+- en: 'Like Java, Kotlin’s type system supports type variables. For instance:'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像 Java 一样，Kotlin 的类型系统支持类型变量。例如：
+- en: '[PRE17]'
+  id: totrans-73
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: This function creates a Kotlin `Pair` object in which both of the elements must
+    be of the same type. Given this definition, `simplePair("Hello", "Goodbye")` and
+    `simplePair(4, 5)` are both legal, but `simplePair("Hello", 5)` is not.
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此函数创建一个 Kotlin `Pair` 对象，其中两个元素必须是相同类型。根据这个定义，`simplePair("Hello", "Goodbye")`
+    和 `simplePair(4, 5)` 都是合法的，但 `simplePair("Hello", 5)` 不合法。
+- en: 'The generic type denoted as `T` in the definition of `simplePair` is a type
+    variable: the values it can take are Kotlin types (in this example, `String` or
+    `Int`). A function (or a class) that uses a type variable is said to be *generic*.'
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 `simplePair` 定义中标记为 `T` 的通用类型是一个类型变量：它可以取 Kotlin 类型的值（在此示例中为 `String` 或 `Int`）。使用类型变量的函数（或类）称为*泛型*。
+- en: Variables and Functions
+  id: totrans-76
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 变量和函数
+- en: Now that we have Kotlin’s type language to support us, we can start to discuss
+    the syntax of Kotlin itself.
+  id: totrans-77
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们有 Kotlin 的类型语言支持，我们可以开始讨论 Kotlin 本身的语法。
+- en: In Java the top-level syntactic entity is the class. All variables and methods
+    are members of some class or other, and the class is the main element in a homonymous
+    file.
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Java 中，顶级的语法实体是类。所有变量和方法都是某个类的成员，而类是同名文件中的主要元素。
+- en: Kotlin has no such limitations. You can put your entire program in one file,
+    if you like (please don’t). You can also define variables and functions outside
+    any class.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 没有这种限制。如果你愿意的话，可以将整个程序放在一个文件中（请不要这样做）。你还可以在任何类之外定义变量和函数。
+- en: Variables
+  id: totrans-80
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 变量
+- en: 'There are two ways to declare a variable: with the keywords `val` and `var`.
+    The keyword is required, is the first thing on the line, and introduces the declaration:'
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 声明变量有两种方法：使用关键字 `val` 和 `var`。关键字是必需的，是行中的第一件事，并引入了声明：
+- en: '[PRE18]'
+  id: totrans-82
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE18]'
+- en: 'The keyword `val` creates a variable that is read-only: it cannot be reassigned.
+    Be careful, though! You might think `val` is like a Java variable declared using
+    the `final` keyword. Though similar, it is not the same! Although it cannot be
+    reassigned, a `val` definitely can change value! A `val` variable in Kotlin is
+    more like a Java class’s field, which has a getter but no setter, as shown in
+    the following code:'
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 关键字 `val` 创建的变量是只读的：它不能被重新赋值。但要小心！你可能会认为 `val` 就像使用 `final` 关键字声明的 Java 变量。虽然相似，但并不完全相同！尽管不能被重新赋值，`val`
+    变量确实可以改变值！在 Kotlin 中，`val` 变量更像是 Java 类的字段，具有 getter 但没有 setter，如下面的代码所示：
+- en: '[PRE19]'
+  id: totrans-84
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE19]'
+- en: Every time `surprising` is accessed, it will return a different random value.
+    This is an example of a property with no *backing field*. We’ll cover properties
+    later in this chapter. On the other hand, if we had written `val rand = Random()`,
+    then `rand` wouldn’t change in value and would be more like a `final` variable
+    in Java.
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次访问 `surprising`，它都会返回不同的随机值。这是一个没有 *后备字段* 的属性的示例。我们将在本章后面讨论属性。另一方面，如果我们写了
+    `val rand = Random()`，那么 `rand` 的值不会改变，更像是 Java 中的 `final` 变量。
+- en: 'The second keyword, `var`, creates a familiar mutable variable: like a little
+    box that holds the last thing that was put into it.'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二个关键字 `var` 创建的是一个熟悉的可变变量：就像一个小盒子，可以装入最后放入的东西。
+- en: 'In the next section, we will move on to one of Kotlin’s features as a functional
+    language: *lambdas*.'
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接下来的部分，我们将继续讨论 Kotlin 作为函数式语言的一个特性：*lambda*。
+- en: Lambdas
+  id: totrans-88
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: Lambda
+- en: 'Kotlin supports function literals: lambdas. In Kotlin, lambdas are always surrounded
+    by curly braces. Within the braces, the argument list is to the left of an arrow,
+    `->`, and the expression that is the value of executing the lambda is to the right,
+    as shown in the following code:'
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 支持函数字面值：lambda。在 Kotlin 中，lambda 总是用花括号括起来。在花括号内，参数列表位于箭头 `->` 的左侧，执行
+    lambda 的值是箭头右侧的表达式，如下面的代码所示：
+- en: '[PRE20]'
+  id: totrans-90
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE20]'
+- en: 'By convention, the returned value is the value of the last expression in the
+    body of the lambda. For example, the function shown in the following code is of
+    type `(Int, Int) -> String`:'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 按照惯例，返回的值是 lambda 体中最后一个表达式的值。例如，下面代码中显示的函数的类型是 `(Int, Int) -> String`：
+- en: '[PRE21]'
+  id: totrans-92
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE21]'
+- en: 'Kotlin has a very interesting feature that allows actually extending the language.
+    When the last argument to a function is another function (the function is higher-order),
+    you can move the lambda expression passed as a parameter out of the parentheses
+    that normally delimit the actual parameter list, as shown in the following code:'
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 有一个非常有趣的特性，允许实际上扩展语言。当函数的最后一个参数是另一个函数（该函数是高阶的）时，可以将作为参数传递的 lambda 表达式移出通常界定实际参数列表的括号，如下面的代码所示：
+- en: '[PRE22]'
+  id: totrans-94
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE22]'
+- en: 'This function would typically be used like this:'
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个函数通常会像这样使用：
+- en: '[PRE23]'
+  id: totrans-96
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE23]'
+- en: 'But thanks to the language feature we mentioned, it can also be used like this:'
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但由于我们提到的语言特性，它也可以像这样使用：
+- en: '[PRE24]'
+  id: totrans-98
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE24]'
+- en: This is much nicer, isn’t it? Thanks to this feature, your code can be more
+    readable. A more advanced usage of this feature are `DSL`s.^([3](ch01.html#idm46669760026992))
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样更好，不是吗？多亏了这个特性，您的代码可以更易读。这个特性的更高级用法是 `DSL`。^([3](ch01.html#idm46669760026992))
+- en: Extension Functions
+  id: totrans-100
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 扩展函数
+- en: When you need to add a new method to an existing class, and that class comes
+    from a dependency whose source code you don’t own, what do you do?
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您需要向现有类添加一个新方法，并且该类来自您不拥有源代码的依赖项时，您会怎么做？
+- en: 'In Java, if the class isn’t `final`, you can subclass it. Sometimes this isn’t
+    ideal, because there’s one more type to manage, which adds complexity to the project.
+    If the class is `final`, you can define a static method inside some utility class
+    of your own, as shown in the following code:'
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Java 中，如果类不是 `final`，您可以对其进行子类化。有时这并不理想，因为这会增加项目的复杂性。如果类是 `final`，则可以在您自己的某个实用程序类内定义静态方法，如下面的代码所示：
+- en: '[PRE25]'
+  id: totrans-103
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE25]'
+- en: In the previous example, we defined a function to get a word in a text file,
+    at a given index. On the use site, you’d write `String word =` `getWordAtIndex(file,`
+    `3)`, assuming you make the static import of `FileUtils.getWordAtIndex`. That’s
+    fine, we’ve been doing that for years in Java, and it works.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前面的示例中，我们定义了一个函数来获取文本文件中给定索引处的单词。在使用时，您可以写成 `String word = getWordAtIndex(file,
+    3)`，假设您导入了 `FileUtils.getWordAtIndex` 的静态方法。这很好，我们在 Java 中已经做了这些多年，它很有效。
+- en: 'In Kotlin, there’s one more thing you can do. You have the ability to define
+    a new method on a class, even though it isn’t a real member-function of that class.
+    So you’re not really extending the class, but on the use site it feels like you
+    added a method to the class. How is this possible? By defining an *extension function*,
+    as shown in the following code:'
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Kotlin 中，还有一件事情可以做。您可以定义一个新的方法在一个类上，即使它不是该类的真正成员函数。因此，您并没有真正扩展类，但在使用时感觉像是向类添加了一个方法。这是如何可能的呢？通过定义一个*扩展函数*，如下所示：
+- en: '[PRE26]'
+  id: totrans-106
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE26]'
+- en: From inside the declaration of the extension function, `this` refers to the
+    receiving type instance (here, a `File`). You only have access to public and internal
+    attributes and methods, so `private` and `protected` fields are inaccessible—you’ll
+    understand why shortly.
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在扩展函数的声明内部，`this`指的是接收类型的实例（这里是`File`）。您只能访问公共和内部属性和方法，因此`private`和`protected`字段是不可访问的，很快您就会理解为什么。
+- en: 'On the use site, you would write `val word = file.getWordAtIndex(3)`. As you
+    can see, we invoke the `getWordAtIndex()` function on a `File` instance, as if
+    the `File` class had the `getWordAtIndex()` member-function. That makes the use
+    site more expressive and readable. We didn’t have to come up with a name for a
+    new utility class: we can declare extension functions directly at the root of
+    a source file.'
+  id: totrans-108
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在使用时，您可以写成 `val word = file.getWordAtIndex(3)`。正如您所见，我们在`File`实例上调用`getWordAtIndex()`函数，就像`File`类有`getWordAtIndex()`成员函数一样。这使得使用位置更加表达和可读。我们不必为新的实用程序类命名：我们可以直接在源文件的根部声明扩展函数。
+- en: Note
+  id: totrans-109
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'Let’s have a look at the decompiled version of `getWordAtIndex`:'
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看`getWordAtIndex`的反编译版本：
+- en: '[PRE27]'
+  id: totrans-111
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE27]'
+- en: When compiled, the generated bytecode of our extension function is the equivalent
+    of a static method which takes a `File` as its first argument. The enclosing class,
+    `FileUtilsKt`, is named after the name of the source file (*FileUtils.kt*) with
+    the “kt” suffix.
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 编译时，我们的扩展函数生成的字节码相当于一个以`File`作为其第一个参数的静态方法。包围类`FileUtilsKt`的名称与源文件的名称（*FileUtils.kt*）相同，带有“kt”后缀。
+- en: 'That explains why we can’t access private fields in an extension function:
+    we are just adding a static method that takes the receiving type as a parameter.'
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这解释了为什么我们不能在扩展函数中访问私有字段：我们只是添加了一个以接收类型为参数的静态方法。
+- en: 'There’s more! For class attributes, you can declare *extension properties*.
+    The idea is exactly the same—you’re not really extending a class, but you can
+    make new attributes accessible using the dot notation, as shown in the following
+    code:'
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有更多！对于类属性，您可以声明*扩展属性*。思想完全相同——您并没有真正扩展类，但可以使用点符号使新属性可访问，如下面的代码所示：
+- en: '[PRE28]'
+  id: totrans-115
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE28]'
+- en: 'Notice that this time we used `val` (instead of `fun`) to declare the extension
+    property. You would use it like so: `val area = rectangle.area`.'
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，这次我们使用了`val`（而不是`fun`）来声明扩展属性。您可以这样使用它：`val area = rectangle.area`。
+- en: Extension functions and extension properties allow you to extend classes’ capabilities,
+    with a nice dot-notation usage, while still preserving separation of concern.
+    You’re not cluttering existing classes with specific code for particular needs.
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 扩展函数和扩展属性允许您扩展类的功能，使用漂亮的点表示法，同时仍然保持关注点的分离。您不会因特定需求而在现有类中添加特定的代码。
+- en: Classes
+  id: totrans-118
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 类
+- en: 'Classes in Kotlin, at first, look a lot like they do in Java: the `class` keyword,
+    followed by the block that defines the class. One of Kotlin’s killer features,
+    though, is the syntax for the constructor and the ability to declare properties
+    within it. The following code shows the definition of a simple `Point` class along
+    with a couple of uses:'
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin 中的类，起初看起来很像 Java 中的类：`class`关键字，后面跟随定义类的块。不过 Kotlin 的一大杀手级特性是构造函数的语法以及在其中声明属性的能力。下面的代码显示了一个简单的`Point`类的定义以及几个用法：
+- en: '[PRE29]'
+  id: totrans-120
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE29]'
+- en: Class Initialization
+  id: totrans-121
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 类初始化
+- en: Notice that in the preceding code, the constructor of `Point` is embedded in
+    the declaration of the class. It is called the *primary constructor*. `Point`’s
+    primary constructor declares two class properties, `x` and `y`, both of which
+    are integers. The first, `x`, is read-only. The second, `y`, is mutable and nullable,
+    and has a default value of 3.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意，在前面的代码中，`Point`的构造函数嵌入在类声明中。它被称为*主构造函数*。`Point`的主构造函数声明了两个类属性，`x`和`y`，都是整数。第一个`x`是只读的。第二个`y`是可变的和可空的，并且具有默认值3。
+- en: 'Note that the `var` and `val` keywords are very significant! The declaration
+    `class Point(x: Int, y: Int)` is *very* different from the preceding declaration
+    because it does not declare any member properties. Without the keywords, identifiers
+    `x` and `y` are simply arguments to the constructor. For example, the following
+    code will generate an error:'
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '注意`var`和`val`关键字非常重要！声明`class Point(x: Int, y: Int)`与之前的声明*非常*不同，因为它不声明任何成员属性。没有这些关键字，标识符`x`和`y`仅仅是构造函数的参数。例如，以下代码将会生成一个错误：'
+- en: '[PRE30]'
+  id: totrans-124
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE30]'
+- en: 'The `Point` class in this example has only one constructor, the one defined
+    in its declaration. Classes are not limited to this single constructor, though.
+    In Kotlin, you can also define both secondary constructors and initialization
+    blocks, as shown in the following definition of the `Segment` class:'
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个示例中，`Point`类只有一个构造函数，即在其声明中定义的构造函数。然而，在Kotlin中，类不仅限于这个单一的构造函数。您还可以定义辅助构造函数和初始化块，如下所示的`Segment`类的定义：
+- en: '[PRE31]'
+  id: totrans-126
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE31]'
+- en: 'There are some other things that are of interest in this example. First of
+    all, note that a secondary constructor must delegate to the primary constructor,
+    the `: this(...)`, in its declaration. The constructor may have a block of code,
+    but it is required to delegate, explicitly, to the primary constructor, first.'
+  id: totrans-127
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '这个示例中还有一些其他值得注意的事情。首先，请注意辅助构造函数必须在其声明中委托给主构造函数，即`: this(...)`。构造函数可能有一个代码块，但必须显式地首先委托给主构造函数。'
+- en: Perhaps more interesting is the order of execution of the code in the preceding
+    declaration. Suppose one were to create a new `Segment`, using the secondary constructor.
+    In what order would the print statements appear?
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或许更有趣的是在前述声明中代码的执行顺序。假设创建一个新的`Segment`，使用辅助构造函数，打印语句将以何种顺序出现？
+- en: 'Well! Let’s try it and see:'
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 好吧！让我们试一试看：
+- en: '[PRE32]'
+  id: totrans-130
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE32]'
+- en: This is pretty interesting. The `init` block is run before the code block associated
+    with secondary constructor! On the other hand, the properties `length` and `start`
+    have been initialized with their constructor-supplied values. That means that
+    the primary constructor must have been run even before the `init` block.
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这非常有趣。`init`块在与辅助构造函数关联的代码块之前运行！另一方面，属性`length`和`start`已经用它们的构造函数提供的值初始化。这意味着主构造函数必须在`init`块之前运行。
+- en: 'In fact, Kotlin guarantees this ordering: the primary constructor (if there
+    is one) is run first. After it finishes, `init` blocks are run in declaration
+    order (top to bottom). If the new instance is being created using a secondary
+    constructor, the code block associated with that constructor is the last thing
+    to run.'
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，Kotlin保证了这个顺序：主构造函数（如果有的话）首先运行。在它完成之后，`init`块按声明顺序（从上到下）运行。如果使用辅助构造函数创建新实例，与该构造函数关联的代码块将是最后执行的内容。
+- en: Properties
+  id: totrans-133
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 属性
+- en: Kotlin variables, declared using `val` or `var` in a constructor, or at the
+    top level of a class, actually define a *property*. A property, in Kotlin, is
+    like the combination of a Java field and its getter (if the property is read-only,
+    defined with `val`), or its getter and setter (if defined with `var`).
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin变量，在构造函数中使用`val`或`var`声明，或者在类的顶层声明，实际上定义了一个*属性*。在Kotlin中，属性类似于Java字段及其getter（如果属性是只读的，用`val`定义），或者它的getter和setter（如果用`var`定义）的组合。
+- en: 'Kotlin supports customizing the accessor and mutator for a property and has
+    special syntax for doing so, as shown here in the definition of the class `Rectangle`:'
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin支持自定义属性的访问器和修改器，并有特殊的语法来实现，如`Rectangle`类的定义所示：
+- en: '[PRE33]'
+  id: totrans-136
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE33]'
+- en: 'The property `area` is *synthetic*: it is computed from the values for the
+    length and width. Because it wouldn’t make sense to assign to `area`, it is a
+    `val`, read-only, and does not have a `set()` method.'
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 属性`area`是*合成的*：它从长度和宽度的值计算得出。因为对`area`进行赋值是没有意义的，所以它是一个`val`，只读的，并且没有`set()`方法。
+- en: 'Use standard “dot” notation to access the value of a property:'
+  id: totrans-138
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用标准的“点”符号访问属性的值：
+- en: '[PRE34]'
+  id: totrans-139
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE34]'
+- en: 'In order to further explore custom property getters and setters, consider a
+    class that has a hash code that is used frequently (perhaps instances are kept
+    in a `Map`), and that is quite expensive to calculate. As a design decision, you
+    decide to cache the hash code, and to set it when the value of a class property
+    changes. A first try might look something like this:'
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了进一步探索自定义属性的getter和setter，考虑一个具有经常使用的哈希码（可能实例保存在`Map`中）且计算代价很高的类。作为设计决策，您决定缓存哈希码，并在类属性值更改时设置它。第一次尝试可能看起来像这样：
+- en: '[PRE35]'
+  id: totrans-141
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE35]'
+- en: 'The preceding code will fail because of unbounded recursion: the assignment
+    to `summary` is a call to `summary.set()`! Attempting to set the value of the
+    property inside its own setter won’t work. Kotlin uses the special identifier
+    `field` to address this problem. The following shows the corrected version of
+    the code:'
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 前面的代码将因为无限递归而失败：对 `summary` 的赋值是对 `summary.set()` 的调用！试图在其自身的 setter 内设置属性的值是行不通的。Kotlin
+    使用特殊标识符 `field` 来解决这个问题。以下显示了修正后的代码版本：
+- en: '[PRE36]'
+  id: totrans-143
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE36]'
+- en: The identifier `field` has a special meaning only within the custom getter and
+    setter, where it refers to the *backing field* that contains the property’s state.
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 标识符 `field` 仅在自定义 getter 和 setter 内具有特殊意义，其中它指的是包含属性状态的*后备字段*。
+- en: Notice, also, that the preceding code demonstrates the idiom for initializing
+    a property that has a custom getter/setter with a value provided to the class
+    constructor. Defining properties in a constructor parameter list is really handy
+    shorthand. If a few property definitions in a constructor had custom getters and
+    setters, though, it could make the constructor really hard to read.
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还要注意，前面的代码演示了使用构造函数提供的值初始化具有自定义 getter/setter 的属性的习惯用法。在构造函数参数列表中定义属性是非常方便的简写形式。然而，如果几个构造函数中的属性定义具有自定义
+    getter 和 setter，可能会使构造函数变得难以阅读。
+- en: When a property with a custom getter and setter must be initialized from the
+    constructor, the property is defined, along with its custom getter and setter,
+    in the body of the class. The property is initialized with a parameter from the
+    constructor (in this case, `_summary`). This illustrates, again, the importance
+    of the keywords `val` and `var` in a constructor’s parameter list. The parameter
+    `_summary` is just a parameter, not a class property, because it is declared without
+    either keyword.
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当必须从构造函数初始化具有自定义 getter 和 setter 的属性时，该属性与其自定义 getter 和 setter 一起在类的主体中定义。属性使用构造函数中的一个参数进行初始化（在本例中为
+    `_summary`）。这再次说明了构造函数参数列表中 `val` 和 `var` 关键字的重要性。参数 `_summary` 只是一个参数，并不是类属性，因为它在声明时没有任何关键字。
+- en: lateinit Properties
+  id: totrans-147
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 延迟初始化属性
+- en: 'There are times when a variable’s value is not available at the site of its
+    declaration. An obvious example of this for Android developers is a UI widget
+    used in an `Activity` or `Fragment`. It is not until the `onCreate` or `onCreateView`
+    method runs that the variable, used throughout the activity to refer to the widget,
+    can be initialized. The `button` in this example, for instance:'
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时，在声明变量的地方无法获得其值。对于 Android 开发者来说，一个明显的例子是在 `Activity` 或 `Fragment` 中使用的 UI
+    小部件。直到 `onCreate` 或 `onCreateView` 方法运行时，变量才能被初始化，以便在整个活动中引用该小部件。例如，在本例中的 `button`：
+- en: '[PRE37]'
+  id: totrans-149
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE37]'
+- en: The variable must be initialized. A standard technique, since we can’t know
+    the value, yet, is to make the variable nullable and initialize it with `null`.
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 变量必须进行初始化。一个标准的技术，因为我们还不知道值，是将变量设为可空，并用 `null` 进行初始化。
+- en: The first question you should ask yourself in this situation is whether it is
+    really necessary to define this variable at this moment and at this location.
+    Will the `button` reference really be used in several methods or is it really
+    only used in one or two specific places? If the latter, you can eliminate the
+    class global altogether.
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，您应该首先问自己的问题是，是否真的有必要在此时此地定义这个变量。`button` 引用真的会在多个方法中使用吗，还是只在一个或两个特定位置使用？如果是后者，您可以完全消除类全局变量。
+- en: 'However, the problem with using a nullable type is that whenever you use `button`
+    in your code, you will have to check for nullability. For example: `button?.setOnClickListener
+    { .. }`. A couple of variables like this and you’ll end up with a lot of annoying
+    question marks! This can look particularly cluttered if you are used to Java and
+    its simple dot notation.'
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，使用可空类型的问题在于，每当在代码中使用 `button` 时，您都需要检查其是否为 null。例如：`button?.setOnClickListener
+    { .. }`。如果像这样使用几个变量，您将会看到很多令人讨厌的问号！如果您习惯于 Java 和它的简单点表示法，这看起来可能特别凌乱。
+- en: Why, you might ask, does Kotlin prevent me from declaring the `button` using
+    a non-null type when you are *sure* that you will initialize it before anything
+    tries to access it? Isn’t there a way to relax the compiler’s initialization rule
+    just for this `button`?
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可能会问，为什么 Kotlin 不允许我使用非空类型来声明 `button`，当您*确信*在任何东西尝试访问它之前将对其进行初始化？难道没有一种方法可以放宽编译器对此
+    `button` 的初始化规则吗？
+- en: 'It’s possible. You can do exactly that using the `lateinit` modifier, as shown
+    in the following code:'
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 是可能的。您可以使用 `lateinit` 修饰符来实现这一点，如下面的代码所示：
+- en: '[PRE38]'
+  id: totrans-155
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE38]'
+- en: Because the variable is declared `lateinit`, Kotlin will let you declare it
+    without assigning it a value. The variable must be mutable, a `var`, because,
+    by definition, you will assign a value to it, later. Great—problem solved, right?
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为变量声明为 `lateinit`，Kotlin 允许您声明变量而不为其分配值。该变量必须是可变的，即 `var`，因为根据定义，您将稍后为其分配一个值。很好——问题解决了，对吧？
+- en: We, the authors, thought exactly that when we started using Kotlin. Now, we
+    lean toward using `lateinit` only when absolutely necessary, and using nullable
+    values instead. Why?
+  id: totrans-157
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们这些作者，在开始使用 Kotlin 时确实考虑到了这一点。现在，我们倾向于仅在绝对必要时使用 `lateinit`，并使用可空值替代。为什么呢？
+- en: When you use `lateinit`, you’re telling the compiler, “I don’t have a value
+    to give you right now. But I’ll give you a value later, I promise.” If the Kotlin
+    compiler could talk, it would answer, “Fine! You say you know what you’re doing.
+    If something goes wrong, it’s on you.” By using the `lateinit` modifier, you disable
+    Kotlin’s null safety for your variable. If you forget to initialize the variable
+    or try to call some method on it before it’s initialized, you’ll get an `UninitializedPropertyAccessException`,
+    which is essentially the same as getting a `NullPointerException` in Java.
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您使用 `lateinit` 时，您在告诉编译器：“我现在没有值可以给你。但我保证以后会给你一个值。” 如果 Kotlin 编译器能说话，它会回答：“好的！你说你知道自己在做什么。如果出了问题，那就是你的责任。”
+    使用 `lateinit` 修饰符时，您会为该变量禁用 Kotlin 的空安全性。如果您忘记初始化变量或在初始化之前调用某些方法，则会收到 `UninitializedPropertyAccessException`，这与在
+    Java 中收到 `NullPointerException` 类似。
+- en: '*Every single time* we’ve used `lateinit` in our code, we’ve been burned eventually.
+    Our code might work in all of the cases we’d foreseen. We’ve been certain that
+    we didn’t miss anything… and we were wrong.'
+  id: totrans-159
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*每次* 我们在代码中使用 `lateinit`，最终都会受到影响。我们的代码可能在所有我们预见的情况下都可以工作。我们确信没有遗漏任何东西… 但我们错了。'
+- en: When you declare a variable `lateinit` you’re making assumptions that the compiler
+    cannot prove. When you or other developers refactor the code afterward, your careful
+    design might get broken. Tests might catch the error. Or not.^([4](ch01.html#idm46669759047504))
+    In our experience, using `lateinit` always resulted in runtime crashes. How did
+    we fix that? By using a nullable type.
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您声明一个变量为 `lateinit` 时，您正在做编译器无法证明的假设。当您或其他开发人员在之后重构代码时，您精心设计的代码可能会被破坏。测试可能会捕捉到错误。或者不会。^([4](ch01.html#idm46669759047504))
+    根据我们的经验，使用 `lateinit` 总是导致运行时崩溃。我们是如何解决这个问题的？通过使用可空类型。
+- en: When you use a nullable type instead of `lateinit`, the Kotlin compiler will
+    force you to check for nullability in your code, exactly in the places that it
+    might be null. Adding a few question marks is definitely worth the trade-off for
+    more robust code.
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您使用可空类型而不是 `lateinit` 时，Kotlin 编译器会强制您在代码中检查可空性，确切地在可能为 null 的地方。在代码中添加几个问号绝对值得以获得更健壮的代码。
+- en: Lazy Properties
+  id: totrans-162
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 懒加载属性
+- en: It’s a common pattern in software engineering to put off creating and initializing
+    an object until it is actually needed. This pattern is known as *lazy initialization*,
+    and is especially common on Android, since allocating a lot of objects during
+    app startup can lead to a longer startup time. [Example 1-1](#java_mouse_id) is
+    a typical case of lazy initialization in Java.
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在软件工程中，推迟创建和初始化对象直到实际需要时是一种常见模式。这种模式被称为 *懒加载初始化*，在 Android 上尤其常见，因为在应用启动期间分配大量对象会导致启动时间变长。[Example 1-1](#java_mouse_id)
+    是 Java 中懒加载初始化的典型案例。
+- en: Example 1-1\. Java lazy initialization
+  id: totrans-164
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: Example 1-1\. Java 懒加载初始化
+- en: '[PRE39]'
+  id: totrans-165
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE39]'
+- en: The field `heavy` is initialized with a new instance of the class `Heavyweight`
+    (which is, presumably, expensive to create) only when its value is first requested
+    with a call, for example, to `lightweight.getHeavy()`. Subsequent calls to `getHeavy()`
+    will return the cached instance.
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`heavy` 字段只有在首次调用 `lightweight.getHeavy()` 时，才会使用类 `Heavyweight` 的新实例进行初始化（假设这个实例创建代价高昂）。后续调用
+    `getHeavy()` 将返回缓存的实例。'
+- en: In Kotlin, lazy initialization is a part of the language. By using the directive
+    `by lazy` and providing an initialization block, the rest of the lazy instantiation
+    is implicit, as shown in [Example 1-2](#kotlin_mouse_id).
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Kotlin 中，懒加载初始化是语言的一部分。通过使用 `by lazy` 指令并提供一个初始化块，剩下的懒加载实例化是隐式的，如 [Example 1-2](#kotlin_mouse_id)
+    所示。
+- en: Example 1-2\. Kotlin lazy initialization
+  id: totrans-168
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: Example 1-2\. Kotlin 懒加载初始化
+- en: '[PRE40]'
+  id: totrans-169
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE40]'
+- en: We will explain this syntax in greater detail in the next section.
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一节中更详细地解释这种语法。
+- en: Note
+  id: totrans-171
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Notice that the code in [Example 1-1](#java_mouse_id) isn’t thread-safe. Multiple
+    threads calling `Lightweight`’s `getHeavy()` method simultaneously might end up
+    with different instances of `Heavyweight`.
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，在[示例 1-1](#java_mouse_id)中的代码不是线程安全的。同时调用`Lightweight`的`getHeavy()`方法的多个线程可能会得到不同的`Heavyweight`实例。
+- en: By default, the code in [Example 1-2](#kotlin_mouse_id) is thread-safe. Calls
+    to `Lightweight::getHeavy()` will be synchronized so that only one thread at a
+    time is in the initialization block.
+  id: totrans-173
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 默认情况下，[示例 1-2](#kotlin_mouse_id)中的代码是线程安全的。对`Lightweight::getHeavy()`的调用将被同步，以确保每次只有一个线程在初始化块中。
+- en: Fine-grained control of concurrent access to a lazy initialization block can
+    be managed using `LazyThreadSafetyMode`.
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以使用`LazyThreadSafetyMode`来对延迟初始化块的并发访问进行精细化控制。
+- en: A Kotlin lazy value will not be initialized until a call is made at runtime.
+    The first time the property `heavy` is referenced, the initialization block will
+    be run.
+  id: totrans-175
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin的延迟值在运行时不会被初始化。第一次引用属性`heavy`时，初始化块将被执行。
+- en: Delegates
+  id: totrans-176
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 委托
+- en: Lazy properties are an example of a more general Kotlin feature, called *delegation*.
+    A declaration uses the keyword `by` to define a delegate that is responsible for
+    getting and setting the value of the property. In Java, one could accomplish something
+    similar with, for example, a setter that passed its argument on as a parameter
+    to a call to a method on some other object, the delegate.
+  id: totrans-177
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Lazy属性是Kotlin更一般的*委托*特性的一个例子。声明使用关键字`by`定义一个委托，该委托负责获取和设置属性的值。在Java中，可以通过例如将其参数传递给委托对象的方法调用来实现类似的功能。
+- en: Because Kotlin’s lazy initialization feature is an excellent example of the
+    power of idiomatic Kotlin, let’s take a minute to unpack it.
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为Kotlin的延迟初始化特性是惯用Kotlin强大功能的一个极好例子，让我们花点时间来解析它。
+- en: The first part of the declaration in [Example 1-2](#kotlin_mouse_id) reads `val
+    heavy`. This is, we know, the declaration of a read-only variable, `heavy`. Next
+    comes the keyword `by`, which introduces a delegate. The keyword `by` says that
+    the next identifier in the declaration is an expression that will evaluate to
+    the object that will be responsible for the value of `heavy`.
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[示例 1-2](#kotlin_mouse_id)中声明的第一部分是`val heavy`。我们知道，这是一个只读变量`heavy`的声明。接下来是关键字`by`，引入了一个委托。关键字`by`表示声明中的下一个标识符是一个表达式，该表达式将求值为负责`heavy`值的对象。
+- en: The next thing in the declaration is the identifier `lazy`. Kotlin is expecting,
+    an expression. It turns out that `lazy` is just a function! It is a function that
+    takes a single argument, a lambda, and returns an object. The object that it returns
+    is a `Lazy<T>` where `T` is the type returned by the lambda.
+  id: totrans-180
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 声明中的下一个事物是标识符`lazy`。Kotlin期望一个表达式。原来`lazy`只是一个函数！它是一个接受单个lambda参数并返回对象的函数。它返回的对象是一个`Lazy<T>`，其中`T`是lambda返回的类型。
+- en: 'The implementation of a `Lazy<T>` is quite simple: the first time it is called
+    it runs the lambda and caches its value. On subsequent calls it returns the cached
+    value.'
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Lazy<T>`的实现非常简单：第一次调用时运行lambda并缓存其值。随后的调用将返回缓存的值。'
+- en: Lazy delegation is just one of many varieties of *property delegation*. Using
+    keyword `by`, you can also define *observable properties* (see the [Kotlin documentation
+    for delegated properties](https://oreil.ly/6lTab)). Lazy delegation is, though,
+    the most common property delegation used in Android code.
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 延迟委托只是*属性委托*的众多变体之一。使用关键字`by`，你也可以定义*可观察属性*（参见[Kotlin委托属性的文档](https://oreil.ly/6lTab)）。在Android代码中，延迟委托是最常用的属性委托。
+- en: Companion Objects
+  id: totrans-183
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 伴生对象
+- en: 'Perhaps you are wondering what Kotlin did with static variables. Have no fear;
+    Kotlin uses *companion objects*. A companion object is a *singleton object* always
+    related to a Kotlin class. Although it isn’t required, most often the definition
+    of a companion object is placed at the bottom of the related class, as shown here:'
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或许你想知道Kotlin是如何处理静态变量的。别担心；Kotlin使用*伴生对象*。伴生对象是始终与Kotlin类相关联的*单例对象*。虽然不是必需的，但大多数情况下伴生对象的定义放在相关类的底部，如下所示：
+- en: '[PRE41]'
+  id: totrans-185
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE41]'
+- en: 'Companion objects can have names, extend classes, and inherit interfaces. In
+    this example, `TimeExtension`’s companion object is named `StdTimeExtension` and
+    inherits the interface `Formatter`:'
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Companion objects可以有名称，扩展类，并继承接口。在这个例子中，`TimeExtension`的伴生对象被命名为`StdTimeExtension`，并继承接口`Formatter`：
+- en: '[PRE42]'
+  id: totrans-187
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE42]'
+- en: 'When referencing a member of a companion object from outside a class that contains
+    it, you must qualify the reference with the name of the containing class:'
+  id: totrans-188
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当从包含它的类外部引用伴生对象的成员时，必须用包含类的名称限定引用：
+- en: '[PRE43]'
+  id: totrans-189
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE43]'
+- en: A companion object is initialized when Kotlin loads the related class.
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当Kotlin加载相关类时，伴生对象会被初始化。
+- en: Data Classes
+  id: totrans-191
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 数据类
+- en: 'There is a category of classes so common that, in Java, they have a name: they
+    are called *POJOs*, or plain old Java objects. The idea is that they are simple
+    representations of structured data. They are a collection of data members (fields),
+    most of which have getters and setters, and just a few other methods: `equals`,
+    `hashCode`, and `toString`. These kinds of classes are so common that Kotlin has
+    made them part of the language. They are called *data classes*.'
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Java中有一类非常常见的类，它们甚至有一个名字：*POJOs*，或者叫做普通的旧Java对象。其思想是它们是结构化数据的简单表示。它们是数据成员（字段）的集合，其中大多数有getter和setter，还有少量其他方法：`equals`、`hashCode`和`toString`。这种类如此常见，以至于Kotlin将其作为语言的一部分。它们被称为*数据类*。
+- en: 'We can improve our definition of the `Point` class by making it a data class:'
+  id: totrans-193
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以通过将其定义为数据类来改进`Point`类的定义：
+- en: '[PRE44]'
+  id: totrans-194
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE44]'
+- en: 'What’s the difference between this class, declared using the `data` modifier,
+    and the original, declared without it? Let’s try a simple experiment, first using
+    the original definition of `Point` (without the `data` modifier):'
+  id: totrans-195
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`data`修饰符声明的这个类与原始的不使用修饰符声明的类有什么区别？让我们进行一个简单的实验，首先使用原始定义的`Point`（不带`data`修饰符）：
+- en: '[PRE45]'
+  id: totrans-196
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE45]'
+- en: 'The output from this small program will be `"Points are equals: false"`. The
+    reason for this perhaps unexpected result is that Kotlin compiles `p1 == p2` as
+    `p1.equals(p2)`. Since our first definition of the `Point` class did not override
+    the `equals` method, this turns into a call to the `equals` method in `Point`’s
+    base class, `Any`. `Any`’s implementation of `equals` returns `true` only when
+    an object is compared to itself.'
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '这个小程序的输出将是`"Points are equals: false"`。这个也许意料之外的结果的原因是，Kotlin将`p1 == p2`编译成了`p1.equals(p2)`。由于我们第一次定义的`Point`类没有覆盖`equals`方法，这就转变成了对`Point`基类`Any`中的`equals`方法的调用。`Any`的`equals`实现仅在对象与自身比较时返回`true`。'
+- en: 'If we try the same thing with the new definition of `Point` as a data class,
+    the program will print `"Points are equals: true"`. The new definition behaves
+    as intended because a data class automatically includes overrides for the methods
+    `equals`, `hashCode`, and `toString`. Each of these automatically generated methods
+    depends on all of a class’s properties.'
+  id: totrans-198
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '如果我们尝试使用新定义的`Point`作为数据类来做同样的事情，程序将会打印出`"Points are equals: true"`。新定义的行为符合预期，因为数据类自动包含了`equals`、`hashCode`和`toString`方法的覆盖。每个自动生成的方法都依赖于类的所有属性。'
+- en: 'For example, the `data class` version of `Point` contains an `equals` method
+    that is equivalent to this:'
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，`Point`的数据类版本包含了等效于这个的`equals`方法：
+- en: '[PRE46]'
+  id: totrans-200
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE46]'
+- en: 'In addition to providing default implementations of `equals` and `hashCode`,
+    a `data class` also provides the `copy` method. Here’s an example of its use:'
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了提供`equals`和`hashCode`的默认实现外，数据类还提供了`copy`方法。以下是其使用示例：
+- en: '[PRE47]'
+  id: totrans-202
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE47]'
+- en: Kotlin’s data classes are a perfect convenience for a frequently used idiom.
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin的数据类非常方便，用于频繁使用的习语。
+- en: 'In the next section, we examine another special kind of class: *enum classes*.'
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接下来的部分中，我们将研究另一种特殊类型的类：*枚举类*。
+- en: Enum Classes
+  id: totrans-205
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 枚举类
+- en: 'Remember when developers were being advised that enums were too expensive for
+    Android? Fortunately, no one is even suggesting that anymore: use enum classes
+    to your heart’s desire!'
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还记得开发者曾经被建议说枚举在安卓上太昂贵了吗？幸运的是，现在没有人再建议那样做：尽情使用枚举类吧！
+- en: 'Kotlin’s enum classes are very similar to Java’s enums. They create a class
+    that cannot be subclassed and that has a fixed set of instances. Also as in Java,
+    enums cannot subclass other types but can implement interfaces and can have constructors,
+    properties, and methods. Here are a couple of simple examples:'
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin的枚举类与Java的枚举非常相似。它们创建一个不能被子类化的类，并且有一组固定的实例。与Java一样，枚举不能子类化其他类型，但可以实现接口，可以有构造函数、属性和方法。以下是一些简单的示例：
+- en: '[PRE48]'
+  id: totrans-208
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE48]'
+- en: 'Enums work very well with Kotlin’s `when` expression. For example:'
+  id: totrans-209
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 枚举与Kotlin的`when`表达式非常搭配。例如：
+- en: '[PRE49]'
+  id: totrans-210
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE49]'
+- en: When the `when` expression is used to assign a variable, or as an expression
+    body of a function as in the previous example, it must be *exhaustive*. An exhaustive
+    `when` expression is one that covers every possible value of its argument (in
+    this case, `activity`). A standard way of assuring that a `when` expression is
+    exhaustive is to include an `else` clause. The `else` clause matches any value
+    of the argument that is not explicitly mentioned in its case list.
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当使用`when`表达式用于变量赋值，或者作为函数的表达式体时，必须是*穷尽的*。一个穷尽的`when`表达式是指覆盖了其参数的每一个可能值（在本例中为`activity`）。确保`when`表达式是穷尽的一种标准方法是包含一个`else`子句。`else`子句匹配参数的任何未显式列出的值。
+- en: In the preceding example, to be exhaustive, the `when` expression must accommodate
+    every possible value of the function parameter `activity`. The parameter is of
+    type `GymActivity` and, therefore, must be one of that enum’s instances. Because
+    an enum has a known set of instances, Kotlin can determine that all of the possible
+    values are covered as explicitly listed cases and permit the omission of the `else`
+    clause.
+  id: totrans-212
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前面的例子中，为了是穷尽的，`when`表达式必须适应函数参数`activity`的每一个可能值。该参数是类型为`GymActivity`的枚举实例之一。因为枚举具有已知的一组实例，Kotlin可以确定所有可能的值都被显式列出，并允许省略`else`子句。
+- en: 'Omitting the `else` clause like this has a really nice advantage: if we add
+    a new value to the `GymActivity` enum, our code suddenly won’t compile. The Kotlin
+    compiler detects that the `when` expression is no longer exhaustive. Almost certainly,
+    when you add a new case to an enum, you want to be aware of all the places in
+    your code that have to adapt to the new value. An exhaustive `when` expression
+    that does not include an `else` case does exactly that.'
+  id: totrans-213
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 像这样省略`else`子句有一个非常好的优势：如果我们向`GymActivity`枚举添加一个新值，我们的代码将突然无法编译。Kotlin编译器检测到`when`表达式不再是穷尽的。几乎肯定，当你向枚举添加新的情况时，你希望知道所有需要适应新值的代码位置。不包含`else`情况的穷尽`when`表达式正是这样做的。
+- en: Note
+  id: totrans-214
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: What happens if a `when` statement need not return a value (for instance, a
+    function in which the `when` statement’s value is not the value of the function)?
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果一个`when`语句不需要返回值（例如，`when`语句的值不是函数的返回值的值），会发生什么？
+- en: If the `when` statement is not used as an expression, the Kotlin compiler doesn’t
+    force it to be exhaustive. You will, however, get a lint warning (a yellow flag,
+    in Android Studio) that tells you that it is recommended that a `when` expression
+    on enum be exhaustive.
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果`when`语句未用作表达式，Kotlin编译器不会强制其为穷尽的。但是，你会收到一个lint警告（在Android Studio中为黄色标志），告诉你建议对枚举的`when`表达式进行穷尽检查。
+- en: There’s a trick that will force Kotlin to interpret any `when` statement as
+    an expression (and, therefore, to be exhaustive). The extension function defined
+    in [Example 1-3](#exhaustive_property_id) forces the `when` statement to return
+    a value, as we see in [Example 1-4](#when_statement_exhaustive_id). Because it
+    must have a value, Kotlin will insist that it be exhaustive.
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还有一个技巧可以强制Kotlin将任何`when`语句解释为表达式（因此必须是穷尽的）。在[示例 1-3](https://example.org/exhaustive_property_id)中定义的扩展函数强制`when`语句返回一个值，正如我们在[示例 1-4](https://example.org/when_statement_exhaustive_id)中看到的。因为它必须有一个值，Kotlin将坚持它是穷尽的。
+- en: Example 1-3\. Forcing `when` to be exhaustive
+  id: totrans-218
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 1-3\. 强制`when`表达式是穷尽的
+- en: '[PRE50]'
+  id: totrans-219
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE50]'
+- en: Example 1-4\. Checking for an exhaustive `when`
+  id: totrans-220
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例 1-4\. 检查穷尽的`when`
+- en: '[PRE51]'
+  id: totrans-221
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE51]'
+- en: Enums are a way of creating a class that has a specified, static set of instances.
+    Kotlin provides an interesting generalization of this capability, the *sealed
+    class*.
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 枚举是创建具有指定静态实例集的类的一种方法。Kotlin提供了这种能力的一个有趣的泛化，即*封闭类*。
+- en: Sealed Classes
+  id: totrans-223
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 封闭类
+- en: 'Consider the following code. It defines a single type, `Result`, with exactly
+    two subtypes. `Success` contains a value; `Failure` contains an `Exception`:'
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 考虑以下代码。它定义了一个单一类型`Result`，具有精确的两个子类型。`Success`包含一个值；`Failure`包含一个`Exception`：
+- en: '[PRE52]'
+  id: totrans-225
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE52]'
+- en: Notice that there is no way to do this with an `enum`. All of the values of
+    an enum must be instances of the same type. Here, though, there are two distinct
+    types that are subtypes of `Result`.
+  id: totrans-226
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，用`enum`无法实现这一点。枚举的所有值必须是相同类型的实例。然而，在这里，有两个不同类型作为`Result`的子类型。
+- en: 'We can create a new instance of either of the two types:'
+  id: totrans-227
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以创建两种类型中的任何一种的新实例：
+- en: '[PRE53]'
+  id: totrans-228
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE53]'
+- en: 'And, again, a `when` expression is a handy way to manage a `Result`:'
+  id: totrans-229
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 同样，`when`表达式是管理`Result`的一种方便方式：
+- en: '[PRE54]'
+  id: totrans-230
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE54]'
+- en: We’ve had to add an `else` branch again, because the Kotlin compiler doesn’t
+    know that `Success` and `Failure` are the only `Result` subclasses. Somewhere
+    in your program, you might create another subclass of result `Result` and add
+    another possible case. Hence the `else` branch is required by the compiler.
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不得不再次添加`else`分支，因为Kotlin编译器不知道`Success`和`Failure`是唯一的`Result`子类。在程序的某个地方，你可能会创建`Result`的另一个子类并添加另一个可能的情况。因此，编译器需要`else`分支。
+- en: 'Sealed classes do for types what enums do for instances. They allow you to
+    announce to the compiler that there is a fixed, known set of subtypes (`Success`
+    and `Failure` in this case) for a certain base type (`Result`, here). To make
+    this declaration, use the keyword `sealed` in the declaration, as shown in the
+    following code:'
+  id: totrans-232
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 封闭类对类型起到与枚举对实例的作用。它们允许你向编译器宣告某种基类型（此处为`Result`）有一组固定的已知子类型（在本例中为`Success`和`Failure`）。要做出这样的声明，请在声明中使用关键字`sealed`，如下代码所示：
+- en: '[PRE55]'
+  id: totrans-233
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE55]'
+- en: 'Because `Result` is *sealed*, the Kotlin compiler knows that `Success` and
+    `Failure` are the only possible subclasses. Once again, we can remove the `else`
+    from a `when` expression:'
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因为`Result`是*sealed*的，Kotlin编译器知道`Success`和`Failure`是唯一可能的子类。因此，我们可以再次从`when`表达式中移除`else`分支：
+- en: '[PRE56]'
+  id: totrans-235
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE56]'
+- en: Visibility Modifiers
+  id: totrans-236
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 可见性修饰符
+- en: 'In both Java and Kotlin, visibility modifiers determine the scope of a variable,
+    class, or method. In Java, there are three visibility modifiers:'
+  id: totrans-237
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Java和Kotlin中，可见性修饰符决定了变量、类或方法的作用域。在Java中，有三种可见性修饰符：
+- en: '`private`'
+  id: totrans-238
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`private`'
+- en: References are only visible to the class that they are defined within, and from
+    the outer class if defined in an inner class.
+  id: totrans-239
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 引用仅对其定义所在的类及其外部类（如果定义在内部类中）可见。
+- en: '`protected`'
+  id: totrans-240
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`protected`'
+- en: References are visible to the class that they are defined within, or any subclasses
+    of that class. In addition, they are also visible from classes in the same package.
+  id: totrans-241
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 引用仅对其定义所在的类及其子类可见。此外，它们还可从同一包中的类中访问。
+- en: '`public`'
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`public`'
+- en: References are visible anywhere.
+  id: totrans-243
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 引用在任何地方可见。
+- en: 'Kotlin also has these three visibility modifiers. However, there are some subtle
+    differences. While you can only use them with class-member declarations in Java,
+    you can use them with class-member *and* top-level declarations in Kotlin:'
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin也有这三种可见性修饰符。但是，存在一些细微的差异。在Java中，你只能在类成员声明中使用它们，而在Kotlin中，你可以在类成员*和*顶层声明中使用它们：
+- en: '`private`'
+  id: totrans-245
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`private`'
+- en: 'The declaration’s visibility depends on where it is defined:'
+  id: totrans-246
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 声明的可见性取决于其定义位置：
+- en: A class member declared as `private` is visible only in the *class* in which
+    it is defined.
+  id: totrans-247
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 声明为`private`的类成员仅在定义它的*类*中可见。
+- en: A top-level `private` declaration is visible only in the *file* in which it
+    is defined.
+  id: totrans-248
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 顶层的`private`声明仅在定义它的*文件*中可见。
+- en: '`protected`'
+  id: totrans-249
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`protected`'
+- en: Protected declarations are visible only in the class in which they are defined,
+    and the subclasses thereof.
+  id: totrans-250
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 受保护的声明仅在定义它们的类及其子类中可见。
+- en: '`public`'
+  id: totrans-251
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`public`'
+- en: References are visible anywhere, just like in Java.
+  id: totrans-252
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 引用与Java中一样，在任何地方可见。
+- en: In addition to these three different visibilities, Java has a fourth, *package-private*,
+    making references only visible from classes that are within the same package.
+    A declaration is package-private when it has no visibility modifiers. In other
+    words, this is the default visibility in Java.
+  id: totrans-253
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 除了这三种不同的可见性修饰符，Java还有第四种*package-private*，使引用仅在同一包中的类中可见。当声明没有可见性修饰符时，即为包私有可见性，这是Java中的默认可见性。
+- en: Kotlin has no such concept.^([5](ch01.html#idm46669757884816)) This might be
+    surprising, because Java developers often rely on package-private visibility to
+    hide implementation details from other packages within the same module. In Kotlin,
+    packages aren’t used for visibility scoping at all—they’re just namespaces. Therefore,
+    the default visibility is different in Kotlin—it’s *public*.
+  id: totrans-254
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin没有这样的概念。^([5](ch01.html#idm46669757884816)) 这可能会让人感到惊讶，因为Java开发者经常依赖于包私有可见性来隐藏同一模块内其他包的实现细节。在Kotlin中，包不用于可见性作用域——它们只是命名空间。因此，Kotlin中的默认可见性与Java不同——它是*public*。
+- en: The fact that Kotlin doesn’t have package-private visibility has quite a significant
+    impact on how we design and structure our code. To guarantee a complete encapsulation
+    of declarations (classes, methods, top-level fields, etc.), you can have all these
+    declarations as `private` within the same file.
+  id: totrans-255
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Kotlin不支持包私有可见性对我们如何设计和组织代码产生了相当大的影响。为了确保声明（类、方法、顶层字段等）的完全封装，可以在同一个文件中将所有这些声明设为`private`。
+- en: Sometimes it’s acceptable to have several closely related classes split into
+    different files. However, those classes won’t be able to access siblings from
+    the same package unless they are `public` or `internal`. What’s `internal`? It’s
+    the fourth visibility modifier supported by Kotlin, which makes the reference
+    visible anywhere within the containing *module*.^([6](ch01.html#idm46669757879232))
+    From a module standpoint, `internal` is identical to `public`. However, `internal`
+    is interesting when this module is intended as a library—for example, it’s a dependency
+    for other modules. Indeed, `internal` declarations aren’t visible from modules
+    that import your library. Therefore, `internal` is useful to hide declarations
+    from the outside world.
+  id: totrans-256
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时将几个密切相关的类分割到不同的文件中是可以接受的。然而，这些类不能访问同一包中的兄弟类，除非它们是 `public` 或 `internal`。什么是
+    `internal`？它是 Kotlin 支持的第四种可见性修饰符，在包含 *模块* 内的任何地方都可见。^([6](ch01.html#idm46669757879232))
+    从模块的角度来看，`internal` 和 `public` 是相同的。然而，在将此模块用作库（例如，它是其他模块的依赖项）时，`internal` 就显得很有意义。事实上，`internal`
+    声明对导入您库的模块是不可见的。因此，`internal` 对于隐藏对外界的声明是很有用的。
+- en: Note
+  id: totrans-257
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: The `internal` modifier isn’t meant for visibility scoping inside the module,
+    which is what package-private does in Java. This isn’t possible in Kotlin. It
+    is possible to restrict visibility a little more heavy-handedly using the `private`
+    modifier.
+  id: totrans-258
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`internal` 修饰符并不是用于模块内部的可见性范围，这是 Java 中包私有的作用。在 Kotlin 中这是不可能的。可以使用 `private`
+    修饰符稍微严格限制可见性。'
+- en: Summary
+  id: totrans-259
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 摘要
+- en: '[Table 1-1](#table1_1) highlights some of the key differences between Java
+    and Kotlin.'
+  id: totrans-260
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[表 1-1](#table1_1) 强调了 Java 和 Kotlin 之间的一些关键差异。'
+- en: Table 1-1\. Differences between Java and Kotlin features
+  id: totrans-261
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 表 1-1\. Java 和 Kotlin 特性的差异
+- en: '| Feature | Java | Kotlin |'
+  id: totrans-262
+  prefs: []
+  type: TYPE_TB
+  zh: '| 功能 | Java | Kotlin |'
+- en: '| --- | --- | --- |'
+  id: totrans-263
+  prefs: []
+  type: TYPE_TB
+  zh: '| --- | --- | --- |'
+- en: '| File contents | A single file contains a single top-level class. | A single
+    file can hold any number of classes, variables, or functions. |'
+  id: totrans-264
+  prefs: []
+  type: TYPE_TB
+  zh: '| 文件内容 | 单个文件包含单个顶级类。 | 单个文件可以包含任意数量的类、变量或函数。 |'
+- en: '| Variables | Use `final` to make a variable immutable; variables are mutable
+    by default. Defined at the class level. | Use `val` to make a variable read-only,
+    or `var` for read/write values. Defined at the class level, or may exist independently
+    outside of a class. |'
+  id: totrans-265
+  prefs: []
+  type: TYPE_TB
+  zh: '| 变量 | 使用 `final` 使变量不可变；变量默认可变。定义在类级别。 | 使用 `val` 使变量只读，或使用 `var` 进行读/写操作。定义在类级别，或可以独立存在于类外。
+    |'
+- en: '| Type inferencing | Data types are required. `Date date = new Date();` | Data
+    types can be inferred, like `val date = Date()`, or explicitly defined, like `val
+    date: Date = Date()`. |'
+  id: totrans-266
+  prefs: []
+  type: TYPE_TB
+  zh: '| 类型推断 | 需要数据类型。`Date date = new Date();` | 数据类型可以推断，例如 `val date = Date()`，或显式定义，例如
+    `val date: Date = Date()`。 |'
+- en: '| Boxing and unboxing types | In Java, data primitives like `int` are recommended
+    for more expensive operations, since they are less expensive than boxed types
+    like `Integer`. However, boxed types have lots of useful methods in Java’s wrapper
+    classes. | Kotlin doesn’t have primitive types out of the box. Everything is an
+    object. When compiled for the JVM, the generated bytecode performs automatic unboxing,
+    when possible. |'
+  id: totrans-267
+  prefs: []
+  type: TYPE_TB
+  zh: '| 包装和拆箱类型 | 在 Java 中，像 `int` 这样的原始数据类型推荐用于更昂贵的操作，因为它们比 `Integer` 等包装类型更便宜。然而，在
+    Java 的包装类中，有许多有用的方法。 | Kotlin 没有原始类型。一切都是对象。当编译为 JVM 时，生成的字节码会自动进行拆箱操作，如果可能的话。
+    |'
+- en: '| Access modifiers | Public and protected classes, functions, and variables
+    can be extended and overridden. | As a functional language, Kotlin encourages
+    immutability whenever possible. Classes and functions are final by default. |'
+  id: totrans-268
+  prefs: []
+  type: TYPE_TB
+  zh: '| 访问修饰符 | 公共和受保护的类、函数和变量可以被扩展和重写。 | 作为一种函数式语言，Kotlin 在尽可能的情况下鼓励不可变性。类和函数默认为
+    final。 |'
+- en: '| Access modifiers in multi-module projects | Default access is package-private.
+    | There is no package-private, and default access is public. New `internal` access
+    provides visibility in the same module. |'
+  id: totrans-269
+  prefs: []
+  type: TYPE_TB
+  zh: '| 多模块项目中的访问修饰符 | 默认访问是包私有的。 | Kotlin 没有包私有，而是默认公共访问。新的 `internal` 访问提供同一模块中的可见性。
+    |'
+- en: '| Functions | All functions are methods. | Kotlin has function types. Function
+    data types look like, for example, `(param: String) -> Boolean`. |'
+  id: totrans-270
+  prefs: []
+  type: TYPE_TB
+  zh: '| 函数 | 所有函数都是方法。 | Kotlin 具有函数类型。函数数据类型看起来像 `(param: String) -> Boolean`。 |'
+- en: '| Nullability | Any non-primitive object can be null. | Only explicitly nullable
+    references, declared with the `?` suffix on the type, can be set to null: `val
+    date: Date? = new Date()`. |'
+  id: totrans-271
+  prefs: []
+  type: TYPE_TB
+  zh: '| 可空性 | 任何非基本类型对象可以为 null。 | 只有显式可空引用，类型后缀为 `?`，可以设置为 null：`val date: Date?
+    = new Date()`。 |'
+- en: '| Statics versus constants | The `static` keyword attaches a variable to a
+    class definition, rather than an instance. | There is no `static` keyword. Use
+    a private `const` or a `companion` object. |'
+  id: totrans-272
+  prefs: []
+  type: TYPE_TB
+  zh: '| 静态与常量 | `static` 关键字将变量附加到类定义，而不是实例。 | 没有 `static` 关键字。使用私有 `const` 或 `companion`
+    对象。 |'
+- en: 'Congratulations, you just finished a one-chapter covering Kotlin’s essentials.
+    Before we start talking about applying Kotlin to Android, we need to discuss Kotlin’s
+    built-in library: collections and data transformations. Understanding the underlying
+    functions of data transformations in Kotlin will give you the necessary foundation
+    needed to understand Kotlin as a functional language.'
+  id: totrans-273
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恭喜，您刚刚完成了一章涵盖 Kotlin 的基本内容。在我们开始讨论如何将 Kotlin 应用于 Android 之前，我们需要讨论 Kotlin 的内置库：集合和数据转换。理解
+    Kotlin 中数据转换的基本功能将为理解 Kotlin 作为一种函数式语言所需的基础打下必要的基础。
+- en: ^([1](ch01.html#idm46669770421056-marker)) Dmitry Jemerov and Svetlana Isakova.
+    *Kotlin in Action*. Manning, 2017.
+  id: totrans-274
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch01.html#idm46669770421056-marker)) Dmitry Jemerov 和 Svetlana Isakova。*Kotlin
+    in Action*。Manning，2017年。
+- en: '^([2](ch01.html#idm46669761440208-marker)) Kotlin officially calls this type
+    inferencing, which uses a partial phase of the compiler (the frontend component)
+    to do type checking of the written code while you write in the IDE. It’s a plug-in
+    for IntelliJ! Fun fact: the entirety of IntelliJ and Kotlin is made of compiler
+    plug-ins.'
+  id: totrans-275
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([2](ch01.html#idm46669761440208-marker)) Kotlin 官方称之为类型推断，它使用编译器的部分阶段（前端组件）在您在
+    IDE 中编写代码时进行类型检查。这是 IntelliJ 的一个插件！有趣的事实：IntelliJ 和 Kotlin 的整体都是由编译器插件构建的。
+- en: ^([3](ch01.html#idm46669760026992-marker)) DSL stands for *domain-specific language*.
+    An example of a DSL built in Kotlin is the Kotlin Gradle DSL.
+  id: totrans-276
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([3](ch01.html#idm46669760026992-marker)) DSL 意味着*领域特定语言*。Kotlin 中构建的 DSL 示例包括
+    Kotlin Gradle DSL。
+- en: ^([4](ch01.html#idm46669759047504-marker)) You can check whether the `latenit`
+    `button` property is initialized using `this::button.isInitialized`. Relying on
+    developers to add this check in all the right places doesn’t solve the underlying
+    issue.
+  id: totrans-277
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([4](ch01.html#idm46669759047504-marker)) 您可以使用 `this::button.isInitialized`
+    检查 `latenit` `button` 属性是否已初始化。依赖开发人员在所有正确的位置添加此检查并不能解决潜在问题。
+- en: ^([5](ch01.html#idm46669757884816-marker)) At least, as of Kotlin 1.5.20\. As
+    we write these lines, Jetbrains is considering adding a package-private visibility
+    modifier to the language.
+  id: totrans-278
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([5](ch01.html#idm46669757884816-marker)) 至少在 Kotlin 1.5.20 版中。截至我们撰写这些文字时，Jetbrains
+    正在考虑向语言添加包私有可见性修饰符。
+- en: ^([6](ch01.html#idm46669757879232-marker)) A module is a set of Kotlin files
+    compiled together.
+  id: totrans-279
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([6](ch01.html#idm46669757879232-marker)) 模块是一组一起编译的 Kotlin 文件。

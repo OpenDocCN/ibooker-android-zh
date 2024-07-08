@@ -1,0 +1,2577 @@
+- en: Chapter 8\. Structured Concurrency with Coroutines
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第 8 章。使用协程进行结构化并发
+- en: In the previous chapter, we introduced a new asynchronous programming paradigm—coroutines.
+    When using coroutines, it’s important to know how to use suspending functions
+    appropriately; we’ll cover that topic in this chapter. As most programs have to
+    deal with exception handling and cancellation, we’ll also cover these topics—and
+    you’ll see that, in this regard, coroutines have their own set of rules you should
+    be aware of.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前一章中，我们介绍了一种新的异步编程范式——协程。在使用协程时，了解如何适当使用挂起函数非常重要；我们将在本章介绍这个话题。由于大多数程序都需要处理异常处理和取消操作，我们还将涵盖这些主题——您会看到，在这方面，协程有自己的一套您应该了解的规则。
+- en: 'The first section of this chapter covers the idiomatic usage of suspending
+    functions. We’ll take the example of a hiking app to compare two implementations:
+    one based on threads and the other one based on suspending functions and coroutines.
+    You’ll see how this comparison highlights the power of coroutines in some situations.'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章的第一部分涵盖了挂起函数的惯用用法。我们将以徒步旅行应用为例，比较基于线程和基于挂起函数和协程的两种实现方式。您将看到这种比较如何突显出协程在某些情况下的强大。
+- en: As is common for most mobile apps, the hiking example requires a *cancellation
+    mechanism*. We’ll cover all you need to know about cancellation with coroutines.
+    In order to prepare for most situations, we’ll then cover *parallel decomposition*
+    and *supervison*. Using these concepts, you’ll be able to implement complex concurrent
+    logic if you need to.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于大多数移动应用程序而言，徒步旅行示例需要一个*取消机制*。我们将详细介绍关于使用协程进行取消的所有知识。为了准备应对各种情况，我们将介绍*并行分解*和*监督*。使用这些概念，您将能够在需要时实现复杂的并发逻辑。
+- en: Finally, this chapter ends with an explanation of exception handling with coroutines.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，本章结束时将解释协程的异常处理。
+- en: Suspending Functions
+  id: totrans-5
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 挂起函数
+- en: 'Imagine that you’re developing an application to help users plot, plan, track,
+    draw, and share information about hiking. Your users should be able to navigate
+    to any of the hikes they’ve already completed or that are in progress. Before
+    going out for a given hike, some basic statistics are useful, like:'
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想象一下，您正在开发一个帮助用户规划、计划、跟踪、绘制和分享关于徒步旅行的信息的应用程序。用户应能够导航到他们已经完成或正在进行的任何徒步旅行。在开始某次徒步旅行之前，一些基本的统计信息是有用的，比如：
+- en: Total distance
+  id: totrans-7
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 总距离
+- en: The length of the last hike in both time and distance
+  id: totrans-8
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 上次徒步旅行的时间和距离长度
+- en: The current weather along the trail they chose
+  id: totrans-9
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 他们选择的路径上的当前天气
+- en: Favorite hikes
+  id: totrans-10
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 最喜爱的徒步旅行
+- en: Such an application would require various interactions between the client and
+    server(s) for meteorological data and user information. How might we choose to
+    store data for such an application?
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样的应用程序需要客户端与服务器之间各种关于气象数据和用户信息的交互。我们可能会选择如何存储这样一个应用程序的数据？
+- en: We may choose to store this data locally for later use, or on remote servers
+    (which is referred to as *persistence strategies*). Longer-running tasks, especially
+    networking or IO tasks, can take shape with background jobs like reading from
+    a database, a local file, or a protobuf; or querying a remote server. At its core,
+    reading data from a host device will always be faster than reading the same data
+    from the network.
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以选择在本地存储这些数据以供以后使用，或者在远程服务器上存储（这称为*持久化策略*）。长时间运行的任务，特别是网络或 IO 任务，可以通过后台作业来实现，比如从数据库中读取、从本地文件中读取或从远程服务器查询。从主机设备读取数据的速度始终快于从网络读取相同数据。
+- en: So, the retrieved data may come at variable rates, depending on the nature of
+    the query. Our worker logic must be resilient and flexible enough to support and
+    survive this situation, and tough enough to handle circumstances beyond our control
+    or even awareness.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，检索到的数据可能以不同的速率返回，这取决于查询的性质。我们的工作逻辑必须具有弹性和足够的灵活性，以支持并应对这种情况，而且要足够强大，能够处理我们无法控制甚至意识到的情况。
+- en: Set the Scene
+  id: totrans-14
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 设定场景
+- en: You need to build out a feature that allows users to retrieve their favorite
+    hikes along with the current weather for each of those hikes.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您需要开发一个功能，允许用户检索他们最喜欢的徒步旅行及每次徒步旅行的当前天气。
+- en: 'We’ve already gone ahead and provided some library code of the application
+    described in the beginning of the chapter. The following is a set of classes and
+    functions already made available to you:'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经提供了本章开头描述的应用程序的一些库代码。以下是已为您提供的一组类和函数：
+- en: '[PRE0]'
+  id: totrans-17
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: '`Weather` isn’t a Kotlin data class, because we need a name for a type for
+    the weather attribute for `HikeData` (if we had declared `Weather` as a data class
+    without providing attributes, the code wouldn’t compile).'
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`Weather` 不是 Kotlin 数据类，因为我们需要为 `HikeData` 的天气属性提供一个类型名称（如果我们将 `Weather` 声明为没有提供属性的数据类，代码将无法编译）。'
+- en: 'A `Hike`, in this example, is only:'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此示例中，`Hike` 仅仅是：
+- en: A name
+  id: totrans-20
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 一个名称
+- en: A total number of miles
+  id: totrans-21
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 总英里数
+- en: The total ascent in feet
+  id: totrans-22
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: 海拔总上升（英尺）
+- en: A `HikeData` pairs a `Hike` object with a *nullable* `Weather` instance (if
+    we couldn’t get the weather data for some reason).
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`HikeData` 将 `Hike` 对象与一个可为空的 `Weather` 实例配对（如果由于某些原因无法获取天气数据）。'
+- en: 'We are also provided with the methods to fetch the list of a `Hike` given a
+    user id along with weather data for a hike:'
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还提供了获取给定用户 ID 的远足列表以及远足的天气数据的方法：
+- en: '[PRE1]'
+  id: totrans-25
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: Those two functions might be long-running operations—like querying a database
+    or an API. In order to avoid blocking the UI thread while fetching the list of
+    hikes or the current weather, we’ll leverage suspending functions.
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这两个函数可能是长时间运行的操作，比如查询数据库或 API。为了在获取远足列表或当前天气时避免阻塞 UI 线程，我们将利用挂起函数。
+- en: 'We believe that the best way to understand how to use suspending functions
+    is to compare the following:'
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们认为了解如何使用挂起函数的最佳方式是比较以下内容：
+- en: A “traditional” approach using threads and `Handler`
+  id: totrans-28
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 使用线程和 `Handler` 的“传统”方法
+- en: An implementation using suspending functions with coroutines
+  id: totrans-29
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 使用协程的挂起函数实现
+- en: First we’ll show you how the traditional approach has its limitations in some
+    situations, and that it’s not easy to overcome them. Then we’ll show you how using
+    suspending functions and coroutines changes the way we implement asynchronous
+    logic and how we can solve all the problems we had with the traditional approach.
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们将向您展示传统方法在某些情况下存在限制，并且不容易克服这些限制。然后，我们将向您展示如何使用挂起函数和协程改变我们实现异步逻辑的方式，并且如何解决我们在传统方法中遇到的所有问题。
+- en: Let’s start with the thread-based implementation.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们从基于线程的实现开始。
+- en: Traditional Approach Using java.util.concurrent.ExecutorService
+  id: totrans-32
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用 `java.util.concurrent.ExecutorService` 的传统方法
+- en: '`fetchHikesForUser` and `fetchWeather` functions should be invoked from a background
+    thread. In Android, that might be done in any number of ways. Java has the traditional
+    `Thread` library of course, and the `Executors` framework. The Android standard
+    library has the (now legacy) `AsyncTask`, `HandlerThread`, as well as the `ThreadPoolExecutor`
+    class.'
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`fetchHikesForUser` 和 `fetchWeather` 函数应该从后台线程调用。在 Android 中，可以通过多种方式来实现。当然，Java
+    有传统的 `Thread` 库和 `Executors` 框架。Android 标准库有（现在已经过时的）`AsyncTask`，`HandlerThread`，以及
+    `ThreadPoolExecutor` 类。'
+- en: Among all those possibilities, we want to take the best implementation in terms
+    of expressiveness, readability, and control. For those reasons, we decided to
+    leverage the `Executors` framework.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在所有可能性中，我们希望选择表现力、可读性和控制性最好的实现方式。因此，我们决定利用 `Executors` 框架。
+- en: Inside a `ViewModel`, suppose you use one of the factory methods for `ExecutorService`
+    from the `Executors` class to get back a `ThreadPoolExecutor` for performing asynchronous
+    work using the traditional thread-based model.
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 `ViewModel` 中，假设您使用 `Executors` 类的工厂方法之一来获取返回用于使用传统基于线程的模型执行异步工作的 `ThreadPoolExecutor`。
+- en: 'In the following, we’ve chosen a *work-stealing* pool. Compared to a simple-thread
+    pool with a blocking queue, a work-stealing pool can reduce contention while keeping
+    a targeted number of threads active. The idea behind this is that enough work
+    queues are maintained so that an overwhelmed worker^([1](ch08.html#idm46669749430800))
+    might have one of its tasks “stolen” by another worker which is less loaded:'
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在接下来的内容中，我们选择了 *工作窃取* 池。与带有阻塞队列的简单线程池相比，工作窃取池可以减少争用，同时保持目标数量的活动线程。其背后的想法是维护足够多的工作队列，以便超负荷的工作线程可能会将其任务“窃取”给负载较轻的另一个工作线程：
+- en: '[PRE2]'
+  id: totrans-37
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: When performing IO operations, having 10 threads is reasonable, even on Android
+    devices. In the case of `Executors.newWorkStealingPool`, the actual number of
+    threads grows and shrinks dynamically, depending on the load. Do note, however,
+    that a work-stealing pool makes no guarantees about the order in which submitted
+    tasks are executed.
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在执行 IO 操作时，即使在 Android 设备上，拥有 10 个线程也是合理的。在使用 `Executors.newWorkStealingPool`
+    的情况下，实际线程数量会根据负载动态增长和收缩。但需要注意的是，工作窃取池不保证提交的任务执行顺序。
+- en: Note
+  id: totrans-39
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: 'We could also have leveraged the Android primitive `ThreadPoolExecutor` class.
+    More specifically, we could have created our thread pool this way:'
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们也可以利用 Android 原生的 `ThreadPoolExecutor` 类。具体来说，我们可以这样创建我们的线程池：
+- en: '[PRE3]'
+  id: totrans-41
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: The usage is then exactly the same. Even if there are subtle differences with
+    the work-stealing pool we initially created, what’s important to notice here is
+    how you can submit tasks to the thread pool.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后使用方式完全相同。即使最初创建的工作窃取池存在微妙差异，重要的是注意如何向线程池提交任务。
+- en: 'Using a thread pool just for `fetchHikesForUser` could be overkill—especially
+    if you don’t invoke `fetchHikesForUser` for different users concurrently. Consider
+    the rest of the implementation that uses an `ExecutorService` for more sophisticated
+    concurrent work, as shown in the following code:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仅仅为 `fetchHikesForUser` 使用线程池可能会有些过头 —— 特别是如果你不会并发地为不同用户调用 `fetchHikesForUser`。考虑使用
+    `ExecutorService` 的其余实现来处理更复杂的并发工作，如下面的代码所示：
+- en: '[PRE4]'
+  id: totrans-44
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'For each `Hike`, a new task is submitted. This new task:'
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 对于每个 `Hike`，都会提交一个新任务。这个新任务：
+- en: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO1-1)'
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO1-1)'
+- en: Fetches weather information
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 获取天气信息
+- en: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO1-2)'
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO1-2)'
+- en: Stores `Hike` and `Weather` objects inside a `HikeData` container
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将 `Hike` 和 `Weather` 对象存储在 `HikeData` 容器内。
+- en: '[![3](assets/3.png)](#co_structured_concurrency_with_coroutines_CO1-3)'
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_structured_concurrency_with_coroutines_CO1-3)'
+- en: Adds the `HikeData` instance to an internal list
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将 `HikeData` 实例添加到内部列表
+- en: '[![4](assets/4.png)](#co_structured_concurrency_with_coroutines_CO1-4)'
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![4](assets/4.png)](#co_structured_concurrency_with_coroutines_CO1-4)'
+- en: Notifies the view that the `HikeData` list has changed, which will pass the
+    newly updated state of that list data
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通知视图 `HikeData` 列表已更改，将传递该列表数据的新更新状态。
+- en: 'We explicitly left a common mistake in the preceding code. Can you spot it?
+    Although it runs fine as is, imagine that we add a public method to add a new
+    hike:'
+  id: totrans-54
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们故意在前述代码中留下了一个常见的错误。你能发现它吗？尽管目前的运行正常，但想象一下，如果我们添加一个公共方法来添加新的徒步旅行：
+- en: '[PRE5]'
+  id: totrans-55
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: In step 3 in the `onHikesFetched` method, we added a new element to `hikeDataList`
+    from one of the background threads of `ioThreadPool`. What could go wrong with
+    such a harmless method?
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 `onHikesFetched` 方法的第 3 步中，我们从 `ioThreadPool` 的一个后台线程向 `hikeDataList` 添加了一个新元素。这样一个无害的方法可能会出什么问题？
+- en: You could try to invoke `addHike` from the main thread while `hikeDataList`
+    is being modified by a background thread.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当后台线程修改 `hikeDataList` 时，你可能尝试从主线程调用 `addHike`。
+- en: Nothing enforces the thread from which the public `addHike` is going to be called.
+    In Kotlin on the JVM, a mutable list is backed by an `ArrayList`. However, an
+    `ArrayList` isn’t *thread-safe*. Actually, this isn’t the only mistake we’ve made.
+    `hikeDataList` isn’t correctly published—there’s no guarantee that in step 4 the
+    background thread sees an updated value for `hikeDataList`. There is no *happens
+    before*^([2](ch08.html#idm46669749241152)) enforcement here from the Java memory
+    model—the background thread might not see an up-to-date state of `hikeDataList`,
+    even if the main thread put a new element in the list beforehand.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 没有强制规定从哪个线程调用公共的 `addHike`。在 Kotlin 的 JVM 中，可变列表由 `ArrayList` 支持。然而，`ArrayList`
+    不是 *线程安全* 的。事实上，这并不是我们唯一的错误。`hikeDataList` 没有正确发布 —— 在第 4 步中，后台线程可能看不到 `hikeDataList`
+    的更新值。在 Java 内存模型中，这里没有 *happens before*^([2](ch08.html#idm46669749241152)) 强制执行
+    —— 即使主线程之前将一个新元素放入列表中。
+- en: Consequently, the iterator within the `onHikesFetched` chain will throw a `ConcurrentModificationException`
+    when it realizes the collection has been “magically” modified. Populating `hikeDataList`
+    from a background thread isn’t safe in this case (see [Figure 8-1](#fig8_1)).
+  id: totrans-59
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，在 `onHikesFetched` 链中的迭代器在意识到集合已被“神奇地”修改时会抛出 `ConcurrentModificationException`。在这种情况下，从后台线程填充
+    `hikeDataList` 是不安全的（参见 [Figure 8-1](#fig8_1)）。
+- en: '![AddHike ConcurrenctModificationException](assets/pawk_0801.png)'
+  id: totrans-60
+  prefs: []
+  type: TYPE_IMG
+  zh: '![AddHike ConcurrentModificationException](assets/pawk_0801.png)'
+- en: Figure 8-1\. `addHike` adds to the existing `hikeDataList` that is already being
+    modified in the background thread.
+  id: totrans-61
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 8-1\. `addHike` 方法会向已在后台线程中修改的 `hikeDataList` 添加新内容。
+- en: Falling into this pattern, even when safe, increases the likelihood that habit
+    overtakes sensibility and that during the same day or week or month, this mistake
+    repeats in a less safe circumstance. Consider other team members with edit access
+    to the same codebase and you can see that we quickly lose control.
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 落入这种模式，即使在安全时，也增加了习惯占优势的可能性，并且在同一天或同一周或同一月内，此错误在不安全的情况下重复发生。考虑到其他具有对同一代码库编辑访问权限的团队成员，你会发现我们很快失去了控制。
+- en: Thread safety matters anytime multiple threads are attempting to access the
+    same resource at the same time, and it’s hard to get right. This is why *defaulting
+    to the main thread*^([3](ch08.html#idm46669749034928)) is considered a good practice.
+  id: totrans-63
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在多个线程同时尝试访问相同资源时，线程安全性很重要，而且很难做到正确。这就是为什么*默认使用主线程*^([3](ch08.html#idm46669749034928))被认为是一个良好的实践。
+- en: So how would you do this? Are you able to get the background thread to tell
+    the main thread “add this element to this list whenever you can, then notify the
+    view with the updated list of `HikeData`”? For this purpose, you can use the handy
+    `HandlerThread` and `Handler` classes.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 那么你该如何做呢？能否让后台线程告诉主线程“无论何时都要将此元素添加到此列表，然后用更新后的`HikeData`列表通知视图”？为此，可以使用方便的`HandlerThread`和`Handler`类。
+- en: A Reminder About HandlerThread
+  id: totrans-65
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 关于HandlerThread的提醒
+- en: A `HandlerThread` is a thread to which a “message loop” is attached. It’s an
+    implementation of the producer-consumer design pattern, where the `HandlerThread`
+    is the consumer. A `Handler` sits between the actual message queue and other threads
+    that can send new messages. Internally, the loop that consumes the message queue
+    is created using the `Looper` class (also called “looper”). A `HandlerThread`
+    completes when you invoke its `quit` or `quickSafely` method. Paraphrasing Android’s
+    documentation, the `quit` method causes the handler thread’s looper to terminate
+    without processing any more messages in the message queue. The `quitSafely` method
+    causes the handler thread’s looper to terminate as soon as all remaining messages
+    in the message queue, that are already due to be delivered, have been handled.
+  id: totrans-66
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一个`HandlerThread`是一个带有“消息循环”的线程。它是生产者-消费者设计模式的一种实现，其中`HandlerThread`是消费者。一个`Handler`位于实际消息队列和可以发送新消息的其他线程之间。在内部，消费消息队列的循环是使用`Looper`类（也称为“looper”）创建的。当调用其`quit`或`quickSafely`方法时，`HandlerThread`会完成。根据Android的文档，`quit`方法会导致处理程序线程的looper终止，而不处理消息队列中的任何其他消息。`quitSafely`方法会导致处理程序线程的looper在处理完所有已准备好交付的剩余消息后立即终止。
+- en: Be really careful about remembering to stop a `HandlerThread`. For example,
+    imagine you start a `HandlerThread` within the lifecycle of an activity (say,
+    in an `onCreate` method of a fragment). If you rotate the device, the activity
+    is destroyed and then re-created. A new `HandlerThread` instance is then created
+    and started while the old one is still running, leading to a serious memory leak
+    (see [Figure 8-2](#fig_8_2))!
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 非常注意记得停止`HandlerThread`。例如，想象一下，你在活动的生命周期内启动了一个`HandlerThread`（比如在片段的`onCreate`方法中）。如果你旋转设备，活动会被销毁然后重新创建。然后会创建并启动一个新的`HandlerThread`实例，而旧的仍在运行，导致严重的内存泄漏（见[图 8-2](#fig_8_2)）！
+- en: '![HandlerThread](assets/pawk_0802.png)'
+  id: totrans-68
+  prefs: []
+  type: TYPE_IMG
+  zh: '![HandlerThread](assets/pawk_0802.png)'
+- en: Figure 8-2\. A `HandlerThread` consumes tasks coming from the `MessageQueue`.
+  id: totrans-69
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图8-2\. 一个`HandlerThread`消费来自`MessageQueue`的任务。
+- en: 'On Android, the main thread is a `HandlerThread`. Because creating a `Handler`
+    to post messages to the main thread is very common, a static method on the `Looper`
+    class exists to get the reference on the main thread’s `Looper` instance. Using
+    a `Handler`, you can post a `Runnable` to be executed on the thread that the `Looper`
+    instance associated with the `Handler` is attached to. The Java signature is:'
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android上，主线程是一个`HandlerThread`。因为创建一个`Handler`来向主线程发送消息是非常常见的，所以`Looper`类上存在一个静态方法来获取与`Handler`关联的主线程的`Looper`实例的引用。使用`Handler`，你可以将一个`Runnable`发布到与`Handler`关联的`Looper`实例所附加的线程上执行。Java签名是：
+- en: '[PRE6]'
+  id: totrans-71
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: 'Since a `Runnable` only has one abstract method, `run`, it can be nice and
+    syntactically sweetened in Kotlin using a lambda, as shown in the following code:'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于`Runnable`只有一个抽象方法`run`，在Kotlin中可以使用lambda语法来美化代码，如下所示：
+- en: '[PRE7]'
+  id: totrans-73
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: 'In practice, you just create it like this:'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在实际应用中，你可以像这样创建它：
+- en: '[PRE8]'
+  id: totrans-75
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: 'Then you can can utilize the loop handler in the previous example, as shown
+    in the following code:'
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，你可以在前面示例中利用循环处理程序，如下代码所示：
+- en: '[PRE9]'
+  id: totrans-77
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'This time, we post a `Runnable` to the main thread, in which:'
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这一次，我们将一个`Runnable`发布到主线程中，其中：
+- en: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO2-1)'
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO2-1)'
+- en: A new `HideData` instance is added to `hikeDataList`.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 新的`HideData`实例添加到`hikeDataList`。
+- en: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO2-2)'
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO2-2)'
+- en: '`hikeLiveData` is given the `hikeDataList` as an updated value. Notice that
+    we can use the highly readable and intuitive assignment operator here: `hikeLiveData.value`
+    `=` `..`, which is nicer than `hikeLiveData.postValue(..)`. This is because the
+    `Runnable` will be executed from the main thread—`postValue` is only useful when
+    updating the value of a `LiveData` from a background thread.'
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将`hikeDataList`作为更新后的值赋予`hikeLiveData`。请注意，我们可以在此处使用高度可读且直观的赋值运算符：`hikeLiveData.value`
+    `=` `..`，这比`hikeLiveData.postValue(..)`更好。这是因为`Runnable`将从主线程执行——`postValue`仅在从后台线程更新`LiveData`的值时有用。
+- en: Doing this, all accessors of `hikeDataList` are *thread-confined* to the main
+    thread (see [Figure 8-3](#thread_confined_id)), eliminating all possible concurrency
+    hazards.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这样做，所有`hikeDataList`的访问器*线程限定*为主线程（见[图 8-3](#thread_confined_id)），消除所有可能的并发危害。
+- en: '![Thread-confined](assets/pawk_0803.png)'
+  id: totrans-84
+  prefs: []
+  type: TYPE_IMG
+  zh: '![线程限定](assets/pawk_0803.png)'
+- en: Figure 8-3\. The main thread can only access `hikeDataList`.
+  id: totrans-85
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 8-3\. 主线程只能访问`hikeDataList`。
+- en: That’s it for the “traditional” approach. Other libraries like *RxJava/RxKotlin*
+    and *Arrow* could have been used to perform essentially the same thing. The logic
+    is made of several steps. You start the first one, giving it a callback containing
+    the set of instructions to run when the background job is done. Each step is connected
+    to the next by the code inside the callbacks. We’ve discussed it in [Chapter 6](ch06.html#handling_concurrency_id),
+    and we hope that we’ve illuminated some potential pitfalls and given you the tools
+    to avoid them.
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是“传统”方法的全部内容。其他库如*RxJava/RxKotlin*和*Arrow*也可以用于执行基本相同的操作。逻辑由几个步骤组成。您开始第一个步骤，给它一个回调，其中包含在后台作业完成时运行的指令集。每个步骤都通过回调内部的代码连接到下一个步骤。我们在[第
+    6 章](ch06.html#handling_concurrency_id)中讨论过它，并希望我们已经阐明了一些潜在的问题，并为您提供了避免这些问题的工具。
+- en: 'Interestingly, callback complexity doesn’t seem to be an issue in this example—everything
+    is done with two methods, a `Handler` and a `ExecutorService`. However, an insidious
+    situation arises in the following scenario:'
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有趣的是，回调复杂性在这个示例中似乎不是问题——一切都是用两个方法完成的，一个`Handler`和一个`ExecutorService`。然而，在以下情况下出现了一个隐匿的情况：
+- en: A user navigates to a list of hikes, then `fetchHikesAsync` is called on the
+    `ViewModel`. The user just installed the application on a new device; thus the
+    history isn’t in cache, so the app has to access remote APIs to fetch fresh data
+    from some remote service.
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用户导航到一系列远足，然后在`ViewModel`上调用`fetchHikesAsync`。用户刚刚在新设备上安装了应用程序，因此历史记录不在缓存中，因此应用程序必须访问远程
+    API 从某个远程服务获取新鲜数据。
+- en: Let’s assume that the wireless network is slow, but not so slow as to cause
+    IO timeout errors. The view keeps showing that the list is updating, and the user
+    might think that there is in fact a suppressed error, and retry the fetch (which
+    might be available using some refresh UI like a `SwipeRefreshLayout`, an explicit
+    refresh button, or even just using navigation to reenter the UI and presume a
+    fetch will be called implicitly).
+  id: totrans-89
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设无线网络速度较慢，但不会导致 IO 超时错误。视图不断显示列表正在更新，用户可能会误以为实际上存在被抑制的错误，并重试获取（可能可以使用某些刷新 UI，如`SwipeRefreshLayout`、显式刷新按钮，甚至只是使用导航重新进入
+    UI 并假设将隐式调用获取操作）。
+- en: Unfortunately, nothing in our implementation anticipates this. When `fetchHikesAsync`
+    is called, a workflow is launched and cannot be stopped. Imagining the worst case,
+    every time a user navigates back and reenters in the hike list view, a new workflow
+    is launched. This is clearly poor design.
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不幸的是，我们的实现没有预料到这一点。当调用`fetchHikesAsync`时，启动了一个工作流程，无法停止。想象最坏的情况，每当用户返回并重新进入远足列表视图时，都会启动一个新的工作流程。这显然是设计不良。
+- en: A cancellation mechanism might be one possible solution. We might implement
+    a cancellation mechanism by ensuring that every new call of `fetchHikesAsync`
+    cancels any previous in-flight or pending call. Alternatively, you could discard
+    new calls of `fetchHikesAsync` while a previous call is still running. Implementing
+    that in this context requires thoughtfulness and deliberation.
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 取消机制可能是一种可能的解决方案。我们可以通过确保每次新调用`fetchHikesAsync`时取消任何先前的正在进行或挂起的调用来实现取消机制。或者，当先前的调用仍在运行时，您可以丢弃新的`fetchHikesAsync`调用。在这种情况下实施这一点需要深思熟虑和审慎。
+- en: A cancellation mechanism isn’t as fire-and-forget as we might find in other
+    flows, because you have to ensure that *every* background thread effectively stops
+    their execution.
+  id: totrans-92
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 取消机制并不像我们在其他流程中发现的那样随手可得，因为你必须确保*每一个*后台线程都有效地停止它们的执行。
+- en: As you know from the previous chapter, coroutines and suspending functions can
+    be a great fit here, and in similar circumstances. We chose this hiking app example
+    because we have a great opportunity to use suspending functions.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你从前一章节中所知，协程和挂起函数在这里以及类似的情况下非常合适。我们选择这个徒步应用的例子是因为我们有一个很好的机会使用挂起函数。
+- en: Using Suspending Functions and Coroutines
+  id: totrans-94
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用挂起函数和协程
+- en: As a reminder, we’ll now implement the exact same logic; but this time we’ll
+    be using suspending functions and coroutines.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 作为提醒，我们现在将实现完全相同的逻辑；但这一次我们将使用挂起函数和协程。
+- en: You declare a suspending function when the function may not return immediately.
+    Therefore, any blocking function is eligible to be rewritten as a suspending function.
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当函数可能不会立即返回时，你声明一个挂起函数。因此，任何阻塞函数都有资格被重写为挂起函数。
+- en: 'The `fetchHikesForUser` function is a good example because it blocks the calling
+    thread until it returns a list of `Hike` instances. Therefore, it can be expressed
+    as a suspending function, as shown in the following code:'
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`fetchHikesForUser`函数是一个很好的例子，因为它会阻塞调用线程，直到返回一个`Hike`实例列表。因此，它可以表示为一个挂起函数，如下所示：'
+- en: '[PRE10]'
+  id: totrans-98
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE10]'
+- en: We had to pick another name for the suspending function. In this example, blocking
+    calls are prefixed with “fetch” by convention.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不得不为挂起函数选择另一个名称。在这个例子中，按照约定，阻塞调用都以“fetch”作为前缀。
+- en: Similarly, as shown in [Example 8-1](#weather_for_hike_id), you can declare
+    the equivalent for `fetchWeather`.
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类似地，如[示例8-1](#weather_for_hike_id)所示，你可以声明相当于`fetchWeather`的内容。
+- en: Example 8-1\. `fetchWeather` as suspending function
+  id: totrans-101
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例8-1\. `fetchWeather`作为挂起函数
+- en: '[PRE11]'
+  id: totrans-102
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE11]'
+- en: Those suspending functions are wrappers around their blocking counterpart. When
+    invoked from inside a coroutine, the `Dispatcher` supplied to the `withContext`
+    function determines which thread pool the blocking call is executed on. Here,
+    `Dispatchers.IO` is a perfect fit and is very similar to the work-stealing pool
+    seen earlier.
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这些挂起函数是它们阻塞对应函数的包装器。当从协程内部调用时，由`withContext`函数提供的`Dispatcher`确定阻塞调用在哪个线程池上执行。在这里，`Dispatchers.IO`非常适合，并且与之前看到的工作窃取池非常相似。
+- en: Note
+  id: totrans-104
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Once you’ve wrapped blocking calls in suspending blocks like the suspending
+    `weatherForHike` function, you’re now ready to use those suspending functions
+    inside coroutines—as you’ll see shortly.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦你将阻塞调用包装在类似挂起`weatherForHike`函数中的挂起块中，你现在可以在协程内使用这些挂起函数了——正如你马上将看到的那样。
+- en: 'Actually, there’s a convention with suspending functions to make everyone’s
+    life simpler: *a suspending function never blocks the calling thread*. In the
+    case of `weatherForHike`, this is indeed the case, since regardless of which thread
+    invokes `weatherForHike` from within a coroutine, the `withContext(Dispatchers.IO)`
+    statement causes the execution to jump to another thread.^([4](ch08.html#idm46669748759888))'
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 实际上，有一个关于挂起函数的约定，可以让每个人的生活更简单：*挂起函数永远不会阻塞调用线程*。对于`weatherForHike`来说，这确实如此，因为无论哪个线程从协程内部调用`weatherForHike`，`withContext(Dispatchers.IO)`语句都会导致执行跳转到另一个线程。^([4](ch08.html#idm46669748759888))
+- en: Everything we’ve done using the callback pattern can now fit in a single public
+    `update` method, which reads like procedural code. This is possible thanks to
+    the suspending functions, as shown in [Example 8-2](#example8_8).
+  id: totrans-107
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们通过回调模式所做的一切现在可以放在一个单独的公共`update`方法中，这样看起来就像是过程化的代码。这得益于挂起函数，正如在[示例8-2](#example8_8)中所示。
+- en: Example 8-2\. Using suspending functions in the view-model
+  id: totrans-108
+  prefs:
+  - PREF_H5
+  type: TYPE_NORMAL
+  zh: 示例8-2\. 在视图模型中使用挂起函数
+- en: '[PRE12]'
+  id: totrans-109
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE12]'
+- en: 'We’re going to provide the details of [Example 8-2](#example8_8) step by step:'
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将逐步提供[示例8-2](#example8_8)的细节：
+- en: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO3-1)'
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO3-1)'
+- en: When `update` is called, it immediately starts a coroutine, using the `launch`
+    coroutine builder. As you know, a coroutine is never launched out of the blue.
+    As we’ve seen in [Chapter 7](ch07.html#coroutine_concepts), a coroutine must always
+    be started within a `CoroutineScope`. Here, we’re using `viewModelScope`.
+  id: totrans-112
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当调用`update`时，它会立即启动一个协程，使用`launch`协程构建器。正如你所知，协程不会突然间启动。正如我们在[第7章](ch07.html#coroutine_concepts)中所见，协程必须始终在`CoroutineScope`内启动。这里我们使用的是`viewModelScope`。
+- en: 'Where does this scope come from? The Android Jetpack team from Google know
+    that using Kotlin and coroutines requires a `CoroutineScope`. To ease your life,
+    they maintain [Android KTX](https://oreil.ly/e3sqR), which is a set of Kotlin
+    extensions on the Android platform and other APIs. The goal is to use Kotlin idioms
+    while still integrating nicely with the Android framework. They leverage extension
+    functions, lambdas, parameter default values, and coroutines. Android KTX is made
+    of several libraries. In this example, we used *lifecycle-viewmodel-ktx*. To use
+    it in your app, you should add the following to your dependencies listed in your
+    `build.gradle` (use a newer version if available): `implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0"`.'
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个范围是从哪里来的？Google的Android Jetpack团队知道使用Kotlin和协程需要一个`CoroutineScope`。为了简化您的生活，他们维护了[Android
+    KTX](https://oreil.ly/e3sqR)，这是在Android平台和其他API上的一组Kotlin扩展。其目标是使用Kotlin惯用语法，同时与Android框架良好集成。他们利用了扩展函数、lambda、参数默认值和协程。Android
+    KTX由多个库组成。在这个示例中，我们使用了*lifecycle-viewmodel-ktx*。要在您的应用程序中使用它，请将以下内容添加到`build.gradle`中的依赖项列表中（如果有更新的版本，请使用更新版本）：`implementation
+    "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0"`。
+- en: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO3-2)'
+  id: totrans-114
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO3-2)'
+- en: The line `val hikes = hikesForUser("userId")` is the first suspension point.
+    The coroutine started by `launch` is stopped until `hikesForUser` returns.
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 行`val hikes = hikesForUser("userId")` 是第一个暂停点。由`launch`启动的协程将停止，直到`hikesForUser`返回。
+- en: '[![3](assets/3.png)](#co_structured_concurrency_with_coroutines_CO3-3)'
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_structured_concurrency_with_coroutines_CO3-3)'
+- en: You’ve got your list of `Hike` instances. Now you can *concurrently* fetch the
+    weather data for each of them. We can use a loop and start a new coroutine for
+    each hike using `launch`.
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您已经获取了您的`Hike`实例列表。现在您可以*并发地*为每个实例获取天气数据。我们可以使用循环，并使用`launch`为每次徒步旅行启动一个新协程。
+- en: '[![4](assets/4.png)](#co_structured_concurrency_with_coroutines_CO3-4)'
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![4](assets/4.png)](#co_structured_concurrency_with_coroutines_CO3-4)'
+- en: '`val weather = weatherForHike(hike)` is another suspension point. Each of the
+    coroutines started in the `for` loop will reach this suspension point.'
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`val weather = weatherForHike(hike)` 是另一个暂停点。`for`循环中启动的每个协程将达到这个暂停点。'
+- en: 'Let’s have a closer look at the coroutine started for each `Hike` instance
+    in the following code:'
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们仔细看看以下代码中为每个`Hike`实例启动的协程：
+- en: '[PRE13]'
+  id: totrans-121
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE13]'
+- en: Since the parent scope (`viewModelScope`) defaults to the main thread, every
+    single line inside the launch block is executed on the main thread, except the
+    content of the suspending function `weatherForHike`, which uses `Dispatchers.IO`
+    (see [Example 8-1](#weather_for_hike_id)). The assignment of `weather` is done
+    on the main thread. Therefore, the usages of `hikeDataList` are confined to the
+    main thread—there are no thread-safety issues. As for `hikeLiveData`, you can
+    use the setter of its `value` (and since we’re in Kotlin, that means the assignment
+    operator), instead of `postValue`, since we know we’re calling this from the main
+    thread.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于父作用域（`viewModelScope`）默认为主线程，`launch`块内的每一行都在主线程上执行，除了挂起函数`weatherForHike`的内容，它使用`Dispatchers.IO`（见[Example 8-1](#weather_for_hike_id)）。`weather`的赋值是在主线程上完成的。因此，`hikeDataList`的使用局限于主线程——没有线程安全问题。至于`hikeLiveData`，您可以使用其`value`的setter（因为我们知道我们是从主线程调用此方法），而不是`postValue`。
+- en: Warning
+  id: totrans-123
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: 'When using a coroutine scope, you should always be conscious of how it manages
+    your coroutines, especially knowing what `Dispatcher` the scope uses. The following
+    code shows how it’s declared in the source code of the library:'
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用协程范围时，您应始终意识到它如何管理您的协程，特别是要知道范围使用的`Dispatcher`。下面的代码展示了它在库源代码中的声明方式：
+- en: '[PRE14]'
+  id: totrans-125
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE14]'
+- en: As you can see in this example, `viewModelScope` is declared as an extension
+    property on the `ViewModel` class. Even if the `ViewModel` class has absolutely
+    no notion of `CoroutineScope`, declaring it in this manner enables the syntax
+    in our example. Then, an internal store is consulted to check whether a scope
+    has already been created or not. If not, a new one is created using `CloseableCoroutineScope(..)`.^([5](ch08.html#idm46669748190592))
+    For instance, don’t pay attention to `SupervisorJob`—we’ll explain its role later
+    when we discuss cancellation. What’s particularly relevant here is `Dispatchers.Main.immediate`,
+    a variation of `Dispatcher.Main`, which executes coroutines immediately when they
+    are launched from the main thread. Consequently, this scope defaults to the main
+    thread. This is a critical piece of information that you’ll need to know moving
+    forward from here.
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你在这个例子中看到的那样，`viewModelScope` 被声明为 `ViewModel` 类的扩展属性。即使 `ViewModel` 类根本没有
+    `CoroutineScope` 的概念，以这种方式声明它也能使我们示例中的语法生效。然后，会查询内部存储来检查是否已经创建了范围。如果没有，将使用 `CloseableCoroutineScope(..)`
+    创建一个新的范围。^([5](ch08.html#idm46669748190592)) 例如，不要关注 `SupervisorJob` ——我们稍后在讨论取消时会解释它的作用。这里特别相关的是
+    `Dispatchers.Main.immediate`，这是 `Dispatcher.Main` 的一种变体，它在从主线程启动协程时会立即执行。因此，此范围默认为主线程。这是您从这里继续前进需要了解的关键信息。
+- en: Summary of Suspending Functions Versus Traditional Threading
+  id: totrans-127
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 挂起函数与传统线程的总结
+- en: Thanks to suspending functions, asynchronous logic can be written like procedural
+    code. Since the Kotlin compiler generates all the necessary callbacks and boilerplate
+    code under the hood, the code you write using a cancellation mechanism can be
+    much more concise.^([6](ch08.html#idm46669748183760)) For example, a coroutine
+    scope that uses `Dispatchers.Main` doesn’t need `Handler`s or other communication
+    primitives to pass data to and from a background thread to the main thread, as
+    is still the case with purely multithreaded environments (without coroutines).
+    Actually, all the problems we had in the thread-based approach are now nicely
+    solved using coroutines—and that includes the cancellation mechanism.
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 多亏了挂起函数，异步逻辑可以像过程式代码一样编写。由于 Kotlin 编译器在幕后生成了所有必要的回调和样板代码，因此使用取消机制编写的代码可以更加简洁。^([6](ch08.html#idm46669748183760))
+    例如，使用 `Dispatchers.Main` 的协程范围不需要 `Handler` 或其他通信原语来在后台线程与主线程之间传递数据，这在纯多线程环境（无协程）中仍然是必需的。实际上，通过协程我们成功解决了线程模型中遇到的所有问题，包括取消机制。
+- en: Code using coroutines and suspending functions can also be more readable, as
+    there can be far fewer implicit or indirect instructions (like nested calls, or
+    SAM instances, as described in [Chapter 6](ch06.html#handling_concurrency_id)).
+    Moreover, IntelliJ and Android Studio make those suspending calls stand out with
+    a special icon in the margin.
+  id: totrans-129
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用协程和挂起函数的代码也可以更易读，因为可以减少隐式或间接指令（例如嵌套调用或 SAM 实例，如 [第6章](ch06.html#handling_concurrency_id)
+    中所述）。此外，IntelliJ 和 Android Studio 使用特殊图标使这些挂起调用在边栏中突出显示。
+- en: In this section, we only scratched the surface of cancellation. The following
+    section covers all you need to know about cancellation with coroutines.
+  id: totrans-130
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本节中，我们仅仅触及了取消操作的表面。接下来的部分将全面介绍使用协程进行取消操作所需的所有知识。
+- en: Cancellation
+  id: totrans-131
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 取消操作
+- en: 'Handling task cancellation is a critical part of an Android application. When
+    a user navigates for the first time to the view displaying the list of hikes along
+    with statistics and weather, a decent number of coroutines are started from the
+    view-model. If for some reason the user decides to leave the view, then the tasks
+    launched by the view-model are probably running for nothing. Unless of course
+    the user later navigates back to the view, but it’s dangerous to assume that.
+    To avoid wasting resources, a good practice in this scenario is to cancel all
+    ongoing tasks related to views no longer needed. This is a good example of cancellation
+    you might implement yourself, as part of your application design. There’s another
+    kind of cancellation: the one that happens when something bad happens. So we’ll
+    distinguish the two types here:'
+  id: totrans-132
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 处理任务取消是 Android 应用的关键部分。当用户首次导航到显示徒步旅行列表及其统计和天气的视图时，从视图模型启动了大量协程。如果用户因某些原因决定离开视图，则视图模型启动的任务可能无用。当然，除非用户稍后重新导航到视图，但假设这一点是危险的。为了避免浪费资源，在此情况下的一个良好做法是取消所有与不再需要的视图相关的进行中的任务。这是您可能会自行实施的取消的一个很好的例子，作为应用程序设计的一部分。还有另一种类型的取消：在发生不良情况时发生的取消。因此，在这里我们将区分这两种类型：
+- en: Designed cancellation
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 设计的取消
+- en: For example, a task that’s cancelled after a user taps a “Cancel” button in
+    a custom or arbitrary UI.
+  id: totrans-134
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，用户在自定义或任意 UI 中点击“取消”按钮后取消的任务。
+- en: Failure cancellation
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 失败取消
+- en: For example, a cancellation that’s caused by exceptions, either intentionally
+    (thrown) or unexpectedly (unhandled).
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，由异常引起的取消，无论是有意（抛出）还是意外（未处理）。
+- en: Keep those two types of cancellation in mind, as you’ll see that the coroutine
+    framework handles them differently.
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 记住这两种类型的取消，因为您会发现协程框架对它们有不同的处理方式。
+- en: Coroutine Lifecycle
+  id: totrans-138
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 协程生命周期
+- en: To understand how cancellation works, you need to be aware that a coroutine
+    has a lifecycle, which is shown in [Figure 8-4](#coroutine_lifecycle_id).
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要理解取消工作的方式，您需要了解协程的生命周期，如 [图 8-4](#coroutine_lifecycle_id) 所示。
+- en: '![Lifecyle](assets/pawk_0804.png)'
+  id: totrans-140
+  prefs: []
+  type: TYPE_IMG
+  zh: '![生命周期](assets/pawk_0804.png)'
+- en: Figure 8-4\. Coroutine lifecycle.
+  id: totrans-141
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图 8-4\. 协程生命周期。
+- en: 'When a coroutine is created, for example, with the `launch {..}` function with
+    no additional context or arguments, it’s created in the `Active` state. That means
+    it starts immediately when `launch` is called. This is also called *eagerly* started.
+    In some situations, you might want to start a coroutine *lazily*, which means
+    it won’t do anything until you manually start it. To do this, `launch` and `async`
+    can both take a named argument “start,” of type `CoroutineStart`. The default
+    value is `CoroutineStart.DEFAULT` (eager start), but you can use `CoroutineStart.LAZY`,
+    as in the following code:'
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当协程例如使用 `launch {..}` 函数创建时，没有额外的上下文或参数，它会在 `Active` 状态下创建。这意味着当调用 `launch`
+    时，它会立即开始。这也称为 *eagerly* 启动。在某些情况下，您可能希望 *lazily* 启动协程，这意味着它在手动启动之前不会执行任何操作。要做到这一点，`launch`
+    和 `async` 都可以接受名为“start”的命名参数，类型为 `CoroutineStart`。默认值是 `CoroutineStart.DEFAULT`（eager
+    start），但您可以使用 `CoroutineStart.LAZY`，如以下代码所示：
+- en: '[PRE15]'
+  id: totrans-143
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE15]'
+- en: Don’t forget to call `job.start()`! Because when started lazily, a coroutine
+    needs to be explicitly started.^([7](ch08.html#idm46669748133168)) You don’t have
+    to do this by default, as a coroutine is created in the `Active` state.
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不要忘记调用 `job.start()`！因为当协程懒惰启动时，需要显式启动它。^([7](ch08.html#idm46669748133168))
+    默认情况下，您不必这样做，因为协程是在 `Active` 状态下创建的。
+- en: 'When a coroutine is done with its work, it remains in the `Completing` state
+    until all of its children reach the `Completed` state (see [Chapter 7](ch07.html#coroutine_concepts)).
+    Only then does it reach the `Completed` state. As usual, let’s crack open the
+    source code and take a look at the following:'
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当协程完成其工作后，它会保持在 `Completing` 状态，直到其所有子协程都达到 `Completed` 状态（参见 [第 7 章](ch07.html#coroutine_concepts)）。然后它才会达到
+    `Completed` 状态。像往常一样，让我们打开源代码并查看以下内容：
+- en: '[PRE16]'
+  id: totrans-146
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE16]'
+- en: 'This `viewModelScope.launch` completes its work almost instantly: it only starts
+    two child coroutines and does nothing else on its own. It quickly reaches the
+    `Completing` state and moves to the `Completed` state only when the child coroutines
+    complete.'
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个 `viewModelScope.launch` 几乎立即完成其工作：它只启动了两个子协程，并且自身没有其他操作。它很快进入 `Completing`
+    状态，并且只有在子协程完成时才进入 `Completed` 状态。
+- en: Coroutine cancellation
+  id: totrans-148
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 协程取消
+- en: While in `Active` or `Completing` state, if an exception is thrown or the logic
+    calls `cancel()`, the coroutine transitions to `Cancelling` state. If required,
+    this is when you perform necessary cleanup. The coroutine remains in this `Cancelling`
+    state until the cleanup job is done with its work. Only then will the coroutine
+    transition to the `Cancelled` state.
+  id: totrans-149
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当处于`Active`或`Completing`状态时，如果抛出异常或逻辑调用`cancel()`，协程将转换为`Cancelling`状态。如果需要，这时可以执行必要的清理工作。协程将保持在`Cancelling`状态，直到清理工作完成。然后协程才会转换到`Cancelled`状态。
+- en: Job holds the state
+  id: totrans-150
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 作业保持状态
+- en: 'Internally, all those states of the lifecycle are held by the `Job` of the
+    coroutine. The `Job` doesn’t have a property named “state” (whose values would
+    range from “NEW” to “COMPLETED”). Instead, the state is represented by three Booleans
+    (flags): `isActive`, `isCancelled`, and `isCompleted`. Each state is represented
+    by a combination of those flags, as you can see in [Table 8-1](#table_ch8).'
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 所有这些生命周期状态都由协程的`Job`持有。`Job`没有名为“state”的属性（其值范围从“NEW”到“COMPLETED”）。相反，状态由三个布尔标志（`isActive`、`isCancelled`和`isCompleted`）表示。每个状态由这些标志的组合表示，如你在[Table 8-1](#table_ch8)中所见。
+- en: Table 8-1\. `Job` states
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 表 8-1\. `Job` 状态
+- en: '| State | `isActive` | `isCompleted` | `isCancelled` |'
+  id: totrans-153
+  prefs: []
+  type: TYPE_TB
+  zh: '| State | `isActive` | `isCompleted` | `isCancelled` |'
+- en: '| --- | --- | --- | --- |'
+  id: totrans-154
+  prefs: []
+  type: TYPE_TB
+  zh: '| --- | --- | --- | --- |'
+- en: '| New (optional initial state) | false | false | false |'
+  id: totrans-155
+  prefs: []
+  type: TYPE_TB
+  zh: '| New (optional initial state) | false | false | false |'
+- en: '| Active (default initial state) | true | false | false |'
+  id: totrans-156
+  prefs: []
+  type: TYPE_TB
+  zh: '| Active (default initial state) | true | false | false |'
+- en: '| Completing (transient state) | true | false | false |'
+  id: totrans-157
+  prefs: []
+  type: TYPE_TB
+  zh: '| Completing (transient state) | true | false | false |'
+- en: '| Cancelling (transient state) | false | false | true |'
+  id: totrans-158
+  prefs: []
+  type: TYPE_TB
+  zh: '| Cancelling (transient state) | false | false | true |'
+- en: '| Cancelled (final state) | false | true | true |'
+  id: totrans-159
+  prefs: []
+  type: TYPE_TB
+  zh: '| Cancelled (final state) | false | true | true |'
+- en: '| Completed (final state) | false | true | false |'
+  id: totrans-160
+  prefs: []
+  type: TYPE_TB
+  zh: '| Completed (final state) | false | true | false |'
+- en: As you can see, there is no way to distinguish the `Completing` state from the
+    `Active` state using only those Booleans. Anyway, in most cases what you will
+    really care about is the value of a particular flag, rather than the state itself.
+    For example, if you check for `isActive`, you’re actually checking for `Active`
+    and `Completing` states at the same time. More on that in the next section.
+  id: totrans-161
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所见，仅凭这些布尔值无法区分`Completing`状态和`Active`状态。不过，在大多数情况下，你真正关心的是特定标志的值，而不是状态本身。例如，如果你检查`isActive`，实际上是同时检查`Active`和`Completing`状态。在下一节中会详细讨论这个问题。
+- en: Cancelling a Coroutine
+  id: totrans-162
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 取消协程
+- en: 'Let’s take a look at the following example, where we have a coroutine which
+    simply prints on the console `"job: I''m working.."` twice per second. The parent
+    coroutine waits a little before cancelling this coroutine:'
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '让我们看看下面的例子，其中有一个协程简单地每秒在控制台上打印`"job: I''m working.."`两次。父协程在取消此协程之前稍等一下：'
+- en: '[PRE17]'
+  id: totrans-164
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE17]'
+- en: You can see that the instance of `Job` returned by `launch` has a `cancel()`
+    method. As its name suggests, it cancels the running coroutine. By the way, a
+    `Deferred` instance—which is returned by the `async` coroutine builder—also has
+    this `cancel()` method since a `Deferred` instance is a specialized `Job`.
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以看到由`launch`返回的`Job`实例有一个`cancel()`方法。顾名思义，它取消正在运行的协程。顺便说一句，由`async`协程构建器返回的`Deferred`实例也有这个`cancel()`方法，因为`Deferred`实例是一个特殊的`Job`。
+- en: 'Back to our example: you might expect this little piece of code to print “job:
+    I’m working..” three times. Actually, the output is:'
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '回到我们的例子：你可能期望这段小代码打印“job: I''m working..”三次。实际上输出结果是：'
+- en: '[PRE18]'
+  id: totrans-167
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE18]'
+- en: 'So the child coroutine is still running despite the cancellation from the parent.
+    This is because the child coroutine isn’t cooperative with cancellation. There
+    are several ways to change that. The first one is by periodically checking for
+    the cancellation status of the coroutine, using `isActive`, as shown in the following
+    code:'
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，尽管父协程取消了，子协程仍在运行。这是因为子协程不配合取消。有几种方法可以改变这种情况。第一种方法是定期检查协程的取消状态，使用`isActive`，如下面的代码所示：
+- en: '[PRE19]'
+  id: totrans-169
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE19]'
+- en: 'You can call `isActive` this way because it’s an extension property on `CoroutineScope`,
+    as shown in the following code:'
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你可以这样调用`isActive`，因为它是`CoroutineScope`的扩展属性，如下面的代码所示：
+- en: '[PRE20]'
+  id: totrans-171
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE20]'
+- en: 'Now that the code is cooperative with cancellation, the result is:'
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在代码与取消是协作的，结果如下：
+- en: '[PRE21]'
+  id: totrans-173
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE21]'
+- en: Using `isActive` is simply reading a Boolean value. Determining whether the
+    job should be stopped, and both the setup and execution of that logic, is your
+    r[.keep-together] esponsibility.
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`isActive`只是简单地读取一个布尔值。确定是否应该停止作业，以及该逻辑的设置和执行，是你的责任。
+- en: In lieu of `isActive`, `ensureActive` can be used. The difference between `isActive`
+    and `ensureActive` is that the latter immediately throws a `CancellationException`
+    if the job is no longer active.
+  id: totrans-175
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以使用 `ensureActive` 代替 `isActive`。`isActive` 和 `ensureActive` 的区别在于，后者如果作业不再活动，立即抛出
+    `CancellationException`。
+- en: 'So `ensureActive` is a drop-in replacement of the following code:'
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 因此，`ensureActive` 可以替换以下代码：
+- en: '[PRE22]'
+  id: totrans-177
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE22]'
+- en: 'Similarly to `Thread.yield()`, there is a third possibility: `yield()`, which
+    is a suspending function. In addition to checking the cancellation status of the
+    job, the underlying thread is released and is made available for other coroutines.
+    This is especially useful when performing CPU-intensive computations inside a
+    coroutine using `Dispatchers.Default` (or similar). Placing `yield()` at strategic
+    places, you can avoid exhausting the thread pool. In other words, you probably
+    don’t want a coroutine to be too selfish, and keep a core busy with specific contextual
+    responsibilities for an extended period of time, if those resources could be better
+    served in another process. To be more cooperative, a greedy CPU-bound coroutine
+    should `yield()` from time to time, giving other coroutines the opportunity to
+    run.'
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 类似于 `Thread.yield()`，还有第三种可能性：`yield()`，它是一个挂起函数。除了检查作业的取消状态外，底层线程被释放并可以用于其他协程。当使用
+    `Dispatchers.Default`（或类似的）在协程中执行 CPU 密集型计算时，这是非常有用的。通过在战略位置放置 `yield()`，您可以避免耗尽线程池。换句话说，如果这些资源可以更好地为另一个进程提供服务，您可能不希望协程过于自私，保持一个核心忙碌，负责特定的上下文责任一段时间。
+- en: Those ways of interrupting a coroutine are perfect when the cancellation is
+    happening inside your code. What if you just delegated some work to a third-party
+    library, like an HTTP client?
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当取消发生在您的代码内部时，中断协程的这些方式是完美的。如果您将某些工作委托给第三方库，例如 HTTP 客户端，该怎么办呢？
+- en: Cancelling a Task Delegated to a Third-Party Library
+  id: totrans-180
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 取消委托给第三方库的任务
+- en: '`OkHttp` is a widely deployed HTTP client on Android. If you’re not familiar
+    with this library, the following is a snippet taken from the official documentation,
+    to perform an synchronous GET:'
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`OkHttp` 是 Android 上广泛部署的 HTTP 客户端。如果您对这个库不熟悉，以下是从官方文档摘录的片段，用于执行同步 GET 请求：'
+- en: '[PRE23]'
+  id: totrans-182
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE23]'
+- en: This example is pretty straightforward. `client.newCall(request)` returns an
+    instance of `Call`. You enqueue an instance of `Callback` while your code proceeds
+    unfazed. Is this cancellable? Yes. A `Call` can be manually cancelled using `call.cancel()`.
+  id: totrans-183
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个例子非常简单。`client.newCall(request)` 返回一个 `Call` 的实例。您可以在代码继续进行的同时排队一个 `Callback`
+    的实例。这是可取消的吗？是的。可以使用 `call.cancel()` 手动取消 `Call`。
+- en: 'When using coroutines, the preceding example is the kind of code you might
+    write inside a coroutine. It would be ideal if this cancellation was done automatically
+    upon cancellation of the coroutine inside of which the HTTP request is done. Otherwise,
+    the following shows what you would have to write:'
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在使用协程时，前面的例子是您可能在协程内部编写的代码。如果在进行 HTTP 请求的协程取消时自动完成取消将是理想的。否则，以下展示了您必须编写的代码：
+- en: '[PRE24]'
+  id: totrans-185
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE24]'
+- en: The obvious caveat is that it pollutes your code—not to mention that you could
+    forget to add this check, or have it at the wrong place. There must be a better
+    solution to this.
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显而易见的警告是，它会污染您的代码，更不用说您可能会忘记添加此检查或者将其放置在错误的位置。必须有更好的解决方案。
+- en: Thankfully, the coroutine framework comes with functions specifically designed
+    to turn a function that expects a callback into a suspending function. They come
+    in several flavors including `suspendCancellableCoroutine`. The latter is designed
+    to craft a suspending function which is *cooperative with cancellation*.
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幸运的是，协程框架提供了专门设计的函数，可以将期望回调的函数转换为挂起函数。它们有多种变体，包括 `suspendCancellableCoroutine`。后者旨在创建一个与取消协作的挂起函数。
+- en: 'The following code shows how to create a suspending function as an extension
+    function of `Call`, which is cancellable and suspends until you get the response
+    of your HTTP request, or an exception occurs:'
+  id: totrans-188
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面的代码展示了如何创建一个挂起函数作为`Call`的扩展函数，它是可取消的，并且挂起直到您获得您的 HTTP 请求的响应或发生异常：
+- en: '[PRE25]'
+  id: totrans-189
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE25]'
+- en: If you’ve never seen code like this, it’s natural to be afraid of its off-putting
+    complexity. The great news is that this function is fully generic—it only needs
+    to be written once. You can have it inside a “util” package of your project if
+    you want, or in your parallelism package; or just remember the basics and use
+    some version of it when performing conversions like that.
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您从未见过这样的代码，对其复杂性感到畏惧是很自然的。但是好消息是，这个函数是完全通用的 - 您只需要编写一次即可。如果您愿意，可以将它放在项目的“util”包中，或者在您的并行包中；或者只需记住基本知识，在执行类似的转换时使用其某个版本即可。
+- en: Before showing the benefits of such a utility method, we owe you a detailed
+    explanation.
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在展示这种实用方法的好处之前，我们需要给您一个详细的解释。
+- en: 'In [Chapter 7](ch07.html#coroutine_concepts), we explained how the Kotlin compiler
+    generates a `Continuation` instance for each suspending function. The `suspendCancellableCoroutine`
+    function gives you the opportunity to use this instance of `Continuation`. It
+    accepts a lambda with `CancellableContinuation` as receiver, as shown in the following
+    code:'
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[第7章](ch07.html#coroutine_concepts)中，我们解释了Kotlin编译器为每个挂起函数生成一个`Continuation`实例。`suspendCancellableCoroutine`函数允许您使用这个`Continuation`实例。它接受一个带有`CancellableContinuation`作为接收器的lambda表达式，如下所示：
+- en: '[PRE26]'
+  id: totrans-193
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE26]'
+- en: 'A `CancellableContinuation` is a `Continuation` that is cancellable. We can
+    register a callback that will be invoked upon cancellation, using `invokeOnCancellation
+    { .. }`. In this case, all we want is to cancel the `Call`. Since we’re inside
+    an extension function of `Call`, we add the following code:'
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`CancellableContinuation`是一个可取消的`Continuation`。我们可以注册一个回调函数，在取消时调用它，使用`invokeOnCancellation
+    { .. }`。在这种情况下，我们只需取消`Call`。由于我们在`Call`的扩展函数内部，我们添加以下代码：'
+- en: '[PRE27]'
+  id: totrans-195
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE27]'
+- en: After we’ve specified what should happen upon cancellation of the suspending
+    function,  we  perform  the  actual  HTTP  request  by  invoking  `Call.enqueue()`, 
+    giving a `Callback` instance. A suspending function “resumes” or “stops suspending”
+    when the corresponding `Continuation` is resumed, with either `resume` or `resumeWithException`.
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在指定了挂起函数取消时应发生的事情之后，我们通过调用`Call.enqueue()`执行实际的HTTP请求，提供一个`Callback`实例。当对应的`Continuation`使用`resume`或`resumeWithException`恢复时，挂起函数就会“恢复”或“停止挂起”。
+- en: When you get the result of your HTTP request, either `onResponse` or `onFailure`
+    will be called on the `Callback` instance you provided. If `onResponse` is called,
+    this is the “happy path.” You got a response and you should now resume the continuation
+    with a result of your choice. As shown in [Figure 8-5](#happy_path_sad_path),
+    we chose the body of the HTTP response. Meanwhile, on the “sad path,” `onFailure`
+    is called, and `OkHttp API` gives you an instance of an `IOException`.
+  id: totrans-197
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您获取到HTTP请求的结果时，`Callback`实例上的`onResponse`或`onFailure`将被调用。如果调用了`onResponse`，这是“快乐路径”。您收到了响应，现在可以使用您选择的结果恢复继续。如图[8-5图](#happy_path_sad_path)所示，我们选择了HTTP响应的主体。与此同时，在“悲伤路径”上，将调用`onFailure`，并且`OkHttp
+    API`会给您一个`IOException`的实例。
+- en: '![Happy Path/Sad Path](assets/pawk_0805.png)'
+  id: totrans-198
+  prefs: []
+  type: TYPE_IMG
+  zh: '![快乐路径/悲伤路径](assets/pawk_0805.png)'
+- en: Figure 8-5\. (1) First, a device will send an HTTP request to the server. (2)
+    The type of the response being returned will determine what happens next. (3)
+    If the request is a success, then `onResponse` is called. Otherwise, `onFailure`
+    is executed.
+  id: totrans-199
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 图8-5\. (1)首先，设备将向服务器发送一个HTTP请求。(2)返回的响应类型将决定接下来会发生什么。(3)如果请求成功，则调用`onResponse`。否则，将执行`onFailure`。
+- en: It is important to resume the continuation with this exception, using `resumeWithException`.
+    This way, the coroutine framework knows about the failure of this suspending function
+    and will propagate this event all the way up the coroutine hierarchy.
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`resumeWithException`恢复该异常的继续是非常重要的，这是一个例外情况。这样，协程框架就能够知道这个挂起函数的失败，并将此事件传播到协程层次结构的所有位置。
+- en: 'Now, for the best part: a showcase of how to use it inside a coroutine, as
+    shown in the following:'
+  id: totrans-201
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在到了最精彩的部分：展示如何在协程中使用它，如下所示：
+- en: '[PRE28]'
+  id: totrans-202
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE28]'
+- en: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO4-1)'
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO4-1)'
+- en: We start off by launching a coroutine with `launch`.
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们首先使用`launch`启动一个协程。
+- en: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO4-2)'
+  id: totrans-205
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO4-2)'
+- en: Inside the coroutine returned by `launch`, we invoke a suspending function `performHttpRequest`,
+    which uses `Dispatchers.IO`. This suspending function creates a new `Call` instance
+    and then invokes our suspending `await()` on it. At this point, an HTTP request
+    is performed.
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在由`launch`返回的协程内部，我们调用一个挂起函数`performHttpRequest`，它使用`Dispatchers.IO`。这个挂起函数创建一个新的`Call`实例，然后在其上调用我们的挂起`await()`。在这一点上，执行了一个HTTP请求。
+- en: '[![3](assets/3.png)](#co_structured_concurrency_with_coroutines_CO4-3)'
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_structured_concurrency_with_coroutines_CO4-3)'
+- en: Concurrently, and while step 2 is done on some thread of `Dispatchers.IO`, our
+    main thread proceeds execution of the main method, and immediately encounters
+    `delay(200)`. The coroutine running on the main thread is suspended for 200 ms.
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与此同时，当`Dispatchers.IO`的某个线程完成步骤2时，我们的主线程继续执行主方法，并立即遇到`delay(200)`。主线程上运行的协程会挂起200毫秒。
+- en: '[![4](assets/4.png)](#co_structured_concurrency_with_coroutines_CO4-4)'
+  id: totrans-209
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![4](assets/4.png)](#co_structured_concurrency_with_coroutines_CO4-4)'
+- en: After 200 ms have passed, we invoke `job.cancelAndJoin()`, which is a convenience
+    method for `job.cancel()`, then `job.join()`. Consequently, if the HTTP request
+    takes longer than 200 ms, the coroutine started by `launch` is still in the `Active`
+    state. The suspending `performHttpRequest` hasn’t returned yet. Calling `job.cancel()`
+    cancels the coroutine. Thanks to structured concurrency, the coroutine knows about
+    all of its children. The cancellation is propagated all the way down the hierarchy.
+    The `Continuation` of `performHttpRequest` gets cancelled, and so does the HTTP
+    request. If the HTTP request takes less than 200 ms, `job.cancelAndJoin()` has
+    no effect.
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 过了200毫秒后，我们调用`job.cancelAndJoin()`，这是一个方便的方法，相当于`job.cancel()`，然后`job.join()`。因此，如果HTTP请求花费的时间超过200毫秒，由`launch`启动的协程仍处于`Active`状态。挂起的`performHttpRequest`还没有返回。调用`job.cancel()`取消了协程。由于结构化并发，协程知道它所有的子协程。取消操作会向下传播到整个层次结构。`performHttpRequest`的`Continuation`被取消，HTTP请求也被取消。如果HTTP请求花费时间少于200毫秒，`job.cancelAndJoin()`没有效果。
+- en: No matter how deep in the coroutine hierarchy the HTTP request is performed,
+    if our predefined `Call.await()` is used, the cancellation of the `Call` is triggered
+    if a parent coroutine is cancelled.
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 无论HTTP请求在协程层次结构的多深处执行，如果使用我们预定义的`Call.await()`，则取消`Call`时会触发。
+- en: Coroutines That Are Cooperative with Cancellation
+  id: totrans-212
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 与取消协作的协程
+- en: 'You’ve just seen the various techniques to make a coroutine cancellable. Actually,
+    the coroutine framework has a convention: a well-behaved cancellable coroutine
+    throws a `CancellationException` when it’s cancelled. Why? Let’s look at this
+    suspending function in the following code:'
+  id: totrans-213
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您刚刚看到了使协程可取消的各种技术。实际上，协程框架有一个约定：行为良好的可取消协程在取消时会抛出`CancellationException`。为什么呢？让我们看看下面的代码中的这个挂起函数：
+- en: '[PRE29]'
+  id: totrans-214
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE29]'
+- en: 'It is indeed cancellable thanks to the `isActive` check. Imagine that you need
+    to do some cleanup when this function is cancelled. You know when this function
+    is cancelled when `isActive == false`, so you can add a cleanup block at the end,
+    as shown in the following:'
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 多亏了`isActive`检查，它确实是可取消的。想象一下，当函数被取消时，您需要进行一些清理工作。当`isActive == false`时，您知道函数被取消了，因此您可以在最后添加一个清理块，如下所示：
+- en: '[PRE30]'
+  id: totrans-216
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE30]'
+- en: 'Sometimes you’ll need to have the cleanup logic outside the cancelled function;
+    for example, when this function comes from an external dependency. So you need
+    to find a way to notify the call stack that this function is cancelled. Exceptions
+    are perfect for this. This is why the coroutine framework follows this convention
+    of throwing a `CancellationException`. Actually, *all* suspending functions from
+    the *kotlinx.coroutines* package are cancellable and throw `CancellationException`
+    when cancelled. `withContext` is one of them, so you could react to `wasteCpu`
+    cancellation higher in the call stack, as shown in the following code:'
+  id: totrans-217
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时，您需要在取消的函数之外进行清理逻辑；例如，当此函数来自外部依赖时。因此，您需要找到一种方法来通知调用堆栈该函数已取消。异常非常适合此目的。这就是为什么协程框架遵循抛出`CancellationException`的约定。实际上，*kotlinx.coroutines*包中的所有挂起函数都是可取消的，并且在取消时抛出`CancellationException`。`withContext`就是其中之一，因此您可以在调用堆栈中更高层次地响应`wasteCpu`的取消，如下面的代码所示：
+- en: '[PRE31]'
+  id: totrans-218
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE31]'
+- en: If you run this code, you’ll find that a `CancellationException` is caught.
+    Even though we never explicitly threw a `CancellationException` from inside `wasteCpu()`,
+    `withContext` did it for us.
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果运行此代码，您会发现捕获到了`CancellationException`。即使我们从`wasteCpu()`内部从未显式地抛出过`CancellationException`，`withContext`也为我们抛出了它。
+- en: Note
+  id: totrans-220
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: By throwing `CancellationException` only in case of cancellation, the coroutine
+    framework is able to differentiate a simple cancellation from a failure of a coroutine.
+    In the latter case, an exception will be raised that isn’t a subtype of `CancellationException`.
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 仅在取消情况下引发`CancellationException`时，协程框架才能区分简单的取消和协程失败。在后一种情况下，将引发一个不是`CancellationException`子类型的异常。
+- en: 'If you wish to investigate coroutine cancellation, you can *name* your coroutines
+    and enable debugging of coroutines inside the IDE by adding the VM option `-Dkotlinx.coroutines.debug`.
+    To name a coroutine, simply add a `CoroutineName` context element like so: `val`
+    `job` `=` `launch(CoroutineName("wasteCpu"))` `{..}`. This way, when catching
+    a `CancellationException`, the stacktrace is much more explicit and begins with
+    the following line:'
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您希望调查协程取消，您可以**命名**您的协程，并通过添加VM选项`-Dkotlinx.coroutines.debug`在IDE中启用协程调试。要命名协程，只需添加`CoroutineName`上下文元素，如下所示：`val
+    job = launch(CoroutineName("wasteCpu")) {..}`。这样，当捕获`CancellationException`时，堆栈跟踪会更加明确，并以以下行开始：
+- en: '[PRE32]'
+  id: totrans-223
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE32]'
+- en: In the previous example, if you swap `wasteCpu()` with `performHttpRequest()`—the
+    suspending function we made earlier with `suspendCancellableCoroutine`—you will
+    also find that a `CancellationException` is caught. So a suspending function made
+    with `suspendCancellableCoroutine` also throws a `CancellationException` when
+    cancelled.
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在上一个例子中，如果您将`wasteCpu()`替换为我们之前用`suspendCancellableCoroutine`创建的挂起函数`performHttpRequest()`，您还会发现捕获到`CancellationException`。因此，使用`suspendCancellableCoroutine`创建的挂起函数在取消时也会抛出`CancellationException`。
+- en: delay Is Cancellable
+  id: totrans-225
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: delay可取消
+- en: 'Remember `delay()`? Its signature is shown in the following code:'
+  id: totrans-226
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 还记得`delay()`吗？其签名如下所示：
+- en: '[PRE33]'
+  id: totrans-227
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE33]'
+- en: '`suspendCancellableCoroutine` again! So this means that anywhere you use `delay`,
+    you’re giving a coroutine or suspending function the opportunity to cancel. Building
+    on this, we could rewrite `wasteCpu()` as in the following:'
+  id: totrans-228
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 再次是`suspendCancellableCoroutine`！这意味着无论您在哪里使用`delay`，您都为协程或挂起函数提供了取消的机会。基于此，我们可以按照以下方式重新编写`wasteCpu()`：
+- en: '[PRE34]'
+  id: totrans-229
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE34]'
+- en: 'Notice that:'
+  id: totrans-230
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请注意：
+- en: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO5-1)'
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO5-1)'
+- en: We removed the `isActive` check.
+  id: totrans-232
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们去掉了`isActive`检查。
+- en: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO5-2)'
+  id: totrans-233
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO5-2)'
+- en: Then we added a simple `delay`, with a small enough sleep time (so the behavior
+    is similar to the previous implementation).
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后我们增加了一个简单的`delay`，睡眠时间足够短（使行为类似于以前的实现）。
+- en: This new version of `wasCpu` turns out to be cancellable just like the original,
+    and throws `CancellationException` when cancelled. This is because this suspending
+    function spends most of its time in the `delay` function.
+  id: totrans-235
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个新版本的`wasCpu`结果与原版一样可取消，并在取消时抛出`CancellationException`。这是因为这个挂起函数大部分时间都在`delay`函数中度过。
+- en: Tip
+  id: totrans-236
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: 'To summarize this section, you should strive to make your suspending functions
+    cancellable. A suspending function can be made of several suspending functions.
+    All of them should be cancellable. For example, if you need to perform a CPU-heavy
+    computation, then you should use `yield()` or `ensureActive()` at strategic places.
+    For example:'
+  id: totrans-237
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 总结本节，您应该努力使您的挂起函数可取消。一个挂起函数可能由多个挂起函数组成。它们都应该是可取消的。例如，如果您需要执行大量计算密集型计算，那么您应该在合适的位置使用`yield()`或`ensureActive()`。例如：
+- en: '[PRE35]'
+  id: totrans-238
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE35]'
+- en: Handling Cancellation
+  id: totrans-239
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 处理取消
+- en: 'In the previous section, you learned that it is possible to react to cancellation
+    using a try/catch statement. However, imagine that inside the code handling the
+    cancellation, you need to call some other suspending functions. You could be tempted
+    to implement the strategy shown in the following code:'
+  id: totrans-240
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前一节中，您已经学会了通过try/catch语句对取消作出反应。但是，想象一下，在处理取消的代码内部，您需要调用其他挂起函数。您可能会想要实现以下代码中显示的策略：
+- en: '[PRE36]'
+  id: totrans-241
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE36]'
+- en: 'Sadly, the preceding code doesn’t compile. Why? Because *a cancelled coroutine
+    isn’t allowed to suspend*. This is another rule from the coroutine framework.
+    The solution is to use `withContext(NonCancellable)`, as shown in the following
+    code:'
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 遗憾的是，前面的代码无法编译。为什么？因为*取消的协程不允许挂起*。这是协程框架的另一个规则。解决方案是使用`withContext(NonCancellable)`，如下所示：
+- en: '[PRE37]'
+  id: totrans-243
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE37]'
+- en: '`NonCancellable` is specifically designed for `withContext` to make sure the
+    supplied block of code won’t be cancelled.^([8](ch08.html#idm46669746634112))'
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`NonCancellable`是专门为`withContext`设计，以确保提供的代码块不会被取消。^([8](ch08.html#idm46669746634112))'
+- en: Causes of Cancellation
+  id: totrans-245
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 取消的原因
+- en: 'As we’ve seen before, there are two kinds of cancellation: *by design* and
+    *by failure*. Initially, we said that a failure is encountered when an exception
+    is thrown. It was a bit of an overstatement. You’ve just seen that, when voluntarily
+    cancelling a coroutine, a `CancellationException` is thrown. This is in fact what
+    distinguishes the two kinds of cancellation.'
+  id: totrans-246
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我们之前看到的，有两种取消方式：*按设计* 和 *按失败*。最初，我们说当抛出异常时遇到失败。这有点言过其实。你刚刚看到，当自愿取消一个协程时，会抛出
+    `CancellationException`。这实际上是区分这两种取消方式的标志。
+- en: 'When cancelling a coroutine `Job.cancel` (by design), the coroutine terminates
+    without affecting its parent. If the parent also has other child coroutines, they
+    also aren’t affected by this cancellation. The following code illustrates this:'
+  id: totrans-247
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当取消一个协程 `Job.cancel`（按设计），该协程终止而不影响其父协程。如果父协程还有其他子协程，它们也不受此取消影响。以下代码说明了这一点：
+- en: '[PRE38]'
+  id: totrans-248
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE38]'
+- en: 'The output of this program is:'
+  id: totrans-249
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此程序的输出为：
+- en: '[PRE39]'
+  id: totrans-250
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE39]'
+- en: '`child1` delays forever while `child2` waits for `child1` to proceed. The parent
+    quickly cancels `child1`, and we can see that `child1` is indeed cancelled since
+    `child2` continues its execution. Finally, the output “Parent is not cancelled”
+    is proof that the parent wasn’t affected by this cancellation (nor was `child2`,
+    by the way).'
+  id: totrans-251
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`child1` 永久延迟，而 `child2` 等待 `child1` 继续。父协程迅速取消 `child1`，我们可以看到 `child1` 确实被取消了，因为
+    `child2` 继续执行。最后，“Parent is not cancelled” 的输出证明父协程未受此取消影响（顺便说一句，`child2` 也没有受影响）。'
+- en: 'On the other hand, in the case of a failure (if an exception different from
+    `CancellationException` was thrown), the default behavior is that the parent gets
+    cancelled with that exception. If the parent also has other child coroutines,
+    they are also cancelled. Let’s try to illustrate this. Spoiler alert—don’t do
+    what we show in the following:'
+  id: totrans-252
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一方面，在失败的情况下（如果抛出了与 `CancellationException` 不同的异常），默认行为是父协程用该异常取消。如果父协程还有其他子协程，它们也会被取消。让我们试着说明这一点。剧透警告——不要照着以下内容做：
+- en: '[PRE40]'
+  id: totrans-253
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE40]'
+- en: What we’re trying to create is a circumstance in which a child fails after some
+    time, and we want to check that it causes the parent to fail. Then we need to
+    confirm that all other child coroutines of that parent should be cancelled too,
+    assuming that’s the cancellation policy we passed.
+  id: totrans-254
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们尝试创建这样一种情况：一个子协程在一段时间后失败，我们希望检查它是否导致父协程失败。然后，我们需要确认，假设这是我们传递的取消策略，该父协程的所有其他子协程也应该被取消。
+- en: 'At first glance, this code looks OK:'
+  id: totrans-255
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 乍一看，这段代码看起来没问题：
+- en: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO6-1)'
+  id: totrans-256
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![1](assets/1.png)](#co_structured_concurrency_with_coroutines_CO6-1)'
+- en: We’re creating the parent scope.
+  id: totrans-257
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们正在创建父作用域。
+- en: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO6-2)'
+  id: totrans-258
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![2](assets/2.png)](#co_structured_concurrency_with_coroutines_CO6-2)'
+- en: We’re starting a new coroutine inside this scope.
+  id: totrans-259
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在这个作用域内部启动一个新的协程。
+- en: '[![3](assets/3.png)](#co_structured_concurrency_with_coroutines_CO6-3)'
+  id: totrans-260
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![3](assets/3.png)](#co_structured_concurrency_with_coroutines_CO6-3)'
+- en: The first child waits indefinitely. If this child gets cancelled, it should
+    print “Child 1 was cancelled” since a `CancellationException` would have been
+    thrown from the `delay(Long.MAX_VALUE)`.
+  id: totrans-261
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个子协程无限等待。如果取消此子协程，它应该打印“Child 1 was cancelled”，因为从 `delay(Long.MAX_VALUE)`
+    中会抛出 `CancellationException`。
+- en: '[![4](assets/4.png)](#co_structured_concurrency_with_coroutines_CO6-4)'
+  id: totrans-262
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![4](assets/4.png)](#co_structured_concurrency_with_coroutines_CO6-4)'
+- en: Another child throws an `IOException` after a delay of 1 second.
+  id: totrans-263
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 另一个子协程在延迟1秒后抛出 `IOException`。
+- en: '[![5](assets/5.png)](#co_structured_concurrency_with_coroutines_CO6-5)'
+  id: totrans-264
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '[![5](assets/5.png)](#co_structured_concurrency_with_coroutines_CO6-5)'
+- en: Wait for the coroutine started in step 2\. If you don’t do this, the execution
+    of `runBlocking` terminates and the program stops.
+  id: totrans-265
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 等待在步骤2中启动的协程。如果不这样做，`runBlocking` 的执行将终止，程序停止。
+- en: Running this program, you indeed see “Child 1 was cancelled,” though the program
+    crashes right after with an uncaught `IOException`. Even if you surround `job.join()`
+    with a `try`/`catch` block, you’ll still get the crash.
+  id: totrans-266
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行此程序，你确实会看到“Child 1 was cancelled”，尽管程序立即因未捕获的 `IOException` 而崩溃。即使你用 `try`/`catch`
+    块包围 `job.join()`，仍会导致崩溃。
+- en: What we’re missing here is the origination of the exception. It was thrown from
+    inside a `launch`, which propagates exceptions upward through the coroutine hierarchy
+    until it reaches the parent scope. This behavior cannot be overridden. Once that
+    `scope` sees the exception, it cancels itself and all its children, then propagates
+    the exception to its parent, which is the scope of `runBlocking`.
+  id: totrans-267
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在这里缺少的是异常的发生地点。它是从`launch`内部抛出的，该异常通过协程层次结构向上传播，直到达到父作用域。这种行为无法被覆盖。一旦`scope`捕获到异常，它将取消自身和所有子作用域，然后将异常传播到其父作用域，即`runBlocking`的作用域。
+- en: It’s important to realize that trying to catch the exception isn’t going to
+    change the fact that the root coroutine of `runBlocking` is going to be cancelled
+    with that exception.
+  id: totrans-268
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 重要的是要意识到，试图捕获异常并不会改变`runBlocking`的根协程因该异常而被取消的事实。
+- en: 'In some cases, you might consider this as an acceptable scenario: any unhandled
+    exception leads to a program crash. However, in other scenarios you might prefer
+    to prevent the failure of `scope` to propagate to the main coroutine. To this
+    purpose, you need to register a `CoroutineExceptionHandler` (CEH):'
+  id: totrans-269
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在某些情况下，您可能认为这是可以接受的场景：任何未处理的异常都会导致程序崩溃。但在其他情况下，您可能希望防止作用域的失败传播到主协程。为此，您需要注册一个`CoroutineExceptionHandler`（CEH）：
+- en: '[PRE41]'
+  id: totrans-270
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE41]'
+- en: 'A `CoroutineExceptionHandler` is conceptually very similar to `Thread.UncaughtExceptionHandler`—except
+    it’s intended for coroutines. It’s a `Context` element, which should be added
+    to the context of a scope or a coroutine. The scope should create its own `Job`
+    instance, as a CEH only takes effect when installed at the top of a coroutine
+    hierarchy. In the preceding example, we added the CEH to the context of the scope.
+    We could very well have added it to the context of the first `launch`, like so:'
+  id: totrans-271
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`CoroutineExceptionHandler`在概念上与`Thread.UncaughtExceptionHandler`非常相似——只是它用于协程。它是一个`Context`元素，应添加到作用域或协程的上下文中。作用域应该创建自己的`Job`实例，因为CEH仅在安装在协程层次结构的顶部时才会生效。在前面的示例中，我们将CEH添加到了作用域的上下文中。我们也可以将其添加到第一个`launch`的上下文中，如下所示：'
+- en: '[PRE42]'
+  id: totrans-272
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE42]'
+- en: 'Running this sample with the exception handler, the output of the program now
+    is:'
+  id: totrans-273
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行此示例时使用异常处理程序，程序的输出如下：
+- en: '[PRE43]'
+  id: totrans-274
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE43]'
+- en: The program no longer crashes. From inside the CEH implementation, you could
+    retry the previously failed operations.
+  id: totrans-275
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 程序不再崩溃。在CEH实现内部，您可以重试先前失败的操作。
+- en: This example demonstrates that *by default*, the failure of a coroutine causes
+    its parent to cancel itself along with all the other children of that parent.
+    What if this behavior doesn’t match your application design? Sometimes the failure
+    of a coroutine is acceptable and doesn’t require the cancellation of all other
+    coroutines started inside the same scope. This is called *supervision* in the
+    coroutine framework.
+  id: totrans-276
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此示例演示了*默认情况下*，协程的失败会导致其父作用域及其所有其他子作用域被取消。如果此行为不符合您的应用程序设计，该怎么办？有时，协程的失败是可以接受的，并且不需要取消同一作用域内启动的所有其他协程。在协程框架中，这称为*监督*。
+- en: Supervision
+  id: totrans-277
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 监督
+- en: Consider the real-world example of loading a fragment’s layout. Each child `View`
+    might require some background processing to be fully constructed. Assuming you’re
+    using a scope which defaults to the main thread, and child coroutines for the
+    background tasks, the failure of one of those tasks shouldn’t cause the failure
+    of the parent scope. Otherwise, the whole fragment would become unresponsive to
+    the user.
+  id: totrans-278
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 考虑加载片段布局的真实示例。每个子`View`可能需要一些后台处理才能完全构建。假设您使用的作用域默认为主线程，并且使用子协程进行后台任务处理，其中一个任务的失败不应导致父作用域的失败。否则，整个片段对用户将变得无响应。
+- en: 'To implement this cancellation strategy, you can use `SupervisorJob`, which
+    is a `Job` for which the failure or cancellation of a child doesn’t affect other
+    children; *nor* does it affect the scope itself. A `SupervisorJob` is typically
+    used as a drop-in replacement for `Job` when building a `CoroutineScope`. The
+    resulting scope is then called a “supervisor scope.” Such a scope propagates cancellation
+    downward only, as shown in the following code:'
+  id: totrans-279
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要实现这种取消策略，您可以使用`SupervisorJob`，它是一个`Job`，其子作业的失败或取消不会影响其他子作业，也不会影响作用域本身。当构建`CoroutineScope`时，通常将`SupervisorJob`用作`Job`的替代品。然后称该作用域为“监督作用域”。这样的作用域仅向下传播取消，如以下代码所示：
+- en: '[PRE44]'
+  id: totrans-280
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE44]'
+- en: 'The output of this sample is:'
+  id: totrans-281
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此示例的输出是：
+- en: '[PRE45]'
+  id: totrans-282
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE45]'
+- en: 'Notice that we’ve installed a CEH in the context of the scope. Why? The first
+    child throws an exception that is never caught. Even if a supervisor scope isn’t
+    affected by the failure of a child, it still propagates unhandled exceptions—which,
+    as you know, might cause the program to crash. This is precisely the purpose of
+    a CEH: to handle uncaught exceptions. Interestingly enough, the CEH could also
+    have been installed into the context of the first `launch`, with the same result,
+    as shown in the following:'
+  id: totrans-283
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意，在范围的上下文中我们已经安装了一个CEH。为什么呢？第一个子任务抛出了一个未被捕获的异常。即使监督范围不受子任务失败的影响，它仍会传播未处理的异常——正如你所知，这可能导致程序崩溃。这正是CEH的目的：处理未捕获的异常。有趣的是，CEH也可以安装在第一个`launch`的上下文中，结果相同，如下所示：
+- en: '[PRE46]'
+  id: totrans-284
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE46]'
+- en: A CEH is intended to be installed at the top of a coroutine hierarchy, as this
+    is the place where uncaught exceptions can be handled.
+  id: totrans-285
+  prefs: []
+  type: TYPE_NORMAL
+  zh: CEH应安装在协程层次结构的顶部，这是处理未捕获异常的理想位置。
+- en: 'In this example, the CEH is installed on a direct child of the coroutine scope.
+    You can install it on a nested coroutine, as in the following:'
+  id: totrans-286
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个例子中，CEH安装在协程范围的直接子任务上。你可以在嵌套协程上安装它，就像下面这样：
+- en: '[PRE47]'
+  id: totrans-287
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE47]'
+- en: In this case, the CEH isn’t accounted for, and the program might crash.
+  id: totrans-288
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这种情况下，CEH没有被考虑在内，程序可能会崩溃。
+- en: supervisorScope Builder
+  id: totrans-289
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`supervisorScope` 构建器'
+- en: Similarly to `coroutineScope` builder—which inherits the current context and
+    creates a new `Job`—`supervisorScope` creates a `SupervisorJob`. Just like `coroutineScope`,
+    it waits for all children to complete. One crucial difference with `coroutineScope`
+    is that it only propagates cancellation downward, and cancels all children only
+    if it has failed itself. Another difference with `coroutineScope` is how exceptions
+    are handled. We’ll delve into that in the next section.
+  id: totrans-290
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与`coroutineScope`构建器类似，它继承当前上下文并创建一个新的`Job`，`supervisorScope`创建一个`SupervisorJob`。与`coroutineScope`一样，它等待所有子任务完成。与`coroutineScope`的一个关键区别是它只向下传播取消，并且仅当它自己失败时才取消所有子任务。与`coroutineScope`的另一个区别是异常的处理方式。我们将在下一节深入探讨这一点。
+- en: Parallel Decomposition
+  id: totrans-291
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 并行分解
+- en: Imagine that a suspending function has to run multiple tasks in parallel before
+    returning its result. Take, for example, the suspending function `weatherForHike`
+    from our hiking app at the beginning of this chapter. Fetching the weather could
+    involve multiple APIs, depending on the nature of the data. Wind data and temperature
+    could be fetched separately, from separate data sources.
+  id: totrans-292
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 想象一下，一个挂起函数在返回其结果之前必须并行运行多个任务。例如，在本章开头的我们的徒步应用中的挂起函数`weatherForHike`。获取天气可能涉及多个API，具体取决于数据的性质。风力数据和温度可能分别从不同的数据源获取。
+- en: 'Assuming you have suspending functions `fetchWind` and `fetchTemperatures`,
+    you could implement `weatherForHike` as follows:'
+  id: totrans-293
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 假设你有挂起函数`fetchWind`和`fetchTemperatures`，你可以实现`weatherForHike`如下：
+- en: '[PRE48]'
+  id: totrans-294
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE48]'
+- en: '`async` can also be used in this example because `withContext` provides a `CoroutineScope`—its
+    last argument is a suspending lambda with `CoroutineScope` as the receiver. Without
+    `withContext`, this sample wouldn’t compile, because there wouldn’t be any scope
+    provided for `async`.'
+  id: totrans-295
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这个例子中也可以使用`async`，因为`withContext`提供了一个`CoroutineScope`——它的最后一个参数是一个挂起lambda，以`CoroutineScope`作为接收者。如果没有`withContext`，这个示例就无法编译，因为没有提供任何作用域给`async`使用。
+- en: '`withContext` is particularly useful when you need to change the dispatcher
+    inside your suspending function. What if you don’t need to change your dispatcher?
+    The suspending `weatherForHike` could very well be called from a coroutine which
+    is already dispatched to the IO dispatcher. Then, using `withContext(Dispatchers.IO)`
+    would be redundant. In such situations, you could use `coroutineScope` instead
+    of or in conjunction with `withContext`. It’s a `CoroutineScope` builder, which
+    you use as in the following:'
+  id: totrans-296
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`withContext`在需要在挂起函数内部更改调度器时特别有用。如果不需要更改调度器呢？那么，挂起`weatherForHike`很可能已经从已经调度到IO调度器的协程中调用。那么，使用`withContext(Dispatchers.IO)`将是多余的。在这种情况下，你可以使用`coroutineScope`替代或与`withContext`结合使用。它是一个`CoroutineScope`构建器，你可以像下面这样使用：'
+- en: '[PRE49]'
+  id: totrans-297
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE49]'
+- en: 'Here, `coroutineScope` replaces `withContext`. What does this `coroutineScope`
+    do? First of all, have a look at its signature:'
+  id: totrans-298
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在这里，`coroutineScope`替换了`withContext`。那么，`coroutineScope`做什么呢？首先，看一下它的签名：
+- en: '[PRE50]'
+  id: totrans-299
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE50]'
+- en: From the official documentation, this function creates a `CoroutineScope` and
+    calls the specified `suspend` block with this scope. The provided scope inherits
+    its `coroutineContext` from the outer scope, but overrides the context’s `Job`.
+  id: totrans-300
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 根据官方文档，此函数创建一个`CoroutineScope`并使用此范围调用指定的`suspend`块。提供的范围从外部范围继承其`coroutineContext`，但覆盖了上下文的`Job`。
+- en: This function is designed for *parallel decomposition* of work. When any child
+    coroutine in this scope fails, this scope fails and all the rest of the children
+    are cancelled (for a different behavior, use supervisorScope). This function returns
+    as soon as the given block and all its child coroutines are completed.
+  id: totrans-301
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个函数被设计用于*并行分解*工作。当此作用域内的任何子协程失败时，此作用域失败，并且所有其余的子协程都会被取消（如果需要不同的行为，请使用`supervisorScope`）。此函数在给定的代码块及其所有子协程完成后返回。
+- en: Automatic Cancellation
+  id: totrans-302
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 自动取消
+- en: Applied to our example, if `fetchWind` fails, the scope provided by `coroutineScope`
+    fails and `fetchTemperatures` is subsequently cancelled. If `fetchTemperatures`
+    involves allocating heavy objects, you can see the benefit of the cancellation.
+  id: totrans-303
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用于我们的示例，如果`fetchWind`失败，则由`coroutineScope`提供的作用域失败，并且随后取消`fetchTemperatures`。如果`fetchTemperatures`涉及分配大型对象，您可以看到取消的好处。
+- en: '`coroutineScope` really shines when you need to *perform several tasks concurrently*.'
+  id: totrans-304
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`coroutineScope` 在需要*同时执行多个任务*时表现出色。'
+- en: Exception Handling
+  id: totrans-305
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 异常处理
+- en: Exception handling is an important part of your application design. Sometimes
+    you will just catch exceptions immediately after they’re raised, while other times
+    you’ll let them bubble up the hierarchy until the dedicated component handles
+    it. To that extent, the language construct `try`/`catch` is probably what you’ve
+    used so far. However, in the coroutine framework, there’s a catch (pun intended).
+    We could have started this chapter with it, but we needed to introduce you to
+    *supervision* and `CoroutineExceptionHandler` first.
+  id: totrans-306
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 异常处理是应用程序设计的重要部分。有时，您会在异常被引发后立即捕获它们，而其他时候则会让它们向上层级冒泡，直到专用组件处理它。在这种程度上，语言结构`try`/`catch`可能是您到目前为止使用的内容。然而，在协程框架中，有一个小陷阱（有点双关语）。我们本章可以从中开始，但我们首先需要向您介绍*监督*和`CoroutineExceptionHandler`。
+- en: Unhandled Versus Exposed Exceptions
+  id: totrans-307
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 未处理与暴露的异常
+- en: 'When it comes to exception propagation, uncaught exceptions can be treated
+    by the coroutine machinery as on of the following:'
+  id: totrans-308
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当涉及异常传播时，未捕获的异常可以被协程机制处理为以下之一：
+- en: Unhandled to the client code
+  id: totrans-309
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 未处理给客户端代码
+- en: '*Unhandled* exceptions can only be handled by a `CoroutineExceptionHandler`.'
+  id: totrans-310
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*未处理*的异常只能由`CoroutineExceptionHandler`处理。'
+- en: Exposed to the client code
+  id: totrans-311
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 暴露给客户端代码
+- en: '*Exposed* exceptions are the ones the client code can handle using `try`/`catch`.'
+  id: totrans-312
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*暴露*的异常是客户端代码可以使用`try`/`catch`处理的异常。'
+- en: 'In this matter, we can distinguish two categories of coroutine builders based
+    on how they treat uncaught exceptions:'
+  id: totrans-313
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在此事项中，我们可以根据协程构建器如何处理未捕获的异常将协程构建器区分为两类：
+- en: Unhandled (`launch` is one of them)
+  id: totrans-314
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 未处理的（`launch` 是其中之一）
+- en: Exposed (`async` is one of them)
+  id: totrans-315
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 暴露的（`async` 是其中之一）
+- en: 'First of all, do note that we’re talking about uncaught exceptions. If you
+    catch an exception *before* it is handled by a coroutine builder, everything works
+    as usual—you catch it, so the coroutine machinery isn’t aware of it. The following
+    shows an example with `launch` and `try`/`catch`:'
+  id: totrans-316
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，请注意我们谈论的是未捕获的异常。如果在协程构建器处理之前*捕获*异常，一切都正常——您捕获了它，因此协程机制并不知晓它。以下是使用`launch`和`try`/`catch`的示例：
+- en: '[PRE51]'
+  id: totrans-317
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE51]'
+- en: This example works as you would expect, *if* `regularFunctionWhichCanThrowException`
+    is, as its name suggests, a regular function which does not involve, directly
+    or indirectly, other coroutine builders—in which case, special rules can apply
+    (as we’ll see later in this chapter).
+  id: totrans-318
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果`regularFunctionWhichCanThrowException`正如其名称所示，是一个不直接或间接涉及其他协程构建器的常规函数，则此示例会按预期工作（在这种情况下，可能会应用特殊规则，我们稍后将在本章中详细介绍）。
+- en: 'The same idea applies to the `async` builder, as shown in the following:'
+  id: totrans-319
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相同的思路适用于`async`构建器，如下所示：
+- en: '[PRE52]'
+  id: totrans-320
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE52]'
+- en: 'The output of this program is, as you can easily guess:'
+  id: totrans-321
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此程序的输出，正如您可以轻易猜到的那样：
+- en: '[PRE53]'
+  id: totrans-322
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE53]'
+- en: 'Alternatively, instead of `try`/`catch`, you could use `runCatching`. It allows
+    for a nicer syntax if you consider that the happy path is when no exception is
+    thrown:'
+  id: totrans-323
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 或者，您可以使用`runCatching`而不是`try`/`catch`。如果考虑到快乐路径是在没有抛出异常时：
+- en: '[PRE54]'
+  id: totrans-324
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE54]'
+- en: 'Under the hood, `runCatching` is nothing but a `try`/`catch`, returning a `Result`
+    object, which offers some sugar methods like `getOrNull()` and `exceptionOrNull()`,
+    as in the following:'
+  id: totrans-325
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在底层，`runCatching`其实就是一个`try`/`catch`，返回一个`Result`对象，提供一些便捷方法如`getOrNull()`和`exceptionOrNull()`，如下所示：
+- en: '[PRE55]'
+  id: totrans-326
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE55]'
+- en: Some extension functions are defined on the `Result` and available out of the
+    box, like `getOrDefault` which returns the encapsulated value of the `Result`
+    instance if `Result.isSuccess` is `true` or a provided default value otherwise.
+  id: totrans-327
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一些扩展函数被定义在`Result`上，并且可以直接使用，比如`getOrDefault`，如果`Result.isSuccess`为`true`，则返回`Result`实例的封装值，否则返回提供的默认值。
+- en: Exposed Exceptions
+  id: totrans-328
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 暴露的异常
+- en: 'As we stated before, you can catch *exposed* exceptions using built-in language
+    support: `try`/`catch`. The following code shows where we have created our own
+    scope inside of which two concurrent tasks, `task1` and `task2`, are started in
+    a `supervisorScope`. `task2` immediately fails:'
+  id: totrans-329
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我们之前所述，你可以使用内置语言支持来捕获*暴露*的异常：`try`/`catch`。以下代码展示了我们在自己的作用域内创建了两个并发任务`task1`和`task2`的示例，在`supervisorScope`中启动。`task2`立即失败：
+- en: '[PRE56]'
+  id: totrans-330
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE56]'
+- en: 'The output of this program is:'
+  id: totrans-331
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该程序的输出是：
+- en: '[PRE57]'
+  id: totrans-332
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE57]'
+- en: This example demonstrates that inside a `supervisorScope`, `async` *exposes*
+    uncaught exceptions in the `await` call. If you don’t surround the `await` call
+    with a `try`/`catch` block, then the scope of `supervisorScope` fails and cancels
+    `task1`, then *exposes* to its parent the exception that caused its failure. So
+    this means that even when using a `supervisorScope`, unhandled exceptions in a
+    scope lead to the cancellation of the entire coroutine hierarchy beneath that
+    scope—and the exception is propagated up. By handling the exception the way we
+    did in this example, task 2 fails while task 1 isn’t affected.
+  id: totrans-333
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此示例演示了在`supervisorScope`内部，`async` *在* `await` 调用中*暴露*了未捕获的异常。如果你不用`try`/`catch`块包围`await`调用，那么`supervisorScope`的作用域会失败并取消`task1`，然后*向*其父级*暴露*导致其失败的异常。因此，即使在使用`supervisorScope`时，作用域内的未处理异常也会导致整个协程层次结构的取消，并且异常会向上传播。通过在此示例中处理异常的方式，任务2失败而任务1不受影响。
+- en: Interestingly enough, if you don’t invoke `task2.await()`, the program executes
+    as if no exception was ever—thrown`task2` silently fails.
+  id: totrans-334
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有趣的是，如果你不调用`task2.await()`，程序会执行，就好像从未抛出异常一样——`task2`会静默失败。
+- en: 'Now we’ll use the exact same example, but with a `coroutineScope` instead of
+    `supervisorScope`:'
+  id: totrans-335
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们将使用完全相同的示例，但是使用`coroutineScope`而不是`supervisorScope`：
+- en: '[PRE58]'
+  id: totrans-336
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE58]'
+- en: 'The output of this program is:'
+  id: totrans-337
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该程序的输出是：
+- en: '[PRE59]'
+  id: totrans-338
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE59]'
+- en: Then the program crashes on Android due to `java.lang.Exception`—we’ll explain
+    this shortly.
+  id: totrans-339
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后程序在安卓上由于`java.lang.Exception`而崩溃——我们很快会解释这个问题。
+- en: From this you can learn that inside a `coroutineScope`, `async` *exposes* uncaught
+    exceptions but also notifies its parent. If you don’t call `task2.await()`, the
+    program still crashes because `coroutineScope` fails and *exposes* to its parent
+    the exception that caused its failure. Then, `scope.launch` treats this exception
+    as *unhandled*.
+  id: totrans-340
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 从中你可以学到，在`coroutineScope`内部，`async` *暴露*了未捕获的异常，但同时也通知其父级。如果你不调用`task2.await()`，程序仍会崩溃，因为`coroutineScope`失败并*暴露*了导致其失败的异常。然后，`scope.launch`将这个异常视为*未处理*的异常。
+- en: Unhandled Exceptions
+  id: totrans-341
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 未处理的异常
+- en: 'The coroutine framework treats unhandled exceptions in a specific way: it tries
+    to use a CEH if the coroutine context has one. If not, it delegates to the *global
+    handler*. This handler calls a customizable set of CEH *and* calls the standard
+    mechanism of unhandled exceptions: `Thread.uncaughtExceptionHandler`. By default
+    on Android, the previously mentioned set of handlers is only made of a single
+    CEH which prints the stacktrace of the unhandled exception. However, it is possible
+    to register a custom handler which will be called in addition to the one that
+    prints the stacktrace. So you should remember that if you don’t handle an exception,
+    the `Thread.uncaughtExceptionHandler` *will* be invoked.'
+  id: totrans-342
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 协程框架以特定方式处理作用域内的未处理异常：尝试使用CEH（CoroutineExceptionHandler），如果协程上下文有的话。如果没有，就委托给*全局处理程序*。此处理程序调用一组可自定义的CEH，*并*调用未处理异常的标准机制：`Thread.uncaughtExceptionHandler`。在安卓上，默认情况下，先前提到的处理程序集仅由一个单独的CEH组成，它打印未处理异常的堆栈跟踪。但是，可以注册自定义处理程序，它将在打印堆栈跟踪的处理程序之外调用。因此，请记住，如果不处理异常，将调用`Thread.uncaughtExceptionHandler`。
+- en: The default `UncaughtExceptionHandler` on Android makes your application crash,
+    while on the JVM,^([9](ch08.html#idm46669744963376)) the default handler prints
+    the stacktrace to the console. Consequently, if you execute this program not on
+    Android but on the JVM, the output is:^([10](ch08.html#idm46669744962560))
+  id: totrans-343
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Android上，默认的`UncaughtExceptionHandler`会使您的应用程序崩溃，而在JVM上^([9](ch08.html#idm46669744963376))，默认的处理程序会将堆栈跟踪打印到控制台。因此，如果您不是在Android上执行此程序，而是在JVM上执行，则输出为：^([10](ch08.html#idm46669744962560))
+- en: '[PRE60]'
+  id: totrans-344
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE60]'
+- en: 'Back to Android. How could you handle this exception? Since `coroutineScope`
+    *exposes* exceptions, you could wrap `coroutineScope` inside a `try`/`catch` statement.
+    Alternatively, if you don’t handle it correctly, the preceding `coroutineScope`,
+    `scope.launch`, treats this exception as unhandled. Then your last chance to handle
+    this exception is to register a CEH. There are at least two reasons you would
+    do that: first, to stop the exception’s propagation and avoid a program crash;
+    and second, to notify your crash analytics and rethrow the exception—potentially
+    making the application crash. In any case, we’re not advocating for silently catching
+    exceptions. If you do want to use CEH, there are a couple of things you should
+    know. A CEH only works when registered to:'
+  id: totrans-345
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 回到Android。你怎么处理这个异常？由于`coroutineScope`*暴露*异常，你可以将`coroutineScope`包装在`try`/`catch`语句中。另外，如果你没有正确处理它，前面的`coroutineScope`，`scope.launch`，会将这个异常视为未处理的。那么你最后处理这个异常的机会就是注册一个CEH。至少有两个原因会这样做：第一，停止异常的传播并避免程序崩溃；第二，通知您的崩溃分析并重新抛出异常——可能导致应用程序崩溃。无论如何，我们都不主张悄悄地捕获异常。如果您确实想要使用CEH，有几件事情您应该知道。只有在以下情况下注册的CEH才会起作用：
+- en: '`launch` (not `async`) when `launch` is a root coroutine builder^([11](ch08.html#idm46669744952688))'
+  id: totrans-346
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 当`launch`是根协程构建器时（而不是`async`）^([11](ch08.html#idm46669744952688))
+- en: A scope
+  id: totrans-347
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 一个范围
+- en: '`supervisorScope`*s* direct child'
+  id: totrans-348
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`supervisorScope`的直接子项'
+- en: 'In our example, the CEH should be registered either on `scope.launch` or on
+    the scope itself. The following code shows this on the root coroutine:'
+  id: totrans-349
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们的示例中，CEH 应该注册在 `scope.launch` 上，或者直接在范围上。下面的代码显示了这个在根协程上的示例：
+- en: '[PRE61]'
+  id: totrans-350
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE61]'
+- en: 'The output of this program is:'
+  id: totrans-351
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 此程序的输出是：
+- en: '[PRE62]'
+  id: totrans-352
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE62]'
+- en: 'Here is the same example, this time with the CEH registered on the scope:'
+  id: totrans-353
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是同样的例子，这次在范围上注册了CEH：
+- en: '[PRE63]'
+  id: totrans-354
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE63]'
+- en: 'Finally, we illustrate the use of a CEH on a `supervisorScope` direct child:'
+  id: totrans-355
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们演示了在`supervisorScope`的直接子项上使用CEH的方法：
+- en: '[PRE64]'
+  id: totrans-356
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE64]'
+- en: Notice that the coroutine builder on which the CEH is registered is a `launch`.
+    It wouldn’t have been taken into account with an `async`, which *exposes* uncaught
+    exceptions, which can be handled with `try`/`catch`.
+  id: totrans-357
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 注意CEH注册的协程构建器是`launch`。如果是`async`，它不会被考虑，因为它*暴露*未捕获的异常，可以使用`try`/`catch`处理。
+- en: Summary
+  id: totrans-358
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 摘要
+- en: When a function might not return immediately, it’s a good candidate to be implemented
+    as a suspending function. However, the `suspend` modifier doesn’t magically turn
+    a blocking call into a nonblocking one. Use `withContext` along with the appropriate
+    `Dispatcher`, and/or call other suspending functions.
+  id: totrans-359
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 当函数可能不会立即返回时，将其实现为挂起函数是一个很好的选择。但是，`suspend`修饰符并不会自动将阻塞调用转换为非阻塞调用。使用`withContext`以及适当的`Dispatcher`，和/或调用其他挂起函数。
+- en: A coroutine can be deliberately cancelled using `Job.cancel()` for `launch`,
+    or `Deferred.cancel()` for `async`. If you need to call some suspending functions
+    inside your cleanup code, make sure you wrap your cleanup logic inside a `withContext(NonCancellable)
+    { .. }` block. The cancelled coroutine will remain in the cancelling state until
+    the cleanup exits. After the cleanup is done, the aforementioned coroutine goes
+    to the cancelled state.
+  id: totrans-360
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 一个协程可以通过`Job.cancel()`来被主动取消，用于`launch`，或者通过`Deferred.cancel()`用于`async`。如果你需要在清理代码中调用一些挂起函数，请确保将清理逻辑包装在`withContext(NonCancellable)
+    { .. }`块中。被取消的协程会保持取消状态直到清理完成。清理完成后，上述协程进入取消状态。
+- en: A coroutine always waits for its children to complete before completing itself.
+    So cancelling a coroutine also cancels all of its children.
+  id: totrans-361
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 一个协程总是在其子协程完成之前等待自身完成。所以取消一个协程也会取消其所有子协程。
+- en: Your coroutines should be cooperative with cancellation. All suspending functions
+    from the *kotlinx.coroutines* package are cancellable. This notably includes `withContext`.
+    If you’re implementing your own suspending function, make sure it is cancellable
+    by checking `isActive` or calling `ensureActive()` or `yield()` at appropriate
+    steps.
+  id: totrans-362
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 您的协程应与取消协作。来自*kotlinx.coroutines*包的所有挂起函数都是可取消的。这特别包括`withContext`。如果您正在实现自己的挂起函数，请确保它是可取消的，方法是在适当的步骤中检查`isActive`或调用`ensureActive()`或`yield()`。
+- en: 'There are two categories of coroutine scope: the scopes using `Job` and the
+    ones using `SupervisorJob` (also called supervisor scopes). They differ in how
+    cancellation is performed and in exception handling. If the failure of a child
+    should also cancel other children, use a regular scope. Otherwise, use a supervisor
+    scope.'
+  id: totrans-363
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 协程作用域有两种类别：使用`Job`的作用域和使用`SupervisorJob`（也称为监督作用域）的作用域。它们在取消操作和异常处理方式上有所不同。如果子协程的失败也应该取消其他子协程，请使用普通作用域。否则，请使用监督作用域。
+- en: '`launch` and `async` differ in how they treat uncaught exceptions. `async`
+    *exposes* exceptions, which can be caught by wrapping the `await` call in a `try`/`catch`.
+    On the other hand, `launch` treats uncaught exceptions as unhandled, which can
+    be handled using a CEH.'
+  id: totrans-364
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '`launch`和`async`在处理未捕获的异常时有所不同。`async` *公开* 异常，可以通过在`await`调用周围包装`try`/`catch`来捕获。另一方面，`launch`将未捕获的异常视为未处理的，可以使用CEH来处理它们。'
+- en: A CEH is optional. It should only be used when you really need to do something
+    with unhandled exceptions. Unhandled exceptions typically should make your application
+    crash. Or, at least, recovering from some exceptions might leave your application
+    in an undetermined state. Nevertheless, if you decide to use a CEH, then it should
+    be installed at the top of the coroutine hierarchy—typically into the topmost
+    scope. It can also be installed on a `supervisorScope` direct child.
+  id: totrans-365
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: CEH（未处理异常处理器）是可选的。只有在真正需要处理未处理异常时才应使用它。未处理的异常通常应导致应用程序崩溃。或者，从某些异常中恢复可能会使应用程序处于不确定状态。然而，如果决定使用CEH，则应将其安装在协程层次结构的顶部——通常是在最顶层的作用域中。它也可以安装在`supervisorScope`的直接子级上。
+- en: If a coroutine fails because of an uncaught exception, it gets cancelled along
+    with all of its children and the exceptions propagate up.
+  id: totrans-366
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如果协程因未捕获的异常而失败，则它将与其所有子协程一起取消，并且异常将向上传播。
+- en: Closing Thoughts
+  id: totrans-367
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 总结思考
+- en: You learned how to write your own suspending functions, and how to use them
+    inside coroutines. Your coroutines live within scopes. In order to implement the
+    desired cancellation policy, you know how to choose between `coroutineScope` and
+    `supervisorScope`. The scopes you create are children of other scopes higher in
+    the hierarchy. In Android, those “root” scopes are library-provided—you don’t
+    create them yourself. A good example is the `viewModelScope` available in any
+    `ViewModel` instance.
+  id: totrans-368
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您学会了如何编写自己的挂起函数，以及如何在协程中使用它们。您的协程存在于作用域内。为了实现所需的取消策略，您知道如何在`coroutineScope`和`supervisorScope`之间进行选择。您创建的作用域是更高层次作用域的子作用域。在Android中，这些“根”作用域由库提供——您不需要自己创建。一个很好的例子是任何`ViewModel`实例中都可以使用的`viewModelScope`。
+- en: Coroutines are a perfect fit for one-time or repetitive tasks. However, we often
+    have to work with asynchronous streams of data. `Channel`s and `Flow`s are designed
+    for that, and will be covered in the next two chapters.
+  id: totrans-369
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 协程非常适合一次性或重复性任务。然而，我们经常需要处理异步数据流。`Channel`和`Flow`就是为此设计的，并将在接下来的两章中进行讲解。
+- en: ^([1](ch08.html#idm46669749430800-marker)) When performing CPU-bound tasks,
+    a worker is bound to a CPU core.
+  id: totrans-370
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([1](ch08.html#idm46669749430800-marker)) 在执行CPU绑定任务时，工作者绑定到CPU核心。
+- en: ^([2](ch08.html#idm46669749241152-marker)) See *Java Concurrency in Practice*
+    (Addison-Wesley), Brian Goetz et al., 16.2.2.
+  id: totrans-371
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([2](ch08.html#idm46669749241152-marker)) 参见*Java并发实战*（Addison-Wesley），Brian
+    Goetz等人，16.2.2。
+- en: ^([3](ch08.html#idm46669749034928-marker)) We mentioned this in [Chapter 5](ch05.html#thread_safety_id).
+    In this case, it means that we add a new element to `hikeDataList` from the main
+    thread.
+  id: totrans-372
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([3](ch08.html#idm46669749034928-marker)) 我们在[第5章](ch05.html#thread_safety_id)中提到过这一点。在这种情况下，这意味着我们从主线程向`hikeDataList`添加了一个新元素。
+- en: ^([4](ch08.html#idm46669748759888-marker)) Unless the `Dispatchers.IO` suffers
+    from thread starvation, which is highly unlikely.
+  id: totrans-373
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([4](ch08.html#idm46669748759888-marker)) 除非`Dispatchers.IO`遭遇线程饥饿，这种情况非常罕见。
+- en: ^([5](ch08.html#idm46669748190592-marker)) It’s just a subclass of the regular
+    `CoroutineScope`, which invokes `coroutineContext.cancel()` inside its `close()`
+    method.
+  id: totrans-374
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([5](ch08.html#idm46669748190592-marker)) 它只是常规`CoroutineScope`的一个子类，其在`close()`方法中调用`coroutineContext.cancel()`。
+- en: ^([6](ch08.html#idm46669748183760-marker)) Notice that the material on the suspending
+    functions approach is relatively shorter (three and a half pages compared to seven
+    pages for the traditional approach)—probably because suspending functions is an
+    easier (and easier-to-explain) solution.
+  id: totrans-375
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([6](ch08.html#idm46669748183760-marker)) 注意，挂起函数方法的材料相对较短（三页半，相比传统方法的七页）——可能是因为挂起函数是一种更简单（也更易于解释）的解决方案。
+- en: ^([7](ch08.html#idm46669748133168-marker)) When started lazily, a coroutine
+    is in the `New` state. Only after invoking `job.start()` does the coroutine move
+    to the `Active state`. Calling `job.join()` also starts the coroutine.
+  id: totrans-376
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([7](ch08.html#idm46669748133168-marker)) 当懒启动时，协程处于 `New` 状态。只有在调用 `job.start()`
+    后，协程才会进入 `Active` 状态。调用 `job.join()` 也会启动协程。
+- en: ^([8](ch08.html#idm46669746634112-marker)) `NonCancellable` is actually a special
+    implementation of `Job` which is always in `Active` state. So suspending functions
+    that use `ensureActive()` under this context are never cancelled.
+  id: totrans-377
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([8](ch08.html#idm46669746634112-marker)) `NonCancellable` 实际上是 `Job` 的特殊实现，始终处于
+    `Active` 状态。因此，在此上下文中使用 `ensureActive()` 的挂起函数永远不会被取消。
+- en: ^([9](ch08.html#idm46669744963376-marker)) By JVM, we mean on a desktop application,
+    or on the server side.
+  id: totrans-378
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([9](ch08.html#idm46669744963376-marker)) JVM 指的是桌面应用程序或服务器端。
+- en: ^([10](ch08.html#idm46669744962560-marker)) “Program ends” is printed because
+    the *unhandled* exception makes `scope` fail, not the scope from `runBlocking`.
+  id: totrans-379
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([10](ch08.html#idm46669744962560-marker)) 因为未处理的异常使得 `scope` 失败，而不是 `runBlocking`
+    中的作用域，所以打印了“程序结束”。
+- en: ^([11](ch08.html#idm46669744952688-marker)) A root coroutine builder is a scope’s
+    direct child. In the previous example, at the line `val job = scope.launch {..}`,
+    `launch` is a root coroutine builder.
+  id: totrans-380
+  prefs: []
+  type: TYPE_NORMAL
+  zh: ^([11](ch08.html#idm46669744952688-marker)) 根协程构建器是作用域的直接子级。在前面的例子中，在`val job
+    = scope.launch {..}`这一行，`launch` 是一个根协程构建器。

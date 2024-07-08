@@ -1,0 +1,360 @@
+- en: Preface
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 前言
+- en: Why We Wrote This Book
+  id: totrans-1
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 为什么写这本书
+- en: This book is a practical cross-reference for iOS and Android native development.
+    By “native” we mean the original, provided toolsets for each platform—Swift and
+    Cocoa for iOS, and Java or Kotlin with the Android Open Source Project (AOSP)
+    software development kit (SDK) for Android.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这本书是iOS和Android本地开发的实用交叉参考。通过“本地”，我们指的是每个平台的原始提供的工具集——对于iOS是Swift和Cocoa，对于Android是Java或Kotlin与Android开源项目（AOSP）软件开发工具包（SDK）。
+- en: We were motivated to write this book out of common need. Both authors have experience
+    with both platforms but specialize in one. Members of our team (including ourselves)
+    would find themselves working on a problem we encountered in one platform, determine
+    a solution to that problem in that platform, and then need to share that solution
+    with the team members working on the other platform.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们写这本书是出于共同的需求。两位作者都有两个平台的经验，但专注于其中一个。我们团队的成员（包括我们自己）会发现自己在一个平台上遇到的问题，确定了该平台上的解决方案，然后需要与在另一个平台上工作的团队成员分享这个解决方案。
+- en: Often, these were common tasks like reading or writing to or from a database
+    or files, making a network connection, or showing user feedback in a way that’s
+    familiar to users. When we started codifying and documenting these tasks, in both
+    platforms, it quickly became apparent that a very large majority of application
+    code fell into one of these categorizations and that a reference source for all
+    of them could be valuable to teams with a similar makeup, teams starting a transition
+    to another platform, or even developers who wanted to start learning both platforms
+    at the same time.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通常情况下，这些任务是一些常见的操作，比如从数据库或文件中读取或写入数据，建立网络连接，或以用户熟悉的方式显示用户反馈。当我们开始系统化和记录这些任务时，在两个平台上很快就显现出一个非常大的应用程序代码大多数属于这些分类之一的事实，而且为所有这些任务提供参考来源对于那些具有类似编码结构的团队、正在向另一个平台过渡的团队或者甚至希望同时学习两个平台的开发人员都是有价值的。
+- en: We hope that this book will provide that resource for the most common mobile
+    development tasks to its readers.
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望这本书能为读者提供关于最常见的移动开发任务的资源。
+- en: Having an entire team of mobile developers with varying levels of cross-platform
+    experience, we were able to manage this pretty well, but the idea of a cross-reference
+    came up a lot, yet there’s really nothing currently available that provides the
+    breadth we think is necessary. We could only imagine the frustration a sole developer
+    in the same situation might experience; this book allows anyone to learn the basic
+    approach to most of the common tasks in application development for both platforms.
+    Each task chapter shows the entire process for the task in both Android and iOS
+    with human-readable walk-throughs of the code samples. We would posit that the
+    samples cover 80% of the basic knowledge required to start off in app development;
+    of course the reader is expected to maintain and update their knowledge and read
+    documentation for what we don’t specifically cover, but we’ve included a start-to-finish
+    application walk-through as well. This sample app demonstrates how to successfully
+    accomplish virtually everything needed by a modern app, using the task cross-reference
+    provided earlier.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们有一个移动开发团队，成员拥有不同水平的跨平台经验，我们能够很好地管理这些，但是经常提到的一个想法是跨参考，然而目前确实没有什么能够提供我们认为是必要的广度。我们只能想象处于同样境地的单个开发人员可能会遇到的挫折；这本书使任何人都能够学习应用程序开发中大多数常见任务的基本方法。每个任务章节展示了在Android和iOS中完成任务的整个过程，并使用可读的代码示例进行逐步讲解。我们认为这些示例涵盖了开始应用程序开发所需的基本知识的80%；当然，读者应该保持并更新他们的知识，并阅读我们没有专门涵盖的文档，但我们也包括了一个从头到尾的应用程序演示。这个示例应用程序演示了如何成功完成现代应用程序所需的几乎所有操作，使用之前提供的任务交叉参考。
+- en: Since all Android code examples are provided in both Java and Kotlin, this book
+    has a pleasant side effect of allowing Android developers the same type of cross-reference
+    between Java and Kotlin as cross-platform developers enjoy between iOS and AOSP.
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于所有Android代码示例都提供了Java和Kotlin两种版本，这本书还具有一个愉快的副作用，让Android开发人员像跨平台开发人员一样享受在Java和Kotlin之间的交叉参考。
+- en: The code samples are not pseudo-code; they are written in the suggested languages
+    and should all compile and function as described.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码示例不是伪代码；它们是用建议的语言编写的，并且应该按描述的方式编译和运行。
+- en: Who This Book Is For
+  id: totrans-9
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 这本书适合谁
+- en: This book is for any native programmer working either exclusively with a single
+    platform or with both, or familiar with one but needing to have some ability with
+    the other. We assume at least a passing familiarity with some programming language.
+    You don’t have to be an expert with Java or Swift, but having some UI programming
+    background is helpful.
+  id: totrans-10
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书适用于任何专门使用单个平台或同时使用两个平台的本地程序员，或者熟悉其中一个但需要掌握另一个的程序员。我们假设您至少对某种编程语言有一定了解。您不必成为Java或Swift的专家，但具有一些UI编程背景会有所帮助。
+- en: You may need to refer to official documentation for Objective-C, Swift, Java,
+    or Kotlin to understand some basic language mechanics referenced within this book.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可能需要参考Objective-C、Swift、Java或Kotlin的官方文档，以理解本书中引用的一些基本语言机制。
+- en: Programmers coming from one framework (iOS- or Android-native development) should
+    have an especially easy time consuming the information provided because almost
+    all code examples are presented with functional equivalence in the complimentary
+    framework (Android for iOS, and vice versa).
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 来自一个框架（iOS或Android本地开发）的程序员应该特别容易消化所提供的信息，因为几乎所有代码示例都以互补框架（Android用于iOS，反之亦然）的功能等效性呈现。
+- en: How This Book Is Organized
+  id: totrans-13
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 本书的组织方式
+- en: This book is divided into two parts, excluding front and back matter. The first
+    part is a list of common, platform-agnostic tasks, like writing a file to local
+    storage or creating an HTTP request. The second part walks you through creating
+    a bare-bones app in each platform, utilizing the techniques from [Part I](part01.html#part_1_tasks).
+  id: totrans-14
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书分为两部分，不包括前言和后记。第一部分是常见的与平台无关的任务列表，如将文件写入本地存储或创建HTTP请求。第二部分指导您在每个平台上创建一个基本应用程序，利用来自[第一部分](part01.html#part_1_tasks)的技术。
+- en: Conventions Used in This Book
+  id: totrans-15
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 本书中使用的约定
+- en: 'The following typographical conventions are used in this book:'
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书使用以下印刷约定：
+- en: '*Italic*'
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*斜体*'
+- en: Indicates new terms, URLs, email addresses, filenames, and file extensions.
+  id: totrans-18
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 表示新术语、URL、电子邮件地址、文件名和文件扩展名。
+- en: '`Constant width`'
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`等宽`'
+- en: Used for program listings, as well as within paragraphs to refer to program
+    elements such as variable or function names, databases, data types, environment
+    variables, statements, and keywords.
+  id: totrans-20
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 用于程序清单，以及段落内引用程序元素，如变量或函数名称、数据库、数据类型、环境变量、语句和关键字。
+- en: '*`Constant width italic`*'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*`等宽斜体`*'
+- en: Shows text that should be replaced with user-supplied values or by values determined
+    by context.
+  id: totrans-22
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 显示应由用户提供值或由上下文确定值的文本。
+- en: Tip
+  id: totrans-23
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 提示
+- en: This element signifies a tip or suggestion.
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个元素表示提示或建议。
+- en: Note
+  id: totrans-25
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: This element signifies a general note.
+  id: totrans-26
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个元素表示一般提示。
+- en: Warning
+  id: totrans-27
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 警告
+- en: This element indicates a warning or caution.
+  id: totrans-28
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个元素表示警告或注意事项。
+- en: Using Code Examples
+  id: totrans-29
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用代码示例
+- en: Supplemental material (code examples, exercises, etc.) is available for download
+    at [*https://github.com/oreillymedia/native-mobile-development*](https://github.com/oreillymedia/native-mobile-development).
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 可以从[*https://github.com/oreillymedia/native-mobile-development*](https://github.com/oreillymedia/native-mobile-development)下载补充材料（代码示例、练习等）。
+- en: This book is here to help you get your job done. In general, if example code
+    is offered with this book, you may use it in your programs and documentation.
+    You do not need to contact us for permission unless you’re reproducing a significant
+    portion of the code. For example, writing a program that uses several chunks of
+    code from this book does not require permission. Selling or distributing examples
+    from O’Reilly books does require permission. Answering a question by citing this
+    book and quoting example code does not require permission. Incorporating a significant
+    amount of example code from this book into your product’s documentation does require
+    permission.
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本书旨在帮助您完成工作。一般而言，如果本书提供了示例代码，您可以在您的程序和文档中使用它。除非您要复制本书的大部分代码，否则无需征得我们的许可。例如，编写一个使用本书多个代码片段的程序不需要许可。出售或分发O’Reilly书籍的示例需要许可。引用本书并引用示例代码来回答问题不需要许可。将本书大量示例代码整合到产品文档中需要许可。
+- en: 'We appreciate, but do not require, attribution. An attribution usually includes
+    the title, author, publisher, and ISBN. For example: “*Native Mobile Development*
+    by Shaun Lewis and Mike Dunn (O’Reilly). Copyright 2020 Shaun Lewis and Mike Dunn,
+    978-1-492-05287-6.”'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们感谢您，但不要求您进行归属。归属通常包括标题、作者、出版商和ISBN。例如：“*Native Mobile Development* by Shaun
+    Lewis and Mike Dunn (O’Reilly). Copyright 2020 Shaun Lewis and Mike Dunn, 978-1-492-05287-6.”
+- en: If you feel your use of code examples falls outside fair use or the permission
+    given above, feel free to contact us at [*permissions@oreilly.com*](mailto:permissions@oreilly.com).
+  id: totrans-33
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您认为您对代码示例的使用超出了合理使用范围或上述许可，请随时通过[*permissions@oreilly.com*](mailto:permissions@oreilly.com)与我们联系。
+- en: O’Reilly Online Learning
+  id: totrans-34
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: O’Reilly在线学习
+- en: Note
+  id: totrans-35
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: For more than 40 years, [*O’Reilly Media*](http://oreilly.com) has provided
+    technology and business training, knowledge, and insight to help companies succeed.
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 超过40年来，[*O’Reilly Media*](http://oreilly.com)一直提供技术和业务培训、知识和见解，帮助公司取得成功。
+- en: Our unique network of experts and innovators share their knowledge and expertise
+    through books, articles, conferences, and our online learning platform. O’Reilly’s
+    online learning platform gives you on-demand access to live training courses,
+    in-depth learning paths, interactive coding environments, and a vast collection
+    of text and video from O’Reilly and 200+ other publishers. For more information,
+    please visit [*http://oreilly.com*](http://oreilly.com).
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们独特的专家和创新者网络通过书籍、文章、会议和我们的在线学习平台分享他们的知识和专业知识。O’Reilly的在线学习平台让您可以按需访问现场培训课程、深入学习路径、交互式编码环境以及来自O’Reilly和其他200多家出版商的大量文本和视频。更多信息，请访问[*http://oreilly.com*](http://oreilly.com)。
+- en: How to Contact Us
+  id: totrans-38
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 如何联系我们
+- en: 'Please address comments and questions concerning this book to the publisher:'
+  id: totrans-39
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 请将有关本书的评论和问题发送至出版商：
+- en: O’Reilly Media, Inc.
+  id: totrans-40
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: O’Reilly Media, Inc.
+- en: 1005 Gravenstein Highway North
+  id: totrans-41
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 1005 Gravenstein Highway North
+- en: Sebastopol, CA 95472
+  id: totrans-42
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 加利福尼亚州，Sebastopol，95472
+- en: 800-998-9938 (in the United States or Canada)
+  id: totrans-43
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 800-998-9938（美国或加拿大）
+- en: 707-829-0515 (international or local)
+  id: totrans-44
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 707-829-0515（国际或本地）
+- en: 707-829-0104 (fax)
+  id: totrans-45
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 707-829-0104（传真）
+- en: We have a web page for this book, where we list errata, examples, and any additional
+    information. You can access this page at [*https://oreil.ly/native-mobile-dev*](https://oreil.ly/native-mobile-dev).
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们为这本书设有一个网页，列出勘误、示例和任何其他信息。您可以访问此页面[*https://oreil.ly/native-mobile-dev*](https://oreil.ly/native-mobile-dev)。
+- en: Email [*bookquestions@oreilly.com*](mailto:bookquestions@oreilly.com) to comment
+    or ask technical questions about this book.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过电子邮件[*bookquestions@oreilly.com*](mailto:bookquestions@oreilly.com)评论或提出有关本书的技术问题。
+- en: For more information about our books, courses, conferences, and news, see our
+    website at [*http://www.oreilly.com*](http://www.oreilly.com).
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有关我们的书籍、课程、会议和新闻的更多信息，请访问我们的网站[*http://www.oreilly.com*](http://www.oreilly.com)。
+- en: 'Find us on Facebook: [*http://facebook.com/oreilly*](http://facebook.com/oreilly)'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Facebook上找到我们：[*http://facebook.com/oreilly*](http://facebook.com/oreilly)
+- en: 'Follow us on Twitter: [*http://twitter.com/oreillymedia*](http://twitter.com/oreillymedia)'
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Twitter上关注我们：[*http://twitter.com/oreillymedia*](http://twitter.com/oreillymedia)
+- en: 'Watch us on YouTube: [*http://www.youtube.com/oreillymedia*](http://www.youtube.com/oreillymedia)'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在YouTube上观看我们：[*http://www.youtube.com/oreillymedia*](http://www.youtube.com/oreillymedia)
+- en: Acknowledgments
+  id: totrans-52
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 致谢
+- en: 'We would like to thank the following individuals, in alphabetical order, for
+    technical review: Paris Buttfield-Addison, Ian Darwyn, Dawn Griffiths, Ben Kreeger,
+    Pierre-Olivier Laurence, Shane Staples, and Subathra Thanabalan.'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们要感谢以下以字母顺序列出的个人进行技术审查：Paris Buttfield-Addison、Ian Darwyn、Dawn Griffiths、Ben
+    Kreeger、Pierre-Olivier Laurence、Shane Staples和Subathra Thanabalan。

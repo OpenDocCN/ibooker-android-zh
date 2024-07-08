@@ -1,0 +1,1782 @@
+- en: 'Chapter 6\. Fragments and Navigation: *Finding Your Way*'
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第 6 章。片段和导航：*找到你的方式*
+- en: '![image](Images/f0219-01.png)'
+  id: totrans-1
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0219-01.png)'
+- en: '**Most apps require more than one screen.**'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**大多数应用程序需要多个屏幕。**'
+- en: So far, we’ve just looked at how to create single-screen apps, which is fine
+    for simple applications. But what if you have **more complex requirements**? In
+    this chapter, you’ll learn how to use **fragments** and the **Navigation component**
+    to **build multi-screen apps.** You’ll learn how **fragments are like subactivities**
+    with their own methods. You’ll find out how to **design effective navigation graphs**.
+    Finally, you’ll meet the **navigation host** and **navigation controller**, and
+    learn how they help you navigate from place to place.
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们只看了如何创建单屏应用程序，这对于简单的应用程序来说是可以的。但是如果你有**更复杂的需求**呢？在本章中，你将学习如何使用**片段**和**导航组件**来**构建多屏应用程序**。你将了解到**片段就像是具有自己方法的子活动**。你将了解如何**设计有效的导航图**。最后，你将会遇到**导航主机**和**导航控制器**，并学习它们如何帮助你从一个地方导航到另一个地方。
+- en: Most apps need more than one screen
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 大多数应用程序需要多个屏幕
+- en: 'All of the apps you’ve built so far have one thing in common: they each have
+    a single screen. Each app has a single activity with a corresponding layout, which
+    defines the app’s appearance, and how the user can interact with it.'
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，您建立的所有应用程序都有一个共同点：它们每个都有一个单屏幕。每个应用程序都有一个对应的布局的单个活动，该布局定义了应用程序的外观和用户的交互方式。
+- en: Most apps, however, contain *more* than one screen. An email app, for example,
+    might have one screen that lets you compose an email, and another that displays
+    a list of emails you’ve received. A calendar app might display a list of events
+    on one screen, and the details of one specific event on another.
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，大多数应用程序包含*多个*屏幕。例如，电子邮件应用程序可能有一个屏幕用于撰写电子邮件，另一个用于显示收到的电子邮件列表。日历应用程序可能在一个屏幕上显示事件列表，在另一个屏幕上显示特定事件的详细信息。
+- en: We’re going to show you how to build multi-screen apps by creating a Secret
+    Message app. The app will comprise of a welcome screen, a second screen which
+    allows the user to enter a message, and a third which displays an encrypted version
+    of the message.
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将向您展示如何通过创建秘密消息应用程序来构建多屏应用程序。该应用程序包括一个欢迎屏幕，一个允许用户输入消息的第二屏幕，以及显示消息加密版本的第三屏幕。
+- en: 'Here’s what the app will look like:'
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是应用程序的外观：
+- en: '![image](Images/f0220-01.png)'
+  id: totrans-9
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0220-01.png)'
+- en: Each screen is a fragment
+  id: totrans-10
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 每个屏幕都是一个片段
+- en: The Secret Message app has three distinct screens, and we’re going to build
+    each screen as a separate **fragment**. A fragment is like a kind of subactivity
+    that’s displayed inside an activity’s layout. It has Kotlin code that controls
+    its behavior, and an associated layout that defines its appearance.
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 秘密消息应用程序有三个不同的屏幕，并且我们将每个屏幕作为一个单独的**片段**来构建。片段类似于显示在活动布局内部的一种子活动。它具有控制其行为的Kotlin代码，并且有一个关联的布局来定义其外观。
+- en: 'Here are the three fragments that the app will use:'
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是应用程序将使用的三个片段：
+- en: '**A fragment has Kotlin code that controls its behavior, and a layout that
+    specifies its appearance.**'
+  id: totrans-13
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**一个片段有控制其行为的Kotlin代码和指定其外观的布局。**'
+- en: WelcomeFragment
+  id: totrans-14
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: WelcomeFragment
+- en: This is the app’s main screen. It needs to display some introductory text, and
+    a button. The button will be used to navigate to the next screen—`MessageFragment`.
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是应用程序的主屏幕。它需要显示一些介绍性文本和一个按钮。该按钮将用于导航到下一个屏幕——`MessageFragment`。
+- en: MessageFragment
+  id: totrans-16
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: MessageFragment
+- en: This screen will let the user enter a message into an edit text. When the user
+    clicks on its button, the app will navigate to `EncryptFragment`.
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这个屏幕将允许用户在编辑文本中输入消息。当用户点击按钮时，应用程序将导航到`EncryptFragment`。
+- en: EncryptFragment
+  id: totrans-18
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: EncryptFragment
+- en: This is the final screen. It encrypts the user’s message, and displays the result.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是最终的屏幕。它加密用户的消息，并显示结果。
+- en: '![image](Images/f0221-01.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0221-01.png)'
+- en: As you can see, the user needs to be able to navigate between all three fragments.
+    So how will this work?
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所看到的，用户需要能够在所有三个片段之间导航。那么这将如何工作呢？
+- en: Navigate between screens using the Navigation component
+  id: totrans-22
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用导航组件在屏幕之间导航
+- en: The best way of navigating between fragments is to use Android’s **Navigation
+    component**. The Navigation component is part of Android Jetpack, and it helps
+    you implement navigation in a standard way.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在片段之间导航的最佳方式是使用Android的**导航组件**。导航组件是Android Jetpack的一部分，它帮助你以标准方式实现导航。
+- en: '![image](Images/f0222-01.png)'
+  id: totrans-24
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0222-01.png)'
+- en: 'To use the Navigation component in the Secret Message app, we’ll include a
+    single activity named `MainActivity`. As the user navigates through the app, the
+    activity will display each fragment in turn like this:'
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要在“秘密消息”应用程序中使用导航组件，我们将包含一个名为`MainActivity`的单一活动。当用户通过应用程序导航时，该活动将依次显示每个片段，如下所示：
+- en: '![image](Images/f0222-02.png)'
+  id: totrans-26
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0222-02.png)'
+- en: You’ll find out more about fragments and the Navigation component as we build
+    the Secret Message app. Let’s go through the steps we’ll take to create it.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们构建“秘密消息”应用程序时，您将进一步了解片段和导航组件。让我们按照创建它的步骤进行。
+- en: Here’s what we’re going to do
+  id: totrans-28
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们将要做的事情
+- en: We’re going to start building the Secret Message app in this chapter, and complete
+    it in the next.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在本章开始构建“秘密消息”应用程序，并在接下来完成它。
+- en: 'Here’s what we’ll do in this chapter:'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章中我们将做以下事情：
+- en: '**Create and display WelcomeFragment.**'
+  id: totrans-31
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**创建并显示WelcomeFragment。**'
+- en: In this step, we’ll create `WelcomeFragment`, which will be the app’s first
+    screen. We’ll display this fragment in `MainActivity`’s layout so the user sees
+    it when the app launches.
+  id: totrans-32
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 在这一步中，我们将创建`WelcomeFragment`，它将是应用程序的第一个屏幕。我们将在`MainActivity`的布局中显示此片段，以便用户在启动应用程序时看到它。
+- en: '![image](Images/f0223-01.png)'
+  id: totrans-33
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0223-01.png)'
+- en: '**Navigate to MessageFragment.**'
+  id: totrans-34
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**导航至MessageFragment。**'
+- en: We’ll create a second fragment named `MessageFragment`, and navigate to it when
+    the user clicks on a button in `WelcomeFragment`’s layout. We’ll use Android’s
+    Navigation component to implement navigation.
+  id: totrans-35
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将创建一个名为`MessageFragment`的第二个片段，并在用户点击`WelcomeFragment`布局中的按钮时导航到它。我们将使用Android的导航组件实现导航。
+- en: '![image](Images/f0223-02.png)'
+  id: totrans-36
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0223-02.png)'
+- en: Let’s start by creating a new project for the app.
+  id: totrans-37
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们从创建应用程序的新项目开始。
+- en: Create a new project
+  id: totrans-38
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建一个新项目。
+- en: '![image](Images/f0224-01.png)'
+  id: totrans-39
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0224-01.png)'
+- en: We’re going to use a new project for the Secret Message app, so create one now
+    using the same steps you used in the previous chapters. Choose the Empty Activity
+    option, enter a name of “Secret Message” and a package name of “com.hfad.secretmessage”,
+    and accept the default save location. Make sure the language is set to Kotlin
+    and the minimum SDK is API 21 so it will run on most Android devices.
+  id: totrans-40
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用一个新项目来创建“秘密消息”应用程序，因此现在使用与前几章相同的步骤创建一个项目。选择空活动选项，输入名称“秘密消息”和包名称“com.hfad.secretmessage”，并接受默认保存位置。确保语言设置为Kotlin，最小SDK为API
+    21，以便在大多数Android设备上运行。
+- en: Add some String resources
+  id: totrans-41
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 添加一些String资源
+- en: Before we create any fragments, we’re going to add some `String` resources to
+    the project. We’ll use these to display text in the fragments’ layouts, such as
+    the labels for buttons, and the welcome message on the first screen.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在创建任何片段之前，我们将向项目中添加一些字符串资源。我们将在片段的布局中使用这些资源来显示文本，例如按钮的标签和第一个屏幕上的欢迎消息。
+- en: 'To add the `String`s, open the file *strings.xml* in the *SecretMessage/app/src/main/res/values*
+    folder, and then add the following resources (in bold) to the file:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要添加字符串，请在*SecretMessage/app/src/main/res/values*文件夹中打开*strings.xml*文件，然后向文件中添加以下资源（加粗部分）：
+- en: '![image](Images/f0224-02.png)'
+  id: totrans-44
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0224-02.png)'
+- en: Add WelcomeFragment to the project
+  id: totrans-45
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 将WelcomeFragment添加到项目中
+- en: We’re going to add a fragment named `WelcomeFragment` to the project. `WelcomeFragment`
+    will be the first screen that the user sees when she opens the app, and we’ll
+    use it to display some introductory text about the app, and a button.
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将向项目中添加名为`WelcomeFragment`的片段。`WelcomeFragment`将是用户打开应用程序时看到的第一个屏幕，我们将在此屏幕上显示一些关于应用程序的介绍性文本和一个按钮。
+- en: To add the fragment, highlight the *com.hfad.secretmessage* package in the *app/src/main/java*
+    folder in the project explorer, go to the File menu, and choose New→Fragment→Fragment
+    (Blank).
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要添加片段，请在项目资源管理器中突出显示*app/src/main/java*文件夹中的*com.hfad.secretmessage*包，转到“文件”菜单，然后选择新建→片段→片段（空白）。
+- en: You will be asked how you want to configure the new fragment. Name the fragment
+    “WelcomeFragment”, and give its layout a name of “fragment_welcome”. Then make
+    sure the language is set to Kotlin, and click on the Finish button.
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您将被问及如何配置新片段。将片段命名为“WelcomeFragment”，并为其布局命名为“fragment_welcome”。然后确保语言设置为Kotlin，然后单击“完成”按钮。
+- en: '![image](Images/f0225-02.png)![image](Images/f0225-03.png)'
+  id: totrans-49
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0225-02.png)![image](Images/f0225-03.png)'
+- en: When you click on the Finish button, Android Studio creates the new fragment
+    and adds it to the project.
+  id: totrans-50
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 单击“完成”按钮时，Android Studio会创建新的片段并将其添加到项目中。
+- en: What fragment code looks like
+  id: totrans-51
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 片段代码的外观
+- en: 'When you create a new fragment, Android Studio adds two files to your project:
+    a Kotlin file that controls the fragment’s behavior, and a layout file that describes
+    the fragment’s appearance.'
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建新片段时，Android Studio会向您的项目添加两个文件：一个控制片段行为的Kotlin文件，和一个描述片段外观的布局文件。
+- en: 'We’ll look at the Kotlin code first. Go to the *com.hfad.secretmessage* package
+    in the *app/src/main/java* folder and open the file *WelcomeFragment.kt*. Then
+    **replace the code** that Android Studio generated with the code below:'
+  id: totrans-53
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们首先来看Kotlin代码。转到*app/src/main/java*文件夹中的*com.hfad.secretmessage*包，并打开*WelcomeFragment.kt*文件。然后用下面的代码替换Android
+    Studio生成的代码：
+- en: '![image](Images/f0226-02.png)'
+  id: totrans-54
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0226-02.png)'
+- en: Fragment code looks similar to activity code
+  id: totrans-55
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 片段代码看起来类似于活动代码
+- en: The above code defines a basic fragment. As you can see, the code for a fragment
+    looks very similar to activity code. Instead of extending `AppCompatActivity`,
+    however, it extends `**Fragment**`.
+  id: totrans-56
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述代码定义了一个基本片段。正如您所见，片段的代码看起来与活动代码非常相似。但是，它不是扩展`AppCompatActivity`，而是扩展了**Fragment**。
+- en: The `androidx.fragment.app.Fragment` class is part of Android Jetpack, and it’s
+    used to define a basic fragment. It includes the latest fragment features, while
+    being backward compatible with older versions of Android.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`androidx.fragment.app.Fragment`类是Android Jetpack的一部分，用于定义基本片段。它包括最新的片段功能，并与较旧版本的Android向后兼容。'
+- en: The fragment overrides the `onCreateView()` method, which gets called as soon
+    as Android needs the fragment’s layout. Nearly every fragment overrides this method,
+    so let’s look at it in more detail.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 片段覆盖了`onCreateView()`方法，该方法在Android需要片段布局时立即调用。几乎每个片段都会覆盖此方法，因此让我们更详细地看一下它。
+- en: '![image](Images/f0226-03.png)'
+  id: totrans-59
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0226-03.png)'
+- en: The fragment’s onCreateView() method
+  id: totrans-60
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 片段的`onCreateView()`方法
+- en: The `onCreateView()` method gets called when Android needs access to the fragment’s
+    layout. Overriding this method is optional, but as you need to implement it each
+    time you define a fragment with a layout, you’ll override it for nearly every
+    fragment you create.
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onCreateView()`方法在Android需要访问片段布局时调用。虽然覆盖此方法是可选的，但由于您需要为几乎每个创建的片段定义一个布局而覆盖它，因此几乎每个片段都会覆盖它。'
+- en: 'The method takes three parameters:'
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该方法接受三个参数：
+- en: '![image](Images/f0227-02.png)'
+  id: totrans-63
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0227-02.png)'
+- en: The first parameter is a `LayoutInflater` that you use to inflate the fragment’s
+    layout. As you learned in [Chapter 3](ch03.xhtml#layoutscolon_being_a_layout),
+    inflating a layout turns its XML views into objects.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个参数是`LayoutInflater`，用于扩展片段的布局。正如您在[第3章](ch03.xhtml#layoutscolon_being_a_layout)中学到的那样，扩展布局会将其XML视图转换为对象。
+- en: The second parameter is a `ViewGroup?`. This is the `ViewGroup` in the activity’s
+    layout that displays the fragment.
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第二个参数是`ViewGroup?`。这是在活动布局中显示片段的`ViewGroup`。
+- en: Note
+  id: totrans-66
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: You’ll find out more about this a few pages ahead.
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您将在几页后了解更多信息。
+- en: The final parameter is a `Bundle?`. This is used if you’ve previously saved
+    the fragment’s state, and want to reinstate it. It works in a similar way to the
+    `Bundle?` parameter that’s passed to an activity’s `onCreate()` method.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后一个参数是`Bundle?`。如果您之前保存了片段的状态并希望重新启用它，则会使用这个参数。它的工作方式类似于传递给活动的`onCreate()`方法的`Bundle?`参数。
+- en: Inflate the fragment’s layout, and return it
+  id: totrans-69
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 扩展片段的布局，并返回它
+- en: The `onCreateView()` method returns a `View?`, which is an inflated version
+    of the fragment’s layout.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`onCreateView()`方法返回一个`View?`，这是片段布局的扩展版本。'
+- en: '![image](Images/f0227-04.png)'
+  id: totrans-71
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0227-04.png)'
+- en: 'You inflate the layout using the `LayoutInflater`’s `inflate()` method like
+    this:'
+  id: totrans-72
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用`LayoutInflater`的`inflate()`方法来扩展布局，示例如下：
+- en: '[PRE0]'
+  id: totrans-73
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: The above code is the fragment equivalent of calling an activity’s `setContentView()`
+    method, as it’s used to inflate the fragment’s layout into a hierarchy of `View`
+    objects. The above code, for example, inflates `WelcomeFragment`’s layout *fragment_welcome.xml*.
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述代码是调用活动的`setContentView()`方法的片段等效代码，因为它用于将`WelcomeFragment`的布局*fragment_welcome.xml*扩展为`View`对象的层次结构。
+- en: Once the fragment’s layout has been inflated, the `View` hierarchy is inserted
+    into the activity’s layout, and displayed.
+  id: totrans-75
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦片段布局被扩展，`View`层次结构将被插入到活动的布局中并显示。
+- en: Now that you’ve seen `WelcomeFragment`’s Kotlin code, let’s take a look at its
+    layout.
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经看到`WelcomeFragment`的Kotlin代码，让我们来看一下它的布局。
+- en: '![image](Images/f0227-05.png)'
+  id: totrans-77
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0227-05.png)'
+- en: Fragment layout code looks like activity layout code
+  id: totrans-78
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 片段布局代码看起来像活动布局代码
+- en: As we said earlier, fragments use layout files to describe their appearance.
+    There’s no difference between activity layout and fragment layout code, so **you
+    can use any of the views and view groups in your fragment layout code that you’re
+    already familiar with**.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我们之前所说，片段使用布局文件描述其外观。活动布局和片段布局代码之间没有区别，因此 **你可以在片段布局代码中使用任何你已经熟悉的视图和视图组**。
+- en: We’re going to replace the default layout code Android Studio has generated
+    for us with a linear layout containing a text view that displays a brief description
+    of the app, and a button that we’ll use to navigate to a different fragment later
+    in the chapter.
+  id: totrans-80
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将用一个线性布局来替换 Android Studio 为我们生成的默认布局代码，其中包含一个文本视图，显示应用程序的简要描述，以及一个按钮，我们将在本章后面用来导航到不同的片段。
+- en: 'Open the file *fragment_welcome.xml* in the *app/src/main/res/layout* folder,
+    and replace its contents with the code below:'
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开 *app/src/main/res/layout* 文件夹中的 *fragment_welcome.xml* 文件，并用以下代码替换其内容：
+- en: '![image](Images/f0228-01.png)'
+  id: totrans-82
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0228-01.png)'
+- en: That’s all the code we need for `WelcomeFragment` (and its layout) for now,
+    so let’s find out how to display it in the app.
+  id: totrans-83
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们现在所需要的 `WelcomeFragment`（及其布局）的所有代码，因此让我们看看如何在应用程序中显示它。
+- en: You display a fragment in a FragmentContainerView
+  id: totrans-84
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在 `FragmentContainerView` 中显示一个片段。
+- en: To display a fragment, you need to add it to an activity’s layout. In this app,
+    for example, we’re going to display `WelcomeFragment` by adding it to `MainActivity`’s
+    layout file *activity_main.xml*.
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要显示一个片段，你需要将它添加到活动的布局中。例如，在这个应用程序中，我们将通过将 `WelcomeFragment` 添加到 `MainActivity`
+    的布局文件 *activity_main.xml* 中来显示它。
+- en: 'You add a fragment to a layout using a `**FragmentContainerView**`. This is
+    a type of `FrameLayout` that’s used to display fragments, and you add it to a
+    layout file using code like this:'
+  id: totrans-86
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使用 `**FragmentContainerView**` 将片段添加到布局中。这是一种用于显示片段的 `FrameLayout` 类型，并且你可以使用以下代码将其添加到布局文件中：
+- en: '![image](Images/f0229-01.png)'
+  id: totrans-87
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0229-01.png)'
+- en: 'You specify which fragment you want to display by setting the `FragmentContainerView`’s
+    `android:name` attribute to the fully qualified fragment name, including its package.
+    In the Secret Message app, we want to display the fragment named `WelcomeFragment`
+    that’s in the *com.hfad.secretmessage* package, so we’re setting the `android:name`
+    attribute using:'
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过将 `FragmentContainerView` 的 `android:name` 属性设置为完全限定的片段名称（包括其包名），来指定要显示的片段。在
+    Secret Message 应用中，我们希望显示位于 *com.hfad.secretmessage* 包中的名为 `WelcomeFragment` 的片段，因此我们使用以下方式设置
+    `android:name` 属性：
+- en: '[PRE1]'
+  id: totrans-89
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: '![image](Images/f0229-02.png)'
+  id: totrans-90
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0229-02.png)'
+- en: 'When Android creates the activity’s layout, it populates the `FragmentContainerView`
+    with the `View` object returned by the fragment’s `onCreateView()` method. This
+    `View` is the fragment’s user interface, so you can think of the `FragmentContainerView`
+    as a placeholder for where the fragment’s layout should be inserted:'
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当 Android 创建活动的布局时，它使用片段的 `onCreateView()` 方法返回的 `View` 对象填充 `FragmentContainerView`。这个
+    `View` 是片段的用户界面，因此你可以将 `FragmentContainerView` 视为插入片段布局的位置的占位符：
+- en: '![image](Images/f0229-03.png)'
+  id: totrans-92
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0229-03.png)'
+- en: Now that you know how to add a fragment to a layout, let’s add `WelcomeFragment`
+    to `MainActivity`’s layout.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你知道如何将片段添加到布局中了，让我们将 `WelcomeFragment` 添加到 `MainActivity` 的布局中。
+- en: Update the activity_main.xml code
+  id: totrans-94
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更新 activity_main.xml 代码
+- en: We want `MainActivity` to display `WelcomeFragment`, which means we need to
+    add a `FragmentContainerView` to its layout.
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望 `MainActivity` 显示 `WelcomeFragment`，这意味着我们需要将一个 `FragmentContainerView`
+    添加到其布局中。
+- en: 'Here’s the full code for *activity_main.xml*: replace the code so that it includes
+    the changes shown here:'
+  id: totrans-96
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 *activity_main.xml* 的完整代码：替换代码以包含此处显示的更改：
+- en: '![image](Images/f0230-02.png)'
+  id: totrans-97
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0230-02.png)'
+- en: The full code for MainActivity.kt
+  id: totrans-98
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: MainActivity.kt 的完整代码
+- en: 'We don’t need to add any extra Kotlin code to `MainActivity` to make it display
+    a fragment because the layout’s `FragmentContainerView` handles everything. You
+    just need to make sure that the code in *MainActivity.kt* looks like this:'
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们无需添加任何额外的 Kotlin 代码到 `MainActivity` 中来使其显示一个片段，因为布局中的 `FragmentContainerView`
+    处理了一切。你只需要确保 *MainActivity.kt* 中的代码看起来像这样：
+- en: '![image](Images/f0230-03.png)'
+  id: totrans-100
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0230-03.png)'
+- en: Let’s see what happens when the app runs.
+  id: totrans-101
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们看看应用程序运行时会发生什么。
+- en: What the code does
+  id: totrans-102
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 代码的作用
+- en: 'The following things happen when the app runs:'
+  id: totrans-103
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当应用程序运行时发生以下事情：
+- en: '**When the app is launched, MainActivity gets created.**'
+  id: totrans-104
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**当应用程序启动时，MainActivity 被创建。**'
+- en: '![image](Images/f0231-02.png)'
+  id: totrans-105
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0231-02.png)'
+- en: '**MainActivity’s onCreate() method runs.**'
+  id: totrans-106
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity 的 onCreate() 方法运行。**'
+- en: The `onCreate()` method specifies that *activity_main.xml* should be used for
+    `MainActivity`’s layout.
+  id: totrans-107
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`onCreate()` 方法指定 `MainActivity` 的布局应使用 *activity_main.xml*。'
+- en: '![image](Images/f0231-03.png)'
+  id: totrans-108
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0231-03.png)'
+- en: '**activity_main.xml includes a FragmentContainerView.**'
+  id: totrans-109
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**activity_main.xml 包含一个 FragmentContainerView。**'
+- en: Its `android:name` attribute specifies that it needs to display `WelcomeFragment`.
+  id: totrans-110
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它的 `android:name` 属性指定需要显示 `WelcomeFragment`。
+- en: '![image](Images/f0231-04.png)'
+  id: totrans-111
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0231-04.png)'
+- en: '**WelcomeFragment’s onCreateView() method is called, which inflates its layout.**'
+  id: totrans-112
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**调用了 `WelcomeFragment` 的 `onCreateView()` 方法，该方法膨胀了它的布局。**'
+- en: '`WelcomeFragment`’s inflated view hierarchy is added to the `FragmentContainerView`
+    in M`ainActivity`’s layout.'
+  id: totrans-113
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`WelcomeFragment` 的膨胀视图层次结构添加到 `MainActivity` 的布局中的 `FragmentContainerView`
+    中。'
+- en: '![image](Images/f0231-05.png)'
+  id: totrans-114
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0231-05.png)'
+- en: '**Finally, MainActivity is displayed on the device.**'
+  id: totrans-115
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**最后，MainActivity 显示在设备上。**'
+- en: As the `FragmentContainerView` includes `WelcomeFragment`, this fragment is
+    displayed on the screen.
+  id: totrans-116
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 由于 `FragmentContainerView` 包含 `WelcomeFragment`，因此该片段显示在屏幕上。
+- en: '![image](Images/f0232-02.png)'
+  id: totrans-117
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0232-02.png)'
+- en: Now that you’ve seen what happens when the code runs, let’s take the app for
+    a test drive.
+  id: totrans-118
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经看到代码运行时发生的情况，让我们来测试一下这个应用程序吧。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-119
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/car.png) 测试驾驶'
+- en: When we run the Secret Message app, `MainActivity` is launched. The `FragmentContainerView`
+    in `MainActivity`’s layout includes `WelcomeFragment`, so the fragment’s layout
+    is displayed on the device.
+  id: totrans-120
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 运行秘密消息应用程序时，会启动 `MainActivity`。`MainActivity` 的布局中的 `FragmentContainerView`
+    包含 `WelcomeFragment`，因此该片段的布局会显示在设备上。
+- en: '![image](Images/f0232-03.png)'
+  id: totrans-121
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0232-03.png)'
+- en: You’ve now learned how to create and display a fragment. Before we build a second
+    fragment and learn how to navigate to it, have a go at the following exercise.
+  id: totrans-122
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经学会了如何创建和显示片段。在我们构建第二个片段并学习如何导航到它之前，请尝试以下练习。
+- en: Pool Puzzle
+  id: totrans-123
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 池子谜题
+- en: '![image](Images/common01.png)'
+  id: totrans-124
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/common01.png)'
+- en: 'Your **job** is to take code snippets from the pool and place them into the
+    blank lines in the linear layout. You may **not** use the same code snippet more
+    than once, and you won’t need to use all the snippets. Your **goal** is to make
+    the linear layout display two fragments, `AFragment` and `BFragment`, so that
+    it displays the screen shown on the right. Hint: both fragments are in a package
+    named *com.hfad.exercise*.'
+  id: totrans-125
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的 **任务** 是从池中获取代码片段，并将它们放置到线性布局的空白行中。你不能多次使用同一个代码片段，并且不需要使用所有的代码片段。你的 **目标**
+    是使线性布局显示两个片段，`AFragment` 和 `BFragment`，从而在右侧显示的屏幕。提示：两个片段都位于名为 *com.hfad.exercise*
+    的包中。
+- en: '![image](Images/f0233-01.png)![image](Images/f0233-02.png)'
+  id: totrans-126
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0233-01.png)![图片](Images/f0233-02.png)'
+- en: Note
+  id: totrans-127
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: '**Note: each thing from the pool can only be used once!**'
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**注意：每个来自池中的元素只能使用一次！**'
+- en: Pool Puzzle Solution
+  id: totrans-129
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 池子谜题解答
+- en: '![image](Images/common01.png)'
+  id: totrans-130
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/common01.png)'
+- en: 'Your **job** is to take code snippets from the pool and place them into the
+    blank lines in the linear layout. You may **not** use the same code snippet more
+    than once, and you won’t need to use all the snippets. Your **goal** is to make
+    the linear layout display two fragments, `AFragment` and `BFragment`, so that
+    it displays the screen shown on the right. Hint: both fragments are in a package
+    named *com.hfad.exercise*.'
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你的 **任务** 是从池中获取代码片段，并将它们放置到线性布局的空白行中。你不能多次使用同一个代码片段，并且不需要使用所有的代码片段。你的 **目标**
+    是使线性布局显示两个片段，`AFragment` 和 `BFragment`，从而在右侧显示的屏幕。提示：两个片段都位于名为 *com.hfad.exercise*
+    的包中。
+- en: '![image](Images/f0234-01.png)![image](Images/f0234-02.png)'
+  id: totrans-132
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0234-01.png)![图片](Images/f0234-02.png)'
+- en: Create MessageFragment
+  id: totrans-133
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建 MessageFragment
+- en: '![image](Images/f0235-01.png)'
+  id: totrans-134
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0235-01.png)'
+- en: So far, we’ve created a fragment named `WelcomeFragment`, which is displayed
+    in `MainActivity`’s layout. Next, we’ll create a new fragment named `MessageFragment`,
+    which we’ll navigate to when the user clicks on `WelcomeFragmen`t’s Start button.
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，我们创建了一个名为 `WelcomeFragment` 的片段，它显示在 `MainActivity` 的布局中。接下来，我们将创建一个名为
+    `MessageFragment` 的新片段，用户点击 `WelcomeFragment` 的“开始”按钮时会导航到该片段。
+- en: We’ll add `MessageFragment` in the same way we added `WelcomeFragment`. Highlight
+    the *com.hfad.secretmessage* package in the *app/src/main/java* folder in the
+    project explorer, go to the File menu, and choose New→Fragment→Fragment (Blank).
+    Name the fragment “MessageFragment” and its layout “fragment_message”, and make
+    sure the language is set to Kotlin. Then click on the Finish button to add the
+    fragment and its layout to the project.
+  id: totrans-136
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将以与添加`WelcomeFragment`相同的方式添加`MessageFragment`。在项目资源管理器中突出显示*app/src/main/java*文件夹中的*com.hfad.secretmessage*包，转到文件菜单，选择New→Fragment→Fragment（Blank）。将片段命名为“MessageFragment”，其布局命名为“fragment_message”，并确保语言设置为Kotlin。然后点击完成按钮，将片段及其布局添加到项目中。
+- en: '![image](Images/f0235-02.png)![image](Images/f0235-03.png)'
+  id: totrans-137
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0235-02.png)![image](Images/f0235-03.png)'
+- en: Update MessageFragment’s layout
+  id: totrans-138
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更新MessageFragment的布局
+- en: 'When you create `MessageFragment`, Android Studio adds two new files to your
+    project: *MessageFragment.kt* (which specifies the fragment’s behavior), and *fragment_message.xml*
+    (which defines its appearance). We’ll update both of these files, starting with
+    the layout.'
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建`MessageFragment`时，Android Studio会向您的项目添加两个新文件：*MessageFragment.kt*（指定片段行为）和*fragment_message.xml*（定义其外观）。我们将更新这两个文件，从布局开始。
+- en: 'The fragment needs to have an edit text to let the user enter a message, and
+    a button which, later on, will be used for navigation. You’re already familiar
+    with the code to add these views, so update the code in *fragment_message.xml*
+    so it matches the code shown here:'
+  id: totrans-140
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 片段需要有一个编辑文本框，让用户输入消息，以及一个按钮，稍后将用于导航。您已经熟悉添加这些视图的代码，因此更新*fragment_message.xml*中的代码，使其与此处显示的代码匹配：
+- en: '![image](Images/f0236-02.png)'
+  id: totrans-141
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0236-02.png)'
+- en: That’s all the code we need for `MessageFragment`’s layout, so let’s go and
+    update its Kotlin code.
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是`MessageFragment`布局所需的所有代码，让我们继续更新其Kotlin代码。
+- en: Update MessageFragment.kt
+  id: totrans-143
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 更新MessageFragment.kt
+- en: '`MessageFragment`’s Kotlin code defines the fragment’s behavior. For now, all
+    we need to do is make sure Android Studio hasn’t added any unnecessary extra code
+    to it that might stop it from working in the way we want.'
+  id: totrans-144
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`MessageFragment`的Kotlin代码定义了片段的行为。目前，我们只需确保Android Studio未向其添加任何可能导致其无法按照我们想要的方式工作的不必要额外代码。'
+- en: 'Go to the *com.hfad.secretmessage* package in the *app/src/main/java* folder
+    and open the file *MessageFragment.kt*. Then replace the code that Android Studio
+    has generated with the code below:'
+  id: totrans-145
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 转到*app/src/main/java*文件夹中的*com.hfad.secretmessage*包，并打开文件*MessageFragment.kt*。然后用下面的代码替换Android
+    Studio生成的代码：
+- en: '![image](Images/f0237-02.png)'
+  id: totrans-146
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0237-02.png)'
+- en: The above code is everything that *MessageFragment.kt* needs to define a basic
+    fragment. Just like the code you saw for `WelcomeFragment`, it extends the `Fragment`
+    class, and overrides its `onCreateView()` method. This method inflates the fragment’s
+    layout, and returns its root view. It gets called whenever the app needs to display
+    the fragment.
+  id: totrans-147
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上面的代码是*MessageFragment.kt*定义基本片段所需的所有内容。就像您在`WelcomeFragment`中看到的代码一样，它扩展了`Fragment`类，并覆盖了其`onCreateView()`方法。此方法会填充片段的布局，并返回其根视图。每当应用程序需要显示片段时，它都会被调用。
+- en: We’ve now finished writing all the layout and Kotlin code that `MessageFragment`
+    needs. Next, we need to make `WelcomeFragment` navigate to it. So how is this
+    done?
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们已经完成了`MessageFragment`所需的所有布局和Kotlin代码的编写。接下来，我们需要让`WelcomeFragment`导航到它。那么如何实现呢？
+- en: '![image](Images/f0237-03.png)'
+  id: totrans-149
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0237-03.png)'
+- en: Use the Navigation component to navigate between fragments
+  id: totrans-150
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用导航组件在片段之间导航
+- en: As we said earlier in the chapter, the standard way of navigating between fragments
+    is to use Android’s Navigation component.
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如本章前面所述，导航到片段的标准方法是使用Android的导航组件。
+- en: The Navigation component is part of Android Jetpack, and it’s a suite of libraries,
+    plug-ins, and tools that you add to your project. It’s extremely flexible, and
+    simplifies many of the complexities of fragment navigation—such as fragment transactions
+    and back stack manipulation—which were previously much harder to implement.
+  id: totrans-152
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导航组件是Android Jetpack的一部分，是您添加到项目中的一套库、插件和工具。它非常灵活，简化了许多片段导航的复杂性，例如片段事务和返回堆栈操作，这些以前实现起来更加困难。
+- en: 'Navigating between fragments is comprised of three main parts:'
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在片段之间导航由三个主要部分组成：
+- en: '![Images](Images/star.png) **A navigation graph**'
+  id: totrans-154
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![Images](Images/star.png) **一个导航图**'
+- en: The navigation graph holds all of the navigation-related information that your
+    app requires, and describes the possible paths the user can take when navigating
+    the app.
+  id: totrans-155
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 导航图包含了应用程序所需的所有与导航相关的信息，并描述了用户在导航应用时可能采用的路径。
+- en: The navigation graph is an XML resource, but you usually edit it using a visual
+    design editor.
+  id: totrans-156
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 导航图是一个XML资源，但通常您会使用可视化设计编辑器来编辑它。
+- en: '![image](Images/f0238-02.png)'
+  id: totrans-157
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0238-02.png)'
+- en: '![Images](Images/star.png) **A navigation host**'
+  id: totrans-158
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/star.png) **导航宿主**'
+- en: A navigation host is an empty container that’s used to display the fragment
+    you navigate to. You add the navigation host to your activity’s layout.
+  id: totrans-159
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 导航宿主是一个空容器，用于显示您导航到的片段。您将导航宿主添加到活动的布局中。
+- en: '![image](Images/f0238-03.png)'
+  id: totrans-160
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0238-03.png)'
+- en: '![Images](Images/star.png) **A navigation controller**'
+  id: totrans-161
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/star.png) **导航控制器**'
+- en: The navigation controller controls which fragment is displayed in the navigation
+    host as the user navigates through the app. You interact with the navigation controller
+    using Kotlin code.
+  id: totrans-162
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 导航控制器控制着在用户导航应用程序时在导航宿主中显示哪个片段。您可以使用Kotlin代码与导航控制器交互。
+- en: '![image](Images/f0238-04.png)'
+  id: totrans-163
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0238-04.png)'
+- en: We’re going to use all three of these to implement navigation in the Secret
+    Message app. First, let’s add the Navigation component’s library to the project.
+  id: totrans-164
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用这三个元素来实现Secret Message应用中的导航功能。首先，让我们向项目中添加导航组件的库。
+- en: Use Gradle to add the Navigation component to your project
+  id: totrans-165
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用Gradle将导航组件添加到您的项目中
+- en: 'As you learned in [Chapter 4](ch04.xhtml#constraint_layoutscolon_draw_up_a_bluepr),
+    you add any extra libraries, tools, and plug-ins your app needs by making changes
+    to the *build.gradle* files. When you create a new project, Android Studio automatically
+    includes two of these files for you: one for the project, and another for the
+    app.'
+  id: totrans-166
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你在[第四章](ch04.xhtml#constraint_layoutscolon_draw_up_a_bluepr)中学到的，通过对*build.gradle*文件进行更改，你可以为应用添加任何额外的库、工具和插件。当你创建一个新项目时，Android
+    Studio会自动为你包含这两个文件：一个是项目的，另一个是应用的。
+- en: To add the Navigation component, you need to edit *both* versions of *build.gradle*.
+    Let’s begin by updating the project version.
+  id: totrans-167
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要添加导航组件，您需要编辑*build.gradle*的*两个*版本。让我们从更新项目版本开始。
+- en: Add a version number to the project build.gradle file
+  id: totrans-168
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 向项目*build.gradle*文件添加版本号
+- en: We’ll begin by adding a new variable to the project’s *build.gradle* file that
+    specifies which version of the Navigation component we’re going to use. Using
+    a variable for this version number means that if we add any extra Navigation component
+    libraries (which we’ll do in the next chapter), the version number for each library
+    will stay nice and consistent.
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从向项目的*build.gradle*文件中添加一个新变量开始，指定我们将使用的导航组件的版本。使用变量来表示版本号意味着，如果我们添加了任何额外的导航组件库（我们将在下一章中完成），每个库的版本号都将保持一致。
+- en: 'To add the variable, open the file *SecretMessage/build.gradle*, and add the
+    following line (in bold) to the `buildscript` section:'
+  id: totrans-170
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要添加这个变量，请打开文件*SecretMessage/build.gradle*，并在`buildscript`部分添加以下行（用**粗体**标出）：
+- en: '![image](Images/f0239-02.png)'
+  id: totrans-171
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0239-02.png)'
+- en: Add a dependency to the app build.gradle file
+  id: totrans-172
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 向应用的*build.gradle*文件添加一个依赖项
+- en: Next, you need to add a library dependency to the app’s version of the *build.gradle*
+    file.
+  id: totrans-173
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，您需要向应用程序版本的*build.gradle*文件中添加一个库依赖。
+- en: 'Open the file *SecretMessage/app/build.gradle*, and add the following line
+    (in bold) to the `dependencies` section:'
+  id: totrans-174
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开文件*SecretMessage/app/build.gradle*，并在`dependencies`部分添加以下行（用**粗体**标出）：
+- en: '![image](Images/f0239-03.png)'
+  id: totrans-175
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0239-03.png)'
+- en: Once you’ve made these changes, click on the Sync Now option that appears at
+    the top of the code editor. This syncs the changes you’ve made with the rest of
+    your project, and adds the library.
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 完成这些更改后，单击代码编辑器顶部显示的“立即同步”选项。这将同步您所做的更改与项目的其余部分，并添加库。
+- en: Create a navigation graph
+  id: totrans-177
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建一个导航图
+- en: Now that we’ve added the Navigation component’s main library to the Secret Message
+    project, we can implement navigation.
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已将导航组件的主库添加到Secret Message项目中，我们可以实现导航了。
+- en: We’ll start by adding a navigation graph to the project. Select the *SecretMessage/app/src/main/res*
+    folder in the project explorer, and then choose File→New→Android Resource File.
+    When prompted, enter a file name of “nav_graph”, choose a resource type of “Navigation”,
+    and click on the OK button. This adds an empty navigation graph file named *nav_graph.xml*
+    to the *SecretMessage/app/src/main/res/navigation* folder.
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们将向项目添加一个导航图。在项目资源管理器中选择*SecretMessage/app/src/main/res*文件夹，然后选择文件→新建→Android
+    资源文件。在提示时，输入文件名“nav_graph”，选择资源类型“Navigation”，然后点击“确定”按钮。这将在*SecretMessage/app/src/main/res/navigation*文件夹中添加一个名为*nav_graph.xml*的空导航图文件。
+- en: '![image](Images/f0240-02.png)'
+  id: totrans-180
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0240-02.png)'
+- en: 'Once you’ve created the new navigation graph, open it (if it’s not open already)
+    by double-clicking on the *nav_graph.xml* file in the project explorer. The file
+    should open in the navigation graph design editor, which looks like this:'
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建新的导航图后，通过双击项目资源管理器中的*nav_graph.xml*文件来打开它（如果尚未打开）。该文件应该在导航图设计编辑器中打开，看起来像这样：
+- en: '![image](Images/f0240-03.png)'
+  id: totrans-182
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0240-03.png)'
+- en: Add fragments to the navigation graph
+  id: totrans-183
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 向导航图中添加片段
+- en: We want the user to be able to navigate from `WelcomeFragment` to `MessageFragment`,
+    so we need to add these fragments to the navigation graph as **destinations**.
+    A destination is a screen in the app—usually a fragment—which the user can navigate
+    to.
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望用户能够从`WelcomeFragment`导航到`MessageFragment`，因此我们需要将这些片段添加到导航图中作为**目的地**。目的地是应用程序中的一个屏幕—通常是一个片段—用户可以导航到该屏幕。
+- en: 'We’ll add `WelcomeFragment` first, as this is the first screen we want the
+    user to see when the app launches. Click on the New Destination button at the
+    top of the design editor, and when prompted, select the option for “fragment_welcome”
+    (`WelcomeFragment`’s layout). This adds `WelcomeFragment` to the navigation graph,
+    so it looks like this:'
+  id: totrans-185
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们将首先添加`WelcomeFragment`，因为这是我们希望用户在应用程序启动时看到的第一个屏幕。在设计编辑器顶部点击“新目的地”按钮，然后在提示时选择“fragment_welcome”（`WelcomeFragment`的布局）选项。这将`WelcomeFragment`添加到导航图中，使其看起来像这样：
+- en: '![image](Images/f0241-02.png)'
+  id: totrans-186
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0241-02.png)'
+- en: 'Next, add `MessageFragment` to the navigation graph by clicking on the New
+    Destination button, and selecting the “fragment_message” option. This adds the
+    second fragment to the navigation graph like so:'
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，通过点击“新目的地”按钮并选择“fragment_message”选项，将`MessageFragment`添加到导航图中。这样就向导航图中添加了第二个片段，如下所示：
+- en: '![image](Images/f0241-03.png)'
+  id: totrans-188
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0241-03.png)'
+- en: Connect fragments using an action
+  id: totrans-189
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用操作连接片段
+- en: We next need to specify that the user can navigate from `WelcomeFragment` to
+    `MessageFragment`, and this is done with an **action**. Actions are used to connect
+    destinations in the navigation graph, and they define possible paths the user
+    can take when navigating through the app.
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，我们需要指定用户可以从`WelcomeFragment`导航到`MessageFragment`，这是通过**操作**完成的。操作用于连接导航图中的目的地，并定义用户在应用程序中导航时可以采取的可能路径。
+- en: 'We’re going to add an action that goes from `WelcomeFragment` to `MessageFragment`,
+    as this is the direction in which we want the user to navigate through the app.
+    Hover your mouse pointer over `WelcomeFragment` in the design editor, then click
+    on the circle that appears on its right edge, and drag it to `MessageFragment`.
+    This draws an arrow—the action—between the two fragments:'
+  id: totrans-191
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将添加一个从`WelcomeFragment`到`MessageFragment`的操作，因为这是我们希望用户在应用程序中导航的方向。将鼠标指针悬停在设计编辑器中的`WelcomeFragment`上，然后单击出现在其右侧的圆圈，并将其拖动到`MessageFragment`。这样在两个片段之间画出一个箭头—即操作：
+- en: '![image](Images/f0242-02.png)'
+  id: totrans-192
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0242-02.png)'
+- en: Every action needs a unique ID
+  id: totrans-193
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 每个操作都需要一个唯一的ID
+- en: '***Every action must have a unique ID. Android uses this ID to determine which
+    destination needs to be displayed as the user navigates through the app.***'
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '***每个操作必须有一个唯一的ID。Android 使用此ID 来确定用户在应用程序中导航时需要显示哪个目的地。***'
+- en: Each time you create an action, Android Studio assigns it a default ID. You
+    can edit this ID—and any other of the action’s properties—using the Attributes
+    panel on the right of the navigation graph.
+  id: totrans-195
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次创建操作时，Android Studio 都会为其分配一个默认的ID。您可以使用导航图右侧的属性面板编辑此ID—以及操作的任何其他属性。
+- en: You want the action you just created to have an ID of “action_welcomeFragment_to_messageFragment”
+    so that it matches the code in this chapter. Make sure this is the case by selecting
+    the action (the arrow) in the design editor, and checking the value of its `id`
+    attribute in the Attributes panel. You’ll use this ID a few pages ahead.
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你希望刚刚创建的操作的ID为“action_welcomeFragment_to_messageFragment”，以便与本章中的代码匹配。请在设计编辑器中选择操作（箭头），并检查其在属性面板中的`id`属性值，确保是这样。稍后几页将会用到这个ID。
+- en: '![image](Images/f0242-03.png)'
+  id: totrans-197
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0242-03.png)'
+- en: Navigation graphs are XML resources
+  id: totrans-198
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 导航图是XML资源。
+- en: Just like a layout, a navigation graph is really just a bunch of XML code. To
+    view the code, click on the Code button at the top of the design editor.
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像布局一样，导航图实际上只是一堆XML代码。要查看代码，请点击设计编辑器顶部的“Code”按钮。
+- en: 'Here’s the underlying XML code for the Secret Message app’s navigation graph
+    *nav_graph.xml*:'
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是秘密消息应用程序导航图 *nav_graph.xml* 的底层XML代码：
+- en: '![image](Images/f0243-02.png)'
+  id: totrans-201
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0243-02.png)'
+- en: 'As you can see, *nav_graph.xml* has a root element of `<navigation>`, and contains
+    two `<fragment>` elements: one for `WelcomeFragment`, and another for `MessageFragment`.
+    The `<fragment>` element for `WelcomeFragment` includes an extra `<action>` element,
+    which denotes the action we just added.'
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你所见，*nav_graph.xml* 有一个根元素 `<navigation>`，包含两个 `<fragment>` 元素：一个是 `WelcomeFragment`，另一个是
+    `MessageFragment`。`WelcomeFragment` 的 `<fragment>` 元素包含一个额外的 `<action>` 元素，表示我们刚刚添加的操作。
+- en: Now that we’ve created the navigation graph, let’s move onto the next part of
+    the Navigation component.
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经创建了导航图，让我们继续Navigation组件的下一部分。
+- en: '**Navigation graphs are usually edited using the design editor, but it can
+    still be useful to check the XML.**'
+  id: totrans-204
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**通常使用设计编辑器编辑导航图，但检查XML仍然很有用。**'
+- en: Add a navigation host to the layout using a FragmentContainerView
+  id: totrans-205
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用 `FragmentContainerView` 向布局添加导航主机。
+- en: 'As we said earlier, the Navigation component is comprised of three main parts:
+    a navigation graph that defines the possible navigation paths, a navigation host
+    that displays destinations, and a navigation controller that controls which destination
+    is displayed. We’ve just created a navigation graph, so the next thing we’ll add
+    is the navigation host.'
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如我们之前提到的，Navigation组件由三个主要部分组成：定义可能导航路径的导航图、显示目的地的导航主机和控制显示哪个目的地的导航控制器。我们刚刚创建了一个导航图，所以下一步我们将添加导航主机。
+- en: You add a navigation host by including one in the activity’s layout. The great
+    news is that the Navigation component comes with a built-in one named `**NavHostFragment**`
+    so you don’t have to write one yourself. It’s a subclass of `Fragment` that implements
+    the `NavHost` interface.
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过在活动的布局中包含导航主机来添加导航主机。好消息是Navigation组件自带一个名为 `**NavHostFragment**` 的内置导航主机，所以你不必自己编写一个。它是实现了
+    `NavHost` 接口的 `Fragment` 子类。
+- en: 'As `NavHostFragment` is a type of fragment, you add it to a layout file using
+    a `FragmentContainerView`. The code looks like this:'
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于 `NavHostFragment` 是一种片段类型，你可以使用 `FragmentContainerView` 将其添加到布局文件中。代码如下：
+- en: '![image](Images/f0244-02.png)![image](Images/f0244-03.png)'
+  id: totrans-209
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0244-02.png)![image](Images/f0244-03.png)'
+- en: 'The above code is like the `FragmentContainerView` code you’ve seen before,
+    but it includes two extra attributes: `**app:navGraph**` and `**app:defaultNavHost**`.'
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上面的代码类似于你之前看到的 `FragmentContainerView` 代码，但包含两个额外的属性：`**app:navGraph**` 和 `**app:defaultNavHost**`。
+- en: The `app:navGraph` attribute tells the navigation host which navigation graph
+    to use, in this case *nav_graph.xml*. The navigation graph specifies which fragment
+    to display first (its start destination) and lets the user navigate between its
+    destinations.
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`app:navGraph` 属性告诉导航主机使用哪个导航图，在本例中为 *nav_graph.xml*。导航图指定了首个要显示的片段（其起始目的地），并允许用户在其目的地之间导航。'
+- en: 'The `app:defaultNavHost` attribute lets the navigation host interact with the
+    device back button: you’ll find out more about this in the next chapter.'
+  id: totrans-212
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`app:defaultNavHost` 属性允许导航主机与设备的返回按钮交互：关于此内容，你将在下一章中了解更多。'
+- en: '![image](Images/f0244-04.png)'
+  id: totrans-213
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0244-04.png)'
+- en: Add a NavHostFragment to activity_main.xml
+  id: totrans-214
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在 *activity_main.xml* 中添加一个 NavHostFragment。
+- en: We’re going to add a navigation host to `MainActivity`’s layout that uses the
+    navigation graph we created. To do this, update the code in *activity_main.xml*
+    so it includes the changes below (in bold).
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在 `MainActivity` 的布局中添加一个使用我们创建的导航图的导航主机。要做到这一点，请更新 *activity_main.xml* 中的代码，包括下面的更改（用粗体标出）。
+- en: '![image](Images/f0245-02.png)'
+  id: totrans-216
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0245-02.png)'
+- en: We need to navigate between the fragments
+  id: totrans-217
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们需要在片段之间导航。
+- en: We’ve now created a navigation graph, and linked it to a navigation host that’s
+    held in a `FragmentContainerView` in `MainActivity`’s layout. When the app runs,
+    `WelcomeFragment`—which is the navigation graph’s start destination—will be displayed.
+  id: totrans-218
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们现在已经创建了一个导航图，并将其链接到 `MainActivity` 布局中的 `FragmentContainerView` 中保存的导航主机。应用程序运行时，导航图的起始目标
+    `WelcomeFragment` 将被显示。
+- en: The final thing we need to do in this chapter is navigate from `WelcomeFragment`
+    to `MessageFragment` when the user clicks on the Start button in `WelcomeFragment`’s
+    layout. Let’s find out how this is done.
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本章的最后一件事是在用户点击 `WelcomeFragment` 布局中的开始按钮时从 `WelcomeFragment` 导航到 `MessageFragment`。让我们看看如何实现这一点。
+- en: '![image](Images/f0245-03.png)'
+  id: totrans-220
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0245-03.png)'
+- en: Add an OnClickListener to the button
+  id: totrans-221
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 向按钮添加 OnClickListener
+- en: To navigate from `WelcomeFragment` to `MessageFragment`, we first need to make
+    `WelcomeFragment`’s Start button respond to clicks. We’ll do this by adding an
+    `OnClickListener` to it.
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要从 `WelcomeFragment` 导航到 `MessageFragment`，我们首先需要使 `WelcomeFragment` 的开始按钮响应点击。我们将通过向其添加
+    `OnClickListener` 来实现这一点。
+- en: Previously, you added `OnClickListener` to an *activity’s* button by getting
+    a reference to it with `findViewById()`, and then calling its `setOnClickListener`
+    method. You included this code in the activity’s `onCreate()` method as this is
+    where it first has access to the views in its layout.
+  id: totrans-223
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 之前，你通过使用 `findViewById()` 获取对*活动*按钮的引用，然后调用其 `setOnClickListener` 方法来向*活动*按钮添加
+    `OnClickListener`。由于活动在其布局中首次访问视图时，你将此代码包含在活动的 `onCreate()` 方法中。
+- en: When you want to add an `OnClickListener` to a *fragment’s* button, however,
+    things are slightly different.
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，当你想向*片段*按钮添加 `OnClickListener` 时，情况略有不同。
+- en: '![image](Images/f0246-02.png)'
+  id: totrans-225
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0246-02.png)'
+- en: Fragment OnClickListener code is a little different
+  id: totrans-226
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 片段 OnClickListener 代码略有不同
+- en: The first difference is that you add an `OnClickListener` to a *fragment’s*
+    button in the fragment’s `**onCreateView()**` ***method, not*** `onCreate()`.
+    This is because a fragment first has access to its views in `onCreateView()`,
+    so it’s the best place to set any `OnClickListener`s.
+  id: totrans-227
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 第一个区别是，你在片段的 `**onCreateView()**` ***方法中向片段的按钮添加了一个* OnClickListener，而不是* 在
+    `onCreate()` 中。这是因为片段在 `onCreateView()` 中首次访问其视图，因此这是设置任何 `OnClickListener` 的最佳位置。
+- en: The second difference is **the** `**Fragment**` **class doesn’t include a**
+    `**findViewById()**` **method**, so you can’t directly call it to get a reference
+    to any views. You can, however, call `findViewById()` on the fragment’s root view
+    instead.
+  id: totrans-228
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**第二个区别是** `**Fragment**` **类不包括** `**findViewById()**` **方法**，因此你不能直接调用它来获取任何视图的引用。不过，你可以在片段的根视图上调用`findViewById()`。'
+- en: 'Here’s what the code looks like to add an `OnClickListener` to a view in fragment
+    code: we’ll add this to `WelcomeFragment` a couple pages ahead:'
+  id: totrans-229
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是在片段代码中向视图添加 `OnClickListener` 的代码示例：我们将在几页后的 `WelcomeFragment` 中添加这个。
+- en: '![image](Images/f0246-03.png)![image](Images/f0246-04.png)'
+  id: totrans-230
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0246-03.png)![图片](Images/f0246-04.png)'
+- en: Now that you know how to add an `OnClickListener` to a fragment’s button, let’s
+    make it navigate when clicked.
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你知道如何向片段的按钮添加 `OnClickListener`，让它在点击时导航。
+- en: '**The Fragment class isn’t a subclass of Activity.**'
+  id: totrans-232
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**Fragment 类不是 Activity 的子类。**'
+- en: Even though fragments have a lot in common with activities, the `Fragment` class
+    doesn’t extend `Activity` so it doesn’t inherit any of its methods.
+  id: totrans-233
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 尽管片段与活动有很多共同点，但 `Fragment` 类不扩展 `Activity`，因此不会继承其任何方法。
+- en: Instead, the `Fragment` class defines its own set of methods. While many of
+    these look identical to the ones that activities inherit, it doesn’t include methods
+    like `findViewById()`.
+  id: totrans-234
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相反，`Fragment` 类定义了自己的一套方法集。虽然其中许多方法看起来与活动继承的方法相同，但它不包括像 `findViewById()` 这样的方法。
+- en: You’ll find out more about fragments and their methods as we go through the
+    book. For now, let’s see what code we need to add to `WelcomeFragment` so that
+    it navigates to `MessageFragment` when its button gets clicked.
+  id: totrans-235
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们继续阅读本书时，你将进一步了解片段及其方法。现在，让我们看看需要添加到 `WelcomeFragment` 的代码，以便在其按钮被点击时导航到 `MessageFragment`。
+- en: '![image](Images/f0247-02.png)'
+  id: totrans-236
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0247-02.png)'
+- en: Get a navigation controller
+  id: totrans-237
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 获取导航控制器
+- en: 'Each time you want to navigate to a new fragment, you first need to get a reference
+    to a navigation controller. You do this by calling the `**findNavController()**`
+    method on its root `View` object. The following code, for example, gets a reference
+    to the navigation controller associated with a root view object named `view`:'
+  id: totrans-238
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当您想要导航到新的片段时，您首先需要获取一个导航控制器的引用。您可以通过调用其根`View`对象上的`**findNavController()**`方法来实现这一点。例如，以下代码获取与名为`view`的根视图对象关联的导航控制器的引用：
+- en: '[PRE2]'
+  id: totrans-239
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: Tell it where to navigate with an action
+  id: totrans-240
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用一个动作告诉它要导航到哪里
+- en: 'Once you have a navigation controller, you ask it to navigate to a new destination
+    by calling its `**navigate()**` method. This method takes one parameter: a navigation
+    action ID.'
+  id: totrans-241
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦您拥有了导航控制器，您可以通过调用其`**navigate()**`方法向其请求导航到新的目标。此方法接受一个参数：导航动作ID。
+- en: As you may recall, when we created the navigation graph, we included an action
+    that went from `WelcomeFragment` to `MessageFragment`. We gave this action the
+    ID “action_welcomeFragment_to_messageFragment”.
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您可能还记得的，当我们创建导航图时，我们包含了一个从`WelcomeFragment`到`MessageFragment`的动作。我们给这个动作取了ID“action_welcomeFragment_to_messageFragment”。
+- en: If we pass this ID to the navigation controller’s `navigate()` method, the controller
+    will see that the action goes from `WelcomeFragment` to `MessageFragment`, and
+    use it to navigate to the new fragment.
+  id: totrans-243
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果我们将此ID传递给导航控制器的`navigate()`方法，控制器将看到操作是从`WelcomeFragment`到`MessageFragment`，并用它来导航到新的片段。
+- en: 'Here’s what the code looks like:'
+  id: totrans-244
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是代码的样子：
+- en: '![image](Images/f0248-02.png)![image](Images/f0248-03.png)'
+  id: totrans-245
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0248-02.png)![image](Images/f0248-03.png)'
+- en: 'We want to navigate to `MessageFragment` when the user clicks on `WelcomeFragment`’s
+    Start button. We’ll therefore add this code to the Start button’s `OnClickListener`
+    like this:'
+  id: totrans-246
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当用户点击`WelcomeFragment`的Start按钮时，我们希望导航到`MessageFragment`。因此，我们将在Start按钮的`OnClickListener`中添加以下代码：
+- en: '![image](Images/f0248-04.png)'
+  id: totrans-247
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0248-04.png)'
+- en: We’ll show you the full `WelcomeFragment` code on the next page.
+  id: totrans-248
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在下一页上展示完整的`WelcomeFragment`代码。
+- en: The full code for WelcomeFragment.kt
+  id: totrans-249
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: WelcomeFragment.kt的完整代码
+- en: 'Below is the complete code for `WelcomeFragment`; update *WelcomeFragment.kt*
+    so it includes the changes (in bold):'
+  id: totrans-250
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是`WelcomeFragment`的完整代码；更新*WelcomeFragment.kt*以包含以下更改（用粗体标出）：
+- en: '![image](Images/f0249-02.png)'
+  id: totrans-251
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0249-02.png)'
+- en: That’s all the code we need to make `WelcomeFragment` navigate to `MessageFragment`.
+    Let’s go through what the code does when it runs, and then take the app for a
+    test drive.
+  id: totrans-252
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是使`WelcomeFragment`导航到`MessageFragment`所需的全部代码。我们来看看代码运行时的操作，然后测试应用程序。
+- en: What happens when the app runs
+  id: totrans-253
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 应用程序运行时发生的事情
+- en: 'The following things happen when the app runs:'
+  id: totrans-254
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当应用程序运行时会发生以下事情：
+- en: '**The app is launched and MainActivity gets created.**'
+  id: totrans-255
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**应用程序启动并创建MainActivity。**'
+- en: '![image](Images/f0250-02.png)'
+  id: totrans-256
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0250-02.png)'
+- en: '**MainActivity’s layout, activity_main.xml, includes a FragmentContainerView
+    that specifies a navigation host and a navigation graph.**'
+  id: totrans-257
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity的布局activity_main.xml包含一个FragmentContainerView，指定了导航主机和导航图。**'
+- en: '![image](Images/f0250-03.png)'
+  id: totrans-258
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0250-03.png)'
+- en: '**The start destination in the navigation graph is WelcomeFragment, so this
+    fragment is added to the navigation host and displayed on the device screen.**'
+  id: totrans-259
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**导航图中的起始目标是WelcomeFragment，因此将此片段添加到导航主机并显示在设备屏幕上。**'
+- en: '![image](Images/f0250-04.png)'
+  id: totrans-260
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0250-04.png)'
+- en: '**The user clicks on the Start button in WelcomeFragment’s layout.**'
+  id: totrans-261
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用户在WelcomeFragment的布局中点击Start按钮。**'
+- en: '![image](Images/f0250-05.png)'
+  id: totrans-262
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0250-05.png)'
+- en: '**The code for the Start button’s OnClickListener finds the navigation controller,
+    and calls its navigate() method.**'
+  id: totrans-263
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**Start按钮的OnClickListener代码查找导航控制器，并调用其navigate()方法。**'
+- en: It passes it the action used to navigate from `WelcomeFragment` to `MessageFragment`.
+  id: totrans-264
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它传递了从`WelcomeFragment`到`MessageFragment`导航使用的动作。
+- en: '![image](Images/f0251-02.png)'
+  id: totrans-265
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0251-02.png)'
+- en: '**The navigation controller looks for the action with this ID in the navigation
+    graph.**'
+  id: totrans-266
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**导航控制器在导航图中查找具有此ID的操作。**'
+- en: It sees that the action goes from `WelcomeFragment` to `MessageFragment`.
+  id: totrans-267
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这段代码表明操作从`WelcomeFragment`到`MessageFragment`。
+- en: '![image](Images/f0251-03.png)'
+  id: totrans-268
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0251-03.png)'
+- en: '**The navigation controller replaces WelcomeFragment with MessageFragment in
+    the navigation host, and MessageFragment is displayed on the device screen.**'
+  id: totrans-269
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**导航控制器在导航主机中用MessageFragment替换WelcomeFragment，并在设备屏幕上显示MessageFragment。**'
+- en: '![image](Images/f0251-04.png)'
+  id: totrans-270
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0251-04.png)'
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-271
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驾驶'
+- en: When we run the app, `MainActivity` is launched, and `WelcomeFragment` is displayed
+    as before.
+  id: totrans-272
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用时，`MainActivity` 被启动，`WelcomeFragment` 如前所示显示。
+- en: When we click on the Start button, the app navigates to `MessageFragment`, and
+    this fragment is displayed on the device.
+  id: totrans-273
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们点击“开始”按钮时，应用程序导航到 `MessageFragment`，并在设备上显示此片段。
+- en: '![image](Images/f0252-02.png)'
+  id: totrans-274
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0252-02.png)'
+- en: Congratulations! You’ve now learned how to build a multi-screen app that lets
+    you navigate from one screen to another.
+  id: totrans-275
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 祝贺！您现在已经学会了如何构建一个可以让您从一个屏幕导航到另一个屏幕的多屏应用程序。
+- en: You’ll build on this knowledge in the next chapter when we finish building the
+    Secret Message app.
+  id: totrans-276
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在下一章中，当我们完成秘密消息应用程序的构建时，您将继续增加这些知识。
+- en: Your Android Toolbox
+  id: totrans-277
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 你的 Android 工具箱
+- en: '![image](Images/tools.png)'
+  id: totrans-278
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/tools.png)'
+- en: '**You’ve got [Chapter 6](#fragments_and_navigationcolon_finding_yo) under your
+    belt and now you’ve added fragments and navigation to your toolbox.**'
+  id: totrans-279
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**你已经掌握了[第 6 章](#fragments_and_navigationcolon_finding_yo)，现在将片段和导航添加到你的工具箱中。**'
+- en: '![image](Images/f0255-01.png)'
+  id: totrans-280
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0255-01.png)'

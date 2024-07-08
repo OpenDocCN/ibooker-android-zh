@@ -1,0 +1,362 @@
+- en: Chapter 13\. Extensions
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第13章 扩展
+- en: Sometimes the functionality provided by Android and iOS just isn’t enough, and
+    sometimes the functionality provided by third-party libraries or internal objects
+    just doesn’t make the cut. Sure, you can subclass, but it’s not always feasible
+    for that to work properly.
+  id: totrans-1
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有时候，Android 和 iOS 提供的功能并不足够，有时候，第三方库或内部对象提供的功能也不够。当然，您可以创建子类，但这并不总是可行的。
+- en: Fortunately, both platforms have a means to augment existing objects.
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 幸运的是，这两个平台都有增强现有对象的方法。
+- en: Tasks
+  id: totrans-3
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 任务
+- en: In this chapter, you’ll learn to add functionality to existing APIs.
+  id: totrans-4
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，您将学习如何为现有的 API 添加功能。
+- en: Android
+  id: totrans-5
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android
+- en: While we have spent the majority of this book defaulting to Java as the language
+    for Android development, and indeed the great majority of Android development
+    does happen in Java, we must now mention that in the Android Framework, *only
+    Kotlin is capable of supporting extensions*. What does that mean? Let’s define
+    the word “extension” to mean “alter or add functionality to any class.” However,
+    Java classes in a project with Kotlin extensions *can* take advantage of the extended
+    functionality!
+  id: totrans-6
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 虽然本书的大部分内容都以 Java 作为 Android 开发的语言，默认使用 Java，而且大部分 Android 开发确实都是使用 Java，但我们现在必须提到，在
+    Android 框架中，*只有 Kotlin 能够支持扩展*。这是什么意思？我们来定义一下“扩展”这个词的含义：“修改或添加类的功能”。然而，在带有 Kotlin
+    扩展的项目中，Java 类也可以利用扩展功能！
+- en: Add Functionality to Existing APIs
+  id: totrans-7
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 为现有的 API 添加功能
+- en: In Java, if you import a third-party library for `CalendarPicker`, you’re pretty
+    much stuck with whatever public API that library provides. Of course, you can
+    alter the source, but at that point you’ve created your own `CalendarPicker`,
+    which will not be an instance of the same class as the original. You could also
+    subclass `CalendarPicker`, but the same caveat applies. It is not possible to
+    add or change the existing functionality of the existing `CalendarPicker` API.
+  id: totrans-8
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Java 中，如果导入一个名为 `CalendarPicker` 的第三方库，您基本上只能使用该库提供的公共 API。当然，您可以修改源代码，但此时您已经创建了自己的
+    `CalendarPicker`，它不会是与原始类相同的实例。您还可以创建 `CalendarPicker` 的子类，但同样的注意事项适用。不可能添加或更改现有的
+    `CalendarPicker` API 的功能。
+- en: 'In Kotlin, this is no longer true. Not only could you add a method to `CalendarPicker`
+    that *all* instances of `CalendarPicker` would have access to, you could in fact
+    add methods to standard library classes like `LinkedList`, or even classes with
+    generic typing like `HashSet<String>`. In fact, there’s even an `Any` class in
+    Kotlin that can be extended to add functionality to all class instances. The classic
+    example of Kotlin extensions does this very thing:'
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Kotlin 中，这不再成立。不仅可以向 `CalendarPicker` 添加一个方法，使得所有 `CalendarPicker` 实例都可以访问，而且实际上可以向标准库类如
+    `LinkedList`，甚至带有泛型类型如 `HashSet<String>` 的类添加方法。事实上，Kotlin 中甚至有一个 `Any` 类，可以扩展以向所有类实例添加功能。Kotlin
+    扩展的经典示例正是这样做的：
+- en: '[PRE0]'
+  id: totrans-10
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: This adds Kotlin’s `?` null-safety operator to the *body* of the common `Object.toString`
+    method. By adding the preceding code, you can safely call `toString` on any object;
+    if the object is `null`, instead of a `NullPointerException`, you’ll just get
+    back the string `"null"`. Pretty intense!
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这将 Kotlin 的 `?` 空安全操作符添加到通用 `Object.toString` 方法的*主体*中。通过添加前述代码，您可以安全地调用任何对象的
+    `toString` 方法；如果对象为 `null`，则不会抛出 `NullPointerException`，而是会返回字符串 `"null"`。相当强大！
+- en: You can add your extensions anywhere, in any package or directory structure
+    you like (as long as it’s a Kotlin file, in a *src* directory). For example, right-click
+    any package in your project, select New > Kotlin File/Class, and give any name—let’s
+    say “extensions” for now (Android Studio will append the “.kt” extension and show
+    a different icon indicating it’s a Kotlin file).
+  id: totrans-12
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以将扩展添加到任何您喜欢的包或目录结构中（只要它是 Kotlin 文件，在*src*目录中）。例如，在项目中右键单击任何包，选择“New > Kotlin
+    File/Class”，然后随便取个名字——比如现在叫“extensions”（Android Studio 将附加“.kt”扩展名并显示不同的图标，表示它是一个
+    Kotlin 文件）。
+- en: 'You could add a number of extension functions to this file, or any number of
+    files, and all would be accessible from any Kotlin class in your project. Let’s
+    say you added the following `String` helper:'
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以向此文件或任何文件添加多个扩展函数，并且所有这些函数都可以从项目中的任何 Kotlin 类访问。假设您添加了以下的 `String` 辅助函数：
+- en: '[PRE1]'
+  id: totrans-14
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: 'Then in some Kotlin class, you could call something like this and get the expected
+    results:'
+  id: totrans-15
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后在某个 Kotlin 类中，您可以调用类似这样的内容并获得预期的结果：
+- en: '[PRE2]'
+  id: totrans-16
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: See [the developer docs](https://oreil.ly/oGVHb) for more information on Kotlin
+    extensions.
+  id: totrans-17
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 查看[开发者文档](https://oreil.ly/oGVHb)以获取有关 Kotlin 扩展的更多信息。
+- en: iOS
+  id: totrans-18
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: iOS
+- en: One of the core language features of Swift is the ability to add new functionality
+    to types with extensions. In fact, this is a major part of the Objective-C language
+    runtime as well, albeit by the name of “category” instead of “extension.” This
+    capability is well baked into Swift and, in fact, very common in practice.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Swift的一个核心语言特性是通过扩展为类型添加新功能。事实上，这也是Objective-C语言运行时的一个重要部分，尽管名称为“category”而不是“extension”。这种能力在Swift中得到了很好的实现，实际上在实践中非常普遍。
+- en: Add Functionality to Existing APIs
+  id: totrans-20
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 添加功能到现有API
+- en: 'Here’s a simple example:'
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里有一个简单的例子：
+- en: '[PRE3]'
+  id: totrans-22
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: First, we define a class called `ExtendableObject`. In our example, the class
+    doesn’t have a body because it’s not important to the example. The real heart
+    of the example is in the next section where we define the extension.
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们定义一个名为`ExtendableObject`的类。在我们的例子中，该类没有主体，因为它对示例并不重要。真正的示例核心在于接下来我们定义扩展的部分。
+- en: 'Our extension is declared on the `ExtendableObject` using `extension ExtendableObject
+    { ... }`. Within that definition, we declare and define a new method called `helloTacos()`
+    that, conveniently, prints the string `Hello, tacos!` to the console. We use our
+    newly defined method by instantiating the object and calling `helloTacos()` as
+    you would any other method on the object, like so:'
+  id: totrans-24
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们在`ExtendableObject`上使用`extension ExtendableObject { ... }`进行声明。在该定义中，我们声明和定义一个名为`helloTacos()`的新方法，方便地将字符串`Hello,
+    tacos!`打印到控制台。我们可以通过实例化对象并像调用对象的任何其他方法一样调用`helloTacos()`来使用我们新定义的方法，如下所示：
+- en: '[PRE4]'
+  id: totrans-25
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: Note
+  id: totrans-26
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: One huge, important thing to note. You can add new methods and functions to
+    existing object types, but it’s not possible to add new stored properties without
+    importing the Objective-C runtime and using associated values. It’s generally
+    not recommended except for very rare circumstances.
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有一件非常重要的事情需要注意。您可以向现有对象类型添加新方法和函数，但无法添加新的存储属性，除非导入Objective-C运行时并使用关联值。一般情况下不建议这样做，除非是非常罕见的情况。
+- en: Extensions for code organization
+  id: totrans-28
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 用于代码组织的扩展
+- en: Because extensions are such an integral part of the Swift language, it’s become
+    common practice in Swift projects to use extensions to organize code throughout
+    a project. Often, you’ll see implementation of protocols stuffed inside an extension
+    at the bottom of a class.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于扩展在Swift语言中是如此重要的一部分，因此在Swift项目中，通常会使用扩展来组织代码。通常，您会看到在类的底部将协议的实现放在扩展中。
+- en: 'Here’s an example:'
+  id: totrans-30
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里有一个例子：
+- en: '[PRE5]'
+  id: totrans-31
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'First, we declare a new protocol called `AwesomeProtocol` with the required
+    method `beAwesome()`. Next, we declare `ExtendableObject`. It’s possible to directly
+    implement the protocol by declaring it as part of the definition of `ExtendableObject`
+    like so:'
+  id: totrans-32
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们声明一个名为`AwesomeProtocol`的新协议，其中包含必需的方法`beAwesome()`。接下来，我们声明`ExtendableObject`。可以直接通过将其作为`ExtendableObject`定义的一部分来实现该协议：
+- en: '[PRE6]'
+  id: totrans-33
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: However, because of the protocol-oriented nature of Swift, this can become unwieldy
+    and not easy to maintain as the number of protocols an object must implement grows
+    as the complexity of the application grows. Our previous example, with the extension
+    split off separately, allows us to lump the protocol conformance together and
+    make it easier to find and maintain in the future.
+  id: totrans-34
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，由于Swift的协议导向性质，随着对象必须实现的协议数量增加以及应用程序复杂性的增加，这种方法可能变得难以控制和维护。我们之前的例子中，通过分离扩展，使得我们可以将协议符合性放在一起，便于将来查找和维护。
+- en: This is entirely a subjective way to organize code, but it’s something of a
+    de facto standard in the Swift community. Feel free to use or not use!
+  id: totrans-35
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这完全是一种主观的代码组织方式，但在Swift社区中算是一种事实上的标准。随意选择使用或不使用！
+- en: Speaking of protocols in Swift—it’s possible to extend those too! Let’s take
+    a look.
+  id: totrans-36
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 谈到Swift中的协议——也可以对其进行扩展！让我们来看看。
+- en: Extending protocols
+  id: totrans-37
+  prefs:
+  - PREF_H3
+  type: TYPE_NORMAL
+  zh: 扩展协议
+- en: 'Extending classes and structures in Swift is slightly different than extending
+    protocols. The syntax is similar, but the mechanism behind it is different. Here’s
+    how to extend a protocol in Swift:'
+  id: totrans-38
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在Swift中，扩展类和结构与扩展协议略有不同。语法类似，但背后的机制不同。以下是如何在Swift中扩展协议的方法：
+- en: '[PRE7]'
+  id: totrans-39
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE7]'
+- en: Note
+  id: totrans-40
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: The protocol we’re extending is not an Objective-C protocol written in Swift—it’s
+    a pure Swift object. That’s important because only pure Swift protocols can be
+    extended. It’s also not possible to extend methods prefixed with `@objc`.
+  id: totrans-41
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们正在扩展的协议不是在Swift中编写的Objective-C协议——它是一个纯粹的Swift对象。这很重要，因为只有纯粹的Swift协议可以进行扩展。也不可能扩展以`@objc`为前缀的方法。
+- en: This example creates a protocol, named `ExtendableProtocol`, with a `doSomething()`
+    method declared as part of the protocol. Next, the extension added to the protocol
+    adds a new `printSomething` method that is declared and defined as part of the
+    extension. Finally, the class `SomeObject` is defined to implement the `ExtendableProtocol`
+    protocol.
+  id: totrans-42
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 本例创建了一个名为`ExtendableProtocol`的协议，其中声明了一个`doSomething()`方法。接下来，协议的扩展添加了一个名为`printSomething`的新方法，并将其声明和定义为扩展的一部分。最后，定义了一个类`SomeObject`来实现`ExtendableProtocol`协议。
+- en: 'Calling an instance of `SomeObject` might look like this:'
+  id: totrans-43
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 调用`SomeObject`的实例可能看起来像这样：
+- en: '[PRE8]'
+  id: totrans-44
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE8]'
+- en: Pretty simple and not too far removed from class and structure extensions, right?
+  id: totrans-45
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 相当简单，与类和结构扩展并没有太大的区别，对吧？
+- en: 'Where the power of protocol extensions becomes apparent is when you need common
+    functionality across objects that do not inherit from the same base class. Take
+    a look at this example:'
+  id: totrans-46
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 协议扩展的强大之处在于当您需要跨不同基类的对象共享通用功能时，它变得显而易见。看看这个例子：
+- en: '[PRE9]'
+  id: totrans-47
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE9]'
+- en: 'First, we declare a protocol, `Typeable`, and an extension on that protocol,
+    which outputs an object’s type. Next, declare three base classes that are totally
+    different objects and not related in any way. Then, we declare three more child
+    objects that each inherit from a different parent class, but that all implement
+    our protocol from before: `Typeable`. After that, we instantiate each class. Finally,
+    we call the same method, `printType`, that was declared in one place, but that
+    functions exactly the same for each discrete and separate object.'
+  id: totrans-48
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 首先，我们声明一个协议`Typeable`，并在该协议上声明一个扩展，输出对象的类型。接下来，声明三个完全不同且没有任何关联的基类。然后，声明三个更多的子对象，每个都继承自不同的父类，但都实现了之前的协议`Typeable`。然后，我们实例化每个类。最后，我们调用同一个方法`printType`，这个方法只在一个地方声明，但对于每个单独的对象都能完全相同地工作。
+- en: Protocol extensions are a powerful addition to Swift that has enabled cleaner
+    code, with a better, more maintainable, architecture.
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 协议扩展是 Swift 中的一个强大补充，它使代码更清晰、更可维护、更具架构性。
+- en: What We’ve Learned
+  id: totrans-50
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们学到了什么
+- en: Adding functionality isn’t easily possible with Java, but Kotlin and Swift both
+    provide built-in mechanisms for extending existing objects. There are limitations
+    in both approaches, but there is a definite use case for the capability enabled
+    by both languages and platforms.
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Java 中不容易添加功能，但 Kotlin 和 Swift 都提供了扩展现有对象的内置机制。这两种方法都有局限性，但两种语言和平台都能提供的功能确实有明确的用例。
+- en: In our final chapter on tasks, we turn our attention not toward building, but
+    toward maintaining what we’ve already built through testing. Both platforms have
+    excellent tooling around testing. Let’s dive in to see what’s available!
+  id: totrans-52
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在我们关于任务的最后一章中，我们的注意力转向了不是向建设方向，而是通过测试来维护我们已经构建的内容。两个平台都围绕测试提供了优秀的工具。让我们深入了解一下可用的内容！

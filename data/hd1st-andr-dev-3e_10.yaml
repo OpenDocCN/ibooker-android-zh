@@ -1,0 +1,2802 @@
+- en: 'Chapter 8\. Navigation ui: *Going Places*'
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 第 8 章。导航 UI：*前往各处*
+- en: '![image](Images/f0293-01.png)'
+  id: totrans-1
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0293-01.png)'
+- en: '**Most apps need to be able to navigate between destinations.**'
+  id: totrans-2
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**大多数应用程序需要能够在目的地之间进行导航。**'
+- en: 'And with Android’s Navigation component, building this UI became much simpler.
+    Here, you’ll learn how to use some of Android’s navigation UI components so that
+    **your users can navigate your app more easily**. You’ll see how to use **themes**,
+    and replace your app’s default app bar with a **toolbar**, You’ll learn how to
+    add **menu items** you can **use for navigation**. You’ll discover how to implement
+    **bottom bar navigation**. Finally, you’ll create a swish **navigation drawer**:
+    a panel that slides out from the side of your activity.'
+  id: totrans-3
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 并且通过 Android 的导航组件，构建这种 UI 变得更加简单。在这里，您将学习如何使用一些 Android 的导航 UI 组件，以便 **使您的用户更轻松地导航您的应用程序**。您将了解如何使用
+    **主题**，并将应用程序的默认应用程序栏替换为 **工具栏**，您将学习如何添加 **用于导航的菜单项**。您将发现如何实现 **底部导航栏导航**。最后，您将创建一个时髦的
+    **导航抽屉**：这是一个从活动侧边滑出的面板。
+- en: Different apps, different structures
+  id: totrans-4
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 不同的应用程序，不同的结构
+- en: 'In the previous two chapters, you learned how to use Android’s Navigation component
+    to navigate from fragment to fragment by clicking on a button. This approach worked
+    well in the Secret Message app because we needed to navigate from one destination
+    to another in a linear way:'
+  id: totrans-5
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在前两章中，您学习了如何使用 Android 的导航组件通过点击按钮从片段导航到片段。这种方法在秘密消息应用程序中效果很好，因为我们需要以线性方式从一个目的地导航到另一个目的地：
+- en: '![image](Images/f0294-01.png)'
+  id: totrans-6
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0294-01.png)'
+- en: 'But not all apps follow this kind of structure. Many apps have screens you
+    need to be able to navigate to from wherever you are in the app. An email app,
+    for example, may have inbox, sent items, and help screens that must be available
+    throughout the app:'
+  id: totrans-7
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但并非所有应用程序都遵循这种结构。许多应用程序有您需要能够从应用程序的任何位置导航到的屏幕。例如，电子邮件应用可能具有必须在整个应用程序中可用的收件箱、已发送项目和帮助屏幕：
+- en: '![image](Images/f0294-02.png)'
+  id: totrans-8
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0294-02.png)'
+- en: When you have an app with a looser navigation structure like this, how do you
+    make sure you can always navigate to each screen?
+  id: totrans-9
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您有一个像这样导航结构较为松散的应用程序时，如何确保您始终可以导航到每个屏幕？
+- en: Android includes navigation UI components
+  id: totrans-10
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: Android 包括导航 UI 组件
+- en: 'When you have screens you want to be able to access from anywhere in your app,
+    you might want to use one of Android’s navigation UI components. They include:'
+  id: totrans-11
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当你有希望在应用程序中任何地方访问的屏幕时，你可能希望使用 Android 的导航 UI 组件之一。它们包括：
+- en: An app bar
+  id: totrans-12
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 应用程序栏
+- en: This is a bar that appears at the top of the screen, and Android Studio usually
+    includes one for you by default. You can add items to the app bar which, when
+    clicked, navigate to destinations.
+  id: totrans-13
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是显示在屏幕顶部的条形区域，Android Studio 通常默认为您包含一个。您可以向应用程序栏中添加项目，当点击时，导航到目的地。
+- en: '![image](Images/f0295-01.png)'
+  id: totrans-14
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0295-01.png)'
+- en: The bottom navigation bar
+  id: totrans-15
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 底部导航栏
+- en: This appears at the bottom of the screen. It features a small number of items
+    you can use for navigation.
+  id: totrans-16
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这出现在屏幕底部。它包含少量项目，可用于导航。
+- en: '![image](Images/f0295-02.png)'
+  id: totrans-17
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0295-02.png)'
+- en: A navigation drawer
+  id: totrans-18
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 导航抽屉
+- en: This is a drawer that slides out from the edge of the screen. Many apps include
+    one of these as it can be very flexible.
+  id: totrans-19
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是从屏幕边缘滑出的抽屉。许多应用程序包括其中一个，因为它非常灵活。
+- en: '![image](Images/f0295-03.png)'
+  id: totrans-20
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0295-03.png)'
+- en: In this chapter, we’re going to discover how to implement each of these three
+    types of navigation UI by building a prototype email app named CatChat.
+  id: totrans-21
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章中，我们将通过构建名为 CatChat 的原型电子邮件应用程序来发现如何实现这三种类型的导航 UI。
+- en: How the CatChat app will work
+  id: totrans-22
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: CatChat 应用程序将如何工作
+- en: 'The CatChat app will feature a single activity named `MainActivity`, and three
+    fragments: `InboxFragment`, `SentItemsFragment`, and `HelpFragment`. Each fragment
+    will be displayed in `MainActivity` as the user navigates to each one.'
+  id: totrans-23
+  prefs: []
+  type: TYPE_NORMAL
+  zh: CatChat 应用程序将包含一个名为 `MainActivity` 的单一活动，并且三个片段：`InboxFragment`、`SentItemsFragment`
+    和 `HelpFragment`。每个片段在用户导航到它们时将在 `MainActivity` 中显示。
+- en: '![image](Images/f0296-01.png)'
+  id: totrans-24
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0296-01.png)'
+- en: The app will include an app bar that includes a Help menu item. When the user
+    clicks on this, the app will navigate to `HelpFragment` by displaying it in `MainActivity`.
+  id: totrans-25
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 应用程序将包括一个应用程序栏，其中包含一个帮助菜单项。当用户点击此菜单项时，应用程序将通过在 `MainActivity` 中显示它来导航到 `HelpFragment`。
+- en: '![image](Images/f0296-02.png)'
+  id: totrans-26
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0296-02.png)'
+- en: 'The app will also feature a navigation drawer that will be used to navigate
+    between all three fragments. The drawer will include an item for each fragment,
+    and clicking on each one will display the correct fragment:'
+  id: totrans-27
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 该应用程序还将具有一个导航抽屉，用于在所有三个片段之间进行导航。抽屉将包括每个片段的项目，点击每个项目将显示正确的片段：
+- en: '![image](Images/f0296-03.png)'
+  id: totrans-28
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0296-03.png)'
+- en: Let’s go through the steps we’ll take to create the CatChat app.
+  id: totrans-29
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们来看看我们将如何创建 CatChat 应用的步骤。
+- en: Here’s what we’re going to do
+  id: totrans-30
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 这是我们要做的事情。
+- en: 'There are four main steps we’ll go through to create the CatChat app:'
+  id: totrans-31
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将执行四个主要步骤来创建 CatChat 应用：
+- en: '**Replace the default app bar with a toolbar.**'
+  id: totrans-32
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用工具栏替换默认的应用栏。**'
+- en: A toolbar looks like an app’s default app bar, but it provides you with more
+    flexibility, and includes the latest app bar features. Along the way, you’ll learn
+    how to apply themes and styles.
+  id: totrans-33
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 工具栏看起来像一个应用程序的默认应用栏，但它为您提供了更多的灵活性，并包括最新的应用栏功能。在此过程中，您将学习如何应用主题和样式。
+- en: '![image](Images/f0297-01.png)'
+  id: totrans-34
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0297-01.png)'
+- en: '**Add a Help menu item to the toolbar.**'
+  id: totrans-35
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**在工具栏中添加帮助菜单项。**'
+- en: When clicked, the Help menu item will navigate to `HelpFragment`.
+  id: totrans-36
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 点击时，帮助菜单项将导航到`HelpFragment`。
+- en: '![image](Images/f0297-02.png)'
+  id: totrans-37
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0297-02.png)'
+- en: '**Implement the bottom bar navigation.**'
+  id: totrans-38
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**实现底部栏导航。**'
+- en: We’ll add a bottom bar to the app so that we can navigate between each of the
+    app’s fragments.
+  id: totrans-39
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 我们将向应用程序添加底部栏，以便我们可以在每个应用程序的片段之间导航。
+- en: '![image](Images/f0297-03.png)'
+  id: totrans-40
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0297-03.png)'
+- en: '**Create the navigation drawer.**'
+  id: totrans-41
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**创建导航抽屉。**'
+- en: Finally, we’ll replace the bottom navigation bar with a navigation drawer. The
+    drawer will include a header image, and items for each of the app’s fragments,
+    grouped into sections.
+  id: totrans-42
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 最后，我们将用导航抽屉替换底部导航栏。抽屉将包括一个头部图像，并为应用程序的每个片段分组成部分的项目。
+- en: '![image](Images/f0297-04.png)'
+  id: totrans-43
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![图片](Images/f0297-04.png)'
+- en: We’ll start by creating a new project for the CatChat app.
+  id: totrans-44
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将从创建 CatChat 应用的新项目开始。
+- en: Create a new project
+  id: totrans-45
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建一个新项目。
+- en: '![image](Images/f0298-01.png)'
+  id: totrans-46
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0298-01.png)'
+- en: We’re going to use a new project for the CatChat app, so create a new Android
+    Studio project using the same steps you used in the previous chapters. Choose
+    the Empty Activity option, enter a name of “CatChat” and a package name of “com.hfad.catchat”,
+    and accept the default save location. Make sure the language is set to Kotlin
+    and the minimum SDK is API 21 so that it will run on most Android devices.
+  id: totrans-47
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用一个新的项目来创建 CatChat 应用程序，所以请使用前几章中使用的相同步骤来创建一个新的 Android Studio 项目。选择空活动选项，输入名称“CatChat”和包名称“com.hfad.catchat”，接受默认保存位置。确保语言设置为
+    Kotlin，最低 SDK 为 API 21，以便它可以在大多数 Android 设备上运行。
+- en: A default app bar gets added…
+  id: totrans-48
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 默认的应用栏被添加了…
+- en: 'When you create a new project with an empty activity, Android Studio usually
+    includes an app bar that displays the app’s name. You can see this app bar at
+    the top of the screen when you run the app:'
+  id: totrans-49
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您使用空活动创建新项目时，Android Studio 通常会包含一个显示应用程序名称的应用栏。当您运行应用程序时，可以在屏幕顶部看到此应用栏：
+- en: '![image](Images/f0298-02.png)'
+  id: totrans-50
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0298-02.png)'
+- en: 'Having an app bar is useful for a number of reasons:'
+  id: totrans-51
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 拥有应用栏对于许多原因都很有用：
+- en: '![Images](Images/star.png) **It makes key actions more prominent in a way that’s
+    predictable, such as sharing content or performing searches.**'
+  id: totrans-52
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/star.png) **它使关键操作更加突出，以一种可预测的方式，例如共享内容或执行搜索。**'
+- en: '![Images](Images/star.png) **It can help the user know where they are in the
+    app by displaying the app name, or a label for the current screen.**'
+  id: totrans-53
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/star.png) **它可以帮助用户知道他们在应用程序中的位置，显示应用程序名称或当前屏幕的标签。**'
+- en: '![Images](Images/star.png) **You can use it to navigate to different destinations.**'
+  id: totrans-54
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '![图片](Images/star.png) **您可以使用它导航到不同的目的地。**'
+- en: But how does the app bar get added?
+  id: totrans-55
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 但是应用栏是如何添加的呢？
+- en: …by applying a theme
+  id: totrans-56
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …通过应用主题
+- en: The default app bar gets added to the app by applying a **theme**. A theme gives
+    your app a consistent look and feel across multiple screens. It controls the app’s
+    general appearance, and whether it includes an app bar.
+  id: totrans-57
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过应用**主题**将默认的应用栏添加到应用程序中。主题使您的应用程序在多个屏幕上具有一致的外观和感觉。它控制应用程序的一般外观，以及是否包含应用栏。
+- en: Android comes with a number of themes you can use in your apps, and by default,
+    Android Studio applies one that includes an app bar.
+  id: totrans-58
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android 提供了许多可以在应用程序中使用的主题，默认情况下，Android Studio 应用了一个包含应用栏的主题。
+- en: The CatChat app will use a Material theme
+  id: totrans-59
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: CatChat 应用程序将使用 Material 主题。
+- en: We’re going to apply a theme to the CatChat app that uses **Material Design**.
+  id: totrans-60
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将为 CatChat 应用程序应用使用**Material Design**的主题。
+- en: Material is a design system developed by Google that helps you build high-quality
+    apps and websites with a consistent look and feel. The idea behind it is that
+    a user can switch from a Google app like the Play Store to an app designed by
+    a third-party developer and instantly feel comfortable and know what to do.
+  id: totrans-61
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Material 是由 Google 开发的设计系统，帮助您构建具有统一外观和感觉的高质量应用程序和网站。其背后的理念是，用户可以从像 Play Store
+    这样的 Google 应用切换到第三方开发者设计的应用程序，并立即感到舒适并知道该如何操作。
+- en: Material was originally inspired by print-based design principles and movement
+    to reflect how real-world objects (such as index cards and pieces of paper) look
+    and behave. Its latest evolution is known as **Material You**, which gives users
+    a more fluid experience with a personalized color palette.
+  id: totrans-62
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Material 最初受到印刷设计原则和物体（如索引卡和纸片）的运动影响，反映了它们的外观和行为。其最新演变被称为 **Material You**，它为用户提供了更流畅的体验和个性化的配色方案。
+- en: The app build.gradle file needs a Material library dependency
+  id: totrans-63
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 应用的 build.gradle 文件需要一个 Material 库依赖项。
+- en: The Material themes are held in a separate library that you need to include
+    in your app. You do this by adding a dependency to the *com.google.android.material*
+    library in the app’s *build.gradle* file.
+  id: totrans-64
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Material 主题保存在一个单独的库中，您需要将其包含在应用中。您可以通过在应用的 *build.gradle* 文件中添加依赖项到 *com.google.android.material*
+    库来实现这一点。
+- en: 'As we want to use a Material theme in the CatChat app, we need to make sure
+    it includes this library. Open the file *CatChat/app/build.gradle*, and make sure
+    it includes the following line (in bold):'
+  id: totrans-65
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 由于我们希望在 CatChat 应用中使用 Material 主题，因此我们需要确保它包含了这个库。打开文件 *CatChat/app/build.gradle*，确保包含以下行（用粗体标出）：
+- en: '![image](Images/f0299-02.png)'
+  id: totrans-66
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0299-02.png)'
+- en: Android Studio may have already added this dependency to the file for you. If
+    not, you’ll need to add it yourself, and click on the Sync Now option that appears
+    at the top of the code editor to sync the change with the rest of your project.
+  id: totrans-67
+  prefs: []
+  type: TYPE_NORMAL
+  zh: Android Studio 可能已经为您在文件中添加了这个依赖项。如果没有，您需要自己添加，并点击代码编辑器顶部出现的 Sync Now 选项，将更改与项目的其余部分同步。
+- en: We want to apply a Material theme to the CatChat app to control its app bar.
+    Let’s find out how to do this.
+  id: totrans-68
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望在 CatChat 应用中应用 Material 主题来控制其应用栏。让我们看看如何实现这一点。
+- en: Apply a theme in AndroidManifest.xml
+  id: totrans-69
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在 AndroidManifest.xml 中应用主题
+- en: You apply a theme in the app’s *AndroidManifest.xml* file. As you learned in
+    [Chapter 3](ch03.xhtml#layoutscolon_being_a_layout), this file provides information
+    about the app’s configuration. It features attributes—including the theme—that
+    have a direct impact on the app bar.
+  id: totrans-70
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以在应用的 *AndroidManifest.xml* 文件中应用一个主题。正如您在 [第3章](ch03.xhtml#layoutscolon_being_a_layout)
+    中所学到的，这个文件提供了关于应用程序配置的信息。它包含一些属性，包括主题，这些属性对应用栏有直接影响。
+- en: 'Here’s the *AndroidManifest.xml* code Android Studio created for us in the
+    CatChat project (we’ve bolded the key areas):'
+  id: totrans-71
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是 Android Studio 在 CatChat 项目中为我们创建的 *AndroidManifest.xml* 代码（我们已将关键部分用粗体标出）：
+- en: '![image](Images/f0300-02.png)'
+  id: totrans-72
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0300-02.png)'
+- en: The `**android:label**` attribute refers to the text that’s displayed in the
+    app bar, and it’s the name you specify when you first create the app. In the code
+    above, it uses a `String` resource named `app_name`, which Android Studio has
+    added to *strings.xml*.
+  id: totrans-73
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`**android:label**` 属性指的是显示在应用栏中的文本，并且它是您在创建应用时指定的名称。在上面的代码中，它使用了一个名为 `app_name`
+    的 `String` 资源，Android Studio 已经添加到 *strings.xml* 中。'
+- en: 'The `**android:theme**` attribute specifies the theme. In the code above, it’s
+    set using:'
+  id: totrans-74
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`**android:theme**` 属性指定了主题。在上面的代码中，它是使用以下方式设置的：'
+- en: '[PRE0]'
+  id: totrans-75
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE0]'
+- en: This specifies that the theme is defined as a style resource (denoted by `@style`)
+    named `Theme.CatChat`.
+  id: totrans-76
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这指定主题被定义为一个名为 `Theme.CatChat` 的样式资源（由 `@style` 表示）。
+- en: Define styles in style resource files
+  id: totrans-77
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在样式资源文件中定义样式
+- en: Style resources are used to describe any themes and styles the app needs to
+    use, and they’re held in one or more style resources files.
+  id: totrans-78
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 样式资源用于描述应用程序需要使用的任何主题和样式，并保存在一个或多个样式资源文件中。
+- en: When we created the CatChat app, Android Studio created two style resource files
+    for us. Both files are named *themes.xml*, and they’re located in the *app/src/main/res/values*
+    and *app/src/main/res/values-night* folders. The one in the *values* folder is
+    the app’s default style resource file, while the one in the *values-night* folder
+    is used at night.
+  id: totrans-79
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们创建 CatChat 应用时，Android Studio 为我们创建了两个样式资源文件。这两个文件名都是 *themes.xml*，分别位于 *app/src/main/res/values*
+    和 *app/src/main/res/values-night* 文件夹中。*values* 文件夹中的文件是应用的默认样式资源文件，而*values-night*
+    文件夹中的文件用于夜间模式。
+- en: Note
+  id: totrans-80
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: Some versions of Android Studio name this file styles.xml instead.
+  id: totrans-81
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有些版本的 Android Studio 将这个文件命名为 styles.xml。
+- en: '*themes.xml* in the *values* folder defines a style code like this:'
+  id: totrans-82
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*values* 文件夹中的 *themes.xml* 定义了如下的样式代码：'
+- en: '![image](Images/f0301-03.png)'
+  id: totrans-83
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0301-03.png)'
+- en: The `**<style>**` element tells Android that it’s a style resource.
+  id: totrans-84
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`**<style>**` 元素告诉 Android 它是一个样式资源。'
+- en: 'Every style must have a name to identify it by, and you define this using the
+    `**name**` attribute like so:'
+  id: totrans-85
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个样式必须有一个名称以标识它，您可以使用 `**name**` 属性来定义，如下所示：
+- en: '![image](Images/f0301-04.png)'
+  id: totrans-86
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0301-04.png)'
+- en: '*AndroidManifest.xml*’s `theme` attribute uses this name to set the app’s theme,
+    for example `"@style/Theme.CatChat"`.'
+  id: totrans-87
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '*AndroidManifest.xml* 的 `theme` 属性使用此名称来设置应用程序的主题，例如 `"@style/Theme.CatChat"`。'
+- en: 'The style also includes a `**parent**` attribute, which specifies which underlying
+    theme the style should be based on. The above code uses:'
+  id: totrans-88
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 样式还包括一个 `**parent**` 属性，指定样式应基于哪个基础主题。上述代码使用：
+- en: '![image](Images/f0301-05.png)'
+  id: totrans-89
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0301-05.png)'
+- en: 'which is a theme with a dark app bar that lets the app transition between day
+    and night themes. During the day, it uses the style defined in the *values* folder’s
+    style resource file, and it switches to the one in the *values-night* folder at
+    night:'
+  id: totrans-90
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是一个带有深色应用栏的主题，允许应用程序在白天和夜间主题之间过渡。白天时，它使用 *values* 文件夹中定义的样式资源文件，夜间则切换到 *values-night*
+    文件夹中的样式资源文件：
+- en: The above style also includes `<item>` elements, which override some of the
+    theme’s colors. Let’s look at this in more detail.
+  id: totrans-91
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述样式还包括 `<item>` 元素，用于覆盖一些主题的颜色。让我们更详细地看看这一点。
+- en: Styles can override theme colors
+  id: totrans-92
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 样式可以覆盖主题颜色
+- en: If you want to override any properties in the parent theme, such as its color
+    scheme, you can do so by adding `<item>` elements to the style. The CatChat app,
+    for example, includes items that override the primary and secondary brand colors.
+    The primary color is the app’s main color, and it’s used for things like the app
+    bar. The secondary color provides a contrast, and it’s used by some views.
+  id: totrans-93
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您想要覆盖父主题中的任何属性，例如其颜色方案，可以通过向样式添加 `<item>` 元素来执行此操作。例如，CatChat 应用程序包括覆盖主要和次要品牌颜色的项目。主要颜色是应用程序的主要颜色，用于例如应用栏。次要颜色提供对比度，并用于某些视图。
+- en: You can use multiple style resource files to apply a different color scheme
+    in different situations. The CatChat app, for example, includes one style resource
+    file in the *values* folder, and another in *values-night*. This arrangement—along
+    with the `DayNight` theme each style is based on—lets you apply different color
+    schemes during the day and at night.
+  id: totrans-94
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以使用多个样式资源文件在不同情况下应用不同的颜色方案。例如，CatChat 应用程序在 *values* 文件夹中包含一个样式资源文件，在 *values-night*
+    中包含另一个样式资源文件。这种安排——以及每个样式所基于的 `DayNight` 主题——允许您在白天和夜间应用不同的颜色方案。
+- en: 'Here’s the code the CatChat app uses to override the primary colors in its
+    *themes.xml* file in the *values* folder:'
+  id: totrans-95
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是 CatChat 应用程序使用的代码，用于覆盖其 *themes.xml* 文件中 *values* 文件夹中的主要颜色：
+- en: '[PRE1]'
+  id: totrans-96
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE1]'
+- en: As you can see, each item has a name, and uses `@color` to refer to a color
+    in a **color resource file**.
+  id: totrans-97
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如您所见，每个项目都有一个名称，并使用 `@color` 来引用**颜色资源文件**中的颜色。
+- en: Color resource files define a set of colors
+  id: totrans-98
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 颜色资源文件定义了一组颜色。
+- en: When you create a new project, Android Studio usually includes a default color
+    resource file named *colors.xml*. It’s located in the *app/src/main/res/values*
+    folder, and its colors can be used throughout your app.
+  id: totrans-99
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建新项目时，Android Studio 通常会包含一个名为 *colors.xml* 的默认颜色资源文件。它位于 *app/src/main/res/values*
+    文件夹中，其颜色可在整个应用程序中使用。
+- en: 'A typical color resource file looks like this:'
+  id: totrans-100
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 典型的颜色资源文件如下所示：
+- en: '![image](Images/f0302-02.png)'
+  id: totrans-101
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0302-02.png)'
+- en: To change your app’s color scheme, simply add the colors you want to the color
+    resource file, and refer to them in its style resource files.
+  id: totrans-102
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要更改应用程序的颜色方案，只需将所需的颜色添加到颜色资源文件中，并在其样式资源文件中引用它们。
+- en: Replace the default app bar with a toolbar
+  id: totrans-103
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 用工具栏替换默认应用栏
+- en: So far, you’ve seen how Android Studio adds a default app bar to your app by
+    applying a theme. Adding an app bar in this way is easy, but a more flexible approach
+    is to **replace it with a toolbar**.
+  id: totrans-104
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，您已经看到 Android Studio 通过应用主题向应用程序添加了默认应用栏。以这种方式添加应用栏很容易，但更灵活的方法是**用工具栏替换它**。
+- en: A basic toolbar looks just like the default app bar you’ve already seen, but
+    it’s much more flexible. You can change its height, for example, and in the next
+    chapter, you’ll learn how to make one expand or collapse when the user scrolls
+    the device screen. It also includes all the latest app bar features, so applying
+    a toolbar makes it easier to include these in your app.
+  id: totrans-105
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 基本的工具栏看起来与您已经看到的默认应用栏非常相似，但它更加灵活。例如，您可以更改其高度，在接下来的章节中，您将学习如何使其在用户滚动设备屏幕时展开或折叠。它还包含所有最新的应用栏功能，因此使用工具栏可以更轻松地将这些功能包含到您的应用中。
+- en: You replace the default app bar by removing the original app bar, including
+    a toolbar in your layout, and then telling the activity to use the toolbar as
+    its app bar. We’ll show you how to do this over the next few pages.
+  id: totrans-106
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要移除默认应用栏，您需要删除原始的应用栏，并在布局中包含一个工具栏，然后告知活动将该工具栏作为其应用栏使用。接下来的几页我们将向您展示如何操作。
+- en: '![image](Images/f0303-02.png)'
+  id: totrans-107
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0303-02.png)'
+- en: Remove the default app bar using a theme
+  id: totrans-108
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 使用主题来移除默认的应用栏
+- en: You remove the default app bar by applying a theme to the app that doesn’t include
+    an app bar.
+  id: totrans-109
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过将不包含应用栏的主题应用到应用程序，您可以移除默认应用栏。
+- en: The current version of the CatChat app, for example, uses the theme `Theme.MaterialComponents.DayNight.DarkActionBar`.
+    We’re going to remove the default app bar by replacing it with `Theme.MaterialComponents.DayNight.NoActionBar`.
+    These two themes have the same general appearance, except that the second has
+    no app bar.
+  id: totrans-110
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 例如，当前版本的 CatChat 应用使用主题 `Theme.MaterialComponents.DayNight.DarkActionBar`。我们将通过将其替换为
+    **`Theme.MaterialComponents.DayNight.NoActionBar`** 来移除默认应用栏。这两个主题基本外观相同，只是第二个没有应用栏。
+- en: 'Change the theme now by updating the code in the *themes.xml* files in the
+    *values* and *values-night* folders so that they include the change shown below
+    (in bold):'
+  id: totrans-111
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在通过更新 *values* 和 *values-night* 文件夹中的 *themes.xml* 文件中的代码，使其包含如下更改（**加粗部分**）来更改主题：
+- en: '![image](Images/f0303-03.png)![image](Images/f0303-04.png)'
+  id: totrans-112
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0303-03.png)![image](Images/f0303-04.png)'
+- en: That’s everything that we need to do to remove the default app bar. Next up,
+    how to add the toolbar.
+  id: totrans-113
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们需要做的一切，移除默认应用栏。接下来，我们将讲解如何添加工具栏。
+- en: A toolbar is a type of View
+  id: totrans-114
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 工具栏是一种视图类型
+- en: Unlike the default app bar, a toolbar is a type of view that you add to your
+    layout. As it’s a view, this means you have full control over its size and position.
+  id: totrans-115
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 与默认应用栏不同，工具栏是一种您可以添加到布局中的视图类型。因为它是一个视图，这意味着您可以完全控制其大小和位置。
+- en: Different types of toolbars are available, and in the CatChat app we’re going
+    to use a **Material toolbar**. This is a type of toolbar that works well with
+    Material themes, such as the one we’re using in this app.
+  id: totrans-116
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 提供了不同类型的工具栏，在 CatChat 应用中，我们将使用**Material 工具栏**。这是一种与 Material 主题非常匹配的工具栏，正如我们在这个应用中使用的那种主题。
+- en: 'You add a Material toolbar using code like this:'
+  id: totrans-117
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以使用如下代码添加一个 Material 工具栏：
+- en: '![image](Images/f0304-02.png)'
+  id: totrans-118
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0304-02.png)'
+- en: 'You start by defining the toolbar using:'
+  id: totrans-119
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您可以通过以下方式开始定义工具栏：
+- en: '![image](Images/f0304-03.png)'
+  id: totrans-120
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0304-03.png)'
+- en: 'where `com.google.android.material.appbar.MaterialToolbar` is the fully qualified
+    path of the `MaterialToolbar` class. You then use other view attributes to give
+    it an ID, and specify its appearance. To make the toolbar as wide as its parent
+    and as tall as the default app bar from the underlying theme, for example, you
+    use:'
+  id: totrans-121
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 其中 `com.google.android.material.appbar.MaterialToolbar` 是 `MaterialToolbar`
+    类的完全限定路径。然后，您可以使用其他视图属性为它指定 ID 并定义其外观。例如，要使工具栏与其父视图同宽并与底层主题的默认应用栏一样高，您可以使用：
+- en: '[PRE2]'
+  id: totrans-122
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE2]'
+- en: The `**?attr**` prefix in the above code means that you want to use an attribute
+    from the current theme. In this particular case, we’re using `?attr/actionBarSize`
+    to refer to the height of the theme’s default app bar.
+  id: totrans-123
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述代码中的 `**?attr**` 前缀表示您希望使用当前主题中的属性。在这种情况下，我们使用 `?attr/actionBarSize` 来引用主题默认应用栏的高度。
+- en: 'You can also style the toolbar so that it uses the app’s primary colors. This
+    is done using the line:'
+  id: totrans-124
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 您还可以为工具栏设置使用应用的主色调。这可以通过以下方式实现：
+- en: '![image](Images/f0304-04.png)'
+  id: totrans-125
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0304-04.png)'
+- en: Now that you’ve learned what toolbar code looks like, let’s add one to `MainActivity`’s
+    layout.
+  id: totrans-126
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经了解了工具栏代码的外观，让我们将其添加到 `MainActivity` 的布局中。
+- en: Add the toolbar to activity_main.xml
+  id: totrans-127
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 将工具栏添加到 `activity_main.xml`
+- en: 'We’re going to add a toolbar to `MainActivity`’s layout so it appears at the
+    top of the screen. Update the code in *activity_main.xml* so that it matches the
+    code below:'
+  id: totrans-128
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在 `MainActivity` 的布局中添加一个工具栏，使其显示在屏幕顶部。请更新 *activity_main.xml* 中的代码，以使其与下面的代码匹配：
+- en: '![image](Images/f0305-02.png)'
+  id: totrans-129
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0305-02.png)'
+- en: Where did the app name go?
+  id: totrans-130
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 应用名称去哪里了？
+- en: 'The above code adds a toolbar to `MainActivity`’s layout, but it doesn’t yet
+    include any app bar functionality. If you were to run the app at this point, you’d
+    find, for example, that the app name isn’t displayed in the toolbar as it was
+    in the default app bar we had previously:'
+  id: totrans-131
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述代码向`MainActivity`的布局添加了一个工具栏，但尚未包含任何应用栏功能。如果您此时运行应用程序，例如，您会发现与之前默认应用栏相比，工具栏中没有显示应用程序名称：
+- en: '![image](Images/f0305-03.png)'
+  id: totrans-132
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0305-03.png)'
+- en: To get the toolbar to behave like a proper app bar, we need to make some changes
+    to the activity’s Kotlin code.
+  id: totrans-133
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使工具栏表现得像一个合适的应用栏，我们需要对活动的Kotlin代码进行一些更改。
+- en: Set the toolbar as MainActivity’s app bar
+  id: totrans-134
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 将工具栏设置为MainActivity的应用栏
+- en: 'To make the toolbar behave like a proper app bar, you need to tell `MainActivity`
+    to treat it as one. You do this by calling the `**setSupportActionBar()**` method
+    in the activity’s Kotlin code, and passing it a reference to the toolbar like
+    so:'
+  id: totrans-135
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要使工具栏表现得像一个合适的应用栏，您需要在活动的Kotlin代码中调用`**setSupportActionBar()**`方法，并像这样传递对工具栏的引用：
+- en: '![image](Images/f0306-02.png)'
+  id: totrans-136
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0306-02.png)'
+- en: 'We’ll add this code to `MainActivity`’s `onCreate()` method so that it runs
+    immediately after the activity gets created. Update the code for *MainActivity.kt*
+    so that it includes the changes (in bold) shown below:'
+  id: totrans-137
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将把以下代码添加到`MainActivity`的`onCreate()`方法中，以便在活动创建后立即运行。更新 *MainActivity.kt*
+    的代码，包括下面显示的更改（用粗体显示）：
+- en: '![image](Images/f0306-03.png)'
+  id: totrans-138
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0306-03.png)'
+- en: That’s everything we need to replace the app’s default app bar with a toolbar.
+    Let’s take the app for a test drive and make sure it appears correctly.
+  id: totrans-139
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们需要用工具栏替换应用程序默认应用栏的所有内容。让我们启动应用程序进行测试，并确保它显示正常。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-140
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![图片](Images/car.png) 测试驾驶'
+- en: When we run the app, `MainActivity` displays a toolbar at the top of the screen.
+    The toolbar includes the name of the app.
+  id: totrans-141
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用时，`MainActivity`在屏幕顶部显示一个工具栏。工具栏包括应用程序的名称。
+- en: Now that we’ve replaced the default app bar with a toolbar, let’s add some more
+    functionality to it.
+  id: totrans-142
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经用工具栏替换了默认应用栏，让我们为其添加更多功能。
+- en: '![image](Images/f0306-04.png)'
+  id: totrans-143
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0306-04.png)'
+- en: Let’s use the toolbar to navigate
+  id: totrans-144
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 让我们使用工具栏进行导航
+- en: '![image](Images/f0307-01.png)'
+  id: totrans-145
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0307-01.png)'
+- en: At the beginning of the chapter, we said we wanted to be able to navigate to
+    different screens in the CatChat app using Android’s navigation UI components.
+    Now that we’ve added a toolbar to the app, let’s create a couple of screens, and
+    use the toolbar to navigate between them.
+  id: totrans-146
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章开头，我们说过我们希望能够使用Android的导航UI组件在CatChat应用中导航到不同的屏幕。现在我们已经为应用添加了一个工具栏，让我们创建几个屏幕，并使用工具栏在它们之间进行导航。
+- en: How toolbar navigation will work
+  id: totrans-147
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 工具栏导航如何工作
+- en: We’ll begin by creating two new fragments—`InboxFragment` and `HelpFragment`—which
+    will be displayed in `MainActivity` when the user navigates to each one. `InboxFragment`
+    will be displayed when the app is launched, and `HelpFragment` will be displayed
+    when we navigate to it.
+  id: totrans-148
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将首先创建两个新的片段——`InboxFragment`和`HelpFragment`——当用户导航到每个片段时将在`MainActivity`中显示。应用启动时将显示`InboxFragment`，导航到`HelpFragment`时将显示。
+- en: Note
+  id: totrans-149
+  prefs:
+  - PREF_H6
+  type: TYPE_NORMAL
+  zh: 注意
+- en: We’re not going to add any email or help functionality to InboxFragment and
+    HelpFragment. We’ll just display a piece of text in each one so we know which
+    fragment is being displayed.
+  id: totrans-150
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们不会向InboxFragment和HelpFragment添加任何电子邮件或帮助功能。我们将只在每个片段中显示一段文本，以便知道显示的是哪个片段。
+- en: 'We’ll navigate to `HelpFragment` by adding a Help item to the toolbar so it
+    looks like this:'
+  id: totrans-151
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将通过向工具栏添加“帮助”项目来导航到`HelpFragment`，效果如下：
+- en: '![image](Images/f0307-03.png)'
+  id: totrans-152
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0307-03.png)'
+- en: We’ll add the Help item using a menu; you’ll find out how to do this a few pages
+    ahead.
+  id: totrans-153
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用菜单添加“帮助”项目；您将在几页之后了解如何操作。
+- en: When we click on the Help item, the app will navigate to `HelpFragment`. We’ll
+    also update the toolbar’s title to indicate what the current screen is, and provide
+    an Up button to make it easy to navigate back to `InboxFragment`.
+  id: totrans-154
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们点击“帮助”项目时，应用将导航到`HelpFragment`。我们还将更新工具栏的标题以指示当前屏幕，并提供“向上”按钮，以便轻松返回`InboxFragment`。
+- en: '![image](Images/f0307-04.png)'
+  id: totrans-155
+  prefs: []
+  type: TYPE_IMG
+  zh: '![图片](Images/f0307-04.png)'
+- en: So that’s how the toolbar navigation will work. Let’s start implementing it
+    by adding `InboxFragment` and `HelpFragment` to the app.
+  id: totrans-156
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是工具栏导航的工作方式。让我们开始通过向应用添加`InboxFragment`和`HelpFragment`来实现它。
+- en: Create InboxFragment
+  id: totrans-157
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建InboxFragment
+- en: 'We want to display `InboxFragment` in `MainActivity` when the app launches.
+    Highlight the *com.hfad.catchat* package in the *app/src/main/java* folder, then
+    go to File→New→Fragment→Fragment (Blank). Name the fragment “InboxFragment”, name
+    its layout “fragment_inbox”, and make sure the language is set to Kotlin. Then
+    update the code for *InboxFragment.kt* to match the code below:'
+  id: totrans-158
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望在应用程序启动时在`MainActivity`中显示`InboxFragment`。在*app/src/main/java*文件夹中突出显示*com.hfad.catchat*包，然后转到文件→新建→片段→空白片段。将片段命名为“InboxFragment”，命名其布局为“fragment_inbox”，并确保语言设置为Kotlin。然后更新*InboxFragment.kt*的代码以匹配下面的代码：
+- en: '![image](Images/f0308-02.png)![image](Images/f0308-03.png)'
+  id: totrans-159
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0308-02.png)![image](Images/f0308-03.png)'
+- en: 'And here’s the code for *fragment_inbox.xml* (update the code for this file
+    too):'
+  id: totrans-160
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是*fragment_inbox.xml*的代码（也更新此文件的代码）：
+- en: '![image](Images/f0308-04.png)'
+  id: totrans-161
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0308-04.png)'
+- en: Create HelpFragment
+  id: totrans-162
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建HelpFragment
+- en: 'We’ll display `HelpFragment` in `MainActivity` when the user clicks on the
+    Help item in the toolbar. Highlight the *com.hfad.catchat* package in the *app/src/main/java*
+    folder, then go to File→New→Fragment→Fragment (Blank). Name the fragment “HelpFragment”,
+    name its layout “fragment_help”, and make sure the language is set to Kotlin.
+    Then make sure the code for *HelpFragment.kt* matches the code below:'
+  id: totrans-163
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当用户在工具栏上单击帮助项时，我们将在`MainActivity`中显示`HelpFragment`。在*app/src/main/java*文件夹中突出显示*com.hfad.catchat*包，然后转到文件→新建→片段→空白片段。将片段命名为“HelpFragment”，命名其布局为“fragment_help”，并确保语言设置为Kotlin。然后确保*HelpFragment.kt*的代码与下面的代码匹配：
+- en: '![image](Images/f0309-02.png)![image](Images/f0309-03.png)'
+  id: totrans-164
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0309-02.png)![image](Images/f0309-03.png)'
+- en: 'Then make sure the code for *fragment_help.xml* matches the layout below:'
+  id: totrans-165
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后确保*fragment_help.xml*的代码与下面的布局匹配：
+- en: '![image](Images/f0309-04.png)'
+  id: totrans-166
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0309-04.png)'
+- en: We’ll use the Navigation component to navigate to HelpFragment
+  id: totrans-167
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们将使用导航组件导航到HelpFragment
+- en: In [Chapter 6](ch06.xhtml#fragments_and_navigationcolon_finding_yo), you learned
+    how to navigate between fragments using Android’s Navigation component. Even though
+    we’re now going to use the toolbar to navigate to a new destination, we can still
+    use the Navigation component for all our navigation needs.
+  id: totrans-168
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在[第6章](ch06.xhtml#fragments_and_navigationcolon_finding_yo)中，您学习了如何使用Android的导航组件在片段之间导航。即使我们现在将使用工具栏导航到新的目的地，我们仍然可以使用导航组件来满足我们所有的导航需求。
+- en: We first need to add the Navigation component to the CatChat project using Gradle.
+  id: totrans-169
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们首先需要使用Gradle将导航组件添加到CatChat项目中。
+- en: Add a version number to the project build.gradle file
+  id: totrans-170
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在项目build.gradle文件中添加版本号
+- en: Just as before, you need to add a new variable to the project’s *build.gradle*
+    file that specifies the version of the Navigation component that should be added
+    to the app.
+  id: totrans-171
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像以前一样，您需要向项目的*build.gradle*文件中添加一个新变量，指定应添加到应用程序中的导航组件的版本。
+- en: 'Open the file *CatChat/build.gradle*, and add the following line (in bold)
+    to the `buildscript` section:'
+  id: totrans-172
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开文件*CatChat/build.gradle*，并在`buildscript`部分添加以下行（**粗体**）：
+- en: '![image](Images/f0310-02.png)'
+  id: totrans-173
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0310-02.png)'
+- en: Add dependencies to the app build.gradle file
+  id: totrans-174
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 在应用程序build.gradle文件中添加依赖项
+- en: Next, you need to add two Navigation component dependencies to the app’s version
+    of the *build.gradle* file.
+  id: totrans-175
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，您需要在应用程序版本的*build.gradle*文件中添加两个导航组件依赖项。
+- en: 'Open the file *CatChat/app/build.gradle*, and add the following two lines (in
+    bold) to the `dependencies` section:'
+  id: totrans-176
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开文件*CatChat/app/build.gradle*，并在`dependencies`部分添加以下两行（**粗体**）：
+- en: '![image](Images/f0310-03.png)'
+  id: totrans-177
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0310-03.png)'
+- en: Once you’ve made these changes, click on the Sync Now option that appears at
+    the top of the code editor to sync the changes with the rest of your project.
+  id: totrans-178
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 完成这些更改后，单击代码编辑器顶部显示的“立即同步”选项，以将更改与项目的其余部分同步。
+- en: Now that you’ve added the Navigation component to your project, let’s use it
+    to create a navigation graph after the following exercise.
+  id: totrans-179
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在您已经将导航组件添加到项目中，请在以下练习后使用它创建导航图。
+- en: Add the fragments to a navigation graph
+  id: totrans-180
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 将片段添加到导航图中
+- en: As you already know, your app’s navigation graph holds details of the destinations
+    in your app and the possible paths you can take to navigate to them. As `InboxFragment`
+    and `HelpFragment` are possible destinations in the CatChat app, we’ll create
+    a new navigation graph, and add the two fragments to it.
+  id: totrans-181
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您已经了解的那样，您的应用程序导航图包含应用程序中目的地的详细信息以及导航到它们的可能路径。由于`InboxFragment`和`HelpFragment`是CatChat应用程序中的可能目的地，我们将创建一个新的导航图，并将这两个片段添加到其中。
+- en: To create the navigation graph, select the *CatChat/app/src/main/res* folder
+    in the project explorer, and then choose File→New→Android Resource File. When
+    prompted, enter a file name of “nav_graph”, choose a resource type of “Navigation”,
+    and click on the OK button.
+  id: totrans-182
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建导航图，请在项目资源管理器中选择*CatChat/app/src/main/res*文件夹，然后选择“文件”→“新建”→“Android资源文件”。在提示时，输入文件名“nav_graph”，选择资源类型“Navigation”，然后点击“确定”按钮。
+- en: '![image](Images/f0313-02.png)'
+  id: totrans-183
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0313-02.png)'
+- en: 'Next, open the navigation graph (file *nav_graph.xml*), switch to the Code
+    view, and update the file so that it matches the code below:'
+  id: totrans-184
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，打开导航图（文件*nav_graph.xml*），切换到代码视图，并更新文件，使其与下面的代码匹配：
+- en: '![image](Images/f0313-03.png)'
+  id: totrans-185
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0313-03.png)'
+- en: The above code adds `InboxFragment` and `HelpFragment` to the navigation graph,
+    and assigns a user-friendly label to each one.
+  id: totrans-186
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上面的代码将`InboxFragment`和`HelpFragment`添加到导航图中，并为每个片段分配了用户友好的标签。
+- en: Those are all the changes we need to make to the navigation graph. Next, let’s
+    update `MainActivity`’s layout so that it can display each fragment when we navigate
+    to it.
+  id: totrans-187
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要对导航图做出的所有更改都在这里了。接下来，让我们更新`MainActivity`的布局，以便在导航到每个片段时能够显示它。
+- en: Add a navigation host to activity_main.xml
+  id: totrans-188
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 在`activity_main.xml`中添加一个导航主机
+- en: As you learned in [Chapter 6](ch06.xhtml#fragments_and_navigationcolon_finding_yo),
+    you display each destination you navigate to by adding a navigation host to the
+    activity’s layout. You do this using a `FragmentContainerView`, specifying the
+    type of navigation host you want to use, and the name of the navigation graph.
+  id: totrans-189
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如你在[第6章](ch06.xhtml#fragments_and_navigationcolon_finding_yo)中学到的那样，通过将导航主机添加到活动的布局中，你可以显示导航到的每个目的地。你可以使用`FragmentContainerView`来做到这一点，指定你想要使用的导航主机类型和导航图的名称。
+- en: 'The code to do this in the CatChat app is almost the same as the code that
+    we added to the Secret Message app in [Chapter 6](ch06.xhtml#fragments_and_navigationcolon_finding_yo).
+    Update your code for *activity_main.xml* to include the changes below (in bold):'
+  id: totrans-190
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在CatChat应用中，执行此操作的代码与我们在第6章中向Secret Message应用程序添加的代码几乎相同。更新*activity_main.xml*的代码以包含下面的更改（用**粗体**标记出来）：
+- en: '![image](Images/f0314-02.png)![image](Images/f0314-03.png)'
+  id: totrans-191
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0314-02.png)![image](Images/f0314-03.png)'
+- en: Now that we’ve added the navigation host, let’s add an item to the toolbar,
+    which we can use to navigate to `HelpFragment`.
+  id: totrans-192
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经添加了导航主机，让我们向工具栏添加一个项目，用于导航到`HelpFragment`。
+- en: Specify items in the toolbar with a menu resource file
+  id: totrans-193
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用菜单资源文件指定工具栏中的项目
+- en: You tell Android which items should appear on the toolbar by defining a **menu**.
+    Each menu is defined in an XML menu resource file which specifies the items that
+    you want to appear.
+  id: totrans-194
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过定义**菜单**告诉Android应该在工具栏上显示哪些项目。每个菜单在一个XML菜单资源文件中定义，指定你希望显示的项目。
+- en: We’re going to create a new menu resource file named *menu_toolbar.xml* which
+    we’ll use to add the Help item to the toolbar. Select the *app/src/main/res* folder,
+    go to the File menu, choose New, and then select the option to create a new Android
+    resource file. When prompted, give it a name of “menu_toolbar”, specify a resource
+    type of “Menu”, and make sure that the directory name is *menu*. When you click
+    on the OK button, Android Studio will create the file for you, and add it to the
+    *app/src/main/res/menu* folder.
+  id: totrans-195
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将创建一个名为*menu_toolbar.xml*的新菜单资源文件，用于将帮助项目添加到工具栏。在项目资源管理器中选择*app/src/main/res*文件夹，然后选择“文件”菜单，选择“新建”，然后选择创建新的Android资源文件。在提示时，将其命名为“menu_toolbar”，指定资源类型为“Menu”，并确保目录名称为*menu*。单击“确定”按钮后，Android
+    Studio将为您创建此文件，并将其添加到*app/src/main/res/menu*文件夹中。
+- en: 'Just like navigation graphs and layout files, you can edit menu resource files
+    by updating the XML code, or by using the built-in design editor. Here’s what
+    the design editor looks like:'
+  id: totrans-196
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像导航图和布局文件一样，你可以通过更新XML代码或使用内置的设计编辑器来编辑菜单资源文件。设计编辑器的外观如下：
+- en: '![image](Images/f0315-01.png)'
+  id: totrans-197
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0315-01.png)'
+- en: Let’s add a Help item to the menu
+  id: totrans-198
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 让我们在菜单中添加一个帮助项目
+- en: We want to be able to navigate to `HelpFragment` from the toolbar, so we’ll
+    add a Help item to the menu resource file. We’ll do this by directly editing the
+    XML code.
+  id: totrans-199
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望能够从工具栏导航到`HelpFragment`，因此我们将在菜单资源文件中添加一个帮助项。我们将直接通过编辑XML代码来实现这一点。
+- en: 'Switch to the Code view of *menu_toolbar.xml*, then update the code so it matches
+    the code below (the lines you need to add are in bold):'
+  id: totrans-200
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 切换到*menu_toolbar.xml*的代码视图，然后更新代码，使其与下面的代码匹配（需要添加的行用**粗体**标记）：
+- en: '![image](Images/f0316-02.png)'
+  id: totrans-201
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0316-02.png)'
+- en: Every menu resource file, including the one above, has a `**<menu>**` root element.
+    This is what tells Android that it defines a menu.
+  id: totrans-202
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每个菜单资源文件，包括上述文件，都有一个`**<menu>**`根元素。这是告诉Android它定义一个菜单的内容。
+- en: Inside the `<menu>` element, you typically have a number of `<item>` elements,
+    each one describing a separate item. In this particular case, there’s a single
+    Help item with the title “Help”.
+  id: totrans-203
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`<menu>`元素内部，通常有多个`<item>`元素，每个元素描述一个单独的项目。在这个特定案例中，有一个标题为“Help”的单个帮助项目。
+- en: The `<item>` element has a number of attributes that you can use to control
+    the item’s appearance.
+  id: totrans-204
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`<item>`元素具有多个属性，可以用来控制项目的外观。'
+- en: The `android:id` attribute assigns an ID to the item. This ID is used by the
+    Navigation component to navigate to a destination, and **it must have the same
+    ID as the destination you want to navigate to in the navigation graph**. You’ll
+    find out how this works a few pages ahead.
+  id: totrans-205
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`android:id`属性为项目分配一个ID。此ID由导航组件用于导航到目标，**它必须与导航图中要导航到的目标具有相同的ID**。您将在接下来的几页中了解其工作原理。'
+- en: The `android:icon` attribute specifies which icon (if any) should be displayed
+    for the item. Android has many built-in icons, and the IDE presents you with a
+    list of available ones when you start typing the icon name.
+  id: totrans-206
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`android:icon`属性指定应为项目显示哪个图标（如果有）。Android有许多内置图标，当您开始键入图标名称时，IDE会向您展示可用的列表。'
+- en: The `android:title` attribute defines the item’s text.
+  id: totrans-207
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`android:title`属性定义项目的文本。'
+- en: The `app:showAsAction` attribute specifies how you want the item to appear in
+    the toolbar. Setting it to “always” means that it should always appear in the
+    main area of the toolbar.
+  id: totrans-208
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`app:showAsAction`属性指定您希望项目在工具栏中如何显示。将其设置为“always”意味着它应始终显示在工具栏的主区域中。'
+- en: onCreateOptionsMenu() adds menu items to the toolbar
+  id: totrans-209
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: onCreateOptionsMenu() 将菜单项添加到工具栏
+- en: Once you’ve defined the menu resource file, you add its items to the toolbar
+    by implementing the `**onCreateOptionsMenu()**` method in your activity code.
+    This method gets called when the activity is ready to add items to the toolbar.
+    It inflates the menu resource file, and adds each item it describes to the toolbar.
+  id: totrans-210
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 定义菜单资源文件后，通过在活动代码中实现`**onCreateOptionsMenu()**`方法将其项目添加到工具栏。此方法在活动准备好向工具栏添加项目时被调用。它会将菜单资源文件填充，并将其描述的每个项目添加到工具栏。
+- en: 'In the CatChat app, we want to add the item defined in *menu_toolbar.xml* to
+    `MainActivity`’s toolbar. The code to add this item is shown below in bold (you’ll
+    update your code a few pages ahead):'
+  id: totrans-211
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在CatChat应用程序中，我们希望将*menu_toolbar.xml*中定义的项目添加到`MainActivity`的工具栏。下面以粗体显示的代码将添加此项目（您将在几页后更新您的代码）：
+- en: '![image](Images/f0317-02.png)'
+  id: totrans-212
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0317-02.png)'
+- en: 'The line:'
+  id: totrans-213
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这一行：
+- en: '[PRE3]'
+  id: totrans-214
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE3]'
+- en: inflates the menu resource file. Behind the scenes, it creates a `Menu` object
+    that represents the menu resource file, and any items the menu resource file contains
+    are translated to `MenuItem` objects. These are then added to the toolbar.
+  id: totrans-215
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 填充菜单资源文件。在幕后，它创建一个代表菜单资源文件的`Menu`对象，菜单资源文件包含的任何项目都被转换为`MenuItem`对象。然后将它们添加到工具栏。
+- en: That’s everything that’s needed to add a menu to the toolbar. Next, we’ll make
+    `MainActivity` navigate to `HelpFragment` when the user clicks the Help item.
+  id: totrans-216
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是向工具栏添加菜单所需的一切。接下来，我们将使`MainActivity`在用户单击帮助项目时导航到`HelpFragment`。
+- en: '![image](Images/f0317-03.png)'
+  id: totrans-217
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0317-03.png)'
+- en: Respond to menu item clicks with onOptionsItemSelected()
+  id: totrans-218
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用onOptionsItemSelected()响应菜单项点击
+- en: 'Once you’ve used the `onCreateOptionsMenu()` method to add menu items to the
+    toolbar, you make them respond to clicks by implementing `**onOptionsItemSelected()**`.
+    This method runs whenever an item in the toolbar is clicked:'
+  id: totrans-219
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 一旦使用`onCreateOptionsMenu()`方法将菜单项添加到工具栏，您可以通过实现`**onOptionsItemSelected()**`使它们响应点击。每当工具栏中的项目被点击时，此方法都会运行：
+- en: '![image](Images/f0318-02.png)'
+  id: totrans-220
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0318-02.png)'
+- en: In the CatChat app, we want to navigate to `HelpFragment` when the user clicks
+    the Help menu item, and we can achieve this with a little help from the Navigation
+    component.
+  id: totrans-221
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在CatChat应用程序中，当用户单击帮助菜单项时，我们希望导航到`HelpFragment`，我们可以通过导航组件来实现这一点。
+- en: 'Here’s what the code looks like; we’ll add these changes to *MainActivity.kt*
+    a few pages ahead:'
+  id: totrans-222
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是代码的样子；我们将在几页后将这些更改添加到*MainActivity.kt*：
+- en: '![image](Images/f0318-03.png)'
+  id: totrans-223
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0318-03.png)'
+- en: Each time the Help menu item is clicked, the navigation controller gets its
+    ID and looks for a matching one in the navigation graph. It then passes the destination
+    with this ID to the navigation host so that it’s displayed on the device screen.
+  id: totrans-224
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次单击“帮助”菜单项时，导航控制器获取其ID并在导航图中查找匹配的ID，然后将带有此ID的目的地传递给导航宿主，以便在设备屏幕上显示。
+- en: We need to configure the toolbar
+  id: totrans-225
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 我们需要配置工具栏
+- en: We’ve now covered everything that’s needed to add the Help menu item to the
+    toolbar and make it navigate to `HelpFragment`. Before we take the app for a test
+    drive, however, there’s one more change we’re going to make.
+  id: totrans-226
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经涵盖了将“帮助”菜单项添加到工具栏并使其导航到`HelpFragment`所需的所有内容。然而，在我们进行应用程序测试之前，还有一个改变我们将要进行。
+- en: 'When we defined the navigation graph *nav_graph.xml* earlier in the chapter,
+    we added labels to each destination using code like this:'
+  id: totrans-227
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们在本章之前定义导航图*nav_graph.xml*时，我们使用如下代码为每个目的地添加了标签：
+- en: '![image](Images/f0319-02.png)'
+  id: totrans-228
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0319-02.png)'
+- en: 'To make it clear which screen is being displayed, we’re going to configure
+    the toolbar so that each time we navigate to a new destination, its label is displayed
+    in the toolbar. We’ll also add an Up button to the toolbar so that when the user
+    navigates to `HelpFragment`, it provides an easy way of navigating back to `InboxFragment`:'
+  id: totrans-229
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了清楚地显示正在显示的屏幕，我们将配置工具栏，以便每次导航到新目的地时，在工具栏中显示其标签。我们还将向工具栏添加一个向上按钮，以便用户在导航到`HelpFragment`时，提供一个快速返回`InboxFragment`的方法：
+- en: '![image](Images/f0319-03.png)'
+  id: totrans-230
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0319-03.png)'
+- en: 'Up navigation may sound the same as using the device Back button, but it’s
+    slightly different. The Back button allows users to work their way *back* through
+    the back stack: the history of screens they’ve visited. The Up button, on the
+    other hand, is based on the navigation graph hierarchy. It provides a quick way
+    of going *up* this hierarchy.'
+  id: totrans-231
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 向上导航听起来可能与使用设备上的返回按钮相同，但稍有不同。返回按钮允许用户通过回退栈（访问过的屏幕的历史记录）逐步“返回”。另一方面，向上按钮基于导航图层次结构。它提供了快速上移此层次结构的方式。
+- en: We can configure the toolbar to update the text and include an Up button using
+    the Navigation component. Let’s find out how.
+  id: totrans-232
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们可以使用导航组件配置工具栏以更新文本并包含一个向上按钮。让我们找出如何做到这一点。
+- en: Configure the toolbar using an AppBarConfiguration
+  id: totrans-233
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用AppBarConfiguration配置工具栏
+- en: '![image](Images/f0320-01.png)'
+  id: totrans-234
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0320-01.png)'
+- en: We want to configure the toolbar so that the text it displays corresponds to
+    the label of the current destination in the navigation graph, and so that it includes
+    an Up button. We can do this by building an `**AppBarConfiguration**` object that’s
+    based on the navigation graph, and linking it to the toolbar. The `AppBarConfiguration`
+    class is part of the Navigation component, and it’s used to make app bars and
+    toolbars play nicely with the navigation controller.
+  id: totrans-235
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们想要配置工具栏，以便它显示对应于导航图中当前目的地标签的文本，并包含一个向上按钮。我们可以通过构建基于导航图的`**AppBarConfiguration**`对象并将其链接到工具栏来实现这一点。`AppBarConfiguration`类是导航组件的一部分，用于使应用栏和工具栏与导航控制器良好地协作。
+- en: 'Here’s the code to build an `AppBarConfiguration` and link it to a toolbar
+    (in bold):'
+  id: totrans-236
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 下面是构建`AppBarConfiguration`并将其链接到工具栏的代码（加粗部分）：
+- en: '![image](Images/f0320-02.png)'
+  id: totrans-237
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0320-02.png)'
+- en: 'The above code first gets a reference to the navigation controller from the
+    navigation host using the code:'
+  id: totrans-238
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 以上代码首先从导航宿主中使用以下代码获取导航控制器的引用：
+- en: '![image](Images/f0320-03.png)'
+  id: totrans-239
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0320-03.png)'
+- en: Code like this is necessary whenever you need to get a reference to the navigation
+    controller from an activity’s `onCreate()` method.
+  id: totrans-240
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当您需要从活动的`onCreate()`方法获取导航控制器的引用时，就需要像这样的代码。
+- en: The code then builds a configuration that links the toolbar to the navigation
+    graph, and applies it to the toolbar.
+  id: totrans-241
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然后，该代码构建了一个将工具栏链接到导航图的配置，并将其应用于工具栏。
+- en: When the code runs, it uses information in the navigation graph to display the
+    current destination’s label. It also adds an Up button to the toolbar for all
+    destinations except the navigation graph’s Start destination, which in this case
+    is `InboxFragment`.
+  id: totrans-242
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当代码运行时，它使用导航图中的信息来显示当前目的地的标签。它还为除导航图的起始目的地之外的所有目的地的工具栏添加一个向上按钮，在这种情况下是`InboxFragment`。
+- en: That’s everything that you need to know to implement toolbar navigation. We’ll
+    show you the full `MainActivity` code on the next page.
+  id: totrans-243
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是您实现工具栏导航所需了解的所有内容。我们将在下一页上展示完整的`MainActivity`代码。
+- en: The full code for MainActivity.kt
+  id: totrans-244
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: MainActivity.kt的完整代码
+- en: 'Here’s the complete code for *MainActivity.kt*; update your code to include
+    the changes below (in bold):'
+  id: totrans-245
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是*MainActivity.kt*的完整代码；更新你的代码以包含以下更改（用粗体标出）：
+- en: '![image](Images/f0321-02.png)'
+  id: totrans-246
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0321-02.png)'
+- en: What happens when the app runs
+  id: totrans-247
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 应用程序运行时会发生什么
+- en: 'The following things happen when the app runs:'
+  id: totrans-248
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当应用程序运行时会发生以下事情：
+- en: '**The app is launched and MainActivity gets created.**'
+  id: totrans-249
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**应用程序启动并创建MainActivity。**'
+- en: '`InboxFragment` is added to the navigation host and displayed on the device
+    screen.'
+  id: totrans-250
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '`InboxFragment`被添加到导航主机并显示在设备屏幕上。'
+- en: '![image](Images/f0322-02.png)'
+  id: totrans-251
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0322-02.png)'
+- en: '**MainActivity’s onCreateOptionsMenu method runs.**'
+  id: totrans-252
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity的onCreateOptionsMenu方法运行。**'
+- en: It adds the Help menu item defined in *menu_toolbar.xml* to the toolbar.
+  id: totrans-253
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它将在工具栏中添加在*menu_toolbar.xml*中定义的帮助菜单项。
+- en: '![image](Images/f0322-03.png)'
+  id: totrans-254
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0322-03.png)'
+- en: '**The user clicks the Help item in the toolbar.**'
+  id: totrans-255
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用户在工具栏中点击帮助项。**'
+- en: '![image](Images/f0322-04.png)'
+  id: totrans-256
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0322-04.png)'
+- en: '**MainActivity’s onOptionsItemSelected() method runs.**'
+  id: totrans-257
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**MainActivity的onOptionsItemSelected()方法运行。**'
+- en: It passes navigation for the Help item to the navigation controller.
+  id: totrans-258
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 它将帮助项的导航传递给导航控制器。
+- en: '![image](Images/f0323-02.png)'
+  id: totrans-259
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0323-02.png)'
+- en: '**The navigation controller looks for the Help item’s ID in the navigation
+    graph.**'
+  id: totrans-260
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**导航控制器在导航图中查找帮助项的ID。**'
+- en: '![image](Images/f0323-03.png)'
+  id: totrans-261
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0323-03.png)'
+- en: '**The navigation controller replaces InboxFragment with HelpFragment in the
+    navigation host.**'
+  id: totrans-262
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**导航控制器将InboxFragment替换为HelpFragment在导航主机中。**'
+- en: '![image](Images/f0323-04.png)'
+  id: totrans-263
+  prefs:
+  - PREF_IND
+  type: TYPE_IMG
+  zh: '![image](Images/f0323-04.png)'
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-264
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驾驶'
+- en: '![image](Images/f0324-01.png)'
+  id: totrans-265
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0324-01.png)'
+- en: When we run the CatChat app, `MainActivity` is launched, and `InboxFragment`
+    is displayed in `MainActivity`’s layout.
+  id: totrans-266
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行CatChat应用程序时，`MainActivity`被启动，并且`InboxFragment`显示在`MainActivity`的布局中。
+- en: A Help item is displayed in `MainActivity`’s toolbar. When we click on it, the
+    app navigates to `HelpFragment`. The toolbar text is changed to “Help” and an
+    Up button appears.
+  id: totrans-267
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在`MainActivity`的工具栏中显示一个帮助项。当我们点击它时，应用程序导航到`HelpFragment`。工具栏文本更改为“帮助”，并出现一个向上按钮。
+- en: When we click on the Up button, the app navigates to `InboxFragment`. The Up
+    button disappears and the text “Inbox” is displayed in the toolbar.
+  id: totrans-268
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们点击“向上”按钮时，应用程序导航到`InboxFragment`。向上按钮消失，工具栏显示“收件箱”文本。
+- en: '![image](Images/f0324-02.png)'
+  id: totrans-269
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0324-02.png)'
+- en: Well done! You’ve now learned how to add a toolbar and use it for navigation.
+  id: totrans-270
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 干得好！你现在已经学会了如何添加工具栏并将其用于导航。
+- en: BE the Menu
+  id: totrans-271
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 扮演菜单
+- en: '![image](Images/common04.png)'
+  id: totrans-272
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common04.png)'
+- en: '**A menu resource file and navigation graph is shown below. The menu is added
+    to a toolbar. Your job is to play like you’re the menu, and say which fragment
+    is navigated to when each item in the menu is clicked.**'
+  id: totrans-273
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**下面显示了一个菜单资源文件和导航图。菜单添加到工具栏。你的任务是扮演菜单，说出每个菜单项被点击时导航到哪个片段。**'
+- en: '![image](Images/f0325-01.png)'
+  id: totrans-274
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0325-01.png)'
+- en: BE the Menu Solution
+  id: totrans-275
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 扮演菜单解决方案
+- en: '![image](Images/common04.png)'
+  id: totrans-276
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common04.png)'
+- en: '**A menu resource file and navigation graph is shown below. The menu is added
+    to a toolbar. Your job is to play like you’re the menu, and say which fragment
+    is navigated to when each item in the menu is clicked.**'
+  id: totrans-277
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**下面显示了一个菜单资源文件和导航图。菜单添加到工具栏。你的任务是扮演菜单，说出每个菜单项被点击时导航到哪个片段。**'
+- en: '![image](Images/f0326-01.png)'
+  id: totrans-278
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0326-01.png)'
+- en: Most types of UI navigation work with the Navigation component
+  id: totrans-279
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 大多数类型的UI导航与导航组件一起工作
+- en: '![image](Images/f0327-01.png)'
+  id: totrans-280
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0327-01.png)'
+- en: In the chapter so far, you’ve learned how to enable toolbar navigation by defining
+    a menu resource file, using the Navigation component to navigate between fragments,
+    and configuring the toolbar to change its appearance as you navigate through the
+    app.
+  id: totrans-281
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 到目前为止，你已经学会了如何通过定义菜单资源文件启用工具栏导航，使用导航组件在片段之间导航，并配置工具栏以在应用程序导航时更改外观。
+- en: The great news is that other types of UI navigation—such as bottom navigation
+    bars and navigation drawers—work in a similar way. Even though they look different
+    from one another, you can take the techniques you’ve learned for toolbar navigation
+    and apply them to other types of navigation.
+  id: totrans-282
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 令人振奋的消息是，其他类型的UI导航，如底部导航栏和导航抽屉，工作方式类似。即使它们看起来彼此不同，你也可以将学到的工具栏导航技巧应用到其他类型的导航上。
+- en: To see how this works, we’re going to add a bottom navigation bar to the CatChat
+    app’s `MainActivity`.
+  id: totrans-283
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 为了看看这是如何工作的，我们将向CatChat应用程序的`MainActivity`添加一个底部导航栏。
+- en: '**A bottom navigation bar can hold up to five items. It’s displayed at the
+    bottom of the screen.**'
+  id: totrans-284
+  prefs:
+  - PREF_BQ
+  type: TYPE_NORMAL
+  zh: '**底部导航栏最多可以容纳五个项目。它显示在屏幕底部。**'
+- en: How the bottom navigation bar will work
+  id: totrans-285
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 底部导航栏的工作原理
+- en: As its name suggests, a bottom navigation bar is a type of navigation bar that’s
+    positioned at the bottom of the device screen. You can use it to navigate to up
+    to five destinations.
+  id: totrans-286
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 顾名思义，底部导航栏是一种位于设备屏幕底部的导航栏类型。您可以使用它导航到最多五个目的地。
+- en: 'The CatChat app’s bottom navigation bar will look like this:'
+  id: totrans-287
+  prefs: []
+  type: TYPE_NORMAL
+  zh: CatChat应用程序的底部导航栏将如下所示：
+- en: '![image](Images/f0327-02.png)'
+  id: totrans-288
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0327-02.png)'
+- en: 'As you can see, the bar contains three items: Inbox, Sent Items, and Help.
+    When we click on each item, the app will navigate to the fragment associated with
+    it. When we click on the Help item, for example, the app will navigate to `HelpFragment`,
+    and when we click on Sent Items, it will navigate to a new fragment (which we
+    need to create) named `SentItemsFragment`.'
+  id: totrans-289
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所见，该栏包含三个项目：收件箱、已发送项目和帮助。当我们点击每个项目时，应用程序将导航到与其关联的片段。例如，当我们点击帮助项目时，应用程序将导航到`HelpFragment`，当我们点击已发送项目时，它将导航到一个新的片段（我们需要创建的）名为`SentItemsFragment`。
+- en: 'We’ll implement bottom bar navigation over the next few pages, and we’ll start
+    by creating the new fragment: `SentItemsFragment`.'
+  id: totrans-290
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将在接下来的几页中实现底部导航栏导航，并且我们将从创建新的片段`SentItemsFragment`开始。
+- en: Create SentItemsFragment
+  id: totrans-291
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建SentItemsFragment
+- en: We need to create a new fragment named `SentItemsFragment`.
+  id: totrans-292
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要创建一个名为`SentItemsFragment`的新片段。
+- en: 'Highlight the *com.hfad.catchat* package in the *app/src/main/java* folder,
+    then go to File→New→Fragment→Fragment (Blank). Name the fragment “SentItemsFragment”,
+    name its layout “fragment_sent_items”, and make sure the language is set to Kotlin.
+    Then update the code for *SentItemsFragment.kt* to match the code below:'
+  id: totrans-293
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在*app/src/main/java*文件夹中突出显示*com.hfad.catchat*包，然后转到文件→新建→Fragment→Fragment（空白）。将片段命名为“SentItemsFragment”，命名其布局为“fragment_sent_items”，并确保语言设置为Kotlin。然后更新*SentItemsFragment.kt*的代码以匹配下面的代码：
+- en: '![image](Images/f0328-02.png)![image](Images/f0328-03.png)'
+  id: totrans-294
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0328-02.png)![image](Images/f0328-03.png)'
+- en: 'And here’s the code for *fragment_sent_items.xml* (update your version of this
+    code too):'
+  id: totrans-295
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是*fragment_sent_items.xml*的代码（也更新您的代码版本）：
+- en: '![image](Images/f0328-04.png)'
+  id: totrans-296
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0328-04.png)'
+- en: Add SentItemsFragment to the Navigation graph
+  id: totrans-297
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 将SentItemsFragment添加到导航图中
+- en: We want to be able to navigate to `SentItemsFragment` from the bottom navigation
+    bar using the Navigation component. To do this, we need to add the fragment to
+    the navigation graph as a new destination.
+  id: totrans-298
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望能够通过导航组件从底部导航栏导航到`SentItemsFragment`。为此，我们需要将该片段作为新目标添加到导航图中。
+- en: 'Open the navigation graph file *nav_graph.xml* (if it’s not already open),
+    then update its code so that it matches the code below (our changes are in bold):'
+  id: totrans-299
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 打开导航图文件*nav_graph.xml*（如果尚未打开），然后更新其代码，使其与下面的代码匹配（我们的更改已加粗）：
+- en: '![image](Images/f0329-02.png)'
+  id: totrans-300
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0329-02.png)'
+- en: As you can see, the new destination has an ID of `sentItemsFragment`, and a
+    label of “Sent Items”. We’ll use the ID in the bottom navigation bar’s menu resource
+    file, which we’ll create next.
+  id: totrans-301
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所见，新目的地的ID为`sentItemsFragment`，标签为“已发送项目”。我们将在接下来创建的底部导航栏菜单资源文件中使用此ID。
+- en: The bottom navigation bar needs a new menu resource file
+  id: totrans-302
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 底部导航栏需要一个新的菜单资源文件
+- en: 'Earlier in the chapter, we created a menu resource file named *menu_toolbar.xml*
+    to add a Help item to the toolbar. While it’s possible for different navigation
+    UI components to share the same menu, we need to create a new one for the bottom
+    navigation bar because it shows two extra items: Inbox and Sent Items.'
+  id: totrans-303
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章的早些时候，我们创建了一个名为*menu_toolbar.xml*的菜单资源文件，以在工具栏中添加帮助项。虽然不同的导航UI组件可以共享相同的菜单，但我们需要为底部导航栏创建一个新的菜单，因为它显示了两个额外的项目：收件箱和已发送项目。
+- en: '![image](Images/f0330-02.png)'
+  id: totrans-304
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0330-02.png)'
+- en: To create the new menu resource file, select the *app/src/main/res* folder,
+    go to the File menu, choose New, and then select the option to create a new Android
+    resource file. When prompted, give it a name of “menu_main”, specify a resource
+    type of “Menu”, and make sure the directory name is *menu*. When you click on
+    the OK button, Android Studio will create the file for you, and add it to the
+    *app/src/main/res/menu* folder.
+  id: totrans-305
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建新的菜单资源文件，请选择*app/src/main/res*文件夹，转到文件菜单，选择新建，然后选择创建新的Android资源文件。在提示时，将其命名为“menu_main”，指定资源类型为“Menu”，并确保目录名称为*menu*。单击“确定”按钮后，Android
+    Studio将为您创建该文件，并将其添加到*app/src/main/res/menu*文件夹中。
+- en: 'Next, open the file *menu_main.xml* (if it’s not already open), and update
+    its code to add menu items for `InboxFragment`, `SentItemsFragment`, and `HelpFragment`
+    (shown below in bold):'
+  id: totrans-306
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 接下来，打开*menu_main.xml*文件（如果还没有打开），并更新其代码以为`InboxFragment`、`SentItemsFragment`和`HelpFragment`添加菜单项（如下所示，用**粗体**标出）：
+- en: '![image](Images/f0330-03.png)'
+  id: totrans-307
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0330-03.png)'
+- en: Now that we’ve created the new menu resource file, let’s add a bottom navigation
+    bar to `MainActivity`.
+  id: totrans-308
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经创建了新的菜单资源文件，让我们向`MainActivity`添加一个底部导航栏。
+- en: A bottom navigation bar is a type of View
+  id: totrans-309
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 底部导航栏是一种视图类型
+- en: 'Just like a toolbar, a bottom navigation bar is a type of view that you add
+    to your layout. The code to add a bottom navigation bar looks like this:'
+  id: totrans-310
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像工具栏一样，底部导航栏是一种你可以添加到布局中的视图类型。添加底部导航栏的代码如下所示：
+- en: '![image](Images/f0331-02.png)'
+  id: totrans-311
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0331-02.png)'
+- en: 'You start by defining the bottom navigation bar using:'
+  id: totrans-312
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 你首先通过以下方式定义底部导航栏：
+- en: '[PRE4]'
+  id: totrans-313
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE4]'
+- en: 'where `com.google.android.material.bottomnavigation.BottomNavigationView` is
+    the fully qualified path of the `BottomNavigationView` class: the class that defines
+    the bar. You then use extra attributes to give it an ID, and specify its appearance.'
+  id: totrans-314
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里`com.google.android.material.bottomnavigation.BottomNavigationView`是`BottomNavigationView`类的完全限定路径：定义该导航栏的类。然后使用额外的属性为它指定一个ID，并指定其外观。
+- en: 'Unlike a toolbar, you don’t need to write Kotlin code to add menu items to
+    a bottom navigation bar. You simply specify which menu resource file to add to
+    the bar using the `app:menu` attribute like this:'
+  id: totrans-315
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不像工具栏，你不需要编写 Kotlin 代码来将菜单项添加到底部导航栏。你只需使用 `app:menu` 属性指定要添加到导航栏的菜单资源文件，像这样：
+- en: '[PRE5]'
+  id: totrans-316
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE5]'
+- en: 'The above code attaches the *menu_main.xml* menu resource file to the bottom
+    navigation bar, and its items are added to the bar at runtime like this:'
+  id: totrans-317
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述代码将*menu_main.xml*菜单资源文件附加到底部导航栏，并在运行时将其项目添加到栏中，如下所示：
+- en: '![image](Images/f0331-03.png)'
+  id: totrans-318
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0331-03.png)'
+- en: Now that you’ve seen what bottom navigation bar code looks like, let’s add one
+    to `MainActivity`’s layout.
+  id: totrans-319
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在你已经看到了底部导航栏的代码，让我们将其添加到`MainActivity`的布局中。
+- en: The full code for activity_main.xml
+  id: totrans-320
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '*activity_main.xml*的完整代码'
+- en: 'Here’s the full code for *activity_main.xml*: update your code to include the
+    changes below (in bold):'
+  id: totrans-321
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是*activity_main.xml*的完整代码：更新你的代码以包含以下更改（用**粗体**标出）：
+- en: '![image](Images/f0332-02.png)'
+  id: totrans-322
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0332-02.png)'
+- en: Now that we’ve added the bottom navigation bar to `MainActivity`’s layout, let’s
+    get it to navigate between destinations.
+  id: totrans-323
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们已经将底部导航栏添加到`MainActivity`的布局中，让我们使其在不同目的地之间导航。
+- en: Link the bottom navigation bar to the navigation controller
+  id: totrans-324
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 将底部导航栏链接到导航控制器
+- en: The code to make a bottom navigation bar navigate between destinations is simpler
+    than the code needed to implement toolbar navigation. All you need to do is get
+    a reference to the `BottomNavigationView`, which defines the navigation bar, and
+    call its `setupWithNavController()` method.
+  id: totrans-325
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 使底部导航栏在目的地之间导航的代码比实现工具栏导航所需的代码简单得多。你只需获取指定导航栏的`BottomNavigationView`引用，并调用其`setupWithNavController()`方法即可。
+- en: 'Here’s what the code looks like:'
+  id: totrans-326
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 代码如下所示：
+- en: '![image](Images/f0333-02.png)'
+  id: totrans-327
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0333-02.png)'
+- en: Each time you click on an item in the navigation bar, the navigation controller
+    fetches its ID and looks for a destination with a matching ID in the navigation
+    graph. It then passes this destination to the navigation host so that it’s displayed
+    on the device screen.
+  id: totrans-328
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每次点击导航栏中的项目时，导航控制器都会获取其ID，并在导航图中查找具有匹配ID的目的地。然后将此目的地传递给导航主机，以便在设备屏幕上显示它。
+- en: '![image](Images/f0333-03.png)'
+  id: totrans-329
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0333-03.png)'
+- en: Let’s add the bottom navigation bar code to *MainActivity.kt*, and take the
+    app for a test drive.
+  id: totrans-330
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们将底部导航栏的代码添加到*MainActivity.kt*中，并测试这个应用程序。
+- en: The updated code for MainActivity.kt
+  id: totrans-331
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '`MainActivity.kt`的更新代码'
+- en: 'Here’s the updated code for *MainActivity.kt*; update the code to include the
+    changes below (in bold):'
+  id: totrans-332
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是*MainActivity.kt*的更新代码：更新代码以包含以下更改（用**粗体**标出）：
+- en: '![image](Images/f0334-02.png)'
+  id: totrans-333
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0334-02.png)'
+- en: Let’s take the app for a test drive.
+  id: totrans-334
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们测试这个应用程序。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-335
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驾驶'
+- en: When we run the CatChat app, `MainActivity` is launched, and `InboxFragment`
+    is displayed in `MainActivity`’s layout. A bottom navigtion bar is displayed that
+    contains three items.
+  id: totrans-336
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行CatChat应用程序时，`MainActivity`被启动，并在`MainActivity`的布局中显示`InboxFragment`。显示一个包含三个项目的底部导航栏。
+- en: When we click on each item in the bottom navigation bar, the app navigates to
+    the appropriate screen. When we click on Sent Items, for example, `SentItemsFragment`
+    is displayed in `MainActivity`, and when we click on the Help item, `HelpFragment`
+    is displayed instead.
+  id: totrans-337
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们点击底部导航栏中的每个项目时，应用程序会导航到相应的屏幕。例如，当我们点击Sent Items时，在`MainActivity`中会显示`SentItemsFragment`，当我们点击Help项目时，将显示`HelpFragment`。
+- en: '![image](Images/f0335-02.png)'
+  id: totrans-338
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0335-02.png)'
+- en: The bottom navigation bar is working exactly how we want it to.
+  id: totrans-339
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 底部导航栏正按照我们的期望工作。
+- en: A navigation drawer lets you display many navigation items
+  id: totrans-340
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 导航抽屉可以让您显示许多导航项目
+- en: '![image](Images/f0336-01.png)'
+  id: totrans-341
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0336-01.png)'
+- en: As you’ve learned, a bottom navigation bar is a good option if you have a small
+    number of navigation items because it allows you to display up to five such items.
+    But what if you have a larger number of menu items?
+  id: totrans-342
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 正如您所了解的，如果您有少量导航项目，底部导航栏是一个不错的选择，因为它允许您显示最多五个这样的项目。但是如果您有更多的菜单项目呢？
+- en: If you want users to be able to navigate through a large number of options,
+    a better choice might be a **navigation drawer**. This is a slide-out, scrollable
+    panel that contains links to other parts of the app that you can optionally group
+    into different sections.
+  id: totrans-343
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如果您希望用户能够浏览大量选项，一个更好的选择可能是**导航抽屉**。这是一个可滑动的面板，包含指向应用程序其他部分的链接，您可以选择将其分组到不同的部分中。
+- en: 'Navigation drawers are widely used across Android apps. The Gmail app, for
+    example, uses a navigation drawer that lets you navigate to different screens
+    in the app, and contains sections such as email categories, recent labels, and
+    all labels:'
+  id: totrans-344
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导航抽屉在Android应用程序中被广泛使用。例如，Gmail应用程序使用一个导航抽屉，让您可以导航到应用程序中的不同屏幕，并包含诸如电子邮件类别、最近标签和所有标签等部分：
+- en: '![image](Images/f0336-02.png)'
+  id: totrans-345
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0336-02.png)'
+- en: Let’s replace the bottom navigation bar with a navigation drawer
+  id: totrans-346
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 让我们用导航抽屉替换底部导航栏
+- en: 'We’re going to replace the bottom navigation bar we added to the CatChat app
+    with a navigation drawer. The navigation drawer will contain a header image and
+    a set of options. The main options will let the user navigate to `InboxFragment`
+    and `SentItemsFragment`, and we’ll put a `HelpFragment` item in a separate section
+    labeled Support. Here’s what the drawer will look like:'
+  id: totrans-347
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将用导航抽屉替换CatChat应用程序中添加的底部导航栏。导航抽屉将包含一个标题图像和一组选项。主要选项将允许用户导航到`InboxFragment`和`SentItemsFragment`，我们将在一个名为Support的单独部分中放置一个`HelpFragment`项目。抽屉将如下所示：
+- en: '![image](Images/f0337-02.png)'
+  id: totrans-348
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0337-02.png)'
+- en: The navigation drawer is composed of several different components. We’ll go
+    through these on the next page.
+  id: totrans-349
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导航抽屉由几个不同的组件组成。我们将在下一页详细介绍这些组件。
+- en: Navigation drawers deconstructed
+  id: totrans-350
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 导航抽屉解构
+- en: 'You implement a navigation drawer by adding a **drawer layout** to the root
+    of your activity’s layout. The drawer layout contains two views:'
+  id: totrans-351
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过将**抽屉布局**添加到活动布局的根部来实现导航抽屉。抽屉布局包含两个视图：
+- en: '**A view for the screen’s main content**'
+  id: totrans-352
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用于屏幕主要内容的视图**'
+- en: This is usually a layout containing a toolbar and a navigation host, which you
+    use to display fragments.
+  id: totrans-353
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 这通常是一个包含工具栏和导航主机的布局，用于显示片段。
+- en: '**A navigation view for the drawer’s contents**'
+  id: totrans-354
+  prefs:
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '**用于抽屉内容的导航视图**'
+- en: A navigation view is a type of frame layout that’s used to display a navigation
+    menu. In this app, it will display a drawer header too.
+  id: totrans-355
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 导航视图是一种用于显示导航菜单的帧布局类型。在这个应用中，它还会显示一个抽屉标题。
+- en: 'When the drawer is closed, the drawer layout looks just like a normal activity,
+    except that the toolbar includes a drawer icon that’s used to open the drawer:'
+  id: totrans-356
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当抽屉关闭时，抽屉布局看起来就像一个普通的活动，只是工具栏包含一个用于打开抽屉的抽屉图标：
+- en: '![image](Images/f0338-02.png)'
+  id: totrans-357
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0338-02.png)'
+- en: 'When you open the drawer, the navigation view slides over the activity’s main
+    content to display the drawer’s contents. When you click on an item, it uses the
+    Navigation component to display the relevant destination, and the drawer closes:'
+  id: totrans-358
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当您打开抽屉时，导航视图会滑动到活动的主要内容上，以显示抽屉的内容。当您点击一个项目时，它会使用导航组件来显示相关的目的地，然后抽屉会关闭：
+- en: '![image](Images/f0338-03.png)'
+  id: totrans-359
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0338-03.png)'
+- en: The drawer gets its items from a menu
+  id: totrans-360
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 抽屉从菜单中获取其项目
+- en: Just like a toolbar and bottom navigation bar, a navigation drawer gets the
+    items it needs to display from a menu resource file.
+  id: totrans-361
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 就像工具栏和底部导航栏一样，导航抽屉从菜单资源文件中获取需要显示的项目。
+- en: 'Instead of creating a new menu resource file for the drawer, we’re going to
+    reuse *menu_main.xml*: the file that we used for the bottom navigation bar. Here’s
+    a reminder of the current code in *menu_main.xml*:'
+  id: totrans-362
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 不要为抽屉创建新的菜单资源文件，我们将重用*menu_main.xml*：这个文件我们之前用于底部导航栏。这里是*menu_main.xml*中当前代码的提醒：
+- en: '![image](Images/f0339-02.png)'
+  id: totrans-363
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0339-02.png)'
+- en: 'The above menu resource file, when added to the navigation drawer, produces
+    a list of items with an icon against each one. We’re going to tweak the menu to
+    add an extra highlight to the item the user selects, and split the menu into sections:'
+  id: totrans-364
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 将上述菜单资源文件添加到导航抽屉中，会生成一个带有每个项目图标的项目列表。我们将调整菜单以在用户选择的项目上添加额外的突出显示，并将菜单分成几个部分：
+- en: '![image](Images/f0339-03.png)'
+  id: totrans-365
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0339-03.png)'
+- en: Let’s find out how.
+  id: totrans-366
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 让我们找出如何做到这一点。
+- en: Add the support section…
+  id: totrans-367
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 添加支持部分…
+- en: 'We’ll first add the Support heading, which is done by defining a new item.
+    Because it’s just a heading, we only need to give it a title: it doesn’t have
+    an icon, and no ID is required as we won’t use it to navigate anywhere.'
+  id: totrans-368
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将首先添加支持标题，通过定义一个新项目来完成。因为它只是一个标题，我们只需要给它一个标题即可：它没有图标，也不需要ID，因为我们不会用它导航到任何地方。
+- en: 'Here’s the code to add the Support heading:'
+  id: totrans-369
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是添加支持标题的代码：
+- en: '![image](Images/f0340-02.png)'
+  id: totrans-370
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0340-02.png)'
+- en: …as a separate submenu
+  id: totrans-371
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …作为独立的子菜单
+- en: We want the Help item to appear under the Support heading so that it forms a
+    separate section. To do this, we’ll define a submenu inside the Support item,
+    specified by a `<menu>` element. We’ll add the Help item to this submenu.
+  id: totrans-372
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望帮助项目出现在支持标题下，形成一个单独的部分。为此，我们将在支持项目内定义一个子菜单，由`<menu>`元素指定。我们将在这个子菜单中添加帮助项目。
+- en: 'Here’s the code to add a submenu, which includes a Help item; we’ll update
+    *menu_main.xml* with this code a couple pages ahead:'
+  id: totrans-373
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是添加子菜单的代码，其中包含一个帮助项目；我们将在稍后的几页更新*menu_main.xml*的代码：
+- en: '![image](Images/f0340-03.png)![image](Images/f0340-04.png)'
+  id: totrans-374
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0340-03.png)![image](Images/f0340-04.png)'
+- en: The above submenu just contains a single item. If you wanted it to contain multiple
+    items, you’d simply include each item in the submenu.
+  id: totrans-375
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述子菜单只包含一个项目。如果您希望它包含多个项目，只需在子菜单中包含每个项目即可。
+- en: That’s all the code we need to add a Support section to the drawer’s menu. Next,
+    let’s find out how to add an extra highlight to the item the user selects.
+  id: totrans-376
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们需要添加支持部分到抽屉菜单的全部代码。接下来，让我们看看如何在用户选择的项目上添加额外的突出显示。
+- en: Highlight the selected item with groups
+  id: totrans-377
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 使用组突出显示选定的项目
+- en: 'The current menu produces a navigation drawer that changes the text color of
+    the current selected item. You can make it extra clear to the user which item
+    has been selected by adding an extra highlight like this:'
+  id: totrans-378
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当前的菜单会生成一个导航抽屉，会改变当前选定项目的文本颜色。您可以通过添加额外的突出显示来更清楚地告知用户哪个项目已被选中：
+- en: '![image](Images/f0341-02.png)'
+  id: totrans-379
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0341-02.png)'
+- en: You add this extra highlight by placing items in a group using the `**<group>**`
+    element. You then use an attribute named `android:checkableBehavior` to specify
+    the group’s behavior when an item is selected.
+  id: totrans-380
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过使用`**<group>**`元素将项目组合到一起，您可以添加额外的突出显示。然后，您可以使用名为`android:checkableBehavior`的属性来指定项目被选中时组的行为。
+- en: 'Here’s the code to do this (we’ll update *menu_main.xml* on the next page):'
+  id: totrans-381
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是执行此操作的代码（我们将在下一页更新*menu_main.xml*）：
+- en: '![image](Images/f0341-03.png)'
+  id: totrans-382
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0341-03.png)'
+- en: As you can see, the above code sets the `android:checkableBehavior` attribute
+    to `"single"`. This option means that only a single item in the group at a time
+    will be highlighted—the option the user selects.
+  id: totrans-383
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 如您所见，上述代码将`android:checkableBehavior`属性设置为`"single"`。这个选项意味着在组中一次只有一个项目会被突出显示——用户选择的选项。
+- en: That’s everything we need to make the menu look and behave the way we want when
+    it’s used by a navigation drawer. We’ll show you the full code on the next page.
+  id: totrans-384
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是我们使菜单在导航抽屉中使用时看起来和行为符合我们期望的所有代码。接下来的页面上我们会展示完整的代码。
+- en: The full code for menu_main.xml
+  id: totrans-385
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: menu_main.xml的完整代码
+- en: We’re going to update the navigation drawer’s menu so that the Help menu is
+    shown in a Support section. We’ll also use groups to add an extra highlight to
+    the item the user selects.
+  id: totrans-386
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将更新导航抽屉的菜单，以便在支持部分显示帮助菜单。我们还将使用组在用户选择的项目上添加额外的突出显示。
+- en: 'Here’s the complete code for *menu_main.xml*; update its code to include all
+    the changes (in bold):'
+  id: totrans-387
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这是*menu_main.xml*的完整代码；更新其代码以包括所有更改（加粗部分）：
+- en: '![image](Images/f0342-02.png)'
+  id: totrans-388
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0342-02.png)'
+- en: That’s the menu sorted. Next, we’ll create the navigation drawer’s header.
+  id: totrans-389
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 菜单已整理好。接下来，我们将创建导航抽屉的页眉。
+- en: Create the navigation drawer’s header
+  id: totrans-390
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 创建导航抽屉的头部
+- en: The navigation drawer’s header is a simple layout that we’ll add to a new layout
+    file named *nav_header.xml*.
+  id: totrans-391
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 导航抽屉的头部是一个简单的布局，我们将其添加到名为 *nav_header.xml* 的新布局文件中。
+- en: Create this file now by selecting the *app/src/main/res/layout* folder in Android
+    Studio, and choosing File→New→Layout Resource File. When prompted, name the layout
+    “nav_header”, and if prompted, choose a resource type of Layout.
+  id: totrans-392
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在 Android Studio 中选择 *app/src/main/res/layout* 文件夹，通过 File→New→Layout Resource
+    File 创建此文件。当提示时，命名布局为“nav_header”，如果需要，选择布局资源类型。
+- en: Add the image file…
+  id: totrans-393
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 添加图片文件…
+- en: The layout is composed of a single image, which needs to be added to the *app/src/main/res/drawable*
+    folder. Android Studio probably created this folder for you when you created the
+    project. If it’s not there, create it by selecting the *app/src/main/res* folder,
+    going to the File menu, choose the New option, and then clicking on the option
+    to create a new Android resource directory. When prompted, choose a resource type
+    of Drawable, name it “drawable”, and click on OK.
+  id: totrans-394
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 布局由一个单独的图片组成，需要将其添加到 *app/src/main/res/drawable* 文件夹中。当您创建项目时，Android Studio
+    可能已经为您创建了此文件夹。如果没有，请通过选择 *app/src/main/res* 文件夹，转到文件菜单，选择新建选项，然后单击创建新的 Android
+    资源目录选项来创建它。在提示时，选择资源类型为 Drawable，命名为“drawable”，然后单击确定。
+- en: '![image](Images/f0343-02.png)'
+  id: totrans-395
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0343-02.png)'
+- en: Once you’ve created the *drawable* folder, download the file *kitten_small.webp*
+    from *tinyurl.com/hfad3*, and add it to the *drawable* folder.
+  id: totrans-396
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 创建完 *drawable* 文件夹后，从 *tinyurl.com/hfad3* 下载 *kitten_small.webp* 文件，并将其添加到 *drawable*
+    文件夹中。
+- en: …and update the nav_header.xml code
+  id: totrans-397
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …并更新 *nav_header.xml* 代码
+- en: 'We’ll add the image to *nav_header.xml* using an `<ImageView>` element. You
+    already know how to use this element, so update the code for *nav_header.xml*
+    to match the code below:'
+  id: totrans-398
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们将使用 `<ImageView>` 元素将图片添加到 *nav_header.xml* 中。您已经知道如何使用此元素，因此请更新 *nav_header.xml*
+    的代码以匹配以下代码：
+- en: '![image](Images/f0343-03.png)'
+  id: totrans-399
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0343-03.png)'
+- en: Now that we have a header for the navigation drawer, let’s add the drawer itself.
+  id: totrans-400
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 现在我们有了导航抽屉的头部，让我们添加抽屉本身。
+- en: How to create a navigation drawer
+  id: totrans-401
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 如何创建导航抽屉
+- en: 'You create a navigation drawer by adding a `**DrawerLayout**` to the activity’s
+    layout as its root element. The `DrawerLayout` needs to contain two things: a
+    view or view group for the activity’s content as its first element, and a navigation
+    view that defines the drawer’s contents as its second.'
+  id: totrans-402
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 要创建导航抽屉，请将 `**DrawerLayout**` 添加到活动的布局中作为根元素。 `DrawerLayout` 需要包含两个内容：作为其第一个元素的活动内容的视图或视图组，以及作为其第二个元素定义抽屉内容的导航视图。
+- en: 'Typical `DrawerLayout` code looks like this:'
+  id: totrans-403
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 典型的 `DrawerLayout` 代码如下：
+- en: '![image](Images/f0344-02.png)'
+  id: totrans-404
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0344-02.png)'
+- en: 'There are two key `<NavigationView>` attributes that you use to control the
+    drawer’s appearance: `**app:headerLayout**` and `**app:menu**`.'
+  id: totrans-405
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有两个关键的 `<NavigationView>` 属性可用于控制抽屉的外观：`**app:headerLayout**` 和 `**app:menu**`。
+- en: The `app:headerLayout` attribute specifies the layout that should be used for
+    the navigation drawer’s header (in this case *nav_header.xml*). This attribute
+    is optional.
+  id: totrans-406
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`app:headerLayout` 属性指定应用于导航抽屉头部的布局（在此例中是 *nav_header.xml*）。此属性是可选的。'
+- en: The `app:menu` attribute specifies which menu resource file contains the drawer’s
+    options (in this case *menu_main.xml*). If you don’t include this attribute, your
+    navigation drawer won’t include any items.
+  id: totrans-407
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '`app:menu` 属性指定了包含抽屉选项的菜单资源文件（在这种情况下是 *menu_main.xml*）。如果不包括此属性，您的导航抽屉将不包含任何项目。'
+- en: The full code for activity_main.xml
+  id: totrans-408
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '*activity_main.xml* 的完整代码'
+- en: 'We want to replace the `MainActivity`’s bottom navigation bar with a navigation
+    drawer. The code to do this is shown below; update file *activity_main.xml* to
+    include the changes (in bold):'
+  id: totrans-409
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们希望用导航抽屉替换 `MainActivity` 的底部导航栏。以下是执行此操作的代码；更新文件 *activity_main.xml* 来包含以下更改（用粗体表示）：
+- en: '![image](Images/f0345-02.png)![image](Images/f0346-01.png)'
+  id: totrans-410
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0345-02.png)![image](Images/f0346-01.png)'
+- en: We’ve added a navigation drawer to the layout
+  id: totrans-411
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: 我们已将导航抽屉添加到布局中。
+- en: We’ve now replaced the bottom navigation bar in `MainActivity`’s layout with
+    a navigation drawer. It displays an image in its header, and includes all the
+    items specified in the menu resource file *menu_main.xml*.
+  id: totrans-412
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们现在用导航抽屉替换了`MainActivity`布局中的底部导航栏。它在头部显示了一张图片，并包括了 *menu_main.xml* 中指定的所有项目。
+- en: Before we run the app, however, we need to link the navigation drawer to the
+    navigation controller so that clicking on an item navigates to the correct fragment.
+  id: totrans-413
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 然而，在运行应用程序之前，我们需要将导航抽屉链接到导航控制器，以便单击项目时导航到正确的片段。
+- en: '![image](Images/f0346-02.png)'
+  id: totrans-414
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0346-02.png)'
+- en: 'We also need to configure the toolbar so that it includes a drawer icon that,
+    when clicked, will open or close the navigation drawer:'
+  id: totrans-415
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们还需要配置工具栏，以便包括一个抽屉图标，当点击时，将打开或关闭导航抽屉：
+- en: '![image](Images/f0346-03.png)'
+  id: totrans-416
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0346-03.png)'
+- en: Both of these changes are made by tweaking the code in *MainActivity.kt*. Let’s
+    find out how.
+  id: totrans-417
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 通过调整*MainActivity.kt*中的代码来进行这两个更改。让我们看看如何做到这一点。
+- en: Configure the toolbar’s drawer icon…
+  id: totrans-418
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 配置工具栏的抽屉图标…
+- en: Earlier in the chapter, we configured the toolbar to display the current destination’s
+    label and include an Up button. We did this by building an `AppBarConfiguration`
+    object, and linking it to the toolbar.
+  id: totrans-419
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 在本章早些时候，我们配置了工具栏以显示当前目标的标签并包括一个向上按钮。我们通过构建一个`AppBarConfiguration`对象，并将其链接到工具栏来实现这一点。
+- en: 'We now want the toolbar to include a drawer icon, and we can add one by adding
+    the navigation drawer to the `AppBarConfiguration`. Here’s the code to do this:'
+  id: totrans-420
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们现在希望工具栏包括一个抽屉图标，我们可以通过将导航抽屉添加到`AppBarConfiguration`来添加一个。这里是实现这一目标的代码：
+- en: '![image](Images/f0347-02.png)'
+  id: totrans-421
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0347-02.png)'
+- en: The above code adds the drawer layout to the `AppBarConfiguration` object. This
+    allows the toolbar to interact with the drawer by including a drawer icon on every
+    screen where there’s no Up button.
+  id: totrans-422
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 上述代码将抽屉布局添加到`AppBarConfiguration`对象中。这允许工具栏与抽屉进行交互，通过在没有向上按钮的每个屏幕上包括抽屉图标。
+- en: …and link the drawer to the navigation controller
+  id: totrans-423
+  prefs:
+  - PREF_H2
+  type: TYPE_NORMAL
+  zh: …并链接抽屉到导航控制器
+- en: Finally, we need to make the drawer navigate to the correct destination each
+    time the user clicks on one of its items. Just like with the bottom navigation
+    bar, we do this by setting the navigation drawer up with the navigation controller.
+  id: totrans-424
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 最后，我们需要让抽屉在用户每次点击其项目时导航到正确的目标。就像底部导航栏一样，我们通过使用导航控制器设置导航抽屉来完成这个任务。
+- en: 'Here’s the code to do this:'
+  id: totrans-425
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这里是实现这一目标的代码：
+- en: '[PRE6]'
+  id: totrans-426
+  prefs: []
+  type: TYPE_PRE
+  zh: '[PRE6]'
+- en: '![image](Images/f0347-03.png)'
+  id: totrans-427
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0347-03.png)'
+- en: Each time the user clicks on an item in the navigation drawer, the navigation
+    controller gets its ID from the menu resource file, and looks for a matching ID
+    in the navigation graph. It then navigates to the destination with that ID.
+  id: totrans-428
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 每当用户在导航抽屉中点击项目时，导航控制器会从菜单资源文件中获取其ID，并在导航图中查找匹配的ID，然后导航到具有该ID的目标。
+- en: That’s all the code we need to control the navigation drawer’s behavior. Let’s
+    add it to *MainActivity.kt* and take the app for a test drive.
+  id: totrans-429
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是控制导航抽屉行为所需的所有代码。让我们将其添加到*MainActivity.kt*中，并进行应用程序测试。
+- en: The full code for MainActivity.kt
+  id: totrans-430
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: MainActivity.kt的完整代码
+- en: 'We need to update `MainActivity` to replace the bottom navigation code with
+    the code for the navigation drawer. Update *MainActivity.kt* with the changes
+    below (in bold):'
+  id: totrans-431
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 我们需要更新`MainActivity`以用导航抽屉的代码替换底部导航代码。使用以下更改更新*MainActivity.kt*（用粗体标记）：
+- en: '![image](Images/f0348-02.png)![image](Images/f0349-01.png)'
+  id: totrans-432
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0348-02.png)![image](Images/f0349-01.png)'
+- en: That’s all the code we need for the navigation drawer. Let’s take it for a test
+    drive.
+  id: totrans-433
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 这就是我们为导航抽屉所需的所有代码。让我们来测试一下。
+- en: '![Images](Images/car.png) Test Drive'
+  id: totrans-434
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: '![Images](Images/car.png) 测试驾驶'
+- en: '![image](Images/f0350-01.png)'
+  id: totrans-435
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0350-01.png)'
+- en: When we run the app, a drawer icon is displayed in the toolbar. Clicking on
+    this icon opens the navigation drawer. When we click on one of the items in the
+    drawer, the fragment for that option is displayed in `MainActivity` and the drawer
+    closes.
+  id: totrans-436
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 当我们运行应用程序时，工具栏中会显示一个抽屉图标。单击此图标会打开导航抽屉。当我们在抽屉中点击其中一个项目时，该选项的片段会显示在`MainActivity`中，并且抽屉关闭。
+- en: '![image](Images/f0350-02.png)'
+  id: totrans-437
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0350-02.png)'
+- en: Congratulations! You’ve now learned how to create a fully operational navigation
+    drawer.
+  id: totrans-438
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 恭喜！现在您已经学会了如何创建一个完全可操作的导航抽屉。
+- en: Layout Magnets
+  id: totrans-439
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 布局磁铁
+- en: '![image](Images/common02.png)'
+  id: totrans-440
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: Somebody used fridge magnets to write the layout code for a navigation drawer,
+    but some of them fell off overnight. Can you put the code back together again?
+  id: totrans-441
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 某人使用冰箱磁铁编写了导航抽屉的布局代码，但是一些磁铁在夜间掉落了。您能重新组合代码吗？
+- en: The activity uses a linear layout for its main content (we’ve left out most
+    of the code for this). The drawer needs to display a header, defined in a layout
+    file named *header.xml*. Its menu items are specified in the menu resource file
+    *menu_drawer.xml*.
+  id: totrans-442
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 活动使用线性布局作为其主要内容（我们略去了大部分代码）。抽屉需要显示一个头部，定义在名为 *header.xml* 的布局文件中。其菜单项在名为 *menu_drawer.xml*
+    的菜单资源文件中指定。
+- en: '![image](Images/f0351-01.png)'
+  id: totrans-443
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0351-01.png)'
+- en: Layout Magnets Solution
+  id: totrans-444
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 布局磁铁解决方案
+- en: '![image](Images/common02.png)'
+  id: totrans-445
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/common02.png)'
+- en: Somebody used fridge magnets to write the layout code for a navigation drawer,
+    but some of them fell off overnight. Can you put the code back together again?
+  id: totrans-446
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 有人用冰箱磁铁编写了导航抽屉的布局代码，但是有些磁铁在夜间掉了下来。你能把代码重新整理好吗？
+- en: The activity uses a linear layout for its main content (we’ve left out most
+    of the code for this). The drawer needs to display a header, defined in a layout
+    file named *header.xml*. Its menu items are specified in the menu resource file
+    *menu_drawer.xml*.
+  id: totrans-447
+  prefs: []
+  type: TYPE_NORMAL
+  zh: 活动使用线性布局作为其主要内容（我们略去了大部分代码）。抽屉需要显示一个头部，定义在名为 *header.xml* 的布局文件中。其菜单项在名为 *menu_drawer.xml*
+    的菜单资源文件中指定。
+- en: '![image](Images/f0352-01.png)'
+  id: totrans-448
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0352-01.png)'
+- en: Your Android Toolbox
+  id: totrans-449
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 你的 Android 工具箱
+- en: '![image](Images/tools.png)'
+  id: totrans-450
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/tools.png)'
+- en: '**You’ve got [Chapter 8](#navigation_uicolon_going_places) under your belt
+    and now you’ve added navigation UI to your toolbox.**'
+  id: totrans-451
+  prefs: []
+  type: TYPE_NORMAL
+  zh: '**你已经掌握了 [第8章](#navigation_uicolon_going_places) 并且现在你已经将导航 UI 添加到你的工具箱中。**'
+- en: '![image](Images/f0353-01.png)'
+  id: totrans-452
+  prefs: []
+  type: TYPE_IMG
+  zh: '![image](Images/f0353-01.png)'

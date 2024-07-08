@@ -1,0 +1,3471 @@
+- en: Table of Contents (the real thing)
+  id: totrans-0
+  prefs:
+  - PREF_H1
+  type: TYPE_NORMAL
+  zh: 目录（真实的内容）
+- en: '[How to use this book: *Intro*](preface02.xhtml#how_to_use_this_bookcolon_intro)'
+  id: totrans-1
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: 如何使用本书：*Intro*
+- en: '**Your brain on Android.** Here you are trying to learn something, while here
+    your brain is, doing you a favor by making sure the learning doesn’t stick. Your
+    brain’s thinking, “Better leave room for more important things, like which wild
+    animals to avoid and whether naked snowboarding is a bad idea.” So how do you
+    trick your brain into thinking that your life depends on knowing how to develop
+    Android apps?'
+  id: totrans-2
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**你的大脑与Android同行。** 在你努力学习某事时，你的大脑却在帮你确保学到的知识不会留下痕迹。你的大脑在想，“最好留出空间给更重要的事情，比如避免哪些野生动物以及裸体滑雪是否一个坏主意。”
+    那么，如何让你的大脑相信你的生活取决于知道如何开发Android应用程序呢？'
+- en: '[“Who is this book for?”](preface02.xhtml#who_is_this_book_forquestion_mark)'
+  id: totrans-3
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“这本书是为谁准备的？”](preface02.xhtml#who_is_this_book_forquestion_mark)'
+- en: '[“We know what you’re thinking”](preface02.xhtml#we_know_what_youapostrophere_thinking)'
+  id: totrans-4
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们知道你在想什么”](preface02.xhtml#we_know_what_youapostrophere_thinking)'
+- en: '[“We know what your *brain* is thinking”](preface02.xhtml#we_know_what_your_brain_is_thinking)'
+  id: totrans-5
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们知道你的*大脑*在想什么”](preface02.xhtml#we_know_what_your_brain_is_thinking)'
+- en: '[“Metacognition: thinking about thinking”](preface02.xhtml#metacognitioncolon_thinking_about_thinki)'
+  id: totrans-6
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“元认知：思考思维”](preface02.xhtml#metacognitioncolon_thinking_about_thinki)'
+- en: '[“Here’s what WE did”](preface02.xhtml#hereapostrophes_what_we_did)'
+  id: totrans-7
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“这就是我们做的”](preface02.xhtml#hereapostrophes_what_we_did)'
+- en: '[“Read me”](preface02.xhtml#read_me)'
+  id: totrans-8
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“阅读我”](preface02.xhtml#read_me)'
+- en: '[“The truly awesome technical review team”](preface02.xhtml#the_truly_awesome_technical_review_team)'
+  id: totrans-9
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“真正了不起的技术审阅团队”](preface02.xhtml#the_truly_awesome_technical_review_team)'
+- en: '[“Acknowledgments”](preface02.xhtml#acknowledgments)'
+  id: totrans-10
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“致谢”](preface02.xhtml#acknowledgments)'
+- en: '[Chapter 1](ch01.xhtml#getting_startedcolon_diving_in)'
+  id: totrans-11
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第1章](ch01.xhtml#getting_startedcolon_diving_in)'
+- en: '**Android is the world’s most popular mobile operating system.** And there
+    are billions of Android users worldwide, all waiting to download your next great
+    idea. In this chapter, you’ll find out how to start turning your ideas into reality
+    by **building a basic Android app**, and updating it. You’ll learn how to run
+    it on physical and virtual devices. Along the way, you’ll meet two of the core
+    components of all Android apps: **activities** and **layouts**.'
+  id: totrans-12
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**Android是全球最流行的移动操作系统。** 全球有数十亿的Android用户，都在等待下载你的下一个伟大想法。在本章中，您将了解如何通过**构建一个基本的Android应用程序**并进行更新，开始将您的想法变成现实。您将学习如何在物理和虚拟设备上运行它。在此过程中，您将遇到所有Android应用程序的两个核心组件：**活动**和**布局**。'
+- en: '[“Welcome to Androidville”](ch01.xhtml#welcome_to_androidville)'
+  id: totrans-13
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“欢迎来到Androidville”](ch01.xhtml#welcome_to_androidville)'
+- en: '[“Activities and layouts form the backbone of your app”](ch01.xhtml#activities_and_layouts_form_the_backbone)'
+  id: totrans-14
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“活动和布局构成您的应用程序的核心”](ch01.xhtml#activities_and_layouts_form_the_backbone)'
+- en: '[“Here’s what we’re going to do”](ch01.xhtml#hereapostrophes_what_weapostrophere_goin)'
+  id: totrans-15
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们将要做什么”](ch01.xhtml#hereapostrophes_what_weapostrophere_goin)'
+- en: '[“Android Studio: your development environment”](ch01.xhtml#android_studiocolon_your_development_env)'
+  id: totrans-16
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Android Studio：您的开发环境”](ch01.xhtml#android_studiocolon_your_development_env)'
+- en: '[“Install Android Studio”](ch01.xhtml#install_android_studio)'
+  id: totrans-17
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“安装Android Studio”](ch01.xhtml#install_android_studio)'
+- en: '[“Let’s build a basic app”](ch01.xhtml#letapostrophes_build_a_basic_app)'
+  id: totrans-18
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“让我们构建一个基本的应用程序”](ch01.xhtml#letapostrophes_build_a_basic_app)'
+- en: '[“How to build the app”](ch01.xhtml#how_to_build_the_app)'
+  id: totrans-19
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何构建应用程序”](ch01.xhtml#how_to_build_the_app)'
+- en: '[“Android Versions Up Close ![Images](Images/zoomr.png)”](ch01.xhtml#android_versions_up_close)'
+  id: totrans-20
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Android版本近距离观察 ![Images](Images/zoomr.png)”](ch01.xhtml#android_versions_up_close)'
+- en: '[“You’ve created your first Android project”](ch01.xhtml#youapostropheve_created_your_first_andro)'
+  id: totrans-21
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您已创建您的第一个Android项目”](ch01.xhtml#youapostropheve_created_your_first_andro)'
+- en: '[“Dissecting your new project”](ch01.xhtml#dissecting_your_new_project)'
+  id: totrans-22
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“解剖你的新项目”](ch01.xhtml#dissecting_your_new_project)'
+- en: '[“Introducing the key files in your project”](ch01.xhtml#introducing_the_key_files_in_your_projec)'
+  id: totrans-23
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“介绍项目中的关键文件”](ch01.xhtml#introducing_the_key_files_in_your_projec)'
+- en: '[“Edit code with the Android Studio editors”](ch01.xhtml#edit_code_with_the_android_studio_editor)'
+  id: totrans-24
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用Android Studio编辑器编辑代码”](ch01.xhtml#edit_code_with_the_android_studio_editor)'
+- en: '[“The story so far”](ch01.xhtml#the_story_so_far)'
+  id: totrans-25
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“到目前为止的故事”](ch01.xhtml#the_story_so_far)'
+- en: '[“How to run the app on a physical device”](ch01.xhtml#how_to_run_the_app_on_a_physical_device)'
+  id: totrans-26
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何在物理设备上运行应用程序”](ch01.xhtml#how_to_run_the_app_on_a_physical_device)'
+- en: '[“How to run the app on a virtual device”](ch01.xhtml#how_to_run_the_app_on_a_virtual_device)'
+  id: totrans-27
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何在虚拟设备上运行应用程序”](ch01.xhtml#how_to_run_the_app_on_a_virtual_device)'
+- en: '[“Create an Android Virtual Device (AVD)”](ch01.xhtml#create_an_android_virtual_device_left_pa)'
+  id: totrans-28
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建 Android 虚拟设备（AVD）”](ch01.xhtml#create_an_android_virtual_device_left_pa)'
+- en: '[“Compile, package, deploy, run”](ch01.xhtml#compilecomma_packagecomma_deploycomma_ru)'
+  id: totrans-29
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“编译、打包、部署、运行”](ch01.xhtml#compilecomma_packagecomma_deploycomma_ru)'
+- en: '[“What just happened?”](ch01.xhtml#what_just_happenedquestion_mark)'
+  id: totrans-30
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“刚才发生了什么？”](ch01.xhtml#what_just_happenedquestion_mark)'
+- en: '[“Let’s refine the app”](ch01.xhtml#letapostrophes_refine_the_app)'
+  id: totrans-31
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“完善应用程序”](ch01.xhtml#letapostrophes_refine_the_app)'
+- en: '[“What’s in the layout?”](ch01.xhtml#whatapostrophes_in_the_layoutquestion_ma)'
+  id: totrans-32
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“布局中有什么？”](ch01.xhtml#whatapostrophes_in_the_layoutquestion_ma)'
+- en: '[“activity_main.xml has two elements”](ch01.xhtml#activityunderscoremaindotxml_has_two_ele)'
+  id: totrans-33
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“activity_main.xml 包含两个元素”](ch01.xhtml#activityunderscoremaindotxml_has_two_ele)'
+- en: '[“Update the text displayed in the layout”](ch01.xhtml#update_the_text_displayed_in_the_layout)'
+  id: totrans-34
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“更新布局中显示的文本”](ch01.xhtml#update_the_text_displayed_in_the_layout)'
+- en: '[“What the code does”](ch01.xhtml#what_the_code_does)'
+  id: totrans-35
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码做了什么？”](ch01.xhtml#what_the_code_does)'
+- en: '[“Your Android Toolbox”](ch01.xhtml#your_android_toolbox)'
+  id: totrans-36
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你的 Android 工具箱”](ch01.xhtml#your_android_toolbox)'
+- en: '[Chapter 2](ch02.xhtml#building_interactive_appscolon_apps_that)'
+  id: totrans-37
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第二章](ch02.xhtml#building_interactive_appscolon_apps_that)'
+- en: '**Most apps need to respond to the user in some way.** And in this chapter,
+    you’ll see how you can make your apps **more interactive**. You’ll discover how
+    to add an ***OnClickListener*** to your activity code so that your app can **listen
+    to what the user’s doing**, and make an appropriate response. You’ll find out
+    more about **how to design layouts**, and you’ll learn how each UI component you
+    add to your layout is derived from **a common View ancestor**. Along the way,
+    you’ll discover **why String resources are so important** for flexible, well-designed
+    apps.'
+  id: totrans-38
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**大多数应用需要以某种方式响应用户**。在本章中，你将看到如何使你的应用程序**更具交互性**。你将了解如何向你的活动代码添加***OnClickListener***，使得你的应用可以**监听用户的操作**并做出适当的响应。你还将更深入地了解**如何设计布局**，并学习每个添加到布局中的
+    UI 组件是如何来自**一个共同的 View 祖先**。在此过程中，你将发现**为什么字符串资源对于灵活、设计良好的应用程序如此重要**。'
+- en: '[“Let’s build a Beer Adviser app”](ch02.xhtml#letapostrophes_build_a_beer_adviser_app)'
+  id: totrans-39
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“让我们构建一个啤酒顾问应用程序”](ch02.xhtml#letapostrophes_build_a_beer_adviser_app)'
+- en: '[“Create the project”](ch02.xhtml#create_the_project)'
+  id: totrans-40
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建项目”](ch02.xhtml#create_the_project)'
+- en: '[“A closer look at the design editor”](ch02.xhtml#a_closer_look_at_the_design_editor)'
+  id: totrans-41
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“仔细查看设计编辑器”](ch02.xhtml#a_closer_look_at_the_design_editor)'
+- en: '[“Add a button using the design editor”](ch02.xhtml#add_a_button_using_the_design_editor)'
+  id: totrans-42
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用设计编辑器添加按钮”](ch02.xhtml#add_a_button_using_the_design_editor)'
+- en: '[“A closer look at the layout code”](ch02.xhtml#a_closer_look_at_the_layout_code)'
+  id: totrans-43
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“仔细查看布局代码”](ch02.xhtml#a_closer_look_at_the_layout_code)'
+- en: '[“Let’s update the layout XML”](ch02.xhtml#letapostrophes_update_the_layout_xml)'
+  id: totrans-44
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“更新布局 XML”](ch02.xhtml#letapostrophes_update_the_layout_xml)'
+- en: '[“The XML changes are reflected in the design editor”](ch02.xhtml#the_xml_changes_are_reflected_in_the_des)'
+  id: totrans-45
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“XML 更改在设计编辑器中反映”](ch02.xhtml#the_xml_changes_are_reflected_in_the_des)'
+- en: '[“There are warnings in the layout…”](ch02.xhtml#there_are_warnings_in_the_layouthellip)'
+  id: totrans-46
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“布局中有警告…”](ch02.xhtml#there_are_warnings_in_the_layouthellip)'
+- en: '[“Put text in a String resource file”](ch02.xhtml#put_text_in_a_string_resource_file)'
+  id: totrans-47
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将文本放入字符串资源文件”](ch02.xhtml#put_text_in_a_string_resource_file)'
+- en: '[“Extract the String resource”](ch02.xhtml#extract_the_string_resource)'
+  id: totrans-48
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“提取字符串资源”](ch02.xhtml#extract_the_string_resource)'
+- en: '[“Add and use a new String resource”](ch02.xhtml#add_and_use_a_new_string_resource)'
+  id: totrans-49
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“添加并使用新的字符串资源”](ch02.xhtml#add_and_use_a_new_string_resource)'
+- en: '[“String Resources Up Close ![Images](Images/zoomr.png)”](ch02.xhtml#string_resources_up_close)'
+  id: totrans-50
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“深入了解字符串资源 ![图片](Images/zoomr.png)”](ch02.xhtml#string_resources_up_close)'
+- en: '[“Add values to the spinner”](ch02.xhtml#add_values_to_the_spinner)'
+  id: totrans-51
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“向 Spinner 添加值”](ch02.xhtml#add_values_to_the_spinner)'
+- en: '[“Add the string-array to strings.xml”](ch02.xhtml#add_the_string-array_to_stringsdotxml)'
+  id: totrans-52
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“向 strings.xml 添加 string-array”](ch02.xhtml#add_the_string-array_to_stringsdotxml)'
+- en: '[“We need to make the app interactive”](ch02.xhtml#we_need_to_make_the_app_interactive)'
+  id: totrans-53
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们需要使应用程序具有交互性”](ch02.xhtml#we_need_to_make_the_app_interactive)'
+- en: '[“What the MainActivity code looks like”](ch02.xhtml#what_the_mainactivity_code_looks_like)'
+  id: totrans-54
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“MainActivity 代码的样子”](ch02.xhtml#what_the_mainactivity_code_looks_like)'
+- en: '[“A button can listen for on-click events…”](ch02.xhtml#a_button_can_listen_for_on-click_eventsh)'
+  id: totrans-55
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“按钮可以监听点击事件…”](ch02.xhtml#a_button_can_listen_for_on-click_eventsh)'
+- en: '[“Get a reference to the button…”](ch02.xhtml#get_a_reference_to_the_buttonhellip)'
+  id: totrans-56
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“获取按钮的引用…”](ch02.xhtml#get_a_reference_to_the_buttonhellip)'
+- en: '[“Pass a lambda to the setOnClickListener method”](ch02.xhtml#pass_a_lambda_to_the_setonclicklistener)'
+  id: totrans-57
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将 Lambda 传递给 setOnClickListener 方法”](ch02.xhtml#pass_a_lambda_to_the_setonclicklistener)'
+- en: '[“How to edit a text view’s text”](ch02.xhtml#how_to_edit_a_text_viewapostrophes_text)'
+  id: totrans-58
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“How to edit a text view’s text”](ch02.xhtml#how_to_edit_a_text_viewapostrophes_text)'
+- en: '[“The updated code for MainActivity.kt”](ch02.xhtml#the_updated_code_for_mainactivitydotkt)'
+  id: totrans-59
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“The updated code for MainActivity.kt”](ch02.xhtml#the_updated_code_for_mainactivitydotkt)'
+- en: '[“What happens when you run the code”](ch02.xhtml#what_happens_when_you_run_the_code)'
+  id: totrans-60
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“What happens when you run the code”](ch02.xhtml#what_happens_when_you_run_the_code)'
+- en: '[“Add the getBeers() method”](ch02.xhtml#add_the_getbeersleft_parenthesisright_pa)'
+  id: totrans-61
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Add the getBeers() method”](ch02.xhtml#add_the_getbeersleft_parenthesisright_pa)'
+- en: '[“Your Android Toolbox”](ch02.xhtml#your_android_toolbox-id00023)'
+  id: totrans-62
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Your Android Toolbox”](ch02.xhtml#your_android_toolbox-id00023)'
+- en: '[Chapter 3](ch03.xhtml#layoutscolon_being_a_layout)'
+  id: totrans-63
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[Chapter 3](ch03.xhtml#layoutscolon_being_a_layout)'
+- en: '**We’ve only scratched the surface of using layouts.** So far, you’ve seen
+    how to arrange views in a simple linear layout, but there’s so much more that
+    layouts can do. In this chapter we’ll **go a little deeper** and show you how
+    layouts really work. You’ll learn **how to fine-tune your linear layouts**. You’ll
+    discover how to use **frame layouts** and **scroll views**. And by the end of
+    the chapter, you’ll learn that even though they might look a little different,
+    all layouts—and the views you add to them—have **more in common than you might
+    think**.'
+  id: totrans-64
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**我们只是初步接触了布局的使用**。到目前为止，您已经看到如何在简单的线性布局中排列视图，但布局还可以做更多事情。在本章中，我们将**深入一些**，向您展示布局的真正工作方式。您将学习**如何调整线性布局**。您将了解如何使用**帧布局**和**滚动视图**。并且在本章结束时，您将会发现，即使它们看起来可能有些不同，所有布局以及您添加到它们的视图**有更多共同之处**。'
+- en: '[“It all starts with a layout”](ch03.xhtml#it_all_starts_with_a_layout)'
+  id: totrans-65
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“It all starts with a layout”](ch03.xhtml#it_all_starts_with_a_layout)'
+- en: '[“Android has different types of layout”](ch03.xhtml#android_has_different_types_of_layout)'
+  id: totrans-66
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Android has different types of layout”](ch03.xhtml#android_has_different_types_of_layout)'
+- en: '[“How to define a linear layout”](ch03.xhtml#how_to_define_a_linear_layout)'
+  id: totrans-67
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“How to define a linear layout”](ch03.xhtml#how_to_define_a_linear_layout)'
+- en: '[“Orientation can be vertical or horizontal”](ch03.xhtml#orientation_can_be_vertical_or_horizonta)'
+  id: totrans-68
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Orientation can be vertical or horizontal”](ch03.xhtml#orientation_can_be_vertical_or_horizonta)'
+- en: '[“Anatomy of AndroidManifest.xml ![Images](Images/common03.png)”](ch03.xhtml#anatomy_of_androidmanifestdotxml)'
+  id: totrans-69
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Anatomy of AndroidManifest.xml ![Images](Images/common03.png)”](ch03.xhtml#anatomy_of_androidmanifestdotxml)'
+- en: '[“Use padding to add space to the layout’s edges”](ch03.xhtml#use_padding_to_add_space_to_the_layoutap)'
+  id: totrans-70
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Use padding to add space to the layout’s edges”](ch03.xhtml#use_padding_to_add_space_to_the_layoutap)'
+- en: '[“The layout code so far”](ch03.xhtml#the_layout_code_so_far)'
+  id: totrans-71
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“The layout code so far”](ch03.xhtml#the_layout_code_so_far)'
+- en: '[“An edit text lets you enter text”](ch03.xhtml#an_edit_text_lets_you_enter_text)'
+  id: totrans-72
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“An edit text lets you enter text”](ch03.xhtml#an_edit_text_lets_you_enter_text)'
+- en: '[“Add views to the layout XML”](ch03.xhtml#add_views_to_the_layout_xml)'
+  id: totrans-73
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Add views to the layout XML”](ch03.xhtml#add_views_to_the_layout_xml)'
+- en: '[“Make a view streeeeetch by adding weight”](ch03.xhtml#make_a_view_streeeeetch_by_adding_weight)'
+  id: totrans-74
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Make a view streeeeetch by adding weight”](ch03.xhtml#make_a_view_streeeeetch_by_adding_weight)'
+- en: '[“How to add weight to one view”](ch03.xhtml#how_to_add_weight_to_one_view)'
+  id: totrans-75
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“How to add weight to one view”](ch03.xhtml#how_to_add_weight_to_one_view)'
+- en: '[“How to add weight to multiple views”](ch03.xhtml#how_to_add_weight_to_multiple_views)'
+  id: totrans-76
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“How to add weight to multiple views”](ch03.xhtml#how_to_add_weight_to_multiple_views)'
+- en: '[“Values you can use with the android:gravity attribute”](ch03.xhtml#values_you_can_use_with_the_androidcolon)'
+  id: totrans-77
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Values you can use with the android:gravity attribute”](ch03.xhtml#values_you_can_use_with_the_androidcolon)'
+- en: '[“The story so far”](ch03.xhtml#the_story_so_far-id00026)'
+  id: totrans-78
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“The story so far”](ch03.xhtml#the_story_so_far-id00026)'
+- en: '[“More values you can use with the android:layout-gravity attribute”](ch03.xhtml#more_values_you_can_use_with_the_android)'
+  id: totrans-79
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“More values you can use with the android:layout-gravity attribute”](ch03.xhtml#more_values_you_can_use_with_the_android)'
+- en: '[“Use margins to add space between views”](ch03.xhtml#use_margins_to_add_space_between_views)'
+  id: totrans-80
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Use margins to add space between views”](ch03.xhtml#use_margins_to_add_space_between_views)'
+- en: '[“Your activity code tells Android which layout it uses”](ch03.xhtml#your_activity_code_tells_android_which_l)'
+  id: totrans-81
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Your activity code tells Android which layout it uses”](ch03.xhtml#your_activity_code_tells_android_which_l)'
+- en: '[“Layout inflation: an example”](ch03.xhtml#layout_inflationcolon_an_example)'
+  id: totrans-82
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Layout inflation: an example”](ch03.xhtml#layout_inflationcolon_an_example)'
+- en: '[“A frame layout stacks its views”](ch03.xhtml#a_frame_layout_stacks_its_views)'
+  id: totrans-83
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“A frame layout stacks its views”](ch03.xhtml#a_frame_layout_stacks_its_views)'
+- en: '[“Add an image to your project”](ch03.xhtml#add_an_image_to_your_project)'
+  id: totrans-84
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Add an image to your project”](ch03.xhtml#add_an_image_to_your_project)'
+- en: '[“Drawable Resources Up Close ![Images](Images/zoomr.png)”](ch03.xhtml#drawable_resources_up_close)'
+  id: totrans-85
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Drawable Resources Up Close ![Images](Images/zoomr.png)”](ch03.xhtml#drawable_resources_up_close)'
+- en: '[“A frame layout stacks views in the order they appear in the layout XML”](ch03.xhtml#a_frame_layout_stacks_views_in_the_order)'
+  id: totrans-86
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“框架布局按照布局XML中出现的顺序堆叠视图”](ch03.xhtml#a_frame_layout_stacks_views_in_the_order)'
+- en: '[“All layouts are a type of ViewGroup…”](ch03.xhtml#all_layouts_are_a_type_of_viewgrouphelli)'
+  id: totrans-87
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“所有布局都是ViewGroup的一种类型…”](ch03.xhtml#all_layouts_are_a_type_of_viewgrouphelli)'
+- en: '[“A scroll view inserts a vertical scrollbar”](ch03.xhtml#a_scroll_view_inserts_a_vertical_scrollb)'
+  id: totrans-88
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“滚动视图插入垂直滚动条”](ch03.xhtml#a_scroll_view_inserts_a_vertical_scrollb)'
+- en: '[“Your Android Toolbox”](ch03.xhtml#your_android_toolbox-id00037)'
+  id: totrans-89
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的Android工具箱”](ch03.xhtml#your_android_toolbox-id00037)'
+- en: '[Chapter 4](ch04.xhtml#constraint_layoutscolon_draw_up_a_bluepr)'
+  id: totrans-90
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第4章](ch04.xhtml#constraint_layoutscolon_draw_up_a_bluepr)'
+- en: '**You don’t build a house without a blueprint.** And some layouts use **blueprints**
+    to make sure they **look exactly the way you want**. In this chapter, we’ll introduce
+    you to Android’s **constraint layout**: a **flexible way of designing more complex
+    UIs**. You’ll discover how **constraints** and **bias** let you position and size
+    your views, **irrespective of screen size and orientation**. You’ll find out how
+    to keep views in their place with **guidelines** and **barriers.** Finally, you’ll
+    learn how to pack or spread views with **chains** and **flows**.'
+  id: totrans-91
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**没有蓝图就不要盲目建房子。** 一些布局使用**蓝图**确保它们**完全按照您的意愿展示**。在本章中，我们将向您介绍Android的**约束布局**：一种**设计更复杂UI的灵活方式**。您将了解如何使用**约束**和**偏差**来定位和调整视图的大小，**无论屏幕大小和方向如何**。您将了解如何使用**指南线**和**障碍物**来固定视图的位置。最后，您将学习如何使用**链条**和**流**来打包或展开视图。'
+- en: '[“Nested layouts revisited”](ch04.xhtml#nested_layouts_revisited)'
+  id: totrans-92
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“嵌套布局再探讨”](ch04.xhtml#nested_layouts_revisited)'
+- en: '[“Introducing the constraint layout”](ch04.xhtml#introducing_the_constraint_layout)'
+  id: totrans-93
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“介绍约束布局”](ch04.xhtml#introducing_the_constraint_layout)'
+- en: '[“Constraint layouts are part of Android Jetpack”](ch04.xhtml#constraint_layouts_are_part_of_android_j)'
+  id: totrans-94
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“约束布局是Android Jetpack的一部分”](ch04.xhtml#constraint_layouts_are_part_of_android_j)'
+- en: '[“Use Gradle to include Jetpack libraries”](ch04.xhtml#use_gradle_to_include_jetpack_libraries)'
+  id: totrans-95
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用Gradle包含Jetpack库”](ch04.xhtml#use_gradle_to_include_jetpack_libraries)'
+- en: '[“Let’s add a constraint layout to activity_main.xml”](ch04.xhtml#letapostrophes_add_a_constraint_layout_t)'
+  id: totrans-96
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“让我们在activity_main.xml中添加一个约束布局”](ch04.xhtml#letapostrophes_add_a_constraint_layout_t)'
+- en: '[“Add a button to the blueprint”](ch04.xhtml#add_a_button_to_the_blueprint)'
+  id: totrans-97
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在蓝图中添加一个按钮”](ch04.xhtml#add_a_button_to_the_blueprint)'
+- en: '[“Position views using constraints”](ch04.xhtml#position_views_using_constraints)'
+  id: totrans-98
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用约束来定位视图”](ch04.xhtml#position_views_using_constraints)'
+- en: '[“Add a vertical constraint too”](ch04.xhtml#add_a_vertical_constraint_too)'
+  id: totrans-99
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“还要添加一个垂直约束”](ch04.xhtml#add_a_vertical_constraint_too)'
+- en: '[“Use opposing constraints to center views”](ch04.xhtml#use_opposing_constraints_to_center_views)'
+  id: totrans-100
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用对立约束来居中视图”](ch04.xhtml#use_opposing_constraints_to_center_views)'
+- en: '[“Remove constraints with the constraint widget”](ch04.xhtml#remove_constraints_with_the_constraint_w)'
+  id: totrans-101
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用约束小部件删除约束”](ch04.xhtml#remove_constraints_with_the_constraint_w)'
+- en: '[“Changes to the blueprint appear in the XML”](ch04.xhtml#changes_to_the_blueprint_appear_in_the_x)'
+  id: totrans-102
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“蓝图的更改会在XML中反映出来”](ch04.xhtml#changes_to_the_blueprint_appear_in_the_x)'
+- en: '[“Views can have bias”](ch04.xhtml#views_can_have_bias)'
+  id: totrans-103
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“视图可以具有偏差”](ch04.xhtml#views_can_have_bias)'
+- en: '[“You can change a view’s size”](ch04.xhtml#you_can_change_a_viewapostrophes_size)'
+  id: totrans-104
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您可以更改视图的大小”](ch04.xhtml#you_can_change_a_viewapostrophes_size)'
+- en: '[“Most layouts need multiple views”](ch04.xhtml#most_layouts_need_multiple_views)'
+  id: totrans-105
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“大多数布局需要多个视图”](ch04.xhtml#most_layouts_need_multiple_views)'
+- en: '[“You can connect views to other views”](ch04.xhtml#you_can_connect_views_to_other_views)'
+  id: totrans-106
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您可以将视图连接到其他视图”](ch04.xhtml#you_can_connect_views_to_other_views)'
+- en: '[“Align views using guidelines”](ch04.xhtml#align_views_using_guidelines)'
+  id: totrans-107
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用指南线对齐视图”](ch04.xhtml#align_views_using_guidelines)'
+- en: '[“Guidelines have a fixed position”](ch04.xhtml#guidelines_have_a_fixed_position)'
+  id: totrans-108
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“指南线有固定的位置”](ch04.xhtml#guidelines_have_a_fixed_position)'
+- en: '[“Create a movable barrier”](ch04.xhtml#create_a_movable_barrier)'
+  id: totrans-109
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建一个可移动的障碍物”](ch04.xhtml#create_a_movable_barrier)'
+- en: '[“Add a horizontal barrier”](ch04.xhtml#add_a_horizontal_barrier)'
+  id: totrans-110
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“添加一个水平障碍物”](ch04.xhtml#add_a_horizontal_barrier)'
+- en: '[“Constrain a button under the barrier”](ch04.xhtml#constrain_a_button_under_the_barrier)'
+  id: totrans-111
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将按钮约束在障碍物下方”](ch04.xhtml#constrain_a_button_under_the_barrier)'
+- en: '[“Use a chain to control a linear group of views”](ch04.xhtml#use_a_chain_to_control_a_linear_group_of)'
+  id: totrans-112
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用链条来控制线性视图组”](ch04.xhtml#use_a_chain_to_control_a_linear_group_of)'
+- en: '[“Create the horizontal chain”](ch04.xhtml#create_the_horizontal_chain)'
+  id: totrans-113
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建水平链条”](ch04.xhtml#create_the_horizontal_chain)'
+- en: '[“There are different styles of chain”](ch04.xhtml#there_are_different_styles_of_chain)'
+  id: totrans-114
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“有不同风格的链条”](ch04.xhtml#there_are_different_styles_of_chain)'
+- en: '[“A flow is like a multi-line chain”](ch04.xhtml#a_flow_is_like_a_multi-line_chain)'
+  id: totrans-115
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“一个流程就像是一个多行链”](ch04.xhtml#a_flow_is_like_a_multi-line_chain)'
+- en: '[“How to add a flow”](ch04.xhtml#how_to_add_a_flow)'
+  id: totrans-116
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何添加一个流程”](ch04.xhtml#how_to_add_a_flow)'
+- en: '[“You can control the flow’s appearance”](ch04.xhtml#you_can_control_the_flowapostrophes_appe)'
+  id: totrans-117
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您可以控制流程的外观”](ch04.xhtml#you_can_control_the_flowapostrophes_appe)'
+- en: '[“Your Android Toolbox”](ch04.xhtml#your_android_toolbox-id00051)'
+  id: totrans-118
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的Android工具箱”](ch04.xhtml#your_android_toolbox-id00051)'
+- en: '[Chapter 5](ch05.xhtml#the_activity_lifecyclecolon_being_an_act)'
+  id: totrans-119
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第5章](ch05.xhtml#the_activity_lifecyclecolon_being_an_act)'
+- en: '**Activities form the foundation of every Android app.** So far you’ve seen
+    how to create an activity, and use it to interact with the user. But if you don’t
+    know about **the activity lifecycle**, some of its behavior **might take you by
+    surprise**. In this chapter, you’ll learn what happens when an activity is **created**
+    and **destroyed**, and how this can lead to **unexpected consequences**. You’ll
+    find out how to control its behavior when it’s made **visible**, or **hidden**.
+    You’ll even discover ways of **saving and restoring your activity’s state**, just
+    when you need it.'
+  id: totrans-120
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**活动是每个Android应用程序的基础**。到目前为止，您已经了解如何创建活动，并与用户进行交互。但是，如果您不了解**活动生命周期**，它的某些行为可能会**让您感到意外**。在本章中，您将学习活动**创建**和**销毁**时发生了什么，以及如何导致**意外后果**。您将了解在活动变得**可见**或**隐藏**时如何控制其行为。甚至还会发现在需要时如何**保存和恢复活动的状态**。'
+- en: '[“How do activities really work?”](ch05.xhtml#how_do_activities_really_workquestion_ma)'
+  id: totrans-121
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“活动到底是如何工作的？”](ch05.xhtml#how_do_activities_really_workquestion_ma)'
+- en: '[“Create a new project”](ch05.xhtml#create_a_new_project-id00053)'
+  id: totrans-122
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建一个新项目”](ch05.xhtml#create_a_new_project-id00053)'
+- en: '[“The full code for activity_main.xml”](ch05.xhtml#the_full_code_for_activityunders-id00054)'
+  id: totrans-123
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“activity_main.xml的完整代码”](ch05.xhtml#the_full_code_for_activityunders-id00054)'
+- en: '[“The activity code controls the stopwatch”](ch05.xhtml#the_activity_code_controls_the_stopwatch)'
+  id: totrans-124
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“活动代码控制秒表”](ch05.xhtml#the_activity_code_controls_the_stopwatch)'
+- en: '[“The full code for MainActivity.kt”](ch05.xhtml#the_full_code_for_mainactivitydo-id00056)'
+  id: totrans-125
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“MainActivity.kt的完整代码”](ch05.xhtml#the_full_code_for_mainactivitydo-id00056)'
+- en: '[“What happens when you run the app”](ch05.xhtml#what_happens_when_you_run_the_app)'
+  id: totrans-126
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“当您运行应用程序时会发生什么？”](ch05.xhtml#what_happens_when_you_run_the_app)'
+- en: '[“Rotating the screen changes the device configuration”](ch05.xhtml#rotating_the_screen_changes_the_device_c)'
+  id: totrans-127
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“旋转屏幕会改变设备配置”](ch05.xhtml#rotating_the_screen_changes_the_device_c)'
+- en: '[“An activity’s states”](ch05.xhtml#an_activityapostrophes_states)'
+  id: totrans-128
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“活动的状态”](ch05.xhtml#an_activityapostrophes_states)'
+- en: '[“The activity lifecycle: from create to destroy”](ch05.xhtml#the_activity_lifecyclecolon_from_create)'
+  id: totrans-129
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“活动生命周期：从创建到销毁”](ch05.xhtml#the_activity_lifecyclecolon_from_create)'
+- en: '[“Your activity inherits the lifecycle methods”](ch05.xhtml#your_activity_inherits_the_lifecycle_met)'
+  id: totrans-130
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的活动继承了生命周期方法”](ch05.xhtml#your_activity_inherits_the_lifecycle_met)'
+- en: '[“Save the current state in a Bundle”](ch05.xhtml#save_the_current_state_in_a_bundle)'
+  id: totrans-131
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在Bundle中保存当前状态”](ch05.xhtml#save_the_current_state_in_a_bundle)'
+- en: '[“Save the state using onSaveInstanceState()”](ch05.xhtml#save_the_state_using_onsaveinstancestate)'
+  id: totrans-132
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用onSaveInstanceState()保存状态”](ch05.xhtml#save_the_state_using_onsaveinstancestate)'
+- en: '[“The updated MainActivity.kt code”](ch05.xhtml#the_updated_mainactivitydotkt_code)'
+  id: totrans-133
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“更新后的MainActivity.kt代码”](ch05.xhtml#the_updated_mainactivitydotkt_code)'
+- en: '[“What happens when you run the app”](ch05.xhtml#what_happens_when_you_run_the_ap-id00058)'
+  id: totrans-134
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“当您运行应用程序时会发生什么？”](ch05.xhtml#what_happens_when_you_run_the_ap-id00058)'
+- en: '[“There’s more to an activity’s life than create and destroy”](ch05.xhtml#thereapostrophes_more_to_an_activityapos)'
+  id: totrans-135
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“一个活动的生命周期远不止创建和销毁”](ch05.xhtml#thereapostrophes_more_to_an_activityapos)'
+- en: '[“The visible lifecycle”](ch05.xhtml#the_visible_lifecycle)'
+  id: totrans-136
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“可见生命周期”](ch05.xhtml#the_visible_lifecycle)'
+- en: '[“We need to implement two more lifecycle methods”](ch05.xhtml#we_need_to_implement_two_more_lifecycle)'
+  id: totrans-137
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们需要实现另外两个生命周期方法”](ch05.xhtml#we_need_to_implement_two_more_lifecycle)'
+- en: '[“Restart the stopwatch when the app becomes visible”](ch05.xhtml#restart_the_stopwatch_when_the_app_becom)'
+  id: totrans-138
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“当应用程序变得可见时重新启动秒表”](ch05.xhtml#restart_the_stopwatch_when_the_app_becom)'
+- en: '[“What happens when you run the app”](ch05.xhtml#what_happens_when_you_run_the_ap-id00064)'
+  id: totrans-139
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“当您运行应用程序时会发生什么？”](ch05.xhtml#what_happens_when_you_run_the_ap-id00064)'
+- en: '[“What if an activity is only partially visible?”](ch05.xhtml#what_if_an_activity_is_only_partially_vi)'
+  id: totrans-140
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如果一个活动只是部分可见会怎么样？”](ch05.xhtml#what_if_an_activity_is_only_partially_vi)'
+- en: '[“The foreground lifecycle”](ch05.xhtml#the_foreground_lifecycle)'
+  id: totrans-141
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“前台生命周期”](ch05.xhtml#the_foreground_lifecycle)'
+- en: '[“Pause the stopwatch if the activity’s paused”](ch05.xhtml#pause_the_stopwatch_if_the_activityapost)'
+  id: totrans-142
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如果活动暂停，暂停秒表”](ch05.xhtml#pause_the_stopwatch_if_the_activityapost)'
+- en: '[“The complete MainActivity.kt code”](ch05.xhtml#the_complete_mainactivitydotkt_code)'
+  id: totrans-143
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“完整的 MainActivity.kt 代码”](ch05.xhtml#the_complete_mainactivitydotkt_code)'
+- en: '[“What happens when you run the app”](ch05.xhtml#what_happens_when_you_run_the_ap-id00071)'
+  id: totrans-144
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“运行应用时会发生什么”](ch05.xhtml#what_happens_when_you_run_the_ap-id00071)'
+- en: '[“Your handy guide to the activity lifecycle methods”](ch05.xhtml#your_handy_guide_to_the_activity_lifecyc)'
+  id: totrans-145
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“活动生命周期方法简明指南”](ch05.xhtml#your_handy_guide_to_the_activity_lifecyc)'
+- en: '[“Your Android Toolbox”](ch05.xhtml#your_android_toolbox-id00073)'
+  id: totrans-146
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你的 Android 工具箱”](ch05.xhtml#your_android_toolbox-id00073)'
+- en: '[Chapter 6](ch06.xhtml#fragments_and_navigationcolon_finding_yo)'
+  id: totrans-147
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第 6 章](ch06.xhtml#fragments_and_navigationcolon_finding_yo)'
+- en: '**Most apps require more than one screen.** So far, we’ve just looked at how
+    to create single-screen apps, which is fine for simple applications. But what
+    if you have **more complex requirements**? In this chapter, you’ll learn how to
+    use **fragments** and the **Navigation component** to **build multi-screen apps**.
+    You’ll learn how **fragments are like subactivities** with their own methods.
+    You’ll find out how to **design effective navigation graphs**. Finally, you’ll
+    meet the **navigation host** and **navigation controller**, and learn how they
+    help you navigate from place to place.'
+  id: totrans-148
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '-   大多数应用需要多个屏幕。到目前为止，我们只看了如何创建单屏应用，这对于简单应用来说很好。但如果你有更复杂的需求呢？在本章中，你将学习如何使用片段和导航组件构建多屏应用。你将了解片段如何像子活动一样拥有自己的方法。你将了解如何设计有效的导航图。最后，你将认识导航宿主和导航控制器，学习它们如何帮助你从一个地方导航到另一个地方。'
+- en: '[“Most apps need more than one screen”](ch06.xhtml#most_apps_need_more_than_one_screen)'
+  id: totrans-149
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“大多数应用需要多个屏幕”](ch06.xhtml#most_apps_need_more_than_one_screen)'
+- en: '[“Each screen is a fragment”](ch06.xhtml#each_screen_is_a_fragment)'
+  id: totrans-150
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“每个屏幕都是一个片段”](ch06.xhtml#each_screen_is_a_fragment)'
+- en: '[“Navigate between screens using the Navigation component”](ch06.xhtml#navigate_between_screens_using_the_navig)'
+  id: totrans-151
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 Navigation 组件在屏幕之间导航”](ch06.xhtml#navigate_between_screens_using_the_navig)'
+- en: '[“Create a new project”](ch06.xhtml#create_a_new_project-id00076)'
+  id: totrans-152
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建新项目”](ch06.xhtml#create_a_new_project-id00076)'
+- en: '[“Add WelcomeFragment to the project”](ch06.xhtml#add_welcomefragment_to_the_project)'
+  id: totrans-153
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将 WelcomeFragment 添加到项目中”](ch06.xhtml#add_welcomefragment_to_the_project)'
+- en: '[“What fragment code looks like”](ch06.xhtml#what_fragment_code_looks_like)'
+  id: totrans-154
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段代码示例”](ch06.xhtml#what_fragment_code_looks_like)'
+- en: '[“The fragment’s onCreateView() method”](ch06.xhtml#the_fragmentapostrophes_oncreateviewleft)'
+  id: totrans-155
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段的 onCreateView() 方法”](ch06.xhtml#the_fragmentapostrophes_oncreateviewleft)'
+- en: '[“Fragment layout code looks like activity layout code”](ch06.xhtml#fragment_layout_code_looks_like_activity)'
+  id: totrans-156
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段布局代码看起来像活动布局代码”](ch06.xhtml#fragment_layout_code_looks_like_activity)'
+- en: '[“You display a fragment in a FragmentContainerView”](ch06.xhtml#you_display_a_fragment_in_a_fragmentcont)'
+  id: totrans-157
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在 FragmentContainerView 中显示片段”](ch06.xhtml#you_display_a_fragment_in_a_fragmentcont)'
+- en: '[“Update the activity_main.xml code”](ch06.xhtml#update_the_activityunderscoremaindotxml)'
+  id: totrans-158
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“更新 activity_main.xml 代码”](ch06.xhtml#update_the_activityunderscoremaindotxml)'
+- en: '[“What the code does”](ch06.xhtml#what_the_code_does-id00079)'
+  id: totrans-159
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码的作用”](ch06.xhtml#what_the_code_does-id00079)'
+- en: '[“Create MessageFragment”](ch06.xhtml#create_messagefragment)'
+  id: totrans-160
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建 MessageFragment”](ch06.xhtml#create_messagefragment)'
+- en: '[“Use the Navigation component to navigate between fragments”](ch06.xhtml#use_the_navigation_component_to_navigate)'
+  id: totrans-161
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 Navigation 组件在片段之间导航”](ch06.xhtml#use_the_navigation_component_to_navigate)'
+- en: '[“Use Gradle to add the Navigation component to your project”](ch06.xhtml#use_gradle_to_add_the_navigation_compone)'
+  id: totrans-162
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 Gradle 添加 Navigation 组件到项目中”](ch06.xhtml#use_gradle_to_add_the_navigation_compone)'
+- en: '[“Create a navigation graph”](ch06.xhtml#create_a_navigation_graph)'
+  id: totrans-163
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建导航图”](ch06.xhtml#create_a_navigation_graph)'
+- en: '[“Add fragments to the navigation graph”](ch06.xhtml#add_fragments_to_the_navigation_graph)'
+  id: totrans-164
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“向导航图添加片段”](ch06.xhtml#add_fragments_to_the_navigation_graph)'
+- en: '[“Connect fragments using an action”](ch06.xhtml#connect_fragments_using_an_action)'
+  id: totrans-165
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用操作连接片段”](ch06.xhtml#connect_fragments_using_an_action)'
+- en: '[“Navigation graphs are XML resources”](ch06.xhtml#navigation_graphs_are_xml_resources)'
+  id: totrans-166
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“导航图是 XML 资源”](ch06.xhtml#navigation_graphs_are_xml_resources)'
+- en: '[“Add a navigation host to the layout using a FragmentContainerView”](ch06.xhtml#add_a_navigation_host_to_the_layout_usin)'
+  id: totrans-167
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 FragmentContainerView 向布局添加导航宿主”](ch06.xhtml#add_a_navigation_host_to_the_layout_usin)'
+- en: '[“Add a NavHostFragment to activity_main.xml”](ch06.xhtml#add_a_navhostfragment_to_activityundersc)'
+  id: totrans-168
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将 NavHostFragment 添加到 activity_main.xml”](ch06.xhtml#add_a_navhostfragment_to_activityundersc)'
+- en: '[“Add an OnClickListener to the button”](ch06.xhtml#add_an_onclicklistener_to_the_button)'
+  id: totrans-169
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将 OnClickListener 添加到按钮”](ch06.xhtml#add_an_onclicklistener_to_the_button)'
+- en: '[“Get a navigation controller”](ch06.xhtml#get_a_navigation_controller)'
+  id: totrans-170
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“获取导航控制器”](ch06.xhtml#get_a_navigation_controller)'
+- en: '[“The full code for WelcomeFragment.kt”](ch06.xhtml#the_full_code_for_welcomefragmentdotkt)'
+  id: totrans-171
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“WelcomeFragment.kt 的完整代码”](ch06.xhtml#the_full_code_for_welcomefragmentdotkt)'
+- en: '[“What happens when the app runs”](ch06.xhtml#what_happens_when_the_app_runs-id00084)'
+  id: totrans-172
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用运行时发生了什么”](ch06.xhtml#what_happens_when_the_app_runs-id00084)'
+- en: '[“Your Android Toolbox”](ch06.xhtml#your_android_toolbox-id00089)'
+  id: totrans-173
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的 Android 工具箱”](ch06.xhtml#your_android_toolbox-id00089)'
+- en: '[Chapter 7](ch07.xhtml#safe_argscolon_passing_information)'
+  id: totrans-174
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第 7 章](ch07.xhtml#safe_argscolon_passing_information)'
+- en: '**Sometimes fragments need extra information to work properly.** If a fragment
+    shows details of a contact, for example, it needs to know which contact to display.
+    But what if this information **comes from another fragment**? In this chapter,
+    you’ll **build on your navigation know-how** by learning **how to pass data between
+    fragments**. You’ll find out **how to add arguments** to navigation destinations
+    so they can receive the information they need. You’ll meet **the Safe Args plug-in**,
+    and learn how to use it to **write type-safe code**. Finally, you’ll discover
+    **how to manipulate the back stack**, and take control of back button behavior.'
+  id: totrans-175
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**有时片段需要额外的信息才能正常工作。**例如，如果一个片段显示一个联系人的详细信息，它需要知道要显示哪个联系人。但如果这些信息来自**另一个片段**呢？在本章中，你将通过学习**如何在片段之间传递数据**，进一步完善你的导航技能。你将了解如何**向导航目的地添加参数**，以便它们能够接收所需的信息。你将会遇到**Safe
+    Args 插件**，并学习如何使用它来**编写类型安全的代码**。最后，你将探索**如何操作返回堆栈**，并控制返回按钮的行为。'
+- en: '[“The Secret Message app navigates between fragments”](ch07.xhtml#the_secret_message_app_navigates_between)'
+  id: totrans-176
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“秘密消息应用在片段之间导航”](ch07.xhtml#the_secret_message_app_navigates_between)'
+- en: '[“MessageFragment needs to pass the message to a new fragment”](ch07.xhtml#messagefragment_needs_to_pass_the_messag)'
+  id: totrans-177
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“MessageFragment 需要将消息传递给新的片段”](ch07.xhtml#messagefragment_needs_to_pass_the_messag)'
+- en: '[“Create EncryptFragment…”](ch07.xhtml#create_encryptfragmenthellip)'
+  id: totrans-178
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建 EncryptFragment…”](ch07.xhtml#create_encryptfragmenthellip)'
+- en: '[“Add EncryptFragment to the navigation graph”](ch07.xhtml#add_encryptfragment_to_the_navigation_gr)'
+  id: totrans-179
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将 EncryptFragment 添加到导航图”](ch07.xhtml#add_encryptfragment_to_the_navigation_gr)'
+- en: '[“MessageFragment needs to navigate to EncryptFragment”](ch07.xhtml#messagefragment_needs_to_navigate_to_enc)'
+  id: totrans-180
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“MessageFragment 需要导航到 EncryptFragment”](ch07.xhtml#messagefragment_needs_to_navigate_to_enc)'
+- en: '[“Add Safe Args to the build.gradle files”](ch07.xhtml#add_safe_args_to_the_builddotgradle_file)'
+  id: totrans-181
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将 Safe Args 添加到 build.gradle 文件”](ch07.xhtml#add_safe_args_to_the_builddotgradle_file)'
+- en: '[“EncryptFragment needs to accept a String argument”](ch07.xhtml#encryptfragment_needs_to_accept_a_string)'
+  id: totrans-182
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“EncryptFragment 需要接受一个 String 参数”](ch07.xhtml#encryptfragment_needs_to_accept_a_string)'
+- en: '[“MessageFragment needs to pass a message to EncryptFragment”](ch07.xhtml#messagefragment_needs_to_pass_a_message)'
+  id: totrans-183
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“MessageFragment 需要将消息传递给 EncryptFragment”](ch07.xhtml#messagefragment_needs_to_pass_a_message)'
+- en: '[“Safe Args generates Directions classes”](ch07.xhtml#safe_args_generates_directions_classes)'
+  id: totrans-184
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Safe Args 生成 Directions 类”](ch07.xhtml#safe_args_generates_directions_classes)'
+- en: '[“Update the MessageFragment.kt code”](ch07.xhtml#update_the_messagefragmentdotkt_code)'
+  id: totrans-185
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“更新 MessageFragment.kt 代码”](ch07.xhtml#update_the_messagefragmentdotkt_code)'
+- en: '[“EncryptFragment needs to get the argument’s value”](ch07.xhtml#encryptfragment_needs_to_get_the_argumen)'
+  id: totrans-186
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“EncryptFragment 需要获取参数的值”](ch07.xhtml#encryptfragment_needs_to_get_the_argumen)'
+- en: '[“The full code for EncryptFragment.kt”](ch07.xhtml#the_full_code_for_encryptfragmentdotkt)'
+  id: totrans-187
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“EncryptFragment.kt 的完整代码”](ch07.xhtml#the_full_code_for_encryptfragmentdotkt)'
+- en: '[“What happens when the app runs”](ch07.xhtml#what_happens_when_the_app_runs-id00095)'
+  id: totrans-188
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用运行时发生了什么”](ch07.xhtml#what_happens_when_the_app_runs-id00095)'
+- en: '[“What if the user wants to go back?”](ch07.xhtml#what_if_the_user_wants_to_go_backquestio)'
+  id: totrans-189
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“用户想要返回怎么办？”](ch07.xhtml#what_if_the_user_wants_to_go_backquestio)'
+- en: '[“Welcome to the back stack”](ch07.xhtml#welcome_to_the_back_stack)'
+  id: totrans-190
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“欢迎来到返回堆栈”](ch07.xhtml#welcome_to_the_back_stack)'
+- en: '[“Use the navigation graph to pop fragments off the back stack”](ch07.xhtml#use_the_navigation_graph_to_pop_fragment)'
+  id: totrans-191
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用导航图弹出片段”](ch07.xhtml#use_the_navigation_graph_to_pop_fragment)'
+- en: '[“Your Android Toolbox”](ch07.xhtml#your_android_toolbox-id00101)'
+  id: totrans-192
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的 Android 工具箱”](ch07.xhtml#your_android_toolbox-id00101)'
+- en: '[Chapter 8](ch08.xhtml#navigation_uicolon_going_places)'
+  id: totrans-193
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第 8 章](ch08.xhtml#navigation_uicolon_going_places)'
+- en: '**Most apps need to be able to navigate between destinations.** And with the
+    Android the Navigation component, building this UI became much simpler. Here,
+    you’ll learn how to use some of Android’s navigation UI components so that **your
+    users can navigate your app more easily**. You’ll see how to use **themes**, and
+    replace your app’s default app bar with a **toolbar**. You’ll learn how to add
+    **menu items** you can **use for navigation**. You’ll discover how to implement
+    **bottom bar navigation**. Finally, you’ll create a swish **navigation drawer**:
+    a panel that slides out from the side of your activity.'
+  id: totrans-194
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 大多数应用需要能够在目的地之间进行导航。而有了Android的导航组件，构建此UI变得简单得多。在这里，您将学习如何使用一些Android的导航UI组件，以便使**您的用户能更轻松地导航您的应用**。您将了解如何使用**主题**，并将默认应用栏替换为**工具栏**。您将学习如何添加**可用于导航的菜单项**。您将发现如何实现**底部导航栏导航**。最后，您将创建一个时尚的**导航抽屉**：这是一个从活动侧边滑出的面板。
+- en: '[“Different apps, different structures”](ch08.xhtml#different_appscomma_different_structures)'
+  id: totrans-195
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“不同应用，不同结构”](ch08.xhtml#different_appscomma_different_structures)'
+- en: '[“Android includes navigation UI components”](ch08.xhtml#android_includes_navigation_ui_component)'
+  id: totrans-196
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Android包含导航UI组件”](ch08.xhtml#android_includes_navigation_ui_component)'
+- en: '[“How the CatChat app will work”](ch08.xhtml#how_the_catchat_app_will_work)'
+  id: totrans-197
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“CatChat应用的工作方式”](ch08.xhtml#how_the_catchat_app_will_work)'
+- en: '[“Apply a theme in AndroidManifest.xml”](ch08.xhtml#apply_a_theme_in_androidmanifestdotxml)'
+  id: totrans-198
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在AndroidManifest.xml中应用主题”](ch08.xhtml#apply_a_theme_in_androidmanifestdotxml)'
+- en: '[“Define styles in style resource files”](ch08.xhtml#define_styles_in_style_resource_files)'
+  id: totrans-199
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在样式资源文件中定义样式”](ch08.xhtml#define_styles_in_style_resource_files)'
+- en: '[“Replace the default app bar with a toolbar”](ch08.xhtml#replace_the_default_app_bar_with_a_toolb)'
+  id: totrans-200
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将默认应用栏替换为工具栏”](ch08.xhtml#replace_the_default_app_bar_with_a_toolb)'
+- en: '[“Create InboxFragment”](ch08.xhtml#create_inboxfragment)'
+  id: totrans-201
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建InboxFragment”](ch08.xhtml#create_inboxfragment)'
+- en: '[“Specify items in the toolbar with a menu resource file”](ch08.xhtml#specify_items_in_the_toolbar_with_a_menu)'
+  id: totrans-202
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用菜单资源文件指定工具栏中的项目”](ch08.xhtml#specify_items_in_the_toolbar_with_a_menu)'
+- en: '[“onCreateOptionsMenu() adds menu items to the toolbar”](ch08.xhtml#oncreateoptionsmenuleft_parenthesisright)'
+  id: totrans-203
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“onCreateOptionsMenu()将菜单项添加到工具栏”](ch08.xhtml#oncreateoptionsmenuleft_parenthesisright)'
+- en: '[“Respond to menu item clicks with onOptionsItemSelected()”](ch08.xhtml#respond_to_menu_item_clicks_with_onoptio)'
+  id: totrans-204
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“通过onOptionsItemSelected()响应菜单项点击”](ch08.xhtml#respond_to_menu_item_clicks_with_onoptio)'
+- en: '[“Configure the toolbar using an AppBarConfiguration”](ch08.xhtml#configure_the_toolbar_using_an_appbarcon)'
+  id: totrans-205
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用AppBarConfiguration配置工具栏”](ch08.xhtml#configure_the_toolbar_using_an_appbarcon)'
+- en: '[“What happens when the app runs”](ch08.xhtml#what_happens_when_the_app_runs-id00116)'
+  id: totrans-206
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用运行时的具体操作”](ch08.xhtml#what_happens_when_the_app_runs-id00116)'
+- en: '[“Most types of UI navigation work with the Navigation component”](ch08.xhtml#most_types_of_ui_navigation_work_with_th)'
+  id: totrans-207
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“大多数类型的UI导航都可以使用导航组件”](ch08.xhtml#most_types_of_ui_navigation_work_with_th)'
+- en: '[“Create SentItemsFragment”](ch08.xhtml#create_sentitemsfragment)'
+  id: totrans-208
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建SentItemsFragment”](ch08.xhtml#create_sentitemsfragment)'
+- en: '[“The bottom navigation bar needs a new menu resource file”](ch08.xhtml#the_bottom_navigation_bar_needs_a_new_me)'
+  id: totrans-209
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“底部导航栏需要一个新的菜单资源文件”](ch08.xhtml#the_bottom_navigation_bar_needs_a_new_me)'
+- en: '[“Link the bottom navigation bar to the navigation controller”](ch08.xhtml#link_the_bottom_navigation_bar_to_the_na)'
+  id: totrans-210
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将底部导航栏链接到导航控制器”](ch08.xhtml#link_the_bottom_navigation_bar_to_the_na)'
+- en: '[“A navigation drawer lets you display many navigation items”](ch08.xhtml#a_navigation_drawer_lets_you_display_man)'
+  id: totrans-211
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“导航抽屉允许您显示许多导航项”](ch08.xhtml#a_navigation_drawer_lets_you_display_man)'
+- en: '[“Add the support section…”](ch08.xhtml#add_the_support_sectionhellip)'
+  id: totrans-212
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“添加支持部分…”](ch08.xhtml#add_the_support_sectionhellip)'
+- en: '[“Highlight the selected item with groups”](ch08.xhtml#highlight_the_selected_item_with_groups)'
+  id: totrans-213
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用分组突出显示选定的项目”](ch08.xhtml#highlight_the_selected_item_with_groups)'
+- en: '[“Create the navigation drawer’s header”](ch08.xhtml#create_the_navigation_drawerapostrophes)'
+  id: totrans-214
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建导航抽屉的标题”](ch08.xhtml#create_the_navigation_drawerapostrophes)'
+- en: '[“How to create a navigation drawer”](ch08.xhtml#how_to_create_a_navigation_drawer)'
+  id: totrans-215
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何创建导航抽屉”](ch08.xhtml#how_to_create_a_navigation_drawer)'
+- en: '[“Configure the toolbar’s drawer icon…”](ch08.xhtml#configure_the_toolbarapostrophes_drawer)'
+  id: totrans-216
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“配置工具栏的抽屉图标…”](ch08.xhtml#configure_the_toolbarapostrophes_drawer)'
+- en: '[“Your Android Toolbox”](ch08.xhtml#your_android_toolbox-id00128)'
+  id: totrans-217
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的Android工具箱”](ch08.xhtml#your_android_toolbox-id00128)'
+- en: '[Chapter 9](ch09.xhtml#material_viewscolon_a_material_world)'
+  id: totrans-218
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第9章](ch09.xhtml#material_viewscolon_a_material_world)'
+- en: '**Most apps need a slick UI that responds to the user.** You’ve so far learned
+    how to use views such as **text views, buttons, and spinners**, and applied **Material
+    themes** to make sweeping changes to your app’s look and feel. But there’s so
+    much more you can do. Here, you’ll learn how to make your UI more responsive with
+    the **coordinator layout**. You’ll create **toolbars** that can **collapse or
+    scroll** on a whim. You’ll discover **exciting new views** such as **checkboxes**,
+    **radio buttons**, **chips**, and **floating action buttons**. Finally, you’ll
+    find out how to display friendly pop-up messages using **toasts** and **snackbars**.'
+  id: totrans-219
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '-   大多数应用程序需要一个响应用户的流畅用户界面。您到目前为止已经学会了如何使用诸如**文本视图、按钮和下拉框**等视图，并应用了**Material
+    主题**以进行广泛的应用程序外观和感觉变更。但是您还可以做得更多。在这里，您将学习如何通过**协调布局**使用户界面更具响应性。您将创建可以根据需要**折叠或滚动**的**工具栏**。您还将发现**新奇的新视图**，如**复选框、单选按钮、芯片和浮动操作按钮**。最后，您将了解如何使用**吐司和Snackbar**显示友好的弹出消息。'
+- en: '[“Material is used throughout Androidville”](ch09.xhtml#material_is_used_throughout_androidville)'
+  id: totrans-220
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Material 在整个 Androidville 中使用”](ch09.xhtml#material_is_used_throughout_androidville)'
+- en: '[“The Bits and Pizzas app”](ch09.xhtml#the_bits_and_pizzas_app)'
+  id: totrans-221
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Bits 和 Pizzas 应用程序”](ch09.xhtml#the_bits_and_pizzas_app)'
+- en: '[“Create OrderFragment”](ch09.xhtml#create_orderfragment)'
+  id: totrans-222
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建 OrderFragment”](ch09.xhtml#create_orderfragment)'
+- en: '[“Replace the default app bar with a toolbar”](ch09.xhtml#replace_the_default_app_bar_with-id00130)'
+  id: totrans-223
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“用工具栏替换默认应用栏”](ch09.xhtml#replace_the_default_app_bar_with-id00130)'
+- en: '[“Fragments don’t have a setSupportActionBar() method”](ch09.xhtml#fragments_donapostrophet_have_a_setsuppo)'
+  id: totrans-224
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段没有 setSupportActionBar() 方法”](ch09.xhtml#fragments_donapostrophet_have_a_setsuppo)'
+- en: '[“The coordinator layout coordinates animations between views”](ch09.xhtml#the_coordinator_layout_coordinates_anima)'
+  id: totrans-225
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“协调布局协调视图之间的动画”](ch09.xhtml#the_coordinator_layout_coordinates_anima)'
+- en: '[“The app bar layout enables toolbar animation”](ch09.xhtml#the_app_bar_layout_enables_toolbar_anima)'
+  id: totrans-226
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用栏布局启用工具栏动画”](ch09.xhtml#the_app_bar_layout_enables_toolbar_anima)'
+- en: '[“Tell the toolbar how to respond to scroll events”](ch09.xhtml#tell_the_toolbar_how_to_respond_to_scrol)'
+  id: totrans-227
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“告诉工具栏如何响应滚动事件”](ch09.xhtml#tell_the_toolbar_how_to_respond_to_scrol)'
+- en: '[“How to create a plain collapsing toolbar”](ch09.xhtml#how_to_create_a_plain_collapsing_toolbar)'
+  id: totrans-228
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何创建普通的折叠工具栏”](ch09.xhtml#how_to_create_a_plain_collapsing_toolbar)'
+- en: '[“How to add an image to a collapsing toolbar”](ch09.xhtml#how_to_add_an_image_to_a_collapsing_tool)'
+  id: totrans-229
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何将图像添加到折叠工具栏”](ch09.xhtml#how_to_add_an_image_to_a_collapsing_tool)'
+- en: '[“We need to build OrderFragment’s main content”](ch09.xhtml#we_need_to_build_orderfragmentapostrophe)'
+  id: totrans-230
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们需要构建 OrderFragment 的主要内容”](ch09.xhtml#we_need_to_build_orderfragmentapostrophe)'
+- en: '[“Choose a pizza type using a radio button”](ch09.xhtml#choose_a_pizza_type_using_a_radio_button)'
+  id: totrans-231
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用单选按钮选择披萨类型”](ch09.xhtml#choose_a_pizza_type_using_a_radio_button)'
+- en: '[“A chip is a type of flexible compound button”](ch09.xhtml#a_chip_is_a_type_of_flexible_compound_bu)'
+  id: totrans-232
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“芯片是一种灵活的复合按钮类型”](ch09.xhtml#a_chip_is_a_type_of_flexible_compound_bu)'
+- en: '[“Add multiple chips to a chip group”](ch09.xhtml#add_multiple_chips_to_a_chip_group)'
+  id: totrans-233
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“向 ChipGroup 添加多个芯片”](ch09.xhtml#add_multiple_chips_to_a_chip_group)'
+- en: '[“A FAB is a floating action button”](ch09.xhtml#a_fab_is_a_floating_action_button)'
+  id: totrans-234
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“FAB 是浮动操作按钮”](ch09.xhtml#a_fab_is_a_floating_action_button)'
+- en: '[“You can anchor a FAB to a collapsing toolbar”](ch09.xhtml#you_can_anchor_a_fab_to_a_collapsing_too)'
+  id: totrans-235
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您可以将 FAB 锚定到折叠工具栏”](ch09.xhtml#you_can_anchor_a_fab_to_a_collapsing_too)'
+- en: '[“We need to build OrderFragment’s layout”](ch09.xhtml#we_need_to_build_orderfragmentap-id00139)'
+  id: totrans-236
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们需要构建 OrderFragment 的布局”](ch09.xhtml#we_need_to_build_orderfragmentap-id00139)'
+- en: '[“Add an OnClickListener to the FAB”](ch09.xhtml#add_an_onclicklistener_to_the_fab)'
+  id: totrans-237
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将 OnClickListener 添加到 FAB”](ch09.xhtml#add_an_onclicklistener_to_the_fab)'
+- en: '[“A toast is a simple pop-up message”](ch09.xhtml#a_toast_is_a_simple_pop-up_message)'
+  id: totrans-238
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“吐司是一种简单的弹出消息”](ch09.xhtml#a_toast_is_a_simple_pop-up_message)'
+- en: '[“Display the pizza order in a snackbar”](ch09.xhtml#display_the_pizza_order_in_a_snackbar)'
+  id: totrans-239
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在 Snackbar 中显示披萨订单”](ch09.xhtml#display_the_pizza_order_in_a_snackbar)'
+- en: '[“The snackbar code for the pizza order”](ch09.xhtml#the_snackbar_code_for_the_pizza_order)'
+  id: totrans-240
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“披萨订单的 Snackbar 代码”](ch09.xhtml#the_snackbar_code_for_the_pizza_order)'
+- en: '[“The full code for OrderFragment.kt”](ch09.xhtml#the_full_code_for_orderfragmentdotkt)'
+  id: totrans-241
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“OrderFragment.kt 的完整代码”](ch09.xhtml#the_full_code_for_orderfragmentdotkt)'
+- en: '[“Your Android Toolbox”](ch09.xhtml#your_android_toolbox-id00148)'
+  id: totrans-242
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的 Android 工具箱”](ch09.xhtml#your_android_toolbox-id00148)'
+- en: '[Chapter 10](ch10.xhtml#view_bindingcolon_bound_together)'
+  id: totrans-243
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第 10 章](ch10.xhtml#view_bindingcolon_bound_together)'
+- en: '**It’s time to wave farewell to findViewById().** As you’ve probably noticed
+    by now, the more views you have and the more interactive your apps become, **the
+    more calls you need to make to *findViewById()***. And if you’re getting tired
+    of typing the code for this method every time you want to work with a view, *y*ou’re
+    not alone. In this chapter, you’ll discover **how to make *findViewById()* a thing
+    of the past** by implementing **view binding**. You’ll find out how to apply this
+    technique to both **activity and fragment code**, and you’ll learn why this approach
+    is a **safer, more efficient** way of accessing your layout’s views.'
+  id: totrans-244
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 现在是时候告别findViewById()了。正如你现在可能已经注意到的那样，你拥有的视图越多，你的应用程序变得越交互式，就越需要调用findViewById()。如果你已经厌倦了每次想要使用视图时都要输入这个方法的代码，你并不孤单。在本章中，你将会发现如何通过实现视图绑定使findViewById()成为过去时。你将了解如何将这种技术应用于活动和片段代码，并且你将了解为什么这种方法是访问布局视图更安全、更高效的方式。
+- en: '[“Behind the scenes of findViewById()”](ch10.xhtml#behind_the_scenes_of_findviewbyidleft_pa)'
+  id: totrans-245
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Behind the scenes of findViewById()”](ch10.xhtml#behind_the_scenes_of_findviewbyidleft_pa)'
+- en: '[“There’s a downside to findViewById()”](ch10.xhtml#thereapostrophes_a_downside_to_findviewb)'
+  id: totrans-246
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“findViewById()也有其缺点”](ch10.xhtml#thereapostrophes_a_downside_to_findviewb)'
+- en: '[“View binding to the rescue”](ch10.xhtml#view_binding_to_the_rescue)'
+  id: totrans-247
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“视图绑定来拯救”](ch10.xhtml#view_binding_to_the_rescue)'
+- en: '[“Here’s how we’ll use view binding”](ch10.xhtml#hereapostrophes_how_weapostrophell_use_v)'
+  id: totrans-248
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们将如何使用视图绑定”](ch10.xhtml#hereapostrophes_how_weapostrophell_use_v)'
+- en: '[“The Stopwatch app revisited”](ch10.xhtml#the_stopwatch_app_revisited)'
+  id: totrans-249
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“重新访问秒表应用程序”](ch10.xhtml#the_stopwatch_app_revisited)'
+- en: '[“Enable view binding in the app build.gradle file”](ch10.xhtml#enable_view_binding_in_the_app_builddotg)'
+  id: totrans-250
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在app的build.gradle文件中启用视图绑定”](ch10.xhtml#enable_view_binding_in_the_app_builddotg)'
+- en: '[“How to add view binding to an activity”](ch10.xhtml#how_to_add_view_binding_to_an_activity)'
+  id: totrans-251
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何为活动添加视图绑定”](ch10.xhtml#how_to_add_view_binding_to_an_activity)'
+- en: '[“Use the binding property to interact with views”](ch10.xhtml#use_the_binding_property_to_interact_wit)'
+  id: totrans-252
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用绑定属性与视图交互”](ch10.xhtml#use_the_binding_property_to_interact_wit)'
+- en: '[“The full code for MainActivity.kt”](ch10.xhtml#the_full_code_for_mainactivitydo-id00151)'
+  id: totrans-253
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“MainActivity.kt的完整代码”](ch10.xhtml#the_full_code_for_mainactivitydo-id00151)'
+- en: '[“What the code does”](ch10.xhtml#what_the_code_does-id00152)'
+  id: totrans-254
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码的作用”](ch10.xhtml#what_the_code_does-id00152)'
+- en: '[“Fragments can use view binding too (but the code’s a little different)”](ch10.xhtml#fragments_can_use_view_binding_too_left)'
+  id: totrans-255
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段也可以使用视图绑定（但代码有所不同）”](ch10.xhtml#fragments_can_use_view_binding_too_left)'
+- en: '[“Enable view binding for Bits and Pizzas”](ch10.xhtml#enable_view_binding_for_bits_and_pizzas)'
+  id: totrans-256
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“为Bits and Pizzas启用视图绑定”](ch10.xhtml#enable_view_binding_for_bits_and_pizzas)'
+- en: '[“Fragment view binding code is a little different”](ch10.xhtml#fragment_view_binding_code_is_a_little_d)'
+  id: totrans-257
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段视图绑定代码略有不同”](ch10.xhtml#fragment_view_binding_code_is_a_little_d)'
+- en: '[“Fragments can access views from onCreateView() to onDestroyView()”](ch10.xhtml#fragments_can_access_views_from_oncreate)'
+  id: totrans-258
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“从onCreateView()到onDestroyView()，片段可以访问视图”](ch10.xhtml#fragments_can_access_views_from_oncreate)'
+- en: '[“Fragment Lifecycle Methods Up Close ![Images](Images/zoomr.png)”](ch10.xhtml#fragment_lifecycle_methods_up_close)'
+  id: totrans-259
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“仔细观察片段生命周期方法 ![Images](Images/zoomr.png)”](ch10.xhtml#fragment_lifecycle_methods_up_close)'
+- en: '[“What fragment view binding code looks like”](ch10.xhtml#what_fragment_view_binding_code_looks_li)'
+  id: totrans-260
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段视图绑定代码的实现”](ch10.xhtml#what_fragment_view_binding_code_looks_li)'
+- en: '[“_binding refers to the binding object…”](ch10.xhtml#underscorebinding_refers_to_the_binding)'
+  id: totrans-261
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“_binding指的是绑定对象…”](ch10.xhtml#underscorebinding_refers_to_the_binding)'
+- en: '[“The full code for OrderFragment.kt”](ch10.xhtml#the_full_code_for_orderfragmentd-id00157)'
+  id: totrans-262
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“OrderFragment.kt的完整代码”](ch10.xhtml#the_full_code_for_orderfragmentd-id00157)'
+- en: '[“Your Android Toolbox”](ch10.xhtml#your_android_toolbox-id00162)'
+  id: totrans-263
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你的Android工具箱”](ch10.xhtml#your_android_toolbox-id00162)'
+- en: '[Chapter 11](ch11.xhtml#view_modelscolon_model_behavior)'
+  id: totrans-264
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第11章](ch11.xhtml#view_modelscolon_model_behavior)'
+- en: '**As apps grow more complex, fragments have more to juggle.** And if you’re
+    not careful, this can lead to **bloated code** that tries to do everything. Business
+    logic, navigation, controlling the UI, dealing with configuration changes…you
+    name it, it’s in there. In this chapter, you’ll learn how to deal with this kind
+    of situation using **view models**. You’ll discover **how they simplify your activity
+    and fragment code**. You’ll find out **how they survive configuration changes**,
+    keeping your app’s state safe and sound. Finally, we’ll show you how to build
+    a **view model factory**, and when this might be needed.'
+  id: totrans-265
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '-   当应用程序变得更加复杂时，片段需要处理的事务也越多。如果不小心处理，这可能导致试图做所有事情的**臃肿代码**。业务逻辑、导航、控制 UI、处理配置更改……你说了算，这些都在其中。在本章中，您将学习如何使用**视图模型**来处理这种情况。您将发现它们如何简化您的活动和片段代码。您将了解它们如何在配置更改中生存，保持应用程序的状态安全稳定。最后，我们将向您展示如何构建**视图模型工厂**，以及何时可能需要它。'
+- en: '[“Configuration changes revisited”](ch11.xhtml#configuration_changes_revisited)'
+  id: totrans-266
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“重新讨论配置更改”](ch11.xhtml#configuration_changes_revisited)'
+- en: '[“Introducing the view model”](ch11.xhtml#introducing_the_view_model)'
+  id: totrans-267
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“介绍视图模型”](ch11.xhtml#introducing_the_view_model)'
+- en: '[“What the guessing game will do”](ch11.xhtml#what_the_guessing_game_will_do)'
+  id: totrans-268
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“猜谜游戏将要做什么”](ch11.xhtml#what_the_guessing_game_will_do)'
+- en: '[“How the app will be structured”](ch11.xhtml#how_the_app_will_be_structured)'
+  id: totrans-269
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序的结构化方式”](ch11.xhtml#how_the_app_will_be_structured)'
+- en: '[“Update the project build.gradle file…”](ch11.xhtml#update_the_project_builddotgradle_filehe)'
+  id: totrans-270
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“更新项目的 build.gradle 文件…”](ch11.xhtml#update_the_project_builddotgradle_filehe)'
+- en: '[“The Guessing Game app has two fragments”](ch11.xhtml#the_guessing_game_app_has_two_fragments)'
+  id: totrans-271
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“猜谜游戏应用程序有两个片段”](ch11.xhtml#the_guessing_game_app_has_two_fragments)'
+- en: '[“How navigation should work”](ch11.xhtml#how_navigation_should_work)'
+  id: totrans-272
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“导航应该如何工作”](ch11.xhtml#how_navigation_should_work)'
+- en: '[“Update the navigation graph”](ch11.xhtml#update_the_navigation_graph-id00166)'
+  id: totrans-273
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“更新导航图”](ch11.xhtml#update_the_navigation_graph-id00166)'
+- en: '[“What happens when the app runs”](ch11.xhtml#what_happens_when_the_app_runs-id00167)'
+  id: totrans-274
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时会发生什么”](ch11.xhtml#what_happens_when_the_app_runs-id00167)'
+- en: '[“The game loses state when the screen rotates”](ch11.xhtml#the_game_loses_state_when_the_screen_rot)'
+  id: totrans-275
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“屏幕旋转时游戏丢失状态”](ch11.xhtml#the_game_loses_state_when_the_screen_rot)'
+- en: '[“A view model holds business logic”](ch11.xhtml#a_view_model_holds_business_logic)'
+  id: totrans-276
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“视图模型持有业务逻辑”](ch11.xhtml#a_view_model_holds_business_logic)'
+- en: '[“Add a view model dependency to the app build.gradle file…”](ch11.xhtml#add_a_view_model_dependency_to_the_app_b)'
+  id: totrans-277
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将视图模型依赖添加到应用的 build.gradle 文件中…”](ch11.xhtml#add_a_view_model_dependency_to_the_app_b)'
+- en: '[“Create a GameViewModel object”](ch11.xhtml#create_a_gameviewmodel_object)'
+  id: totrans-278
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建 GameViewModel 对象”](ch11.xhtml#create_a_gameviewmodel_object)'
+- en: '[“What happens when the app runs”](ch11.xhtml#what_happens_when_the_app_runs-id00169)'
+  id: totrans-279
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时会发生什么”](ch11.xhtml#what_happens_when_the_app_runs-id00169)'
+- en: '[“![Images](Images/zooml.png) View Models Up Close”](ch11.xhtml#view_models_up_close)'
+  id: totrans-280
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“![Images](Images/zooml.png) 视图模型近距离”](ch11.xhtml#view_models_up_close)'
+- en: '[“ResultViewModel needs to hold the result”](ch11.xhtml#resultviewmodel_needs_to_hold_the_result)'
+  id: totrans-281
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“ResultViewModel 需要保存结果”](ch11.xhtml#resultviewmodel_needs_to_hold_the_result)'
+- en: '[“A view model factory creates view models”](ch11.xhtml#a_view_model_factory_creates_view_models)'
+  id: totrans-282
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“视图模型工厂创建视图模型”](ch11.xhtml#a_view_model_factory_creates_view_models)'
+- en: '[“Create the ResultViewModelFactory class”](ch11.xhtml#create_the_resultviewmodelfactory_class)'
+  id: totrans-283
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建 ResultViewModelFactory 类”](ch11.xhtml#create_the_resultviewmodelfactory_class)'
+- en: '[“Use the factory to create the view model”](ch11.xhtml#use_the_factory_to_create_the_view_model)'
+  id: totrans-284
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用工厂创建视图模型”](ch11.xhtml#use_the_factory_to_create_the_view_model)'
+- en: '[“What happens when the app runs”](ch11.xhtml#what_happens_when_the_app_runs-id00173)'
+  id: totrans-285
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时会发生什么”](ch11.xhtml#what_happens_when_the_app_runs-id00173)'
+- en: '[“Your Android Toolbox”](ch11.xhtml#your_android_toolbox-id00175)'
+  id: totrans-286
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的 Android 工具箱”](ch11.xhtml#your_android_toolbox-id00175)'
+- en: '[Chapter 12](ch12.xhtml#live_datacolon_leaping_into_action)'
+  id: totrans-287
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第 12 章](ch12.xhtml#live_datacolon_leaping_into_action)'
+- en: '**Your code often needs to react to property value changes.** If a view model
+    property changes value, for example, **the fragment might need to respond** by
+    updating its views or navigating elsewhere. But **how does a fragment get to hear
+    when a property’s been updated**? Here, we’ll introduce you to **live data**:
+    a way of **telling interested parties when something’s changed**. You’ll learn
+    all about ***MutableLiveData***, and how to **make your fragment observe properties**
+    of this type. You’ll discover **how the *LiveData* type helps maintain your app’s
+    integrity**.'
+  id: totrans-288
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**你的代码经常需要对属性值变化做出响应**。例如，如果视图模型的属性值发生变化，**片段可能需要通过更新其视图或导航到其他位置来做出响应**。但是**片段如何知道属性何时被更新**？在这里，我们将向你介绍
+    **LiveData**：一种 **告知感兴趣方发生变化的方式**。你将学习 **MutableLiveData** 的所有内容，以及如何 **使你的片段观察到此类属性**。你会发现
+    **LiveData 类型如何帮助保持应用程序的完整性**。'
+- en: '[“The Guessing Game app revisited”](ch12.xhtml#the_guessing_game_app_revisited)'
+  id: totrans-289
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“重新审视猜谜游戏应用程序”](ch12.xhtml#the_guessing_game_app_revisited)'
+- en: '[“The fragments decide when to update views”](ch12.xhtml#the_fragments_decide_when_to_update_view)'
+  id: totrans-290
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段决定何时更新视图”](ch12.xhtml#the_fragments_decide_when_to_update_view)'
+- en: '[“Here’s what we’re going to do”](ch12.xhtml#hereapostrophes_what_weapostroph-id00177)'
+  id: totrans-291
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“这就是我们要做的”](ch12.xhtml#hereapostrophes_what_weapostroph-id00177)'
+- en: '[“GameViewModel and GameFragment need to use live data”](ch12.xhtml#gameviewmodel_and_gamefragment_need_to_u)'
+  id: totrans-292
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“GameViewModel 和 GameFragment 需要使用 LiveData”](ch12.xhtml#gameviewmodel_and_gamefragment_need_to_u)'
+- en: '[“Live data objects use a value property”](ch12.xhtml#live_data_objects_use_a_value_property)'
+  id: totrans-293
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“LiveData 对象使用 value 属性”](ch12.xhtml#live_data_objects_use_a_value_property)'
+- en: '[“The fragment observes the view model properties and reacts to changes.”](ch12.xhtml#the_fragment_observes_the_view_model_pro)'
+  id: totrans-294
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段观察视图模型属性并对更改作出反应。”](ch12.xhtml#the_fragment_observes_the_view_model_pro)'
+- en: '[“The full code for GameFragment.kt”](ch12.xhtml#the_full_code_for_gamefragmentdotkt)'
+  id: totrans-295
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“GameFragment.kt 的完整代码”](ch12.xhtml#the_full_code_for_gamefragmentdotkt)'
+- en: '[“What happens when the app runs”](ch12.xhtml#what_happens_when_the_app_runs-id00180)'
+  id: totrans-296
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时发生了什么”](ch12.xhtml#what_happens_when_the_app_runs-id00180)'
+- en: '[“Fragments can update GameViewModel’s properties”](ch12.xhtml#fragments_can_update_gameviewmodelapostr)'
+  id: totrans-297
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段可以更新 GameViewModel 的属性”](ch12.xhtml#fragments_can_update_gameviewmodelapostr)'
+- en: '[“What happens when the app runs”](ch12.xhtml#what_happens_when_the_app_runs-id00185)'
+  id: totrans-298
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时发生了什么”](ch12.xhtml#what_happens_when_the_app_runs-id00185)'
+- en: '[“GameFragment still includes game logic”](ch12.xhtml#gamefragment_still_includes_game_logic)'
+  id: totrans-299
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“GameFragment 仍包含游戏逻辑”](ch12.xhtml#gamefragment_still_includes_game_logic)'
+- en: '[“The full code for GameViewModel.kt”](ch12.xhtml#the_full_code_for_gameviewmodeld-id00189)'
+  id: totrans-300
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“GameViewModel.kt 的完整代码”](ch12.xhtml#the_full_code_for_gameviewmodeld-id00189)'
+- en: '[“Make GameFragment observe the new property”](ch12.xhtml#make_gamefragment_observe_the_new_proper)'
+  id: totrans-301
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“让 GameFragment 观察新属性”](ch12.xhtml#make_gamefragment_observe_the_new_proper)'
+- en: '[“What happens when the app runs”](ch12.xhtml#what_happens_when_the_app_runs-id00190)'
+  id: totrans-302
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时发生了什么”](ch12.xhtml#what_happens_when_the_app_runs-id00190)'
+- en: '[“Your Android Toolbox”](ch12.xhtml#your_android_toolbox-id00192)'
+  id: totrans-303
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你的 Android 工具箱”](ch12.xhtml#your_android_toolbox-id00192)'
+- en: '[Chapter 13](ch13.xhtml#data_bindingcolon_building_smart_layouts)'
+  id: totrans-304
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第 13 章](ch13.xhtml#data_bindingcolon_building_smart_layouts)'
+- en: '**Layouts can do more than control your app’s appearance.** All of the layouts
+    you’ve written so far have been told how they should behave by activity or fragment
+    code. But just imagine if **the layouts could think for themselves**, and **make
+    their own decisions**. In this chapter, we’ll introduce you to **data binding**:
+    a way of **boosting your layout’s IQ**. You’ll find out **how to make views get
+    values** directly from the view model. You’ll use **listener binding** to make
+    buttons call their methods. You’ll even discover how **one simple line of code
+    lets views respond to live data updates**.'
+  id: totrans-305
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**布局不仅可以控制应用程序的外观。** 到目前为止，你编写的所有布局都是由活动或片段代码告诉它们应该如何行为。但是想象一下，**如果布局能够自行思考**，**做出自己的决策**。在本章中，我们将向你介绍
+    **数据绑定**：一种 **提升布局智能的方式**。你将了解到如何直接从视图模型 **获取视图的值**。你将使用 **监听器绑定** 让按钮调用它们的方法。你甚至会发现，**只需一行简单的代码即可让视图响应
+    LiveData 的更新**。'
+- en: '[“Back to the Guessing Game app”](ch13.xhtml#back_to_the_guessing_game_app)'
+  id: totrans-306
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“回到猜谜游戏应用程序”](ch13.xhtml#back_to_the_guessing_game_app)'
+- en: '[“The fragments update the views in their layouts”](ch13.xhtml#the_fragments_update_the_views_in_their)'
+  id: totrans-307
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“片段更新其布局中的视图”](ch13.xhtml#the_fragments_update_the_views_in_their)'
+- en: '[“Enable data binding in the app build.gradle file”](ch13.xhtml#enable_data_binding_in_the_app_builddotg)'
+  id: totrans-308
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在应用程序 build.gradle 文件中启用数据绑定”](ch13.xhtml#enable_data_binding_in_the_app_builddotg)'
+- en: '[“ResultFragment updates the text in its layout”](ch13.xhtml#resultfragment_updates_the_text_in_its_l)'
+  id: totrans-309
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“ResultFragment更新其布局中的文本”](ch13.xhtml#resultfragment_updates_the_text_in_its_l)'
+- en: '[“1\. Add <layout> and <data> elements”](ch13.xhtml#onedot_add_less_thanlayoutgreater_than_a)'
+  id: totrans-310
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“1\. 添加<layout>和<data>元素”](ch13.xhtml#onedot_add_less_thanlayoutgreater_than_a)'
+- en: '[“2\. Set the layout’s data binding variable”](ch13.xhtml#twodot_set_the_layoutapostrophes_data_bi)'
+  id: totrans-311
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“2\. 设置布局的数据绑定变量”](ch13.xhtml#twodot_set_the_layoutapostrophes_data_bi)'
+- en: '[“3\. Use the layout’s data binding variable to access the view model”](ch13.xhtml#threedot_use_the_layoutapostrophes_data)'
+  id: totrans-312
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“3\. 使用布局的数据绑定变量访问视图模型”](ch13.xhtml#threedot_use_the_layoutapostrophes_data)'
+- en: '[“What happens when the app runs”](ch13.xhtml#what_happens_when_the_app_runs-id00197)'
+  id: totrans-313
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时发生了什么”](ch13.xhtml#what_happens_when_the_app_runs-id00197)'
+- en: '[“![Images](Images/zooml.png) <layout> Up Close”](ch13.xhtml#less_thanlayoutgreater_than_up_close)'
+  id: totrans-314
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“![Images](Images/zooml.png) <layout>近距离观察”](ch13.xhtml#less_thanlayoutgreater_than_up_close)'
+- en: '[“GameFragment can use data binding too”](ch13.xhtml#gamefragment_can_use_data_binding_too)'
+  id: totrans-315
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“GameFragment也可以使用数据绑定”](ch13.xhtml#gamefragment_can_use_data_binding_too)'
+- en: '[“Add <layout> and <data> elements to fragment_game.xml”](ch13.xhtml#add_less_thanlayoutgreater_than_and_less)'
+  id: totrans-316
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“向fragment_game.xml添加<layout>和<data>元素”](ch13.xhtml#add_less_thanlayoutgreater_than_and_less)'
+- en: '[“Use the data binding variable to set the layout’s text”](ch13.xhtml#use_the_data_binding_variable_to_set_the)'
+  id: totrans-317
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用数据绑定变量设置布局文本”](ch13.xhtml#use_the_data_binding_variable_to_set_the)'
+- en: '[“String resources revisited”](ch13.xhtml#string_resources_revisited)'
+  id: totrans-318
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“字符串资源再访”](ch13.xhtml#string_resources_revisited)'
+- en: '[“The layout can pass parameters to String resources”](ch13.xhtml#the_layout_can_pass_parameters_to_string)'
+  id: totrans-319
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“布局可以向字符串资源传递参数”](ch13.xhtml#the_layout_can_pass_parameters_to_string)'
+- en: '[“We need to set the gameViewModel variable”](ch13.xhtml#we_need_to_set_the_gameviewmodel_variabl)'
+  id: totrans-320
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们需要设置gameViewModel变量”](ch13.xhtml#we_need_to_set_the_gameviewmodel_variabl)'
+- en: '[“What happens when the app runs”](ch13.xhtml#what_happens_when_the_app_runs-id00202)'
+  id: totrans-321
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时发生了什么”](ch13.xhtml#what_happens_when_the_app_runs-id00202)'
+- en: '[“You can use data binding to call methods”](ch13.xhtml#you_can_use_data_binding_to_call_methods)'
+  id: totrans-322
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您可以使用数据绑定调用方法”](ch13.xhtml#you_can_use_data_binding_to_call_methods)'
+- en: '[“Add finishGame() to GameViewModel.kt”](ch13.xhtml#add_finishgameleft_parenthesisright_pare)'
+  id: totrans-323
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“将finishGame()添加到GameViewModel.kt”](ch13.xhtml#add_finishgameleft_parenthesisright_pare)'
+- en: '[“Use data binding to make a button call a method when clicked”](ch13.xhtml#use_data_binding_to_make_a_button_call_a)'
+  id: totrans-324
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用数据绑定使按钮在点击时调用方法”](ch13.xhtml#use_data_binding_to_make_a_button_call_a)'
+- en: '[“What happens when the app runs”](ch13.xhtml#what_happens_when_the_app_runs-id00208)'
+  id: totrans-325
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时发生了什么”](ch13.xhtml#what_happens_when_the_app_runs-id00208)'
+- en: '[“Fireside Chats”](ch13.xhtml#fireside_chats)'
+  id: totrans-326
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“火炉边谈话”](ch13.xhtml#fireside_chats)'
+- en: '[“We can switch off view binding”](ch13.xhtml#we_can_switch_off_view_binding)'
+  id: totrans-327
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们可以关闭视图绑定”](ch13.xhtml#we_can_switch_off_view_binding)'
+- en: '[“Your Android Toolbox”](ch13.xhtml#your_android_toolbox-id00214)'
+  id: totrans-328
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你的Android工具箱”](ch13.xhtml#your_android_toolbox-id00214)'
+- en: '[Chapter 14](ch14.xhtml#room_databasescolon_room_with_a_view)'
+  id: totrans-329
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第14章](ch14.xhtml#room_databasescolon_room_with_a_view)'
+- en: '**Most apps need data that persists.** But if you don’t take steps to store
+    this data somewhere, **it will be lost forever** as soon as the app is closed
+    down. You usually keep data safe in Androidville by **storing it in a database**,
+    so in this chapter, we’ll introduce you to the **Room persistence library**. You’ll
+    learn how to **build databases**, **create tables,** and **define data access
+    methods** using annotated classes and interfaces. You’ll find out how to **use
+    coroutines** to run database code in the background. And along the way, you’ll
+    discover how to **transform your live data as soon as it changes** with a little
+    help from ***Transformations.map()***.'
+  id: totrans-330
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**大多数应用程序需要持久化数据**。但如果你不采取措施将这些数据存储在某处，**一旦应用程序关闭，它将永远丢失**。通常在Androidville，你会通过**将数据存储在数据库中**来保护数据，因此在本章中，我们将向你介绍**Room持久化库**。你将学习如何**构建数据库**，**创建表格**，以及使用带注解的类和接口定义数据访问方法。你将了解如何使用协程在后台运行数据库代码。同时，你将学习如何通过***Transformations.map()***在数据变化时**即时转换你的活动数据**。'
+- en: '[“Most apps need to store data”](ch14.xhtml#most_apps_need_to_store_data)'
+  id: totrans-331
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“大多数应用程序需要存储数据”](ch14.xhtml#most_apps_need_to_store_data)'
+- en: '[“Room is a database library that sits on top of SQLite”](ch14.xhtml#room_is_a_database_library_that_sits_on)'
+  id: totrans-332
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Room是一个位于SQLite之上的数据库库”](ch14.xhtml#room_is_a_database_library_that_sits_on)'
+- en: '[“Create TasksFragment”](ch14.xhtml#create_tasksfragment)'
+  id: totrans-333
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建TasksFragment”](ch14.xhtml#create_tasksfragment)'
+- en: '[“How Room databases are created”](ch14.xhtml#how_room_databases_are_created)'
+  id: totrans-334
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Room数据库是如何创建的”](ch14.xhtml#how_room_databases_are_created)'
+- en: '[“We’ll store tasks data in a table”](ch14.xhtml#weapostrophell_store_tasks_data_in_a_tab)'
+  id: totrans-335
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们将把任务数据存储在表中”](ch14.xhtml#weapostrophell_store_tasks_data_in_a_tab)'
+- en: '[“Specify a table name with @Entity”](ch14.xhtml#specify_a_table_name_with_commercial_ate)'
+  id: totrans-336
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 @Entity 指定表名”](ch14.xhtml#specify_a_table_name_with_commercial_ate)'
+- en: '[“Use an interface to specify data operations”](ch14.xhtml#use_an_interface_to_specify_data_operati)'
+  id: totrans-337
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用接口指定数据操作”](ch14.xhtml#use_an_interface_to_specify_data_operati)'
+- en: '[“Use @Insert to insert a record”](ch14.xhtml#use_commercial_atinsert_to_insert_a_reco)'
+  id: totrans-338
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 @Insert 插入记录”](ch14.xhtml#use_commercial_atinsert_to_insert_a_reco)'
+- en: '[“Use @Delete to delete a record”](ch14.xhtml#use_commercial_atdelete_to_delete_a_reco)'
+  id: totrans-339
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 @Delete 删除记录”](ch14.xhtml#use_commercial_atdelete_to_delete_a_reco)'
+- en: '[“Create a TaskDatabase abstract class”](ch14.xhtml#create_a_taskdatabase_abstract_class)'
+  id: totrans-340
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建一个 TaskDatabase 抽象类”](ch14.xhtml#create_a_taskdatabase_abstract_class)'
+- en: '[“Add properties for any DAO interfaces”](ch14.xhtml#add_properties_for_any_dao_interfaces)'
+  id: totrans-341
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“为任何 DAO 接口添加属性”](ch14.xhtml#add_properties_for_any_dao_interfaces)'
+- en: '[“MVVM revisited”](ch14.xhtml#mvvm_revisited)'
+  id: totrans-342
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“MVVM 重温”](ch14.xhtml#mvvm_revisited)'
+- en: '[“Database operations can run in slooooow-moooo”](ch14.xhtml#database_operations_can_run_in_slooooow-)'
+  id: totrans-343
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“数据库操作可能运行缓慢”](ch14.xhtml#database_operations_can_run_in_slooooow-)'
+- en: '[“1\. Mark TaskDao’s methods with suspend”](ch14.xhtml#onedot_mark_taskdaoapostrophes_methods_w)'
+  id: totrans-344
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“1\. 使用 suspend 标记 TaskDao 的方法”](ch14.xhtml#onedot_mark_taskdaoapostrophes_methods_w)'
+- en: '[“2\. Launch the insert() method in the background”](ch14.xhtml#twodot_launch_the_insertleft_parenthesis)'
+  id: totrans-345
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“2\. 在后台启动 insert() 方法”](ch14.xhtml#twodot_launch_the_insertleft_parenthesis)'
+- en: '[“TasksViewModel needs a view model factory”](ch14.xhtml#tasksviewmodel_needs_a_view_model_factor)'
+  id: totrans-346
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“TasksViewModel 需要一个视图模型工厂”](ch14.xhtml#tasksviewmodel_needs_a_view_model_factor)'
+- en: '[“We’ll use data binding to insert a record”](ch14.xhtml#weapostrophell_use_data_binding_to_inser)'
+  id: totrans-347
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们将使用数据绑定插入记录”](ch14.xhtml#weapostrophell_use_data_binding_to_inser)'
+- en: '[“What happens when the code runs”](ch14.xhtml#what_happens_when_the_code_runs)'
+  id: totrans-348
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码运行时会发生什么”](ch14.xhtml#what_happens_when_the_code_runs)'
+- en: '[“TasksFragment needs to display records”](ch14.xhtml#tasksfragment_needs_to_display_records)'
+  id: totrans-349
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“TasksFragment 需要显示记录”](ch14.xhtml#tasksfragment_needs_to_display_records)'
+- en: '[“Use getAll() to get all tasks from the database”](ch14.xhtml#use_getallleft_parenthesisright_parenthe)'
+  id: totrans-350
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 getAll() 从数据库获取所有任务”](ch14.xhtml#use_getallleft_parenthesisright_parenthe)'
+- en: '[“A LiveData<List<Task>> is a more complex type”](ch14.xhtml#a_livedataless_thanlistless_thantaskgrea)'
+  id: totrans-351
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“A LiveData<List<Task>> 是一个更复杂的类型”](ch14.xhtml#a_livedataless_thanlistless_thantaskgrea)'
+- en: '[“Let’s update the TasksViewModel code”](ch14.xhtml#letapostrophes_update_the_tasksviewmodel)'
+  id: totrans-352
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“让我们更新 TasksViewModel 代码”](ch14.xhtml#letapostrophes_update_the_tasksviewmodel)'
+- en: '[“We’ll bind the tasksString property to the layout’s text view”](ch14.xhtml#weapostrophell_bind_the_tasksstring_prop)'
+  id: totrans-353
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们将把 tasksString 属性绑定到布局的文本视图”](ch14.xhtml#weapostrophell_bind_the_tasksstring_prop)'
+- en: '[“What happens when the code runs”](ch14.xhtml#what_happens_when_the_code_runs-id00230)'
+  id: totrans-354
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码运行时会发生什么”](ch14.xhtml#what_happens_when_the_code_runs-id00230)'
+- en: '[“Your Android Toolbox”](ch14.xhtml#your_android_toolbox-id00232)'
+  id: totrans-355
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你的 Android 工具箱”](ch14.xhtml#your_android_toolbox-id00232)'
+- en: '[Chapter 15](ch15.xhtml#recycler_viewscolon_reducecomma_reusecom)'
+  id: totrans-356
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第 15 章](ch15.xhtml#recycler_viewscolon_reducecomma_reusecom)'
+- en: '**Lists of data are a key part of most apps.** And in this chapter, we’ll show
+    you how to create one using a **recycler view**: a **super-flexible** way of building
+    a **scrollable list**. You’ll learn how to create **flexible layouts** for your
+    list, including text views, checkboxes, and more. You’ll find out **how to create
+    adapters** that **squish your data** into the recycler view in whatever way you
+    choose. You’ll discover how to use **card views** to give your data a **3D material
+    look**. Finally, we’ll show you how **layout managers** can completely change
+    the look of your list with **just one or two lines of code**.'
+  id: totrans-357
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**数据列表是大多数应用的关键部分。**在本章中，我们将展示如何使用 **recycler view** 创建一个 **超级灵活的** **可滚动列表**。您将学习如何为列表创建
+    **灵活的布局**，包括文本视图、复选框等。您将了解如何创建 **适配器**，以任何您选择的方式将数据 **填充** 到 recycler view 中。您将发现如何使用
+    **card view** 为数据赋予 **3D 材质外观**。最后，我们将向您展示如何使用 **布局管理器** 只需一两行代码就可以完全改变列表的外观。'
+- en: '[“What the Tasks app currently looks like”](ch15.xhtml#what_the_tasks_app_currently_looks_like)'
+  id: totrans-358
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Tasks 应用当前的外观”](ch15.xhtml#what_the_tasks_app_currently_looks_like)'
+- en: '[“We can turn the list into a recycler view”](ch15.xhtml#we_can_turn_the_list_into_a_recycler_vie)'
+  id: totrans-359
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们可以将列表转换为 recycler view”](ch15.xhtml#we_can_turn_the_list_into_a_recycler_vie)'
+- en: '[“Tell the recycler view how to display each item…”](ch15.xhtml#tell_the_recycler_view_how_to_display_ea)'
+  id: totrans-360
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“告诉 recycler view 如何显示每个项目…”](ch15.xhtml#tell_the_recycler_view_how_to_display_ea)'
+- en: '[“The adapter adds data to the recycler view”](ch15.xhtml#the_adapter_adds_data_to_the_recycler_vi)'
+  id: totrans-361
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“适配器向回收视图添加数据”](ch15.xhtml#the_adapter_adds_data_to_the_recycler_vi)'
+- en: '[“Define the adapter’s view holder”](ch15.xhtml#define_the_adapterapostrophes_view_holde)'
+  id: totrans-362
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“定义适配器的视图持有者”](ch15.xhtml#define_the_adapterapostrophes_view_holde)'
+- en: '[“Override the onCreateViewHolder() method”](ch15.xhtml#override_the_oncreateviewholderleft_pare)'
+  id: totrans-363
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“重写onCreateViewHolder()方法”](ch15.xhtml#override_the_oncreateviewholderleft_pare)'
+- en: '[“Add data to the layout’s view”](ch15.xhtml#add_data_to_the_layoutapostrophes_view)'
+  id: totrans-364
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“向布局的视图添加数据”](ch15.xhtml#add_data_to_the_layoutapostrophes_view)'
+- en: '[“We need to display the recycler view”](ch15.xhtml#we_need_to_display_the_recycler_view)'
+  id: totrans-365
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们需要显示回收视图”](ch15.xhtml#we_need_to_display_the_recycler_view)'
+- en: '[“We’ve added a recycler view to TasksFragment’s layout”](ch15.xhtml#weapostropheve_added_a_recycler_view_to)'
+  id: totrans-366
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们已将回收视图添加到TasksFragment的布局中”](ch15.xhtml#weapostropheve_added_a_recycler_view_to)'
+- en: '[“TasksFragment needs to update TaskItemAdapter’s data property”](ch15.xhtml#tasksfragment_needs_to_update_taskitemad)'
+  id: totrans-367
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“TasksFragment需要更新TaskItemAdapter的数据属性”](ch15.xhtml#tasksfragment_needs_to_update_taskitemad)'
+- en: '[“What happens when the code runs”](ch15.xhtml#what_happens_when_the_code_runs-id00239)'
+  id: totrans-368
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码运行时的情况”](ch15.xhtml#what_happens_when_the_code_runs-id00239)'
+- en: '[“Recycler views are very flexible”](ch15.xhtml#recycler_views_are_very_flexible)'
+  id: totrans-369
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“回收视图非常灵活”](ch15.xhtml#recycler_views_are_very_flexible)'
+- en: '[“How to create a card view”](ch15.xhtml#how_to_create_a_card_view)'
+  id: totrans-370
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何创建卡片视图”](ch15.xhtml#how_to_create_a_card_view)'
+- en: '[“The full code for task_item.xml”](ch15.xhtml#the_full_code_for_taskunderscoreitemdotx)'
+  id: totrans-371
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“task_item.xml的完整代码”](ch15.xhtml#the_full_code_for_taskunderscoreitemdotx)'
+- en: '[“The adapter’s view holder needs to work with the new layout code”](ch15.xhtml#the_adapterapostrophes_view_holder_needs)'
+  id: totrans-372
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“适配器的视图持有者需要与新布局代码配合工作”](ch15.xhtml#the_adapterapostrophes_view_holder_needs)'
+- en: '[“The full code for TaskItemAdapter.kt”](ch15.xhtml#the_full_code_for_taskitemadapte-id00241)'
+  id: totrans-373
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“TaskItemAdapter.kt的完整代码”](ch15.xhtml#the_full_code_for_taskitemadapte-id00241)'
+- en: '[“The layout manager gallery”](ch15.xhtml#the_layout_manager_gallery)'
+  id: totrans-374
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“布局管理器gallery”](ch15.xhtml#the_layout_manager_gallery)'
+- en: '[“Update fragment_tasks.xml to arrange items in a grid”](ch15.xhtml#update_fragmentunderscoretasksdotxml_to)'
+  id: totrans-375
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“更新fragment_tasks.xml以将项目排列为网格”](ch15.xhtml#update_fragmentunderscoretasksdotxml_to)'
+- en: '[“What happens when the code runs”](ch15.xhtml#what_happens_when_the_code_runs-id00243)'
+  id: totrans-376
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码运行时的情况”](ch15.xhtml#what_happens_when_the_code_runs-id00243)'
+- en: '[“Your Android Toolbox”](ch15.xhtml#your_android_toolbox-id00249)'
+  id: totrans-377
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你的Android工具箱”](ch15.xhtml#your_android_toolbox-id00249)'
+- en: '[Chapter 16](ch16.xhtml#diffutil_and_data_bindingcolon_life_in_t)'
+  id: totrans-378
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: Chapter 16
+- en: '**Your app needs to run as smoothly and efficiently as possible.** But if you’re
+    not careful, large or complex data sets can cause your recycler view to glitch.
+    In this chapter, we’ll introduce you to ***DiffUtil***: a utility class that **adds
+    extra smarts to your recycler view**. You’ll find out how to use it to **make
+    efficient updates** to your recycler view. You’ll discover how ***ListAdapters*
+    make using *DiffUtil* a breeze**. And along the way, you’ll learn **how to get
+    rid of *findViewById() f*or good** by implementing **data binding in your recycler
+    view code**.'
+  id: totrans-379
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '-   你的应用需要尽可能流畅高效地运行。但如果不小心，大型或复杂的数据集可能会导致您的回收视图出现故障。在本章中，我们将向您介绍DiffUtil：这是一个为您的回收视图增加额外智能的实用类。您将了解如何使用它来高效更新您的回收视图。您将发现ListAdapters如何使使用DiffUtil变得轻松。并且在此过程中，通过在您的回收视图代码中实现数据绑定，您将学习如何永久摆脱findViewById()。'
+- en: '[“The Tasks app revisited”](ch16.xhtml#the_tasks_app_revisited)'
+  id: totrans-380
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Tasks应用再访”](ch16.xhtml#the_tasks_app_revisited)'
+- en: '[“How the recycler view gets its data”](ch16.xhtml#how_the_recycler_view_gets_its_data)'
+  id: totrans-381
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“如何获取回收视图的数据”](ch16.xhtml#how_the_recycler_view_gets_its_data)'
+- en: '[“The data property’s setter calls notifyDataSetChanged()”](ch16.xhtml#the_data_propertyapostrophes_setter_call)'
+  id: totrans-382
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“数据属性的setter调用notifyDataSetChanged()”](ch16.xhtml#the_data_propertyapostrophes_setter_call)'
+- en: '[“Tell the recycler view what needs to change”](ch16.xhtml#tell_the_recycler_view_what_needs_to_cha)'
+  id: totrans-383
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“告诉回收视图需要改变什么”](ch16.xhtml#tell_the_recycler_view_what_needs_to_cha)'
+- en: '[“Here’s what we’re going to do”](ch16.xhtml#hereapostrophes_what_weapostroph-id00252)'
+  id: totrans-384
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们要做的事情”](ch16.xhtml#hereapostrophes_what_weapostroph-id00252)'
+- en: '[“We need to implement DiffUtil.ItemCallback”](ch16.xhtml#we_need_to_implement_diffutildotitemcall)'
+  id: totrans-385
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们需要实现DiffUtil.ItemCallback”](ch16.xhtml#we_need_to_implement_diffutildotitemcall)'
+- en: '[“A ListAdapter accepts a DiffUtil.ItemCallback argument”](ch16.xhtml#a_listadapter_accepts_a_diffutildotitemc)'
+  id: totrans-386
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“ListAdapter接受DiffUtil.ItemCallback参数”](ch16.xhtml#a_listadapter_accepts_a_diffutildotitemc)'
+- en: '[“The updated code for TaskItemAdapter.kt”](ch16.xhtml#the_updated_code_for_taskitemadapterdotk)'
+  id: totrans-387
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“TaskItemAdapter.kt的更新代码”](ch16.xhtml#the_updated_code_for_taskitemadapterdotk)'
+- en: '[“Populate the ListAdapter’s list…”](ch16.xhtml#populate_the_listadapterapostrophes_list)'
+  id: totrans-388
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“填充ListAdapter的列表…”](ch16.xhtml#populate_the_listadapterapostrophes_list)'
+- en: '[“The updated code for TasksFragment.kt”](ch16.xhtml#the_updated_code_for_tasksfragme-id00253)'
+  id: totrans-389
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“TasksFragment.kt的更新代码”](ch16.xhtml#the_updated_code_for_tasksfragme-id00253)'
+- en: '[“What happens when the code runs”](ch16.xhtml#what_happens_when_the_code_runs-id00254)'
+  id: totrans-390
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码运行时会发生什么”](ch16.xhtml#what_happens_when_the_code_runs-id00254)'
+- en: '[“Recycler views can use data binding”](ch16.xhtml#recycler_views_can_use_data_binding)'
+  id: totrans-391
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“回收视图可以使用数据绑定”](ch16.xhtml#recycler_views_can_use_data_binding)'
+- en: '[“Add a data binding variable to task_item.xml”](ch16.xhtml#add_a_data_binding_variable_to_taskunder)'
+  id: totrans-392
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“向task_item.xml添加数据绑定变量”](ch16.xhtml#add_a_data_binding_variable_to_taskunder)'
+- en: '[“The layout gets inflated in the adapter’s view holder code”](ch16.xhtml#the_layout_gets_inflated_in_the_adaptera)'
+  id: totrans-393
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在适配器的视图持有者代码中填充布局”](ch16.xhtml#the_layout_gets_inflated_in_the_adaptera)'
+- en: '[“Use the binding class to inflate the layout”](ch16.xhtml#use_the_binding_class_to_inflate_the_lay)'
+  id: totrans-394
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用绑定类来填充布局”](ch16.xhtml#use_the_binding_class_to_inflate_the_lay)'
+- en: '[“The full code for TaskItemAdapter.kt”](ch16.xhtml#the_full_code_for_taskitemadapte-id00258)'
+  id: totrans-395
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“TaskItemAdapter.kt的完整代码”](ch16.xhtml#the_full_code_for_taskitemadapte-id00258)'
+- en: '[“The full code for task_item.xml”](ch16.xhtml#the_full_code_for_taskunderscore-id00259)'
+  id: totrans-396
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“task_item.xml的完整代码”](ch16.xhtml#the_full_code_for_taskunderscore-id00259)'
+- en: '[“What happens when the code runs”](ch16.xhtml#what_happens_when_the_code_runs-id00261)'
+  id: totrans-397
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码运行时会发生什么”](ch16.xhtml#what_happens_when_the_code_runs-id00261)'
+- en: '[“Your Android Toolbox”](ch16.xhtml#your_android_toolbox-id00265)'
+  id: totrans-398
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的Android工具箱”](ch16.xhtml#your_android_toolbox-id00265)'
+- en: '[Chapter 17](ch17.xhtml#recycler_view_navigationcolon_pick_a_car)'
+  id: totrans-399
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第17章](ch17.xhtml#recycler_view_navigationcolon_pick_a_car)'
+- en: '**Some apps rely on the user selecting an item from a list.** And in this chapter,
+    you’ll learn **how to make recycler views a core part of your app design** by
+    **making their items clickable**. You’ll discover how to **implement recycler
+    view navigation** by making the app navigate to a new screen each time the user
+    clicks on a record. You’ll find out **how to show the user extra information**
+    about their chosen record, and update it in the database.'
+  id: totrans-400
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**某些应用程序依赖用户从列表中选择项目。** 在本章中，您将学习如何通过**使其项目可点击**，将**回收视图（recycler views）**作为应用设计的核心部分。您将了解如何通过点击记录使应用**实现回收视图导航**。您还将发现如何向用户显示所选记录的**额外信息**，并在数据库中进行更新。'
+- en: '[“Recycler views can be used for navigation”](ch17.xhtml#recycler_views_can_be_used_for_navigatio)'
+  id: totrans-401
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“回收视图可用于导航”](ch17.xhtml#recycler_views_can_be_used_for_navigatio)'
+- en: '[“Make each item clickable”](ch17.xhtml#make_each_item_clickable)'
+  id: totrans-402
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使每个项目可点击”](ch17.xhtml#make_each_item_clickable)'
+- en: '[“Where should we create the toast?”](ch17.xhtml#where_should_we_create_the_toastquestion)'
+  id: totrans-403
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们应该在哪里创建吐司？”](ch17.xhtml#where_should_we_create_the_toastquestion)'
+- en: '[“We’ll pass a lambda to TaskItemAdapter”](ch17.xhtml#weapostrophell_pass_a_lambda_to_taskitem)'
+  id: totrans-404
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们将向TaskItemAdapter传递一个lambda”](ch17.xhtml#weapostrophell_pass_a_lambda_to_taskitem)'
+- en: '[“What happens when the code runs”](ch17.xhtml#what_happens_when_the_code_runs-id00271)'
+  id: totrans-405
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码运行时会发生什么”](ch17.xhtml#what_happens_when_the_code_runs-id00271)'
+- en: '[“We want to use the recycler view to navigate to a new fragment”](ch17.xhtml#we_want_to_use_the_recycler_view_to_navi)'
+  id: totrans-406
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们希望使用回收视图导航到新的片段”](ch17.xhtml#we_want_to_use_the_recycler_view_to_navi)'
+- en: '[“Create EditTaskFragment…”](ch17.xhtml#create_edittaskfragmenthellip)'
+  id: totrans-407
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建EditTaskFragment…”](ch17.xhtml#create_edittaskfragmenthellip)'
+- en: '[“Update the navigation graph”](ch17.xhtml#update_the_navigation_graph-id00276)'
+  id: totrans-408
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“更新导航图”](ch17.xhtml#update_the_navigation_graph-id00276)'
+- en: '[“Make TasksFragment navigate to EditTaskFragment”](ch17.xhtml#make_tasksfragment_navigate_to_edittaskf)'
+  id: totrans-409
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使TasksFragment导航至EditTaskFragment”](ch17.xhtml#make_tasksfragment_navigate_to_edittaskf)'
+- en: '[“Make EditTaskFragment display the task ID”](ch17.xhtml#make_edittaskfragment_display_the_task_i)'
+  id: totrans-410
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使EditTaskFragment显示任务ID”](ch17.xhtml#make_edittaskfragment_display_the_task_i)'
+- en: '[“What happens when the code runs”](ch17.xhtml#what_happens_when_the_code_runs-id00280)'
+  id: totrans-411
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码运行时会发生什么”](ch17.xhtml#what_happens_when_the_code_runs-id00280)'
+- en: '[“We want to use EditTaskFragment to update task records”](ch17.xhtml#we_want_to_use_edittaskfragment_to_updat)'
+  id: totrans-412
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们希望使用EditTaskFragment更新任务记录”](ch17.xhtml#we_want_to_use_edittaskfragment_to_updat)'
+- en: '[“Use TaskDao to interact with database records”](ch17.xhtml#use_taskdao_to_interact_with_database_re)'
+  id: totrans-413
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用TaskDao与数据库记录交互”](ch17.xhtml#use_taskdao_to_interact_with_database_re)'
+- en: '[“Create EditTaskViewModel”](ch17.xhtml#create_edittaskviewmodel)'
+  id: totrans-414
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建EditTaskViewModel”](ch17.xhtml#create_edittaskviewmodel)'
+- en: '[“EditTaskViewModel will tell EditTaskFragment when to navigate”](ch17.xhtml#edittaskviewmodel_will_tell_edittaskfrag)'
+  id: totrans-415
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“EditTaskViewModel将告诉EditTaskFragment何时导航”](ch17.xhtml#edittaskviewmodel_will_tell_edittaskfrag)'
+- en: '[“EditTaskViewModel needs a view model factory”](ch17.xhtml#edittaskviewmodel_needs_a_view_model_fac)'
+  id: totrans-416
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“EditTaskViewModel 需要一个视图模型工厂”](ch17.xhtml#edittaskviewmodel_needs_a_view_model_fac)'
+- en: '[“fragment_edit_task.xml needs to display the task”](ch17.xhtml#fragmentunderscoreeditunderscoretaskdotx)'
+  id: totrans-417
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“fragment_edit_task.xml 需要显示任务”](ch17.xhtml#fragmentunderscoreeditunderscoretaskdotx)'
+- en: '[“What happens when the code runs”](ch17.xhtml#what_happens_when_the_code_runs-id00284)'
+  id: totrans-418
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“代码运行时会发生什么”](ch17.xhtml#what_happens_when_the_code_runs-id00284)'
+- en: '[“Your Android Toolbox”](ch17.xhtml#your_android_toolbox-id00286)'
+  id: totrans-419
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您的 Android 工具箱”](ch17.xhtml#your_android_toolbox-id00286)'
+- en: '[Chapter 18](ch18.xhtml#jetpack_composecolon_compose_yourself)'
+  id: totrans-420
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第 18 章](ch18.xhtml#jetpack_composecolon_compose_yourself)'
+- en: '**All the UIs you’ve built so far have used views and layout files.** But with
+    **Jetpack Compose**, **that’s not the only option**. In this chapter, we’re going
+    to take **a road trip to Composeville**, and find out how to build UIs using Compose
+    components called **composables** instead of views. You’ll learn how to use built-in
+    composables such as **Text**, **Image**, **TextField,** and **Button**. You’ll
+    discover how to arrange them in **Rows** and **Columns**, and style them using
+    **themes**. You’ll write and preview your own **composable functions**. You’ll
+    even find out **how to manage a composable’s state** using ***MutableState***
+    objects.'
+  id: totrans-421
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '-   所有到目前为止您构建的 UI 都使用了视图和布局文件。但是，使用 **Jetpack Compose**，**这不是唯一的选择**。在本章中，我们将前往
+    **Composeville**，学习如何使用称为 **composables** 的 Compose 组件构建 UI。您将学习如何使用内置的 composables，如
+    **Text**、**Image**、**TextField** 和 **Button**。您将了解如何将它们排列在 **Rows** 和 **Columns**
+    中，并使用 **themes** 进行样式设置。您将编写和预览自己的 **composable functions**。甚至您将了解如何使用 ***MutableState***
+    对象来管理 composable 的状态。'
+- en: '[“UI components don’t have to be Views”](ch18.xhtml#ui_components_donapostrophet_have_to_be)'
+  id: totrans-422
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“UI 组件不一定是 Views”](ch18.xhtml#ui_components_donapostrophet_have_to_be)'
+- en: '[“Create a new Compose project”](ch18.xhtml#create_a_new_compose_project)'
+  id: totrans-423
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建一个新的 Compose 项目”](ch18.xhtml#create_a_new_compose_project)'
+- en: '[“Compose projects have no layout files”](ch18.xhtml#compose_projects_have_no_layout_files)'
+  id: totrans-424
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Compose 项目没有布局文件”](ch18.xhtml#compose_projects_have_no_layout_files)'
+- en: '[“What Compose activity code looks like”](ch18.xhtml#what_compose_activity_code_looks_like)'
+  id: totrans-425
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Compose 活动代码的示例”](ch18.xhtml#what_compose_activity_code_looks_like)'
+- en: '[“Use a Text composable to display text”](ch18.xhtml#use_a_text_composable_to_display_text)'
+  id: totrans-426
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 Text composable 显示文本”](ch18.xhtml#use_a_text_composable_to_display_text)'
+- en: '[“Use composables in composable functions”](ch18.xhtml#use_composables_in_composable_functions)'
+  id: totrans-427
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在 composable 函数中使用 composables”](ch18.xhtml#use_composables_in_composable_functions)'
+- en: '[“Preview composables with the Design or Split option”](ch18.xhtml#preview_composables_with_the_design_or_s)'
+  id: totrans-428
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用设计或拆分选项预览组合部件”](ch18.xhtml#preview_composables_with_the_design_or_s)'
+- en: '[“Let’s make the app convert temperatures”](ch18.xhtml#letapostrophes_make_the_app_convert_temp)'
+  id: totrans-429
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“让我们让应用程序转换温度”](ch18.xhtml#letapostrophes_make_the_app_convert_temp)'
+- en: '[“Add a MainActivityContent composable function”](ch18.xhtml#add_a_mainactivitycontent_composable_fun)'
+  id: totrans-430
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“添加一个 MainActivityContent composable 函数”](ch18.xhtml#add_a_mainactivitycontent_composable_fun)'
+- en: '[“Add an Image to MainActivity.kt”](ch18.xhtml#add_an_image_to_mainactivitydotkt)'
+  id: totrans-431
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“在 MainActivity.kt 中添加图像”](ch18.xhtml#add_an_image_to_mainactivitydotkt)'
+- en: '[“Let’s display the temperature text”](ch18.xhtml#letapostrophes_display_the_temperature_t)'
+  id: totrans-432
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“让我们显示温度文本”](ch18.xhtml#letapostrophes_display_the_temperature_t)'
+- en: '[“Use a Button composable to add a button”](ch18.xhtml#use_a_button_composable_to_add_a_button)'
+  id: totrans-433
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 Button composable 添加按钮”](ch18.xhtml#use_a_button_composable_to_add_a_button)'
+- en: '[“We need to pass a lambda to ConvertButton”](ch18.xhtml#we_need_to_pass_a_lambda_to_convertbutto)'
+  id: totrans-434
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们需要向 ConvertButton 传递一个 lambda”](ch18.xhtml#we_need_to_pass_a_lambda_to_convertbutto)'
+- en: '[“![Images](Images/zooml.png) Composition Up Close”](ch18.xhtml#composition_up_close)'
+  id: totrans-435
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“![Images](Images/zooml.png) Composition Up Close”](ch18.xhtml#composition_up_close)'
+- en: '[“We need to change the value of TemperatureText’s argument”](ch18.xhtml#we_need_to_change_the_value_of_temperatu)'
+  id: totrans-436
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们需要更改 TemperatureText 的参数值”](ch18.xhtml#we_need_to_change_the_value_of_temperatu)'
+- en: '[“What happens when the app runs”](ch18.xhtml#what_happens_when_the_app_runs-id00298)'
+  id: totrans-437
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时会发生什么”](ch18.xhtml#what_happens_when_the_app_runs-id00298)'
+- en: '[“Add a TextField to a composable function”](ch18.xhtml#add_a_textfield_to_a_composable_function)'
+  id: totrans-438
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“向 composable 函数添加 TextField”](ch18.xhtml#add_a_textfield_to_a_composable_function)'
+- en: '[“What happens when the app runs”](ch18.xhtml#what_happens_when_the_app_runs-id00302)'
+  id: totrans-439
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时会发生什么”](ch18.xhtml#what_happens_when_the_app_runs-id00302)'
+- en: '[“Add padding to the Column composable”](ch18.xhtml#add_padding_to_the_column_composable)'
+  id: totrans-440
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“向 Column composable 添加填充”](ch18.xhtml#add_padding_to_the_column_composable)'
+- en: '[“You can center composables in Columns or Rows”](ch18.xhtml#you_can_center_composables_in_columns_or)'
+  id: totrans-441
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“您可以在列或行中居中 composables”](ch18.xhtml#you_can_center_composables_in_columns_or)'
+- en: '[“Applying themes: revisited”](ch18.xhtml#applying_themescolon_revisited)'
+  id: totrans-442
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用主题：再探讨”](ch18.xhtml#applying_themescolon_revisited)'
+- en: '[“Android Studio includes extra theme code”](ch18.xhtml#android_studio_includes_extra_theme_code)'
+  id: totrans-443
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“Android Studio 包含额外的主题代码”](ch18.xhtml#android_studio_includes_extra_theme_code)'
+- en: '[“The full code for MainActivity.kt”](ch18.xhtml#the_full_code_for_mainactivitydo-id00304)'
+  id: totrans-444
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“MainActivity.kt 的完整代码”](ch18.xhtml#the_full_code_for_mainactivitydo-id00304)'
+- en: '[“Your Android Toolbox”](ch18.xhtml#your_android_toolbox-id00306)'
+  id: totrans-445
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你的 Android 工具箱”](ch18.xhtml#your_android_toolbox-id00306)'
+- en: '[Chapter 19](ch19.xhtml#integrating_compose_with_viewscolon_perf)'
+  id: totrans-446
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[第 19 章](ch19.xhtml#integrating_compose_with_viewscolon_perf)'
+- en: '**You get the best results when things work together.** So far, you’ve learned
+    how to build a UI using views or composables. But what if you want to use **both**?
+    In this chapter, you’ll find out how to get **the best of both worlds** by **adding
+    composables to a View-based UI**. You’ll discover techniques for making **composables
+    work with view models**. You’ll even find out how to make them **respond to *LiveData*
+    updates**. By the end of the chapter, you’ll have all the tools you need to **use
+    composables with views**, or even **migrate to a pure Compose UI.**'
+  id: totrans-447
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: '**当各个组件协同工作时，你能够获得最佳效果。** 到目前为止，你已经学会了如何使用视图或可组合项构建用户界面（UI）。但是，如果你想**同时使用**两者呢？在本章中，你将了解如何通过**将可组合项添加到基于视图的
+    UI 中**，来实现**兼收其效**。你将学会使**可组合项与视图模型协同工作**的技术。你甚至会了解到如何使它们**响应 *LiveData* 更新**。本章结束时，你将拥有**在视图中使用可组合项**的所有工具，甚至**迁移到纯
+    Compose UI** 的能力。'
+- en: '[“You can add composables to View-based UIs”](ch19.xhtml#you_can_add_composables_to_view-based_ui)'
+  id: totrans-448
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你可以将可组合项添加到基于视图的 UI”](ch19.xhtml#you_can_add_composables_to_view-based_ui)'
+- en: '[“The Guessing Game app structure”](ch19.xhtml#the_guessing_game_app_structure)'
+  id: totrans-449
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“猜谜游戏应用结构”](ch19.xhtml#the_guessing_game_app_structure)'
+- en: '[“We’ll replace ResultFragment’s views with composables”](ch19.xhtml#weapostrophell_replace_resultfragmentapo)'
+  id: totrans-450
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们将用可组合项替换 ResultFragment 的视图”](ch19.xhtml#weapostrophell_replace_resultfragmentapo)'
+- en: '[“A ComposeView lets you add composables to a layout”](ch19.xhtml#a_composeview_lets_you_add_composables_t)'
+  id: totrans-451
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“ComposeView 允许你向布局中添加可组合项”](ch19.xhtml#a_composeview_lets_you_add_composables_t)'
+- en: '[“Add composables using Kotlin code”](ch19.xhtml#add_composables_using_kotlin_code)'
+  id: totrans-452
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“使用 Kotlin 代码添加可组合项”](ch19.xhtml#add_composables_using_kotlin_code)'
+- en: '[“Add a composable function for the fragment’s content”](ch19.xhtml#add_a_composable_function_for_the_fragme)'
+  id: totrans-453
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“为片段内容添加一个可组合函数”](ch19.xhtml#add_a_composable_function_for_the_fragme)'
+- en: '[“Reproduce the Start New Game button”](ch19.xhtml#reproduce_the_start_new_game_button)'
+  id: totrans-454
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“重现“开始新游戏”按钮”](ch19.xhtml#reproduce_the_start_new_game_button)'
+- en: '[“Reproduce ResultFragment’s TextView”](ch19.xhtml#reproduce_resultfragmentapostrophes_text)'
+  id: totrans-455
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“重现 ResultFragment 的 TextView”](ch19.xhtml#reproduce_resultfragmentapostrophes_text)'
+- en: '[“onCreateView() returns the UI’s root view”](ch19.xhtml#oncreateviewleft_parenthesisright_parent)'
+  id: totrans-456
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“onCreateView() 返回 UI 的根视图”](ch19.xhtml#oncreateviewleft_parenthesisright_parent)'
+- en: '[“The full code for ResultFragment.kt”](ch19.xhtml#the_full_code_for_resultfragment-id00315)'
+  id: totrans-457
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“ResultFragment.kt 的完整代码”](ch19.xhtml#the_full_code_for_resultfragment-id00315)'
+- en: '[“What happens when the app runs”](ch19.xhtml#what_happens_when_the_app_runs-id00316)'
+  id: totrans-458
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“应用程序运行时的情况”](ch19.xhtml#what_happens_when_the_app_runs-id00316)'
+- en: '[“Next we’ll make GameFragment use composables too”](ch19.xhtml#next_weapostrophell_make_gamefragment_us)'
+  id: totrans-459
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“接下来我们还将使 GameFragment 也使用可组合项”](ch19.xhtml#next_weapostrophell_make_gamefragment_us)'
+- en: '[“We’ll add a ComposeView to fragment_game.xml”](ch19.xhtml#weapostrophell_add_a_composeview-id00320)'
+  id: totrans-460
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们将在 fragment_game.xml 中添加一个 ComposeView”](ch19.xhtml#weapostrophell_add_a_composeview-id00320)'
+- en: '[“Add a composable function for GameFragment’s content”](ch19.xhtml#add_a_composable_function_for_gamefragme)'
+  id: totrans-461
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“为 GameFragment 的内容添加一个可组合函数”](ch19.xhtml#add_a_composable_function_for_gamefragme)'
+- en: '[“Reproduce the Finish Game button”](ch19.xhtml#reproduce_the_finish_game_button)'
+  id: totrans-462
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“重现“结束游戏”按钮”](ch19.xhtml#reproduce_the_finish_game_button)'
+- en: '[“Reproduce the EditText with a TextField”](ch19.xhtml#reproduce_the_edittext_with_a_textfield)'
+  id: totrans-463
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“重现用 TextField 替换 EditText”](ch19.xhtml#reproduce_the_edittext_with_a_textfield)'
+- en: '[“Reproduce the Guess button”](ch19.xhtml#reproduce_the_guess_button)'
+  id: totrans-464
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“重现“猜测”按钮”](ch19.xhtml#reproduce_the_guess_button)'
+- en: '[“We’ll display the incorrect guesses in a Text composable”](ch19.xhtml#weapostrophell_display_the_incorrect_gue)'
+  id: totrans-465
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“我们将在 Text 可组合项中显示不正确的猜测”](ch19.xhtml#weapostrophell_display_the_incorrect_gue)'
+- en: '[“Create an IncorrectGuessesText composable function”](ch19.xhtml#create_an_incorrectguessestext_composabl)'
+  id: totrans-466
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“创建 IncorrectGuessesText 可组合函数”](ch19.xhtml#create_an_incorrectguessestext_composabl)'
+- en: '[“Your Android Toolbox”](ch19.xhtml#your_android_toolbox-id00329)'
+  id: totrans-467
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“你的 Android 工具箱”](ch19.xhtml#your_android_toolbox-id00329)'
+- en: '[Appendix A](app01.xhtml#colon_leftoverscolon_the_top_ten)'
+  id: totrans-468
+  prefs:
+  - PREF_UL
+  type: TYPE_NORMAL
+  zh: '[附录 A](app01.xhtml#colon_leftoverscolon_the_top_ten)'
+- en: '**Even after all that, there’s still a little more.** There are just a few
+    more things we think you need to know. We wouldn’t feel right about ignoring them,
+    and we really wanted to give you a book you’d be able to lift without extensive
+    training at the local gym. Before you put down the book, **read through these
+    tidbits**.'
+  id: totrans-469
+  prefs:
+  - PREF_IND
+  type: TYPE_NORMAL
+  zh: 即使经历了这一切，“仍然有更多”。我们认为您需要了解的只是少数几件事情。我们不想忽视它们，而且我们真的希望能给您一本无需在本地健身房进行深度训练就能搬起的书。在您放下这本书之前，请*浏览这些小贴士*。
+- en: '[“1\. Sharing data with other apps”](app01.xhtml#onedot_sharing_data_with_other_apps)'
+  id: totrans-470
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“1\. 与其他应用共享数据”](app01.xhtml#onedot_sharing_data_with_other_apps)'
+- en: '[“2\. WorkManager”](app01.xhtml#twodot_workmanager)'
+  id: totrans-471
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“2\. WorkManager”](app01.xhtml#twodot_workmanager)'
+- en: '[“3\. Dialogs and notifications”](app01.xhtml#threedot_dialogs_and_notifications)'
+  id: totrans-472
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“3\. 对话框和通知”](app01.xhtml#threedot_dialogs_and_notifications)'
+- en: '[“4\. Automated testing”](app01.xhtml#fourdot_automated_testing)'
+  id: totrans-473
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“4\. 自动化测试”](app01.xhtml#fourdot_automated_testing)'
+- en: '[“5\. Supporting different screen sizes”](app01.xhtml#fivedot_supporting_different_screen_size)'
+  id: totrans-474
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“5\. 支持不同屏幕尺寸”](app01.xhtml#fivedot_supporting_different_screen_size)'
+- en: '[“6\. More Compose features”](app01.xhtml#sixdot_more_compose_features)'
+  id: totrans-475
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“6\. 更多 Compose 功能”](app01.xhtml#sixdot_more_compose_features)'
+- en: '[“7\. Retrofit”](app01.xhtml#sevendot_retrofit)'
+  id: totrans-476
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“7\. Retrofit”](app01.xhtml#sevendot_retrofit)'
+- en: '[“8\. Android Game Development Kit”](app01.xhtml#eightdot_android_game_development_kit)'
+  id: totrans-477
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“8\. Android 游戏开发工具包”](app01.xhtml#eightdot_android_game_development_kit)'
+- en: '[“9\. CameraX”](app01.xhtml#ninedot_camerax)'
+  id: totrans-478
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“9\. CameraX”](app01.xhtml#ninedot_camerax)'
+- en: '[“10\. Publishing your app”](app01.xhtml#tendot_publishing_your_app)'
+  id: totrans-479
+  prefs:
+  - PREF_IND
+  - PREF_OL
+  type: TYPE_NORMAL
+  zh: '[“10\. 发布您的应用”](app01.xhtml#tendot_publishing_your_app)'
